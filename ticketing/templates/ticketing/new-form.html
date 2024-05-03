@@ -1,0 +1,29 @@
+<!-- <form method="post" action="../new-form-submit/"> -->
+<form method="post" action="{% url 'ticketing:new-form-submit' %}">
+    {% csrf_token %}
+    <div class="mb-3">
+        <label for="requester_id" class="form-label">requester_id</label>
+        <input type="text" class="form-control" id="requester_id" name="requester_id" />
+    </div>
+    <div class="mb-3">
+        <label for="template_id" class="form-label">template_id</label>
+        <input type="text" class="form-control" id="template_id" name="template_id" />
+    </div>
+    <div class="mb-3">
+        <label for="cores" class="form-label">cores</label>
+        <input type="text" class="form-control" id="cores" name="cores" />
+    </div>
+    <div class="mb-3">
+        <label for="ram" class="form-label">ram</label>
+        <input type="text" class="form-control" id="ram" name="ram" />
+    </div>
+    <div class="mb-3">
+        <label for="storage" class="form-label">storage</label>
+        <input type="text" class="form-control" id="storage" name="storage" />
+    </div>
+    <div class="mb-3">
+        <label for="has_internet" class="form-label">has_internet</label>
+        <input type="text" class="form-control" id="has_internet" name="has_internet" />
+    </div>
+    <button type="submit" class="btn btn-primary">Submit</button>
+</form>
