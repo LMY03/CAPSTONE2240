@@ -31,7 +31,8 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'ticketing.apps.TicketingConfig',
+    "ticketing.apps.TicketingConfig",
+    "proxmox.apps.ProxmoxConfig",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

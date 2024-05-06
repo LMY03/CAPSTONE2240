@@ -1,0 +1,11 @@
+<form action="{% url 'ticketing:request-confirm' %}" method="post">
+    {% csrf_token %}
+    <input type="text" name="template_id" value="{{ requestentry.template_id }}" />
+    <input type="text" name="cores" value="{{ requestentry.cores }}" />
+    <input type="text" name="ram" value="{{ requestentry.ram }}" />
+    <input type="text" name="storage" value="{{ requestentry.storage }}" />
+    <input type="text" name="has_internet" value="{{ requestentry.has_internet }}" />
+    <input type="hidden" name="id" value="{{ requestentry.id }}" />
+    <input type="submit" name="action" value="Accept" />
+    <input type="submit" name="action" value="For Revision" />
+</form>
