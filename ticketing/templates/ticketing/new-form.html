@@ -2,28 +2,68 @@
 <form method="post" action="{% url 'ticketing:new-form-submit' %}">
     {% csrf_token %}
     <div class="mb-3">
-        <label for="requester_id" class="form-label">requester_id</label>
-        <input type="text" class="form-control" id="requester_id" name="requester_id" />
+        <label for="template_id" class="form-label">OS: </label>
+        <select class="form-control" id="template_id" name="template_id">
+        {% for id, code, name in os_options %}
+                    <option value="{{ id }}">{{ name }}</option>
+        {% endfor %}
+        </select>
     </div>
     <div class="mb-3">
-        <label for="template_id" class="form-label">template_id</label>
-        <input type="text" class="form-control" id="template_id" name="template_id" />
+        <label for="cores" class="form-label">Cores: </label>
+        <select class="form-control" id="cores" name="cores">
+            <option value="1">1 core</option>
+            <option value="2">2 core</option>
+            <option value="4">4 core</option>
+            <option value="8">8 core</option>
+        </select>
     </div>
     <div class="mb-3">
-        <label for="cores" class="form-label">cores</label>
-        <input type="text" class="form-control" id="cores" name="cores" />
+        <label for="ram" class="form-label">Ram: </label>
+        <select class="form-control" id="ram" name="ram">
+            <option value="1">1 GB</option>
+            <option value="2">2 GB</option>
+            <option value="4">4 GB</option>
+            <option value="8">8 GB</option>
+        </select>
     </div>
     <div class="mb-3">
-        <label for="ram" class="form-label">ram</label>
-        <input type="text" class="form-control" id="ram" name="ram" />
+        <label for="storage" class="form-label">Storage: </label>
+        <select class="form-control" id="storage" name="storage">
+            <option value="1">1 GB</option>
+            <option value="2">2 GB</option>
+            <option value="4">4 GB</option>
+            <option value="8">8 GB</option>
+            <option value="16">16 GB</option>
+            <option value="32">32 GB</option>
+            <option value="64">64 GB</option>
+            <option value="128">128 GB</option>
+        </select>
     </div>
     <div class="mb-3">
-        <label for="storage" class="form-label">storage</label>
-        <input type="text" class="form-control" id="storage" name="storage" />
+        <label for="has_internet" class="form-label">Internet Access: </label>
+        <select class="form-control" id="has_internet" name="has_internet">
+            <option value="true">Yes</option>
+            <option value="false">No</option>
+        </select>
+    </div>
+    <!--This is for the amount of VMs and kung anong klase for this for-->
+    <div class="mb-3">
+        <label for="usage" class="form-label">Use case:</label> 
+        <select class="form-control" id="use_case" name="use_case">
+            <option value="CCINFOM">CCINFOM</option>
+            <option value="THESIS">Thesis</option>
+        </select>
     </div>
     <div class="mb-3">
-        <label for="has_internet" class="form-label">has_internet</label>
-        <input type="text" class="form-control" id="has_internet" name="has_internet" />
+        <label for="usage" class="form-label">VM Count:</label> 
+        <input type="number" id="vm_count" name="vm_count" min="1" max="50">
     </div>
+    <!--Other configs such as port, firewalls and restrictions-->
+    <div class="mb-3">
+        <label for="other_configs" class="form-label">Other configuration:</label>
+        <input type="text" name="other_configs" id="other_configs"></input>
+    </div>
+
     <button type="submit" class="btn btn-primary">Submit</button>
 </form>

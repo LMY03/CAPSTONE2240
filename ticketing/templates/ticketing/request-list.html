@@ -3,26 +3,42 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Bootstrap demo</title>
-    <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous"> -->
+    <title>Ticket list</title>
+    {% comment %} <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous"> {% endcomment %}
   </head>
   <body>
-    {% if request_list %}
-        <ul>
-        {% for request in request_list %}
-            <li class="list-group-item"><a href="#">{{ request.requester_id }}</a></li>
-            <li class="list-group-item"><a href="#">{{ request.template_id }}</a></li>
-            <li class="list-group-item"><a href="#">{{ request.cores }}</a></li>
-            <li class="list-group-item"><a href="#">{{ request.ram }}</a></li>
-            <li class="list-group-item"><a href="#">{{ request.storage }}</a></li>
-            <li class="list-group-item"><a href="#">{{ request.has_internet }}</a></li>
-            <a href="{% url 'ticketing:details' request.id %}">Open</a>
-            <br /><p>---------------------------------------</p><br />
-        {% endfor %}
-        </ul>
-    {% else %}
+    <div class="container">
+      {% if request_list %}
+        <table class="table table-bordered table-striped">
+          <thead>
+            <tr>
+              <th>Requester ID</th>
+              <th>Template ID</th>
+              <th>Cores</th>
+              <th>RAM</th>
+              <th>Storage</th>
+              <th>Internet Access</th>
+              <th>Details</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for request in request_list %}
+              <tr>
+                <td>{{ request.requester_id }}</td>
+                <td>{{ request.template_id }}</td>
+                <td>{{ request.cores }}</td>
+                <td>{{ request.ram }}</td>
+                <td>{{ request.storage }}</td>
+                <td>{{ request.has_internet }}</td>
+                <td><a href="{% url 'ticketing:details' request.id %}" class="btn btn-primary">Open</a></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
         <p>No Requests are available.</p>
-    {% endif %}
+      {% endif %}
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
   </body>
 </html>
