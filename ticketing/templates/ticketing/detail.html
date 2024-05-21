@@ -1,11 +1,24 @@
-<form action="{% url 'ticketing:request-confirm' %}" method="post">
-    {% csrf_token %}
-    <input type="text" name="template_id" value="{{ requestentry.template_id }}" />
-    <input type="text" name="cores" value="{{ requestentry.cores }}" />
-    <input type="text" name="ram" value="{{ requestentry.ram }}" />
-    <input type="text" name="storage" value="{{ requestentry.storage }}" />
-    <input type="text" name="has_internet" value="{{ requestentry.has_internet }}" />
-    <input type="hidden" name="id" value="{{ requestentry.id }}" />
-    <input type="submit" name="action" value="Accept" />
-    <input type="submit" name="action" value="For Revision" />
-</form>
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Detail View</title>
+    {% comment %} <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous"> {% endcomment %}
+</head>
+<body>
+    <div class="container mt-5">
+        <h1>Detail View for the request ticket</h1>
+        <p><strong>Requester ID:</strong> {{ object.requester_id }}</p>
+        <p><strong>Template ID:</strong> {{ object.template_id }}</p>
+        <p><strong>Cores:</strong> {{ object.cores }}</p>
+        <p><strong>RAM:</strong> {{ object.ram }}</p>
+        <p><strong>Storage:</strong> {{ object.storage }}</p>
+        <p><strong>Has Internet:</strong> {{ object.has_internet }}</p>
+        <p><strong>VM Count:</strong> {{ object.vm_count }}</p>
+        <p><strong>Use case:</strong> {{ object.use_case }}</p>
+        <p><strong>Other configs:</strong> {{ object.other_config }}</p>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+</body>
+</html>

@@ -1,8 +1,10 @@
+from typing import Any
 from django import forms
 from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views import generic
+from .models import OSList
 
 from .models import RequestEntry
 
@@ -17,6 +19,19 @@ class IndexView(generic.ListView):
 class DetailView(generic.DetailView):
     model = RequestEntry
     template_name = "ticketing/detail.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        
+        # Get the pk from the URL
+        pk = self.kwargs.get('pk')
+
+        # If you need to query additional data based on this pk
+        additional_data = RequestEntry.objects.filter(id=pk)
+
+        # Add the additional data to the context
+        context['additional_data'] = additional_data
+        return context
     
 class RequestForm(forms.ModelForm):
     class Meta:
@@ -26,6 +41,13 @@ class RequestForm(forms.ModelForm):
 class RequestFormView(generic.edit.FormView):
     template_name = "ticketing/new-form.html"
     form_class = RequestForm
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        os_list = OSList.objects.all().values_list('id', 'os_code', 'os_name')
+        context['os_options'] = list(os_list)
+        #print(context)
+        return context
 
 def new_form_submit(request):
 
@@ -39,7 +61,10 @@ def new_form_submit(request):
         cores = data.get("cores")
         ram = data.get("ram")
         storage = data.get("storage")
-        has_internet = data.get("has_internet")
+        has_internet = data.get("has_internet") == 'true'
+        use_case = data.get("use_case")
+        other_config = data.get("other_configs")
+        vm_count = data.get("vm_count")
         
         print("-----------------------")
         print(data)
@@ -49,12 +74,15 @@ def new_form_submit(request):
         # create request object
 
         new_request = RequestEntry(
-            requester_id = requester_id,
+            #requester_id = requester_id,
             template_id = template_id,
             cores = cores,
             ram = ram,
             storage = storage,
             has_internet = has_internet,
+            use_case = use_case,
+            other_config = other_config,
+            vm_count = vm_count,
             # status = RequestEntry.Status.PENDING,
         )
         new_request.save()

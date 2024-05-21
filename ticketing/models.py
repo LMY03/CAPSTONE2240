@@ -20,3 +20,13 @@ class RequestEntry(models.Model):
     ram = models.IntegerField(default=2)
     storage = models.FloatField(default=2.0)
     has_internet = models.BooleanField(default=False)
+    use_case = models.CharField(max_length=255, blank=True, null=True)  # New field
+    other_config = models.TextField(blank=True, null=True)  # New field
+    vm_count = models.IntegerField(default = 1)
+
+class OSList (models.Model):
+    os_code = models.CharField(max_length=45)
+    os_name = models.CharField(max_length=90)
+
+    class Meta:
+        db_table = 'os_list'
