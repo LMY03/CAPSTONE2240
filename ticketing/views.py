@@ -14,7 +14,7 @@ class IndexView(generic.ListView):
     context_object_name = "request_list"
 
     def get_queryset(self):
-        return RequestEntry.objects.all()
+        return RequestEntry.objects.select_related("template_id").values("status", "requester_id", "cores", "ram", "storage", "has_internet", "id", "template_id__os_name")
     
 class DetailView(generic.DetailView):
     model = RequestEntry
@@ -27,7 +27,7 @@ class DetailView(generic.DetailView):
         pk = self.kwargs.get('pk')
 
         # If you need to query additional data based on this pk
-        additional_data = RequestEntry.objects.filter(id=pk)
+        additional_data = RequestEntry.objects.filter(id=pk).select_related("template_id")
 
         # Add the additional data to the context
         context['additional_data'] = additional_data
@@ -89,22 +89,21 @@ def new_form_submit(request):
 
     return HttpResponseRedirect(reverse("ticketing:index"))
 
-def request_confirm(request):
-    if request.method == "POST":
-        data = request.POST
-        id = data.get("id")
-        request_entry = RequestEntry.objects.get(pk=id)
-        
-        if data.get("action") == 'Accept':
-            request_entry.status = RequestEntry.Status.CREATING
-        
-        if data.get("action") == 'For Revision':
-            request_entry.template_id = data.get("template_id")
-            request_entry.cores = data.get("cores")
-            request_entry.ram = data.get("ram")
-            request_entry.storage = data.get("storage")
-            request_entry.has_internet = data.get("has_internet")
-            request_entry.status = RequestEntry.Status.FOR_REVISION
-
-        request_entry.save()
+def request_confirm(request, id):
+    request_entry = get_object_or_404(RequestEntry, pk=id)
+    request_entry.status = RequestEntry.Status.CREATING
+    request_entry.save()
     return HttpResponseRedirect(reverse("ticketing:index"))
+
+def revise_request(request, id):
+    data = request.POST
+    request_entry = get_object_or_404(RequestEntry, pk=id)
+    request_entry.status = RequestEntry.Status.FOR_REVISION
+    request_entry.revision_comments = data.get("comment")
+    request_entry.save()
+    return HttpResponseRedirect(reverse("ticketing:index"))
+
+def home_filter_view (request):
+    status = request.GET.get('status')
+    request_list = RequestEntry.objects.filter(status = status)
+    return render (request, 'ticketing/request-list.html', {'request_list': request_list, 'status': status})
