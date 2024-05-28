@@ -1,0 +1,66 @@
+ssh-keygen -t rsa -b 4096
+
+sudo nano docker-compose.yml
+
+docker compose up -d
+
+# GUACAMOLE
+
+mkdir -p ~/guacamole-initdb
+
+docker run --rm guacamole/guacamole /opt/guacamole/bin/initdb.sh --mysql > ~/guacamole-initdb/initdb.sql
+
+docker cp ~/guacamole-initdb/initdb.sql mysql:/docker-entrypoint-initdb.d
+
+docker exec -it mysql bash
+
+cd /docker-entrypoint-initdb.d
+
+mysql -u root -p
+
+use guacamole_db;
+
+source initdb.sql;
+
+grant SELECT,UPDATE,INSERT,DELETE on guacamole_db.* to guacadmin@'%';
+
+flush privileges;
+
+exit;
+
+exit
+
+# NETDATA
+
+# generate API_KEY
+uuidgen
+
+# Login as root in docker container
+docker exec -it netdata /bin/bash
+
+vi /etc/netdata/stream.conf
+
+# plugin API_KEY 
+[API_KEY] 
+    enabled = yes
+
+# logout of docker container
+exit
+exit
+
+docker restart netdata
+
+# ANSIBLE
+
+sudo nano ~/inventory/hosts
+
+IP_ADDRESS_OF_NODE_VM ansible_user=USER_NAME
+
+ssh-copy-id USER_NAME@IP_ADDRESS_OF_NODE_VM
+
+docker exec -it ansible ansible all -i /inventory/hosts -m ping
+
+# References
+
+https://www.youtube.com/watch?v=sYNfPqAN3H4&t
+https://learn.netdata.cloud/docs/netdata-agent/installation/docker#create-a-new-netdata-agent-container
