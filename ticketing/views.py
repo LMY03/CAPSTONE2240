@@ -16,12 +16,27 @@ def login (request):
 
 # Create your views here.
 class IndexView(generic.ListView):
-    template_name = "ticketing/request-list.html"
+    template_name = "ticketing/tsg_home.html"
     context_object_name = "request_list"
 
     def get_queryset(self):
-        return RequestEntry.objects.select_related("template_id").values("status", "requester_id", "cores", "ram", "storage", "has_internet", "id", "template_id__os_name")
-    
+        queryset = RequestEntry.objects.select_related("requester", "template").values(
+            "status",
+            "requester__first_name",
+            "requester__last_name",
+            "cores",
+            "ram",
+            "storage",
+            "has_internet",
+            "id",
+            "template__os_name"
+        )
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        # print(context['request_list'])
+        return context
 class DetailView(generic.DetailView):
     model = RequestEntry
     template_name = "ticketing/detail.html"
@@ -29,12 +44,32 @@ class DetailView(generic.DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         pk = self.kwargs.get('pk')
+        # Fetch the RequestEntry object
         request_entry = get_object_or_404(RequestEntry, pk=pk)
+
+        # Get the details you need from the request_entry
+        request_entry_details = RequestEntry.objects.select_related("requester", "template").values(
+            "status",
+            "requester__first_name",
+            "requester__last_name",
+            "cores",
+            "ram",
+            "storage",
+            "has_internet",
+            "id",
+            "template__os_name",
+            "use_case",
+            "other_config",
+            "vm_count"
+        ).get(pk=pk)
+
+        # Fetch the comments related to the request_entry
         comments = Comment.objects.filter(request_entry=request_entry).order_by('-date_time')
         context['request_entry'] = {
-            'details': request_entry,
+            'details': request_entry_details,
             'comments' : comments
         }
+        print(context)
         return context
 
 @login_required
@@ -54,7 +89,7 @@ def add_comment(request, pk):
 class RequestForm(forms.ModelForm):
     class Meta:
         model = RequestEntry
-        fields = ['requester_id']
+        fields = ['requester']
 
 class RequestFormView(generic.edit.FormView):
     template_name = "ticketing/new-form.html"
@@ -94,11 +129,11 @@ def tsg_home(request):
 def new_form_submit(request):
 
     # TODO: authenticate if valid user(logged in & faculty/tsg)
-
+    
     if request.method == "POST":
         # get data
+        requester = get_object_or_404(User, username=request.user)
         data = request.POST
-        requester_id = request.user
         template_id = data.get("template_id")
         cores = data.get("cores")
         ram = data.get("ram")
@@ -115,10 +150,10 @@ def new_form_submit(request):
         # TODO: data verification
 
         # create request object
-
+        print (os, requester)
         new_request = RequestEntry(
-            requester_id = requester_id,
-            template_id = os,
+            requester = requester,
+            template = os,
             cores = cores,
             ram = ram,
             storage = storage,
@@ -149,4 +184,4 @@ def request_confirm(request, id):
 def home_filter_view (request):
     status = request.GET.get('status')
     request_list = RequestEntry.objects.filter(status = status)
-    return render (request, 'ticketing/request-list.html', {'request_list': request_list, 'status': status})
+    return render (request, 'ticketing/tsg_home.html', {'request_list': request_list, 'status': status})

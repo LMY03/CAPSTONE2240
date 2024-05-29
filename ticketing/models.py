@@ -28,8 +28,8 @@ class RequestEntry(models.Model):
         choices=Status.choices,
         default=Status.PENDING)
 
-    requester_id = models.CharField(max_length=30) # gagawin natin tong foreign key and papalitan natin
-    template_id = models.ForeignKey(OSList, on_delete=models.CASCADE)
+    requester = models.ForeignKey(User, on_delete=models.CASCADE, null= True)
+    template = models.ForeignKey(OSList, on_delete=models.CASCADE, null= True)
     cores = models.IntegerField(default=1)
     ram = models.IntegerField(default=2)
     storage = models.FloatField(default=2.0)
@@ -50,7 +50,7 @@ class UserProfile (models.Model):
     ]
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    user_type = models.CharField (max_length= 20, choices=USER_TYPE_CHOICES)
+    user_type = models.CharField (max_length= 20, choices=USER_TYPE_CHOICES, default='student')
 
     def __str__(self) -> str:
         return self.user.username

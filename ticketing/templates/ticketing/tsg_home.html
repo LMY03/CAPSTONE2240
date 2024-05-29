@@ -35,8 +35,8 @@
           <tbody>
             {% for request in request_list %}
               <tr>
-                <td>{{ request.requester_id }}</td>
-                <td>{{ request.template_id__os_name }}</td>
+                <td>{{ request.requester__first_name }} {{ request.requester__last_name }}</td>
+                <td>{{ request.template__os_name }}</td>
                 <td>{{ request.cores }}</td>
                 <td>{{ request.ram }}</td>
                 <td>{{ request.storage }}</td>
