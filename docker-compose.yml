@@ -1,0 +1,85 @@
+services:
+  guacamole:
+    image: guacamole/guacamole:latest
+    container_name: guacamole
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      GUACD_HOSTNAME: guacd
+      MYSQL_HOSTNAME: mysql
+      MYSQL_PORT: 3306
+      MYSQL_DATABASE: guacamole_db
+      MYSQL_USER: guacadmin
+      MYSQL_PASSWORD: 123456
+      MYSQL_ROOT_PASSWORD: 123456
+    depends_on:
+      - guacd
+      - mysql
+
+  guacd:
+    image: guacamole/guacd:latest
+    container_name: guacd
+    restart: always
+    ports:
+      - "4822:4822"
+
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    restart: always
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: guacamole_db
+      MYSQL_USER: guacadmin
+      MYSQL_PASSWORD: 123456
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  netdata:
+    image: netdata/netdata:latest
+    container_name: netdata
+    pid: host
+    network_mode: host
+    restart: always
+    ports:
+      - "19999:19999"
+    cap_add:
+      - SYS_PTRACE
+      - SYS_ADMIN
+    security_opt:
+      - apparmor:unconfined
+    volumes:
+      - netdataconfig:/etc/netdata
+      - netdatalib:/var/lib/netdata
+      - netdatacache:/var/cache/netdata
+      - /etc/passwd:/host/etc/passwd:ro
+      - /etc/group:/host/etc/group:ro
+      - /etc/localtime:/etc/localtime:ro
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /etc/os-release:/host/etc/os-release:ro
+      - /var/log:/host/var/log:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+
+  ansible:
+    image: cytopia/ansible:latest
+    container_name: ansible
+    volumes:
+      - ./playbooks:/playbooks
+      - ./inventory:/inventory
+      - /home/jin/.ssh/id_rsa:/root/.ssh/id_rsa
+      - /home/jin/.ssh/id_rsa.pub:/root/.ssh/id_rsa.pub
+    environment:
+      ANSIBLE_HOST_KEY_CHECKING: "False"
+    working_dir: /playbooks
+    entrypoint: ["sh", "-c"]
+    command: ["apk update && apk add --no-cache openssh-client && tail -f /dev/null"]
+
+volumes:
+  mysql_data:
+  netdataconfig:
+  netdatalib:
+  netdatacache:
