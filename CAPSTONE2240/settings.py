@@ -26,7 +26,11 @@ SECRET_KEY = 'django-insecure-&r7xdaxzqbf*zz0_u@u36rizbuih)a7975a8&a283owv9p_2mo
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [
+    # 'localhost',
+    # '127.0.0.1',
+    # '::1'
+]
 
 
 # Application definition
@@ -152,7 +156,7 @@ SOCIAL_AUTH_PIPELINE = (
     'social_core.pipeline.social_auth.social_user',
     'social_core.pipeline.user.get_username',
     'social_core.pipeline.user.create_user',
-    'ticketing.pipeline.create_or_update_user_profile',  # Add your custom pipeline function here
+    'ticketing.pipeline.create_or_update_user_profile',  
     'social_core.pipeline.social_auth.associate_user',
     'social_core.pipeline.social_auth.load_extra_data',
     'social_core.pipeline.user.user_details',

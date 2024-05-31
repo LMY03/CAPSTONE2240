@@ -4,7 +4,7 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views import generic
-from .models import OSList
+from .models import VMTemplates
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from .models import RequestEntry, Comment
@@ -16,12 +16,27 @@ def login (request):
 
 # Create your views here.
 class IndexView(generic.ListView):
-    template_name = "ticketing/request-list.html"
+    template_name = "ticketing/tsg_home.html"
     context_object_name = "request_list"
 
     def get_queryset(self):
-        return RequestEntry.objects.select_related("template_id").values("status", "requester_id", "cores", "ram", "storage", "has_internet", "id", "template_id__os_name")
-    
+        queryset = RequestEntry.objects.select_related("requester", "template").values(
+            "status",
+            "requester__first_name",
+            "requester__last_name",
+            "cores",
+            "ram",
+            "has_internet",
+            "id",
+            "template__vm_name"
+        )
+        #.order_by('-requestDate')
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        print(context['request_list'])
+        return context
 class DetailView(generic.DetailView):
     model = RequestEntry
     template_name = "ticketing/detail.html"
@@ -29,12 +44,38 @@ class DetailView(generic.DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         pk = self.kwargs.get('pk')
+        # Fetch the RequestEntry object
         request_entry = get_object_or_404(RequestEntry, pk=pk)
+
+        # Get the details you need from the request_entry
+        request_entry_details = RequestEntry.objects.select_related("requester", "template").values(
+            "status",
+            "requester__first_name",
+            "requester__last_name",
+            "cores",
+            "ram",
+            "storage",
+            "has_internet",
+            "id",
+            "template__vm_name",
+            "use_case",
+            "date_needed",
+            'expiration_date',
+            "other_config",
+            "vm_count",
+            "template__storage"
+        ).get(pk=pk)
+
+        if request_entry_details.get('storage') == 0.0:
+            request_entry_details['storage'] = request_entry_details.get('template__storage')
+
+        # Fetch the comments related to the request_entry
         comments = Comment.objects.filter(request_entry=request_entry).order_by('-date_time')
         context['request_entry'] = {
-            'details': request_entry,
+            'details': request_entry_details,
             'comments' : comments
         }
+        print(context)
         return context
 
 @login_required
@@ -54,7 +95,7 @@ def add_comment(request, pk):
 class RequestForm(forms.ModelForm):
     class Meta:
         model = RequestEntry
-        fields = ['requester_id']
+        fields = ['requester']
 
 class RequestFormView(generic.edit.FormView):
     template_name = "ticketing/new-form.html"
@@ -62,8 +103,8 @@ class RequestFormView(generic.edit.FormView):
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
-        os_list = OSList.objects.all().values_list('id', 'os_code', 'os_name')
-        context['os_options'] = list(os_list)
+        vmtemplate_list = VMTemplates.objects.all().values_list('id', 'vm_name')
+        context['vmtemplate_list'] = list(vmtemplate_list)
         #print(context)
         return context
 
@@ -94,31 +135,33 @@ def tsg_home(request):
 def new_form_submit(request):
 
     # TODO: authenticate if valid user(logged in & faculty/tsg)
-
+    
     if request.method == "POST":
         # get data
+        requester = get_object_or_404(User, username=request.user)
         data = request.POST
-        requester_id = request.user
         template_id = data.get("template_id")
         cores = data.get("cores")
         ram = data.get("ram")
         storage = data.get("storage")
         has_internet = data.get("has_internet") == 'true'
         use_case = data.get("use_case")
+        date_needed = data.get ('date_needed')
+        expiration_date = data.get('expiration_date')
         other_config = data.get("other_configs")
         vm_count = data.get("vm_count")
         
-        os = OSList.objects.get(id = template_id)
+        vmTemplateID = VMTemplates.objects.get(id = template_id)
         print("-----------------------")
         print(data)
 
         # TODO: data verification
 
         # create request object
-
+        #print (vmTemplateID, requester)
         new_request = RequestEntry(
-            requester_id = requester_id,
-            template_id = os,
+            requester = requester,
+            template = vmTemplateID,
             cores = cores,
             ram = ram,
             storage = storage,
@@ -126,6 +169,8 @@ def new_form_submit(request):
             use_case = use_case,
             other_config = other_config,
             vm_count = vm_count,
+            date_needed = date_needed,
+            expiration_date = expiration_date
             # status = RequestEntry.Status.PENDING,
         )
         new_request.save()
@@ -149,4 +194,4 @@ def request_confirm(request, id):
 def home_filter_view (request):
     status = request.GET.get('status')
     request_list = RequestEntry.objects.filter(status = status)
-    return render (request, 'ticketing/request-list.html', {'request_list': request_list, 'status': status})
+    return render (request, 'ticketing/tsg_home.html', {'request_list': request_list, 'status': status})

@@ -27,7 +27,6 @@
               <th>Template OS</th>
               <th>Cores</th>
               <th>RAM</th>
-              <th>Storage</th>
               <th>Internet Access</th>
               <th>Status</th>
             </tr>
@@ -35,11 +34,10 @@
           <tbody>
             {% for request in request_list %}
               <tr>
-                <td>{{ request.requester_id }}</td>
-                <td>{{ request.template_id__os_name }}</td>
+                <td>{{ request.requester__first_name }} {{ request.requester__last_name }}</td>
+                <td>{{ request.template__vm_name }}</td>
                 <td>{{ request.cores }}</td>
                 <td>{{ request.ram }}</td>
-                <td>{{ request.storage }}</td>
                 <td>{{ request.has_internet }}</td>
                 {% if request.status == "CR" %}
                 <td>Creating</td>
