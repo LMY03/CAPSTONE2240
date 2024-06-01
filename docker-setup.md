@@ -3,6 +3,8 @@ ssh-keygen -t rsa -b 4096
 git clone https://github.com/LMY03/CAPSTONE2240.git
 cd CAPSTONE2240
 
+<!-- git -C CAPSTONE2240 pull origin main --> update
+
 sudo nano ~/CAPSTONE2240/docker-compose.yml
 
 docker compose up -d
