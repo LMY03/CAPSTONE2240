@@ -1,6 +1,14 @@
 # Download the Ubuntu 22 Desktop ISO
 https://releases.ubuntu.com/22.04/
 
+# qemu agent
+
+sudo apt install qemu-guest-agent -y
+sudo systemctl enable qemu-guest-agent
+sudo systemctl start qemu-guest-agent
+
+
+
 # Netdata
 
 wget -O /tmp/netdata-kickstart.sh https://get.netdata.cloud/kickstart.sh && sh /tmp/netdata-kickstart.sh

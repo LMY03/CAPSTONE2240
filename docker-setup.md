@@ -1,6 +1,9 @@
 ssh-keygen -t rsa -b 4096
 
-sudo nano docker-compose.yml
+git clone https://github.com/LMY03/CAPSTONE2240.git
+cd CAPSTONE2240
+
+sudo nano ~/CAPSTONE2240/docker-compose.yml
 
 docker compose up -d
 
@@ -18,13 +21,15 @@ cd /docker-entrypoint-initdb.d
 
 mysql -u root -p
 
+CREATE DATABASE IF NOT EXISTS guacamole_db;
+
+CREATE USER IF NOT EXISTS 'guacadmin'@'%' IDENTIFIED BY 'guacpassword';
+GRANT SELECT, UPDATE, INSERT, DELETE ON guacamole_db.* TO 'guacadmin'@'%';
+flush privileges;
+
 use guacamole_db;
 
 source initdb.sql;
-
-grant SELECT,UPDATE,INSERT,DELETE on guacamole_db.* to guacadmin@'%';
-
-flush privileges;
 
 exit;
 
