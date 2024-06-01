@@ -5,22 +5,29 @@ FROM python:3.9-slim
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-# Set work directory
+# Set the working directory in the container
 WORKDIR /app
 
-# Install dependencies
+# Copy the requirements file into the container
 COPY requirements.txt /app/
+
+# Install the dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy project
+# Copy the current directory contents into the container at /app
 COPY . /app/
 
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+# Copy the entrypoint script into the container
+COPY entrypoint.sh /app/
 
-# Expose port 8000
+# Make the entrypoint script executable
+RUN chmod +x /app/entrypoint.sh
+
+# Expose the port that the app runs on
 EXPOSE 8000
 
-# Run the Django server
-ENTRYPOINT ["/entrypoint.sh"]
+# Set the entrypoint to the entrypoint script
+ENTRYPOINT ["/app/entrypoint.sh"]
+
+# Command to run the Django server
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

@@ -1,7 +1,9 @@
 ssh-keygen -t rsa -b 4096
 
 git clone https://github.com/LMY03/CAPSTONE2240.git
-cd CAPSTONE2240
+
+chmod +x ~/CAPSTONE2240/entrypoint.sh
+
 
 <!-- git -C CAPSTONE2240 pull origin main --> update
 
