@@ -30,7 +30,8 @@ class RequestEntry(models.Model):
     class Status(models.TextChoices):
         PENDING = "P", "PENDING"
         FOR_REVISION = 'FR', "FOR REVISION"
-        CREATING = "CR", "CREATING"
+        PROCESSING = "PRCS", "PROCESSING"
+        ONGOING = "OG", "ONGOING" #Tentative
         COMPLETED = "CO", "COMPLETED"
         REJECTED = "RJ", "REJECTED"
         DELETED = "D", "DELETED"
@@ -64,7 +65,7 @@ class UserProfile (models.Model):
     USER_TYPE_CHOICES = [
         ('student', 'Student'),
         ('faculty', 'Faculty'),
-        ('tsg', 'TSG'),
+        ('admin', 'Admin'),
     ]
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
