@@ -1,33 +1,24 @@
-# Use the official Python image from the Docker Hub
-FROM python:3.9-slim
-
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
+# Use an official Python runtime as a parent image
+FROM python:3.8-slim
 
 # Set the working directory in the container
 WORKDIR /app
 
-# Copy the requirements file into the container
-COPY requirements.txt /app/
+# Copy the current directory contents into the container at /app
+COPY . /app
 
-# Install the dependencies
+# Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the current directory contents into the container at /app
-COPY . /app/
-
-# Copy the entrypoint script into the container
-COPY entrypoint.sh /app/
-
-# Make the entrypoint script executable
+# Make entrypoint.sh executable
 RUN chmod +x /app/entrypoint.sh
 
-# Expose the port that the app runs on
+# Make port 8000 available to the world outside this container
 EXPOSE 8000
 
-# Set the entrypoint to the entrypoint script
-ENTRYPOINT ["/app/entrypoint.sh"]
+# Define environment variable
+ENV PYTHONUNBUFFERED=1
 
-# Command to run the Django server
+# Run entrypoint.sh to start the server
+ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]

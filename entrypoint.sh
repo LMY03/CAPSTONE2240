@@ -1,6 +1,9 @@
 #!/bin/sh
 
-# Pull the latest changes from the repository
+# Exit immediately if a command exits with a non-zero status
+set -e
+
+# Pull the latest changes from the Git repository
 echo "Pulling the latest changes from the repository..."
 git pull
 
@@ -12,6 +15,6 @@ python manage.py migrate
 echo "Collecting static files..."
 python manage.py collectstatic --noinput
 
-# Start the Django server
+# Start the Django development server
 echo "Starting the Django server..."
 exec "$@"
