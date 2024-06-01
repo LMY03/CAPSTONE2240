@@ -8,12 +8,12 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - db
+      - mysql
     environment:
       - DB_NAME=cap2240db
       - DB_USER=cap-2240
       - DB_PASSWORD=CAP_2240
-      - DB_HOST=db
+      - DB_HOST=mysql
       - DB_PORT=3306
 
   guacamole:
