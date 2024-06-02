@@ -17,7 +17,7 @@ services:
 
   web:
     build: .
-    command: gunicorn CAP2240.wsgi:application --bind 0.0.0.0:8000
+    command: gunicorn CAPSTONE2240.wsgi:application --bind 0.0.0.0:8000
     volumes:
       - .:/app
     ports:
