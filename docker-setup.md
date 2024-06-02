@@ -3,14 +3,8 @@ ssh-keygen -t rsa -b 4096
 git clone https://github.com/LMY03/CAPSTONE2240.git
 docker compose -f ~/CAPSTONE2240/docker-compose.yml up --build -d
 
-<!-- chmod +x ~/CAPSTONE2240/entrypoint.sh -->
-
-<!-- sudo nano ~/CAPSTONE2240/docker-compose.yml -->
-
-docker compose -f ~/CAPSTONE2240/docker-compose.yml up --build -d
-
-git -C CAPSTONE2240 pull origin main
-docker compose -f ~/CAPSTONE2240/docker-compose.yml up --build -d
+<!-- git -C CAPSTONE2240 pull origin main
+docker compose -f ~/CAPSTONE2240/docker-compose.yml up --build -d -->
 
 # GUACAMOLE
 
