@@ -69,7 +69,7 @@ services:
     image: netdata/netdata:latest
     container_name: netdata
     pid: host
-    network_mode: host
+    # network_mode: host
     restart: always
     ports:
       - "19999:19999"
