@@ -3,9 +3,15 @@
 # Exit immediately if a command exits with a non-zero status
 set -e
 
+# Navigate to the app directory
+cd /app
+
 # Pull the latest changes from the Git repository
 echo "Pulling the latest changes from the repository..."
 git pull
+
+# Install any new dependencies
+pip install --no-cache-dir -r requirements.txt
 
 # Apply database migrations
 echo "Applying database migrations..."
