@@ -15,6 +15,8 @@ services:
       - DB_PASSWORD=CAP_2240
       - DB_HOST=mysql
       - DB_PORT=3306
+    networks:
+      - app-network
 
   guacamole:
     image: guacamole/guacamole:latest
@@ -33,6 +35,8 @@ services:
     depends_on:
       - guacd
       - mysql
+    networks:
+      - app-network
 
   guacd:
     image: guacamole/guacd:latest
@@ -40,6 +44,8 @@ services:
     restart: always
     ports:
       - "4822:4822"
+    networks:
+      - app-network
 
   mysql:
     image: mysql:8.0
@@ -56,6 +62,8 @@ services:
       MYSQL_PASSWORD: 123456
     volumes:
       - mysql_data:/var/lib/mysql
+    networks:
+      - app-network
 
   netdata:
     image: netdata/netdata:latest
@@ -82,6 +90,8 @@ services:
       - /etc/os-release:/host/etc/os-release:ro
       - /var/log:/host/var/log:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - app-network
 
   ansible:
     image: cytopia/ansible:latest
@@ -96,9 +106,14 @@ services:
     working_dir: /playbooks
     entrypoint: ["sh", "-c"]
     command: ["apk update && apk add --no-cache openssh-client && tail -f /dev/null"]
+    networks:
+      - app-network
 
 volumes:
   mysql_data:
   netdataconfig:
   netdatalib:
   netdatacache:
+
+networks:
+  app-network:
