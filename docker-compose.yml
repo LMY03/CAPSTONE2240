@@ -43,7 +43,7 @@ services:
       MYSQL_ROOT_PASSWORD: 123456
     depends_on:
       - guacd
-      - mysql
+      - db
     networks:
       - app-network
 
