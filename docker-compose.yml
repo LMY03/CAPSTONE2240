@@ -1,20 +1,29 @@
 services:
+  db:
+    image: mysql:8.0
+    container_name: mysql
+    restart: always
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: cap2240db
+      MYSQL_USER: cap-2240
+      MYSQL_PASSWORD: 123456
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - app-network
 
-  django:
+  web:
     build: .
-    command: sh -c "git pull && python manage.py runserver 0.0.0.0:8000"
+    command: gunicorn your_project_name.wsgi:application --bind 0.0.0.0:8000
     volumes:
       - .:/app
     ports:
       - "8000:8000"
     depends_on:
-      - mysql
-    environment:
-      - DB_NAME=cap2240db
-      - DB_USER=cap-2240
-      - DB_PASSWORD=CAP_2240
-      - DB_HOST=mysql
-      - DB_PORT=3306
+      - db
     networks:
       - app-network
 
@@ -47,29 +56,10 @@ services:
     networks:
       - app-network
 
-  mysql:
-    image: mysql:8.0
-    container_name: mysql
-    restart: always
-    ports:
-      - "3306:3306"
-    environment:
-      MYSQL_ROOT_PASSWORD: 123456
-      MYSQL_DATABASE: cap2240db
-      MYSQL_USER: cap-2240
-      # MYSQL_DATABASE: guacamole_db
-      # MYSQL_USER: guacadmin
-      MYSQL_PASSWORD: 123456
-    volumes:
-      - mysql_data:/var/lib/mysql
-    networks:
-      - app-network
-
   netdata:
     image: netdata/netdata:latest
     container_name: netdata
     pid: host
-    # network_mode: host
     restart: always
     ports:
       - "19999:19999"
