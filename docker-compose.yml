@@ -9,7 +9,7 @@ services:
       MYSQL_ROOT_PASSWORD: 123456
       MYSQL_DATABASE: cap2240db
       MYSQL_USER: cap-2240
-      MYSQL_PASSWORD: 123456
+      MYSQL_PASSWORD: CAP_2240
     volumes:
       - mysql_data:/var/lib/mysql
     networks:

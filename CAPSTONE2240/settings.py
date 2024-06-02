@@ -92,8 +92,8 @@ DATABASES = {
         'NAME': 'cap2240db',
         'USER': 'cap-2240',
         'PASSWORD': 'CAP_2240',
-        'HOST': 'localhost',
-        'PORT': '3306',
+        'HOST': 'mysql',
+        'PORT': 3306,
     }
 }
 
