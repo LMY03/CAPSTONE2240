@@ -1,10 +1,8 @@
-ssh-keygen -t rsa -b 4096
+# Github Repository
 
 git clone https://github.com/LMY03/CAPSTONE2240.git
-docker compose -f ~/CAPSTONE2240/docker-compose.yml up --build -d
 
-<!-- git -C CAPSTONE2240 pull origin main
-docker compose -f ~/CAPSTONE2240/docker-compose.yml up --build -d -->
+docker compose -f ~/CAPSTONE2240/docker-compose.yml up --build -d
 
 # GUACAMOLE
 
@@ -16,14 +14,18 @@ docker cp ~/guacamole-initdb/initdb.sql mysql:/docker-entrypoint-initdb.d
 
 docker exec -it mysql bash
 
+
 cd /docker-entrypoint-initdb.d
 
 mysql -u root -p
 
+
 CREATE DATABASE IF NOT EXISTS guacamole_db;
 
 CREATE USER IF NOT EXISTS 'guacadmin'@'%' IDENTIFIED BY 'guacpassword';
+
 GRANT SELECT, UPDATE, INSERT, DELETE ON guacamole_db.* TO 'guacadmin'@'%';
+
 flush privileges;
 
 use guacamole_db;
@@ -50,19 +52,24 @@ vi /etc/netdata/stream.conf
 
 # logout of docker container
 exit
+
 exit
 
 docker restart netdata
 
 # ANSIBLE
 
-sudo nano ~/inventory/hosts
+docker exec -it ansible /bin/sh
+
+vi ../inventory/hosts
 
 IP_ADDRESS_OF_NODE_VM ansible_user=USER_NAME
 
 ssh-copy-id USER_NAME@IP_ADDRESS_OF_NODE_VM
 
 docker exec -it ansible ansible all -i /inventory/hosts -m ping
+
+rm -rf ~/.ssh
 
 # References
 

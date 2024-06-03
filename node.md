@@ -4,7 +4,9 @@ https://releases.ubuntu.com/22.04/
 # qemu agent
 
 sudo apt install qemu-guest-agent -y
+
 sudo systemctl enable qemu-guest-agent
+
 sudo systemctl start qemu-guest-agent
 
 
@@ -30,6 +32,7 @@ sudo nano /etc/netdata/netdata.conf
     hostname = HOST_NAME
 
 sudo systemctl enable netdata
+
 sudo systemctl restart netdata
 
 
