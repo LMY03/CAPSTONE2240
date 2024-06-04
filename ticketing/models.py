@@ -22,6 +22,9 @@ class VMTemplates (models.Model):
     storage = models.IntegerField(default= 1)
 
 
+# class ClassCode (models.Model):
+#     course_code = models.CharField(max_length=45)
+#     section = models.CharField(max_length=45)
 
 class RequestEntry(models.Model):
     expirationDateDefault = date.today() + timedelta(days=90)
@@ -52,7 +55,6 @@ class RequestEntry(models.Model):
     ram = models.IntegerField(default=2)
     storage = models.FloatField(default= 0)
     has_internet = models.BooleanField(default=False)
-    use_case = models.CharField(max_length=255, blank=True, null=True)
     other_config = models.TextField(blank=True, null=True)
     vm_count = models.IntegerField(default=1)
     assigned_to = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='assigned_entries')
@@ -60,15 +62,38 @@ class RequestEntry(models.Model):
     def __str__(self):
         return f"{self.id} - {self.status}"
 
+
+class RequestUseCase (models.Model):
+    request = models.ForeignKey(RequestEntry, on_delete= models.CASCADE)
+    request_use_case = models.CharField(max_length=45, null = True , default = 'CLASS_COURSE')
+
+class GroupList (models.Model):
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    request_use_case = models.ForeignKey(RequestUseCase, on_delete=models.CASCADE)
+    group_number = models.IntegerField(default=1)
+
+
+class PortRules (models.Model):
+    interface = models.CharField (max_length=30)
+    protocol = models.CharField (max_length=45)
+    source_address = models.CharField (max_length=45)
+    source_ports = models.CharField (max_length=45)
+    dest_address = models.CharField(max_length=45)
+    dest_ports = models.CharField (max_length=45)
+    nat_ip = models.CharField (max_length=45)
+    nat_ports = models.CharField (max_length=45)
+    description = models.TextField(blank= True, null = True)
+
 class UserProfile (models.Model):
     USER_TYPE_CHOICES = [
         ('student', 'Student'),
         ('faculty', 'Faculty'),
-        ('tsg', 'TSG'),
+        ('admin', 'Admin'),
     ]
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     user_type = models.CharField (max_length= 20, choices=USER_TYPE_CHOICES, default='student')
+    request_use_case = models.ForeignKey(RequestUseCase, on_delete= models.CASCADE, null = True)
 
     def __str__(self) -> str:
         return f"{self.user.username} - Role: {self.user_type}"

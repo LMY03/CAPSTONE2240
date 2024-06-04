@@ -1,83 +1,112 @@
 <!-- <form method="post" action="../new-form-submit/"> -->
-{% load static  %}
-<form method="post" action="{% url 'ticketing:new-form-submit' %}">
-    {% csrf_token %}
-    <div class="mb-3">
-        <label for="template_id" class="form-label">VM Template: </label>
-        <select class="form-control" id="template_id" name="template_id">
-        {% for id, vm_name in vmtemplate_list %}
-                    <option value="{{ id }}">{{ vm_name }}</option>
-        {% endfor %}
-        </select>
-        <p>Note: The number beside the OS is the storage per VM, if there's no number beside it means that you are opting to a different storage option</p>
-    </div>
-    <div class="mb-3">
-        <label for="cores" class="form-label">Cores: </label>
-        <select class="form-control" id="cores" name="cores">
-            <option value="1">1 core</option>
-            <option value="2">2 core</option>
-            <option value="4">4 core</option>
-            <option value="8">8 core</option>
-        </select>
-    </div>
-    <div class="mb-3">
-        <label for="ram" class="form-label">Ram: </label>
-        <select class="form-control" id="ram" name="ram">
-            <option value="1">1 GB</option>
-            <option value="2">2 GB</option>
-            <option value="4">4 GB</option>
-            <option value="8">8 GB</option>
-        </select>
-    </div>
-    <div class="mb-3">
-        <label for="storage" class="form-label">Storage: </label>
-        <select class="form-control" id="storage" name="storage">
-            <option value = "0" selected> 0 GB </option>
-            <option value="1">1 GB</option>
-            <option value="2">2 GB</option>
-            <option value="4">4 GB</option>
-            <option value="8">8 GB</option>
-            <option value="16">16 GB</option>
-            <option value="32">32 GB</option>
-            <option value="64">64 GB</option>
-            <option value="128">128 GB</option>
-        </select>
-        <p>Note: Select a storage per VM, ONLY IF YOU OPTED OUT OF THE VM TEMPLATE </p>
-    </div>
-    <div class="mb-3">
-        <label for="has_internet" class="form-label">Internet Access: </label>
-        <select class="form-control" id="has_internet" name="has_internet">
-            <option value="true">Yes</option>
-            <option value="false">No</option>
-        </select>
-    </div>
-    <!--This is for the amount of VMs and kung anong klase for this for-->
-    <div class="mb-3">
-        <label for="usage" class="form-label">Use case:</label> 
-        <select class="form-control" id="use_case" name="use_case">
-            <option value="CCINFOM">CCINFOM</option>
-            <option value="THESIS">Thesis</option>
-        </select>
-    </div>
-    <div class="mb-3">
-        <label for="usage" class="form-label">VM Count:</label> 
-        <input type="number" id="vm_count" name="vm_count" min="1" max="50">
-    </div>
-    <div class="mb-3">
-        <label for="usage" class="form-label">Date Needed:</label> 
-        <input type="date" id="date_needed" name="date_needed" >
-    </div>
-    <div class="mb-3">
-        <label for="usage" class="form-label">Expiration Date:</label> 
-        <input type="date" id="expiration_date" name="expiration_date" >
-    </div>
-    <!--Other configs such as port, firewalls and restrictions-->
-    <div class="mb-3">
-        <label for="other_configs" class="form-label">Other configuration:</label>
-        <input type="text" name="other_configs" id="other_configs"></input>
-    </div>
-
-    <button type="submit" class="btn btn-primary">Submit</button>
-</form>
-
-<script src="{% static 'ticketing/js/new-form-script.js' %}"></script>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+    </head>
+    <body>
+        {% load static  %}
+        <form method="post" action="{% url 'ticketing:new-form-submit' %}" id ="vm-form">
+            {% csrf_token %}
+            <div class="mb-3">
+                <label for="template_id" class="form-label">VM Template: </label>
+                <select class="form-control" id="template_id" name="template_id">
+                {% for id, vm_name in vmtemplate_list %}
+                            <option value="{{ id }}">{{ vm_name }}</option>
+                {% endfor %}
+                </select>
+                <p>Note: The number beside the OS is the storage per VM, if there's no number beside it means that you are opting to a different storage option</p>
+            </div>
+            <div class="mb-3">
+                <label for="cores" class="form-label">Cores: </label>
+                <select class="form-control" id="cores" name="cores">
+                    <option value="1">1 core</option>
+                    <option value="2">2 core</option>
+                    <option value="4">4 core</option>
+                    <option value="8">8 core</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="ram" class="form-label">Ram: </label>
+                <select class="form-control" id="ram" name="ram">
+                    <option value="1">1 GB</option>
+                    <option value="2">2 GB</option>
+                    <option value="4">4 GB</option>
+                    <option value="8">8 GB</option>
+                </select>
+            </div>
+            <div class="mb-3">
+                <label for="storage" class="form-label">Storage: </label>
+                <select class="form-control" id="storage" name="storage">
+                    <option value = "0" selected> 0 GB </option>
+                    <option value="1">1 GB</option>
+                    <option value="2">2 GB</option>
+                    <option value="4">4 GB</option>
+                    <option value="8">8 GB</option>
+                    <option value="16">16 GB</option>
+                    <option value="32">32 GB</option>
+                    <option value="64">64 GB</option>
+                    <option value="128">128 GB</option>
+                </select>
+                <p>Note: Select a storage per VM, ONLY IF YOU OPTED OUT OF THE VM TEMPLATE </p>
+            </div>
+            <div class="mb-3">
+                <label for="has_internet" class="form-label">Internet Access: </label>
+                <select class="form-control" id="has_internet" name="has_internet">
+                    <option value="true">Yes</option>
+                    <option value="false">No</option>
+                </select>
+            </div>
+            <!--This is for the amount of VMs and kung anong klase for this for-->
+            <div class="mb-3">
+                <label for="usage" class="form-label">Use case:</label> 
+                <select class="form-control" id="use_case" name="use_case">
+                    <option value="RESEARCH">Research</option>
+                    <option value="THESIS">Thesis</option>
+                    <option value="TEST">Test</option>
+                    <option value="CLASS_COURSE">Class Course</option>
+                </select>
+            </div>
+            <div class="mb-3" id="class_course_input" style="display: none;">
+                <label for="course_code" class="form-label">Course Code: Add the section at the end of the course code (e.g CCINFOM_S15)</label>
+                <input type="text" class="form-control" id="course_code1" name="course_code1">
+                <button type='button' id='add_course_button'> + </button>
+            </div>
+            <div class="mb-3">
+                <label for="usage" class="form-label">VM Count:</label> 
+                <input type="number" id="vm_count" name="vm_count" min="1" max="40">
+            </div>
+            <div class="mb-3">
+                <label for="usage" class="form-label">Date Needed:</label> 
+                <input type="date" id="date_needed" name="date_needed" >
+            </div>
+            <div class="mb-3">
+                <label for="usage" class="form-label">Expiration Date:</label> 
+                <input type="date" id="expiration_date" name="expiration_date" >
+            </div>
+            <!-- Other form elements -->
+            <div class="mb-3">
+                <label for="user" class="form-label">Add user:</label> 
+                <select class="form-control" id="useroption" name="useroption">
+                    <option value="individual">Individual</option>
+                    <option value="group">By group</option>
+                </select>
+            </div>
+            <div class="mb-3" id="individual_student_container" style="display: block;">
+                <!-- Individual student container content -->
+                <textarea class="form-control" id="individual_students" name="individual_students" rows="2" ></textarea>
+            </div>
+            <div class="mb-3" id="studentgroup" style="display: none;">
+                <!-- Group container content -->
+            </div>
+            <div class="mb-3">
+                <label for="other_configs" class="form-label">Other configuration:</label>
+                <textarea class="form-control" id="other_configs" name="other_configs" rows="2" ></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </form>
+        
+        <script src="{% static 'ticketing/js/new-form-script.js' %}"></script>
+      </body>
+    </html>
+   

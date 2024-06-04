@@ -7,9 +7,9 @@ from django.views import generic
 from .models import VMTemplates
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
-from .models import RequestEntry, Comment
+from .models import RequestEntry, Comment, RequestUseCase, GroupList
 from django.shortcuts import redirect
-
+import json
 
 def login (request):
     return render(request, 'login.html')
@@ -131,11 +131,10 @@ def faculty_home(request):
 def tsg_home(request):
     return render(request, 'tsg_home.html')
 
-@login_required
+#@login_required
 def new_form_submit(request):
 
     # TODO: authenticate if valid user(logged in & faculty/tsg)
-    
     if request.method == "POST":
         # get data
         requester = get_object_or_404(User, username=request.user)
@@ -145,7 +144,6 @@ def new_form_submit(request):
         ram = data.get("ram")
         storage = data.get("storage")
         has_internet = data.get("has_internet") == 'true'
-        use_case = data.get("use_case")
         date_needed = data.get ('date_needed')
         expiration_date = data.get('expiration_date')
         other_config = data.get("other_configs")
@@ -154,26 +152,74 @@ def new_form_submit(request):
         vmTemplateID = VMTemplates.objects.get(id = template_id)
         print("-----------------------")
         print(data)
-
+        print("-----------------------")
         # TODO: data verification
 
         # create request object
         #print (vmTemplateID, requester)
-        new_request = RequestEntry(
+        new_request = RequestEntry.objects.create(
             requester = requester,
             template = vmTemplateID,
             cores = cores,
             ram = ram,
             storage = storage,
             has_internet = has_internet,
-            use_case = use_case,
             other_config = other_config,
             vm_count = vm_count,
             date_needed = date_needed,
             expiration_date = expiration_date
             # status = RequestEntry.Status.PENDING,
         )
-        new_request.save()
+        
+        new_request_use_case = []
+
+        for i in range(1, int(data['addCourseButtonClick']) + 1):
+            new_request_use_case.append(RequestUseCase.objects.create(
+                request = new_request,
+                request_use_case = data.get(f"course_code{i}")
+            ))
+
+        sections = data.getlist('sections')
+        section_counts = {section: int(data.get(f'{section}_group_count', 0)) for section in sections}
+
+        section_groups = {}
+
+        for section in sections:
+            group_count = section_counts[section]
+            groups = {}
+
+            for group in range(1, group_count + 1):
+                group_key = f'student_user_{section}_{group}'
+                students = [student.strip() for student in data.get(group_key, '').split(',') if student.strip()]
+
+                groups[f'Group{group}'] = [student.strip() for student in students]
+
+            section_groups[section] = groups
+        print (section_groups)
+        print("-----------------------")
+        if data.get('useroption') == 'group' and data.get('use_case') == 'CLASS_COURSE':
+            i = 0
+            for section, groups in section_groups.items():
+                j = 1
+                print(f"Section: {section}, groups: {groups}, j:{j}")
+                for group, students in groups.items():
+                    print(f"Group: {group}, students: {students}")
+                    for student in students:
+                        if (student != ''):
+                            print(f"Student:{student}")
+                            try:
+                                user = User.objects.get(email=student)
+                            except User.DoesNotExist:
+                                usernameSplit = student.split('@')
+                                user = User.objects.create_user(email=student, password='', username = usernameSplit[0])
+                            grouplist = GroupList.objects.create(
+                                user = user,
+                                request_use_case = new_request_use_case[i],
+                                group_number = j
+                            )
+                            print (f"Group List object: {grouplist.request_use_case}")
+                    j += 1
+                i += 1
 
     return HttpResponseRedirect(reverse("ticketing:index"))
 
