@@ -26,11 +26,13 @@ SECRET_KEY = 'django-insecure-&r7xdaxzqbf*zz0_u@u36rizbuih)a7975a8&a283owv9p_2mo
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [
-    # 'localhost',
-    # '127.0.0.1',
-    # '::1'
-]
+ALLOWED_HOSTS = ['*']
+
+# ALLOWED_HOSTS = [
+#     # 'localhost',
+#     # '127.0.0.1',
+#     # '::1'
+# ]
 
 
 # Application definition
@@ -91,7 +93,8 @@ DATABASES = {
         'USER': 'cap-2240',
         'PASSWORD': 'CAP_2240',
         'HOST': 'localhost',
-        'PORT': '3306',
+        # 'HOST': 'mysql',
+        'PORT': 3306,
     }
 }
 
@@ -132,11 +135,11 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
-STATICFILES_DIRS = [
-    BASE_DIR / "static",
-]
+# STATICFILES_DIRS = [
+#     BASE_DIR / "static",
+# ]
 
-STATIC_ROOT = BASE_DIR / "staticfiles"
+# STATIC_ROOT = BASE_DIR / "staticfiles"
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 

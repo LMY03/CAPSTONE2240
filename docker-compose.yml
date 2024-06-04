@@ -1,4 +1,39 @@
 services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    restart: always
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_CAP2240_DATABASE}
+      MYSQL_USER: ${MYSQL_CAP2240_USER}
+      MYSQL_PASSWORD: ${MYSQL_CAP2240_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysql", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}", "-e", "SELECT 1"]
+      timeout: 20s
+      retries: 10
+
+  django:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: sh -c "python3 manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
+    # command: sh -c "python3 manage.py migrate --noinput && python3 manage.py collectstatic --noinput && python manage.py runserver 0.0.0.0:8000"
+    restart: always
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      mysql:
+        condition: service_healthy
+
   guacamole:
     image: guacamole/guacamole:latest
     container_name: guacamole
@@ -9,10 +44,10 @@ services:
       GUACD_HOSTNAME: guacd
       MYSQL_HOSTNAME: mysql
       MYSQL_PORT: 3306
-      MYSQL_DATABASE: guacamole_db
-      MYSQL_USER: guacadmin
-      MYSQL_PASSWORD: 123456
-      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: ${MYSQL_GUACAMOLE_DB}
+      MYSQL_USER: ${MYSQL_GUACAMOLE_USER}
+      MYSQL_PASSWORD: ${MYSQL_GUACAMOLE_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     depends_on:
       - guacd
       - mysql
@@ -24,26 +59,12 @@ services:
     ports:
       - "4822:4822"
 
-  mysql:
-    image: mysql:8.0
-    container_name: mysql
-    restart: always
-    ports:
-      - "3306:3306"
-    environment:
-      MYSQL_ROOT_PASSWORD: 123456
-      MYSQL_DATABASE: guacamole_db
-      MYSQL_USER: guacadmin
-      MYSQL_PASSWORD: 123456
-    volumes:
-      - mysql_data:/var/lib/mysql
-
   netdata:
     image: netdata/netdata:latest
     container_name: netdata
     pid: host
     network_mode: host
-    restart: always
+    restart: unless-stopped
     ports:
       - "19999:19999"
     cap_add:
@@ -66,6 +87,7 @@ services:
 
   ansible:
     image: cytopia/ansible:latest
+    restart: always
     container_name: ansible
     volumes:
       - ./playbooks:/playbooks
@@ -83,3 +105,8 @@ volumes:
   netdataconfig:
   netdatalib:
   netdatacache:
+
+# References
+
+# https://medium.com/@akshatgadodia/dockerizing-a-django-and-mysql-application-a-step-by-step-guide-d4ba181d3de5
+# https://www.youtube.com/watch?v=GGb1C-4mTCw

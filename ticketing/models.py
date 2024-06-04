@@ -33,7 +33,8 @@ class RequestEntry(models.Model):
     class Status(models.TextChoices):
         PENDING = "P", "PENDING"
         FOR_REVISION = 'FR', "FOR REVISION"
-        CREATING = "CR", "CREATING"
+        PROCESSING = "PRCS", "PROCESSING"
+        ONGOING = "OG", "ONGOING" #Tentative
         COMPLETED = "CO", "COMPLETED"
         REJECTED = "RJ", "REJECTED"
         DELETED = "D", "DELETED"
