@@ -1,17 +1,5 @@
-sudo df -h
+# Github Repository
 
-sudo du -ah / | sort -rh | head -n 20
-
-sudo apt-get clean
-
-sudo apt-get autoremove
-
-sudo rm -rf /tmp/*
-
-docker system prune -a -y
-
-sudo find /var/log -type f -delete
-
-git -C CAPSTONE2240 pull origin main
+git clone https://github.com/LMY03/CAPSTONE2240.git
 
 docker compose -f ~/CAPSTONE2240/docker-compose.yml up --build -d
