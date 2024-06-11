@@ -1,0 +1,46 @@
+html,
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f8f9fa;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+
+.sidebar {
+    background-color: #004d00;
+    color: white;
+    flex: 1;
+    padding: 20px;
+}
+
+.sidebar .logo img {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    margin-bottom: 20px;
+}
+
+.sidebar .nav-item a {
+    color: white;
+    text-decoration: none;
+}
+
+.sidebar .logout {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    color: white;
+}
+
+.content {
+    flex: 1;
+    padding: 20px;
+}
+
+.table-container {
+    background-color: #e9ecef;
+    padding: 20px;
+    border-radius: 8px;
+}

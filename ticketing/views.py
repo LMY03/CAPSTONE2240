@@ -4,12 +4,12 @@ from django.http import HttpResponseRedirect
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views import generic
-from .models import VMTemplates
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
-from .models import RequestEntry, Comment, RequestUseCase, GroupList
+from .models import RequestEntry, Comment, RequestUseCase, GroupList, VMTemplates, UserProfile
 from django.shortcuts import redirect
 import json
+from django.forms.models import model_to_dict
 
 def login (request):
     return render(request, 'login.html')
@@ -54,11 +54,11 @@ class DetailView(generic.DetailView):
             "requester__last_name",
             "cores",
             "ram",
-            "storage",
+            #"storage",
             "has_internet",
             "id",
             "template__vm_name",
-            "use_case",
+            #"use_case",
             "date_needed",
             'expiration_date',
             "other_config",
@@ -82,14 +82,28 @@ class DetailView(generic.DetailView):
 def add_comment(request, pk):
     request_entry = get_object_or_404(RequestEntry, pk=pk)
     if request.method == 'POST':
-        user = User.objects.get(username = request.user)
+        user = request.user
+        user_profile = get_object_or_404(UserProfile, user=user)
+    
+        new_data = {}
+        
+        if request_entry.assigned_to is None and user_profile.user_type == 'admin':
+            new_data['assigned_to'] = user
+        
         comment_text = request.POST.get('comment')
-        request_entry.status = RequestEntry.Status.FOR_REVISION
+        
+        if request_entry.status != RequestEntry.Status.FOR_REVISION:
+            new_data['status'] = RequestEntry.Status.FOR_REVISION
+        
         Comment.objects.create(
             request_entry=request_entry,
             comment=comment_text,
             user=user
         )
+        
+        # if new_data:
+        #     log_request_entry_changes(request_entry, user, new_data)
+
     return redirect('ticketing:details', pk=pk)
 
 class RequestForm(forms.ModelForm):
@@ -112,24 +126,12 @@ class RequestFormView(generic.edit.FormView):
 def redirect_based_on_user_type(request):
     user_profile = request.user.userprofile
     if user_profile.user_type == 'student':
-        return redirect('ticketing:student_home')
+        return redirect('users:student_home')
     elif user_profile.user_type == 'faculty':
-        return redirect('ticketing:faculty_home')
+        return redirect('users:faculty_home')
     elif user_profile.user_type == 'tsg':
-        return redirect('ticketing:tsg_home')
+        return redirect('users:tsg_home')
 
-
-@login_required
-def student_home(request):
-    return render(request, 'ticketing/student_home.html')
-
-@login_required
-def faculty_home(request):
-    return render(request, 'faculty_home.html')
-
-@login_required
-def tsg_home(request):
-    return render(request, 'tsg_home.html')
 
 #@login_required
 def new_form_submit(request):
@@ -223,21 +225,26 @@ def new_form_submit(request):
 
     return HttpResponseRedirect(reverse("ticketing:index"))
 
+# def log_request_entry_changes(request_entry, changed_by, new_data):
+#     old_data = model_to_dict(request_entry)
+#     # Assume `new_data` contains the new values to be saved
+
+#     changes = {field: {'old': old_data[field], 'new': new_data[field]}
+#                for field in new_data if old_data[field] != new_data[field]}
+
+#     RequestEntryAudit.objects.create(
+#         request_entry=request_entry,
+#         changed_by=changed_by,
+#         changes=changes
+#     )
+
+#     for field, value in new_data.items():
+#             setattr(request_entry, field, value)
+#     request_entry.save()
+
 def request_confirm(request, id):
     request_entry = get_object_or_404(RequestEntry, pk=id)
     request_entry.status = RequestEntry.Status.CREATING
     request_entry.save()
     return HttpResponseRedirect(reverse("ticketing:index"))
 
-# def revise_request(request, id):
-#     data = request.POST
-#     request_entry = get_object_or_404(RequestEntry, pk=id)
-#     request_entry.status = RequestEntry.Status.FOR_REVISION
-#     request_entry.revision_comments = data.get("comment")
-#     request_entry.save()
-#     return HttpResponseRedirect(reverse("ticketing:index"))
-
-def home_filter_view (request):
-    status = request.GET.get('status')
-    request_list = RequestEntry.objects.filter(status = status)
-    return render (request, 'ticketing/tsg_home.html', {'request_list': request_list, 'status': status})

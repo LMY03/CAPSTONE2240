@@ -1,0 +1,119 @@
+{% extends 'users/base_tsg.html' %}
+
+{% block title %}
+TSG Dashboard
+{% endblock title %}
+{% load static %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'users/css/student_home.css' %}">
+{% endblock css %} 
+
+{% block content %}
+        <div class="col-md-10 content mt-3">
+                        <h1>Detail View for the Request Ticket</h1>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Requester ID:</strong> {{ request_entry.details.requester__first_name }} {{ request_entry.details.requester__last_name }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Template:</strong> {{ request_entry.details.template__vm_name }}</p>
+                            </div>
+                            <div class="col-md-4">
+                                <p id="cores"><strong>Cores:</strong> {{ request_entry.details.cores }}</p>
+                            </div>
+                            <div class="col-md-4">
+                                <p id="ram"><strong>RAM:</strong> {{ request_entry.details.ram }}</p>
+                            </div>
+                            <div class="col-md-4">
+                                <p id="storage"><strong>Storage:</strong> {{ request_entry.details.storage }}</p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Has Internet:</strong> {{ request_entry.details.has_internet }}</p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Date needed:</strong> {{ request_entry.details.date_needed }}</p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Expiration date:</strong> {{ request_entry.details.expiration_date }}</p>
+                            </div>
+                            <div class="col-md-4">
+                                <p id="vm_count"><strong>VM Count:</strong> {{ request_entry.details.vm_count }}</p>
+                            </div>
+                            <div class="col-md-8">
+                                <p><strong>Use case:</strong> {{ request_entry.details.use_case }}</p>
+                            </div>
+                            <div class="col-12">
+                                <p><strong>Other configs:</strong> {{ request_entry.details.other_config }}</p>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col">
+                                <button type="button" class="btn btn-primary w-25" data-bs-toggle="modal" data-bs-target="#vmformsummary" id="accept_button">Accept</button>
+                                <button type="button" class="btn btn-danger w-25 ms-5" id="reject_button">Reject</button>
+                            </div>
+                        </div>
+                        <!-- Comment Section -->
+                        <div class="mt-5">
+                            <h2>Comments</h2>
+                            <!-- Display Comments -->
+                            {% if request_entry.comments %}
+                            <div class="list-group">
+                                {% for comment in request_entry.comments %}
+                                    <div class="list-group-item">
+                                        <p><strong>{{ request_entry.details.requester__first_name }} {{ request_entry.details.requester__last_name }}:</strong> {{ comment.comment }}</p>
+                                        <small class="text-muted">{{ comment.date_time }}</small>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                            <form action="{% url 'ticketing:add_comment' request_entry.details.id %}" method="post" class="mt-3">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <label for="comment" class="form-label">Add a Comment</label>
+                                    <textarea class="form-control" id="comment" name="comment" rows="3" required></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Submit Comment</button>
+                            </form>
+                        </div>
+                <!-- Add Comment Form -->
+                
+            </div>
+        </div>
+
+        <!-- Acceptance Form Summary -->
+        <div class="modal fade" id="vmformsummary" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">VM Form Summary</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p><strong>Requester ID:</strong> {{ request_entry.details.requester__first_name }} {{ request_entry.details.requester__last_name }} </p>
+                        <p><strong>Template:</strong> {{ request_entry.details.template__vm_name }}</p>
+                        <p><strong>Cores:</strong> {{ object.cores }}</p>
+                        <p><strong>RAM:</strong> {{ object.ram }}</p>
+                        <p><strong>Storage:</strong> {{ object.storage }}</p>
+                        <p><strong>Has Internet:</strong> {{ object.has_internet }}</p>
+                        <p><strong>Date needed:</strong> {{ request_entry.details.date_needed }}</p>
+                        <p><strong>Expiration date:</strong> {{ request_entry.details.expiration_date }}</p>
+                        <p><strong>VM Count:</strong> {{ object.vm_count }}</p>
+                        <p><strong>Use case:</strong> {{ object.use_case }}</p>
+                        <p><strong>Other configs:</strong> {{ object.other_config }}</p>
+                        <h1>Total system usage:</h1>
+                        <p id="totalCores"></p>
+                        <p id="totalRam"></p>
+                        <p id="totalStorage"></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-primary" onclick="location.href='{% url 'ticketing:request-confirm' request_entry.details.id %}'">Accept request</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+

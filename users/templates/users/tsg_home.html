@@ -1,0 +1,73 @@
+{% extends 'users/base_tsg.html' %}
+
+{% block title %}
+TSG Dashboard
+{% endblock title %}
+{% load static %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'users/css/student_home.css' %}">
+{% endblock css %} 
+
+{% block content %}
+<div class="col-md-10 content">
+    <div class="container mt-4">
+        <div class="row">
+            <!-- CPU -->
+            <div class="col-md-3 mb-4">
+                <div class="card">
+                    <div class="card-header">CPU</div>
+                    <div class="card-body">
+                        <!-- Add CPU details here -->
+                    </div>
+                </div>
+            </div>
+            <!-- RAM -->
+            <div class="col-md-3 mb-4">
+                <div class="card">
+                    <div class="card-header">RAM</div>
+                    <div class="card-body">
+                        <!-- Add RAM details here -->
+                    </div>
+                </div>
+            </div>
+            <!-- Storage -->
+            <div class="col-md-3 mb-4">
+                <div class="card">
+                    <div class="card-header">Storage</div>
+                    <div class="card-body">
+                        <!-- Add storage details here -->
+                    </div>
+                </div>
+            </div>
+            <!-- Open Tickets -->
+            <div class="col-md-3 mb-4">
+                <div class="card">
+                    <div class="card-header">Open Requests</div>
+                    <div class="card-body">
+                        <!-- Add open tickets details here -->
+                    </div>
+                </div>
+            </div>
+            <!-- Network -->
+            <div class="col-md-12 mb-4">
+                <div class="card">
+                    <div class="card-header">Network</div>
+                    <div class="card-body">
+                        <!-- Add network details here -->
+                    </div>
+                </div>
+            </div>
+            <!-- Latency -->
+            <div class="col-md-12 mb-4">
+                <div class="card">
+                    <div class="card-header">Latency</div>
+                    <div class="card-body">
+                        <!-- Add latency details here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

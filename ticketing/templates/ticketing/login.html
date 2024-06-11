@@ -1,11 +1,25 @@
-<!-- your_app/templates/your_app/login.html -->
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Login</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'ticketing/css/login.css' %}">
 </head>
 <body>
-    <h1>Login</h1>
-    <a href="{% url 'social:begin' 'google-oauth2' %}">Login with Google</a>
+    <div class="container">
+        <div class="login-box">
+            <div class="logo">
+                <img src="{% static 'ticketing/images/De_La_Salle_University_Seal.svg.png' %}" alt="Logo">
+            </div>
+            <div class="google-login">
+                <a href="{% url 'social:begin' 'google-oauth2' %}">
+                    <img src="{% static 'ticketing/images/google.png' %}" alt="Google Logo">
+                    <span>Login with Google</span>
+                </a>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

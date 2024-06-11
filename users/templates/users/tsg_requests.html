@@ -1,0 +1,67 @@
+{% extends 'users/base_tsg.html' %}
+
+{% block title %}
+TSG Dashboard
+{% endblock title %}
+{% load static %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'users/css/student_home.css' %}">
+{% endblock css %} 
+
+{% block content %}
+    <div class="col-md-10 content">
+      <div class="w-25 mb-3">
+        <select class="form-select" onchange="window.location.href=this.value">
+          <option value="{% url 'users:tsg_home' %}">All</option>
+          <option value="{% url 'users:home-filter' %}?status=CR" {% if status == 'CR' %} selected {% endif %}>Creating</option>
+          <option value="{% url 'users:home-filter' %}?status=P" {% if status == 'P' %} selected {% endif %}>Pending</option>
+          <option value="{% url 'users:home-filter' %}?status=FR" {% if status == 'FR' %} selected {% endif %}>For revision</option>
+          <option value="{% url 'users:home-filter' %}?status=CO" {% if status == 'CO' %} selected {% endif %}>Completed</option>
+          <option value="{% url 'users:home-filter' %}?status=D" {% if status == 'D' %} selected {% endif %}>Delete</option>
+        </select>
+        
+      </div>
+      {% if request_list %}
+        <table class="table table-bordered table-striped">
+          <thead>
+            <tr>
+              <th>Requester</th>
+              <th>Template OS</th>
+              <th>Cores</th>
+              <th>RAM</th>
+              <th>Internet Access</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for request in request_list %}
+              <tr>
+                <td>{{ request.requester__first_name }} {{ request.requester__last_name }}</td>
+                <td>{{ request.template__vm_name }}</td>
+                <td>{{ request.cores }}</td>
+                <td>{{ request.ram }}</td>
+                <td>{{ request.has_internet }}</td>
+                {% if request.status == "CR" %}
+                <td>Creating</td>
+                {% elif request.status == "P" %}
+                <td>Pending</td>
+                {% elif request.status == "FR" %}
+                <td>For revision</td>
+                {% elif request.status == "CO" %}
+                <td>Completed</td>
+                {% elif request.status == "D" %}
+                <td>Delete</td>
+                {% endif %}
+                <td><a href="{% url 'users:request_details' request.id %}" class="btn btn-primary">Open</a></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p>No Requests are available.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock content %}
