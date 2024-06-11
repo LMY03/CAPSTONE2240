@@ -10,44 +10,66 @@ TSG Dashboard
 {% endblock css %} 
 
 {% block content %}
-        <div class="col-md-10 content mt-3">
+                <div class="col-md-10 content mt-3">
                         <h1>Detail View for the Request Ticket</h1>
-                        <div class="row">
+                        <div class="row g-3">
                             <div class="col-md-6">
-                                <p><strong>Requester ID:</strong> {{ request_entry.details.requester__first_name }} {{ request_entry.details.requester__last_name }}</p>
+                                <div class="p-3 bg-light border">
+                                    <p><strong>Requester ID:</strong> {{ request_entry.details.requester__first_name }} {{ request_entry.details.requester__last_name }}</p>
+                                </div>
                             </div>
                             <div class="col-md-6">
-                                <p><strong>Template:</strong> {{ request_entry.details.template__vm_name }}</p>
+                                <div class="p-3 bg-light border">
+                                    <p><strong>Template:</strong> {{ request_entry.details.template__vm_name }}</p>
+                                </div>
                             </div>
                             <div class="col-md-4">
-                                <p id="cores"><strong>Cores:</strong> {{ request_entry.details.cores }}</p>
+                                <div class="p-3 bg-light border">
+                                    <p id="cores"><strong>Cores:</strong> {{ request_entry.details.cores }}</p>
+                                </div>
                             </div>
                             <div class="col-md-4">
-                                <p id="ram"><strong>RAM:</strong> {{ request_entry.details.ram }}</p>
+                                <div class="p-3 bg-light border">
+                                    <p id="ram"><strong>RAM:</strong> {{ request_entry.details.ram }}</p>
+                                </div>
                             </div>
                             <div class="col-md-4">
-                                <p id="storage"><strong>Storage:</strong> {{ request_entry.details.storage }}</p>
+                                <div class="p-3 bg-light border">
+                                    <p id="storage"><strong>Storage:</strong> {{ request_entry.details.storage }}</p>
+                                </div>
                             </div>
                             <div class="col-md-4">
-                                <p><strong>Has Internet:</strong> {{ request_entry.details.has_internet }}</p>
+                                <div class="p-3 bg-light border">
+                                    <p><strong>Has Internet:</strong> {{ request_entry.details.has_internet }}</p>
+                                </div>
                             </div>
                             <div class="col-md-4">
-                                <p><strong>Date needed:</strong> {{ request_entry.details.date_needed }}</p>
+                                <div class="p-3 bg-light border">
+                                    <p><strong>Date needed:</strong> {{ request_entry.details.date_needed }}</p>
+                                </div>
                             </div>
                             <div class="col-md-4">
-                                <p><strong>Expiration date:</strong> {{ request_entry.details.expiration_date }}</p>
+                                <div class="p-3 bg-light border">
+                                    <p><strong>Expiration date:</strong> {{ request_entry.details.expiration_date }}</p>
+                                </div>
                             </div>
                             <div class="col-md-4">
-                                <p id="vm_count"><strong>VM Count:</strong> {{ request_entry.details.vm_count }}</p>
+                                <div class="p-3 bg-light border">
+                                    <p id="vm_count"><strong>VM Count:</strong> {{ request_entry.details.vm_count }}</p>
+                                </div>
                             </div>
                             <div class="col-md-8">
-                                <p><strong>Use case:</strong> {{ request_entry.details.use_case }}</p>
+                                <div class="p-3 bg-light border">
+                                    <p><strong>Use case:</strong> {{ request_entry.details.use_case }}</p>
+                                </div>
                             </div>
                             <div class="col-12">
-                                <p><strong>Other configs:</strong> {{ request_entry.details.other_config }}</p>
+                                <div class="p-3 bg-light border">
+                                    <p><strong>Other configs:</strong> {{ request_entry.details.other_config }}</p>
+                                </div>
                             </div>
                         </div>
-                        <div class="row mt-3">
+                        <div class="row g-3 mt-3">
                             <div class="col">
                                 <button type="button" class="btn btn-primary w-25" data-bs-toggle="modal" data-bs-target="#vmformsummary" id="accept_button">Accept</button>
                                 <button type="button" class="btn btn-danger w-25 ms-5" id="reject_button">Reject</button>
