@@ -1,7 +1,17 @@
-git clone https://github.com/LMY03/CAPSTONE2240.git
+sudo df -h
 
-LMY03
-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
+sudo du -ah / | sort -rh | head -n 20
 
-cd CAPSTONE2240
+sudo apt-get clean
 
+sudo apt-get autoremove
+
+sudo rm -rf /tmp/*
+
+docker system prune -a -y
+
+sudo find /var/log -type f -delete
+
+git -C CAPSTONE2240 pull origin main
+
+docker compose -f ~/CAPSTONE2240/docker-compose.yml up --build -d
