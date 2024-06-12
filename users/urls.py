@@ -11,4 +11,6 @@ urlpatterns = [
     path('student/vm/<str:vm_id>/', views.vm_details, name='vm_details'),
     path('tsg/requests/', views.tsg_requests, name = 'vm_requests'),
     path('tsg/request_details/<int:request_id>', views.request_details, name = 'request_details'),
+    path('faculty/vm_details/<str:vm_id>', views.faculty_vm_details, name = 'vm_details_faculty'),
+    path('faculty/requests_list', views.faculty_request_list, name = 'faculty_request_list'),
 ]

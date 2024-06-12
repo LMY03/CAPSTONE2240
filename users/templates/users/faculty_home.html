@@ -1,0 +1,59 @@
+{% extends 'users/base_faculty.html' %}
+
+{% block title %}
+Faculty Dashboard
+{% endblock title %}
+{% load static %}
+
+{% block css %} <link rel="stylesheet" href="{% static 'users/css/student_home.css' %}"> {% endblock css %} 
+
+{% block content %}
+        <!-- Main Content -->
+        <div class="col-md-10 content">
+            <h2>Virtual Machine List</h2>
+            <div class="table-container">
+                <div class="d-flex justify-content-between mb-3">
+                    <input type="text" class="form-control w-25" placeholder="Search">
+                    <button class="btn btn-outline-secondary">
+                        Filter by <i class="bi bi-funnel"></i>
+                    </button>
+                </div>
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col">Virtual Machine ID</th>
+                            <th scope="col">Type</th>
+                            <th scope="col">Group & Section</th>
+                            <th scope="col">Assigned To</th>
+                            <th scope="col">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><i class="bi bi-display"></i> ITSYSAD-VM01</td>
+                            <td>Course</td>
+                            <td>ITSYSAD S15 Group 1</td>
+                            <td>123213</td>
+                            <td>Shutdown</td>
+                        </tr>
+                        <tr>
+                            <td><i class="bi bi-display"></i> CAPIT-VM02</td>
+                            <td>Course</td>
+                            <td>ITSYSAD S15 Group 1</td>
+                            <td>12345231</td>
+                            <td>Running</td>
+                        </tr>
+                        <tr>
+                            <td><i class="bi bi-display"></i> ITISSES-VM03</td>
+                            <td>Course</td>
+                            <td>ITSYSAD S15 Group 2</td>
+                            <td>12345</td>
+                            <td>Running</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

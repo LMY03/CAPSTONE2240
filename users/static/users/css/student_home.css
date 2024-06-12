@@ -7,12 +7,31 @@ body {
     padding: 0;
 }
 
+.custom-dropdown-menu {
+    background-color: #f8f9fa;
+    /* Change this to your desired background color */
+}
+
+.custom-dropdown-menu .dropdown-item {
+    color: #343a40 !important
+        /* Change this to your desired text color */
+}
+
+.custom-dropdown-menu .dropdown-item:hover,
+.custom-dropdown-menu .dropdown-item:focus {
+    background-color: #e9ecef;
+    /* Change this to your desired hover background color */
+    color: #212529;
+    /* Change this to your desired hover text color */
+}
 
 .sidebar {
     background-color: #004d00;
     color: white;
-    flex: 1;
+    height: 100vh;
     padding: 20px;
+    overflow-y: auto;
+    /* Add scrolling behavior for overflow */
 }
 
 .sidebar .logo img {

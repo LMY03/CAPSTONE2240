@@ -38,7 +38,7 @@ def vm_details(request, vm_id):
     vm_data = {
         'vm_id' : vm_id,
     }
-    return render (request, 'users/vm_details.html', context= vm_data)
+    return render (request, 'users/student_vm_details.html', context= vm_data)
 
 def tsg_requests (request):
     context = {}
@@ -92,3 +92,12 @@ def request_details (request, request_id):
     }
 
     return render (request, 'users/tsg_request_details.html', context = context)
+
+def faculty_vm_details (request, vm_id):
+     context ={
+          'vm_id' : vm_id,
+     }
+     return render (request, 'users/faculty_vm_details.html', context = context)
+
+def faculty_request_list(request):
+     return render (request, 'users/faculty_request_list.html')

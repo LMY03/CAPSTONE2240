@@ -1,0 +1,26 @@
+.main-content {
+
+    padding: 20px;
+    min-height: 100vh;
+}
+
+.main-content h1 {
+    margin-bottom: 20px;
+}
+
+.filter {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.filter input {
+    margin-right: 10px;
+}
+
+.table th,
+.table td {
+    background-color: #d3d3d3;
+    vertical-align: middle;
+}

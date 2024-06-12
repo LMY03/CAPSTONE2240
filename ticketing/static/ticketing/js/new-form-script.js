@@ -108,27 +108,19 @@ document.getElementById('add_course_button').addEventListener('click', () => {
         var inputContainer = document.getElementById('class_course_input');
         var newInput = document.createElement('input');
         let newLabel = document.createElement('label');
-        newLabel.innerHTML = `<br>Course Code ${addCourseSectionClicked}:`
+        newLabel.innerHTML = `<br>Course Code ${addCourseSectionClicked} with section:`
         newInput.type = 'text';
-        newInput.className = 'form-control';
+        newInput.className = 'form-control w-25';
         newInput.name = `course_code${addCourseSectionClicked}`;
         newInput.id = `course_code${addCourseSectionClicked}`
         inputContainer.appendChild(newLabel);
         inputContainer.appendChild(newInput);
 
-        // newInput.addEventListener('change', function () {
-        //     const courseCode = this.value;
-        //     const section_code = courseCode.toString().split("_")?.[1];
-
-        //     if (!sectionCounts[section_code]) {
-        //         sectionCounts[section_code] = {
-        //             "GroupCounter": 1
-        //         };
-        //     }
-        // });
     }
 });
 
+
+// Submit the form
 document.getElementById('vm-form').addEventListener('submit', function (event) {
     event.preventDefault();
     const formData = new FormData(this);
