@@ -21,6 +21,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    container_name: CAP-2240
+    # command: sh -c "python manage.py runserver 0.0.0.0:8000"
     command: sh -c "python3 manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
     # command: sh -c "python3 manage.py migrate --noinput && python3 manage.py collectstatic --noinput && python manage.py runserver 0.0.0.0:8000"
     restart: always
@@ -92,8 +94,8 @@ services:
     volumes:
       - ./playbooks:/playbooks
       - ./inventory:/inventory
-      - /home/jin/.ssh/id_rsa:/root/.ssh/id_rsa
-      - /home/jin/.ssh/id_rsa.pub:/root/.ssh/id_rsa.pub
+      - /home/${USERNAME}/.ssh/id_rsa:/root/.ssh/id_rsa:ro
+      - /home/${USERNAME}/.ssh/id_rsa.pub:/root/.ssh/id_rsa.pub:ro
     environment:
       ANSIBLE_HOST_KEY_CHECKING: "False"
     working_dir: /playbooks
