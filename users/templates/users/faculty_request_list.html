@@ -18,26 +18,34 @@ VM Details {{ vm_id }}
         <input type="text" class="form-control w-25" placeholder="Search">
         <button class="btn btn-light"><i class="bi bi-filter"></i> Filter by</button>
     </div>
+    {% if request_entries %}
     <table class="table table-bordered">
         <thead>
             <tr>
-                <th>Ticker ID</th>
+                <th>Ticket ID</th>
                 <th>Category</th>
                 <th>Request Type</th>
                 <th>Date Requested</th>
                 <th>Status</th>
+                <th>Action</th>
             </tr>
         </thead>
         <tbody>
+            {% for request in request_entries  %}
             <tr>
-                <td>#001</td>
+                <td>{{ request.id }}</td>
                 <td>Virtual Machine</td>
-                <td>Course</td>
-                <td>26/05/2024</td>
-                <td>Pending</td>
+                <td>{{ request.category }}</td>
+                <td>{{ request.requestDate}}</td>
+                <td>{{ request.status}}</td>
+                <td><a class="btn btn-outline-primary" href="{% url 'users:faculty_edit_request' request_id=request.id %}" role="button">Edit</a></td>
             </tr>
+            {% endfor %}
         </tbody>
     </table>
+    {% else %}
+    <h1>No request found</h1>
+    {% endif %}
     </div>
 </div>
 

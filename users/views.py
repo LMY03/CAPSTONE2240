@@ -58,10 +58,8 @@ def tsg_requests (request):
 def request_details (request, request_id):
     context = {}
     pk = request_id
-        # Fetch the RequestEntry object
     request_entry = get_object_or_404(RequestEntry, pk=pk)
 
-    # Get the use case details as well and group them
     request_entry_details = RequestEntry.objects.select_related("requester", "template").values(
             "id",
             "status",
@@ -84,7 +82,6 @@ def request_details (request, request_id):
     if request_entry_details.get('storage') == 0.0:
             request_entry_details['storage'] = request_entry_details.get('template__storage')
 
-    # Fetch the comments related to the request_entry
     comments = Comment.objects.filter(request_entry=request_entry).order_by('-date_time')
     context['request_entry'] = {
         'details': request_entry_details,
@@ -100,4 +97,61 @@ def faculty_vm_details (request, vm_id):
      return render (request, 'users/faculty_vm_details.html', context = context)
 
 def faculty_request_list(request):
-     return render (request, 'users/faculty_request_list.html')
+   user = get_object_or_404(User, username=request.user.username)
+   request_entries = RequestEntry.objects.filter(requester=user)
+
+   for request_entry in request_entries:
+        category = 'Unknown'  
+        request_use_case = RequestUseCase.objects.filter(request_id=request_entry).first()
+        
+        if request_use_case:
+            if request_use_case.request_use_case == 'RESEARCH':
+                category = 'Research'
+            elif request_use_case.request_use_case == 'TEST':
+                category = 'Test'
+            elif request_use_case.request_use_case == 'THESIS':
+                category = 'Thesis'
+            else:
+                category = 'Class Course'
+        
+        request_entry.category = category
+
+   context = {
+        'request_entries': request_entries
+    }
+
+   return render(request, 'users/faculty_request_list.html', context)
+
+def edit_request(request, request_id):
+    request_entry = get_object_or_404(RequestEntry, pk = request_id)
+    request_use_case = RequestUseCase.objects.filter(request_id = request_id)
+    context = {'Sections': {}}
+    for use_case in request_use_case:
+        if 'use_case' not in context: 
+            if use_case.request_use_case == 'RESEARCH':
+                context['use_case'] =  'RESEARCH'
+            elif use_case.request_use_case == 'THESIS':
+                context['use_case'] = 'THESIS'
+            elif use_case.request_use_case == 'TEST':
+                context['use_case'] = 'TEST'
+            else:
+                context['use_case'] = 'CLASS_COURSE'
+        if context['use_case'] == 'CLASS_COURSE':
+            context['Sections'][use_case.request_use_case] = {}
+            group_list = GroupList.objects.filter(request_use_case_id = use_case.id)
+            for student in group_list:
+                group_key = f'Group {student.group_number}'
+                if student.group_number >= 1: 
+                    context['isGrouped'] = 1
+                else:
+                    context['isGrouped'] = 0
+                if group_key not in context['Sections'][use_case.request_use_case]:
+                    context['Sections'][use_case.request_use_case][group_key] = []
+                
+                context['Sections'][use_case.request_use_case][group_key].append(student.user)
+
+    vmtemplate_list = VMTemplates.objects.all().values_list('id', 'vm_name')
+    context['vmtemplate_list'] = list(vmtemplate_list)
+    context['request_entry'] = request_entry
+    print(context)
+    return render(request, 'users/faculty_edit_request.html', context)

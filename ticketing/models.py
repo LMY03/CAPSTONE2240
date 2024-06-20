@@ -5,6 +5,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
 from datetime import date, timedelta
+import json
 
 def expiration_date_default():
     return date.today() + timedelta(days=90)
@@ -42,7 +43,6 @@ class RequestEntry(models.Model):
     template = models.ForeignKey(VMTemplates, on_delete=models.SET_NULL, null=True)
     cores = models.IntegerField(default=1)
     # security options
-    #ipaghiwlay date_needed expiration
     date_needed = models.DateField(default = dateNeededDefault)
     expiration_date = models.DateField(default = expirationDateDefault)
     isExpired = models.BooleanField(default=False)
@@ -56,30 +56,38 @@ class RequestEntry(models.Model):
     def __str__(self):
         return f"{self.id} - {self.status}"
 
-# class RequestEntryAudit(models.Model):
-#     class Status(models.TextChoices):
-#         PENDING = 'PENDING', "PENDING"
-#         FOR_REVISION = 'FOR_REVISION', "FOR REVISION"
-#         PROCESSING = 'PROCESSING', "PROCESSING"
-#         ONGOING = 'ONGOING', "ONGOING"  # Tentative
-#         COMPLETED = 'COMPLETED', "COMPLETED"
-#         REJECTED = 'REJECTED', "REJECTED"
-#         DELETED = 'DELETED', "DELETED"
 
-#     request_entry = models.ForeignKey('RequestEntry', on_delete=models.CASCADE, related_name='audits')
-#     changed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
-#     change_date = models.DateTimeField(auto_now_add=True)
-#     changes = JSONField()
+class RequestEntryAudit(models.Model):
+    class Status(models.TextChoices):
+        PENDING = 'PENDING', "PENDING"
+        FOR_REVISION = 'FOR_REVISION', "FOR REVISION"
+        PROCESSING = 'PROCESSING', "PROCESSING"
+        ONGOING = 'ONGOING', "ONGOING"  # Tentative
+        COMPLETED = 'COMPLETED', "COMPLETED"
+        REJECTED = 'REJECTED', "REJECTED"
+        DELETED = 'DELETED', "DELETED"
 
-#     def __str__(self):
-#         return f"Audit for RequestEntry {self.request_entry.id} by {self.changed_by}"
+    request_entry = models.ForeignKey('RequestEntry', on_delete=models.CASCADE, related_name='audits')
+    changed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    change_date = models.DateTimeField(auto_now_add=True)
+    changes = models.TextField()  # Storing JSON as a string
+
+    def __str__(self):
+        return f"Audit for RequestEntry {self.request_entry.id} by {self.changed_by}"
+
+    def set_changes(self, changes_dict):
+        self.changes = json.dumps(changes_dict)
+        self.save()
+
+    def get_changes(self):
+        return json.loads(self.changes)
 
 class RequestUseCase (models.Model):
     request = models.ForeignKey(RequestEntry, on_delete= models.CASCADE)
     request_use_case = models.CharField(max_length=45, null = True , default = 'CLASS_COURSE')
 
 class GroupList (models.Model):
-    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    user = models.CharField(null=False, max_length=50, default=" ")
     request_use_case = models.ForeignKey(RequestUseCase, on_delete=models.CASCADE)
     group_number = models.IntegerField(default=1)
 

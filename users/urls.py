@@ -13,4 +13,6 @@ urlpatterns = [
     path('tsg/request_details/<int:request_id>', views.request_details, name = 'request_details'),
     path('faculty/vm_details/<str:vm_id>', views.faculty_vm_details, name = 'vm_details_faculty'),
     path('faculty/requests_list', views.faculty_request_list, name = 'faculty_request_list'),
+    path('faculty/edit_request/<str:request_id>', views.edit_request, name = 'faculty_edit_request'),
+
 ]

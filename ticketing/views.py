@@ -6,9 +6,9 @@ from django.urls import reverse
 from django.views import generic
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
-from .models import RequestEntry, Comment, RequestUseCase, GroupList, VMTemplates, UserProfile
+from .models import RequestEntry, Comment, RequestUseCase, GroupList, VMTemplates, UserProfile, RequestEntryAudit
 from django.shortcuts import redirect
-import json
+import json, datetime
 from django.forms.models import model_to_dict
 
 def login (request):
@@ -44,10 +44,8 @@ class DetailView(generic.DetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         pk = self.kwargs.get('pk')
-        # Fetch the RequestEntry object
         request_entry = get_object_or_404(RequestEntry, pk=pk)
 
-        # Get the details you need from the request_entry
         request_entry_details = RequestEntry.objects.select_related("requester", "template").values(
             "status",
             "requester__first_name",
@@ -66,14 +64,15 @@ class DetailView(generic.DetailView):
             "template__storage"
         ).get(pk=pk)
 
-        if request_entry_details.get('storage') == 0.0:
-            request_entry_details['storage'] = request_entry_details.get('template__storage')
 
-        # Fetch the comments related to the request_entry
+        request_use_cases = RequestUseCase.objects.filter(request_id=pk)
+
+
         comments = Comment.objects.filter(request_entry=request_entry).order_by('-date_time')
         context['request_entry'] = {
             'details': request_entry_details,
-            'comments' : comments
+            'comments' : comments,
+            'request_use_case': request_use_cases
         }
         print(context)
         return context
@@ -101,8 +100,8 @@ def add_comment(request, pk):
             user=user
         )
         
-        # if new_data:
-        #     log_request_entry_changes(request_entry, user, new_data)
+        if new_data:
+            log_request_entry_changes(request_entry, user, new_data, user)
 
     return redirect('ticketing:details', pk=pk)
 
@@ -144,7 +143,7 @@ def new_form_submit(request):
         template_id = data.get("template_id")
         cores = data.get("cores")
         ram = data.get("ram")
-        storage = data.get("storage")
+       #storage = data.get("storage")
         has_internet = data.get("has_internet") == 'true'
         date_needed = data.get ('date_needed')
         expiration_date = data.get('expiration_date')
@@ -164,7 +163,7 @@ def new_form_submit(request):
             template = vmTemplateID,
             cores = cores,
             ram = ram,
-            storage = storage,
+            #storage = storage,
             has_internet = has_internet,
             other_config = other_config,
             vm_count = vm_count,
@@ -209,13 +208,8 @@ def new_form_submit(request):
                     for student in students:
                         if (student != ''):
                             print(f"Student:{student}")
-                            try:
-                                user = User.objects.get(email=student)
-                            except User.DoesNotExist:
-                                usernameSplit = student.split('@')
-                                user = User.objects.create_user(email=student, password='', username = usernameSplit[0])
                             grouplist = GroupList.objects.create(
-                                user = user,
+                                user = student,
                                 request_use_case = new_request_use_case[i],
                                 group_number = j
                             )
@@ -223,24 +217,35 @@ def new_form_submit(request):
                     j += 1
                 i += 1
 
-    return HttpResponseRedirect(reverse("ticketing:index"))
+    return redirect('users:faculty_home')
 
-# def log_request_entry_changes(request_entry, changed_by, new_data):
-#     old_data = model_to_dict(request_entry)
-#     # Assume `new_data` contains the new values to be saved
+def log_request_entry_changes(request_entry, changed_by, new_data, user):
+    old_data = model_to_dict(request_entry)
+    
 
-#     changes = {field: {'old': old_data[field], 'new': new_data[field]}
-#                for field in new_data if old_data[field] != new_data[field]}
+    for field, value in new_data.items():
+        if isinstance(value, User):
+            new_data[field] = value.id  
+        elif isinstance(value, datetime.date):
+            new_data[field] = value.isoformat()
+    
+    changes = {field: {'old': old_data[field], 'new': new_data[field]}
+               for field in new_data if old_data[field] != new_data[field]}
 
-#     RequestEntryAudit.objects.create(
-#         request_entry=request_entry,
-#         changed_by=changed_by,
-#         changes=changes
-#     )
 
-#     for field, value in new_data.items():
-#             setattr(request_entry, field, value)
-#     request_entry.save()
+    RequestEntryAudit.objects.create(
+        request_entry=request_entry,
+        changed_by=changed_by,
+        changes=json.dumps(changes)
+    )
+    loggedIn_user = get_object_or_404(User, username=user)
+   
+    for field, value in new_data.items():
+        if field == 'assigned_to':
+           setattr(request_entry, field, loggedIn_user) 
+        else: 
+            setattr(request_entry, field, value)
+    request_entry.save()
 
 def request_confirm(request, id):
     request_entry = get_object_or_404(RequestEntry, pk=id)

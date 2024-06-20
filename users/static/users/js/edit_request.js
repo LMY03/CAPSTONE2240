@@ -1,6 +1,50 @@
 let sectionCounts = {};
-let addCourseSectionClicked = 1;
+let addCourseSectionClicked = Object.keys(sectionsData).length;
+let newAddedGroup = {};
 
+for (let section in sectionsData) {
+    let counter = 2;
+    let sectionData = sectionsData[section];
+    let sectionCountKey = `${section} Group Count`;
+    let newAddedGroup = {
+        [sectionCountKey]: Object.keys(section).length
+    };
+    document.getElementById(`add_group_button${section}`).addEventListener('click', function () {
+        let parentDiv = document.getElementById(`section_${section}`);
+
+        const newLabel = document.createElement('label');
+        newLabel.innerHTML = `<br>${section} Group ${++newAddedGroup[sectionCountKey]}:`;
+
+        const newTextArea = document.createElement('textarea');
+        newTextArea.className = 'form-control';
+        newTextArea.name = `student_user_${section}_${newAddedGroup[sectionCountKey]}`;
+        newTextArea.id = `student_user_${section}_${newAddedGroup[sectionCountKey]}`;
+        newTextArea.rows = 3;
+
+        parentDiv.appendChild(newLabel);
+        parentDiv.appendChild(newTextArea);
+    });
+
+    for (let group in sectionData) {
+
+        console.log(`remove_group_${section}_${counter}`)
+        if (group != 'Group 1') {
+            document.getElementById(`remove_group_${section}_${counter}`).addEventListener('click', function () {
+                console.log(`div_${section}_${group}, student_user_${section}_${counter}`);
+                let divSectionGroup = document.getElementById(`div_${section}_${group}`);
+                let textAreaSectionGroup = document.getElementById(`student_user_${section}_${counter - 1}`);
+                if (textAreaSectionGroup) {
+                    textAreaSectionGroup.remove();
+                }
+                if (divSectionGroup) {
+                    divSectionGroup.remove();
+                }
+            });
+            counter += 1;
+        }
+
+    }
+}
 
 function formatDate(date) {
     const d = new Date(date);
@@ -49,7 +93,7 @@ document.getElementById('useroption').addEventListener('change', function () {
                 const sectionDiv = document.createElement('div');
                 sectionDiv.id = `section_${section_code}`;
                 const newLabel = document.createElement('label');
-                newLabel.innerHTML = `<br>${courseCodeInput} Group 1:`;
+                newLabel.innerHTML = `<br>${section_code} Group 1:`;
 
                 const newTextArea = document.createElement('textarea');
                 newTextArea.className = 'form-control';
@@ -67,7 +111,7 @@ document.getElementById('useroption').addEventListener('change', function () {
 
                     newGroupCounter = ++sectionCounts[section_code]["GroupCounter"];
                     const newLabel = document.createElement('label');
-                    newLabel.innerHTML = `<br>${courseCodeInput} Group ${newGroupCounter}:`;
+                    newLabel.innerHTML = `<br>${section_code} Group ${newGroupCounter}:`;
                     newLabel.id = `label_${section_code}_Group${newGroupCounter}`
                     const newTextArea = document.createElement('textarea');
                     newTextArea.className = 'form-control';
@@ -135,18 +179,21 @@ document.getElementById('vm-form').addEventListener('submit', function (event) {
     formDataInputs[`addCourseButtonClick`] = addCourseSectionClicked;
     formData.append('addCourseButtonClick', formDataInputs[`addCourseButtonClick`])
     //formData.append()
-    fetch(this.action, {
-        method: this.method,
-        body: formData
-    })
-        .then(response => response.json())
-        .then(data => {
-            // Handle the response from the backend
-            //console.log(data);
-        })
-        .catch(error => {
-            console.log(error)
-        })
+    formData.forEach((value, key) => {
+        console.log(`${key}: ${value}`);
+    });
+    // fetch(this.action, {
+    //     method: this.method,
+    //     body: formData
+    // })
+    //     .then(response => response.json())
+    //     .then(data => {
+    //         // Handle the response from the backend
+    //         //console.log(data);
+    //     })
+    //     .catch(error => {
+    //         console.log(error)
+    //     })
 });
 
 // Set the min and max dates
