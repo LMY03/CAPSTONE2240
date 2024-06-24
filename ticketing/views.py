@@ -257,7 +257,7 @@ def request_confirm(request, id):
     request_entry.status = RequestEntry.Status.CREATING
     request_entry.save()
 
-    vm_provision(request)
+    vm_provision(request_entry)
 
     return HttpResponseRedirect(reverse("ticketing:index"))
 
@@ -324,20 +324,15 @@ def vm_provision_process(node, vm_id, classname, no_of_vm, cpu_cores, ram):
         'guacamole_username' : guacamole_username
     }
     
-def vm_provision(request): 
+def vm_provision(request_entry):
 
-    if request.method == "POST":
+    node = "pve"
 
-        node = "pve"
+    vm_id = request_entry.template_id.vm_id
+    request_use_case = get_object_or_404(RequestUseCase, pk=request_entry.id)
+    classname = request_use_case.request_use_case
+    no_of_vm = request_entry.vm_count
+    cpu_cores = request_entry.cores
+    ram = request_entry.ram
 
-        data = request.POST
-        vm_id = int(data.get("template_vm_id"))
-        classname = data.get("class")
-        no_of_vm = int(data.get("no_of_vm"))
-        cpu_cores = int(data.get("cpu_cores"))
-        ram = int(data.get("ram"))
-
-        data = vm_provision_process(node, vm_id, classname, no_of_vm, cpu_cores, ram)
-        
-        return render(request, "vm_deletion.html", { "data" : data })
-    return redirect("/ticketing")
+    data = vm_provision_process(node, vm_id, classname, no_of_vm, cpu_cores, ram)
