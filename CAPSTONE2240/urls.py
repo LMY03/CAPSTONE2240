@@ -20,8 +20,12 @@ from ticketing import views
 from django.contrib.auth import views as auth_views
 
 urlpatterns = [
-    path('redirect/', views.redirect_based_on_user_type, name= 'redirect_based_on_user_type'),
+    path('ansible/', include("autotool.urls")),
+    # path('monitoring/', include("monitoring.urls")),
+    path('guacamole/', include("guacamole.urls")),
+    path('proxmox/', include("proxmox.urls")),
     path('ticketing/', include("ticketing.urls")),
+    path('redirect/', views.redirect_based_on_user_type, name= 'redirect_based_on_user_type'),
     path('', auth_views.LoginView.as_view(template_name='ticketing/login.html'), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('accounts/', include('django.contrib.auth.urls')),

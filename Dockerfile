@@ -7,8 +7,12 @@ WORKDIR /app
 
 COPY requirements.txt /app/
 
-RUN pip install -r requirements.txt
-
 RUN apt-get update && apt-get install -y
 
+RUN pip install --upgrade pip
+
+RUN pip install -r requirements.txt
+
 COPY . /app/
+
+# COPY CAP2240_API/inventory/hosts /inventory/hosts
