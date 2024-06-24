@@ -261,10 +261,7 @@ def request_confirm(request, id):
     request_entry.status = RequestEntry.Status.PROCESSING
     request_entry.save()
 
-    request_entry = get_object_or_404(RequestEntry, pk=id)
-    print(request_entry)
-
-    vm_provision(request_entry)
+    vm_provision(id)
 
     return HttpResponseRedirect(reverse("ticketing:index"))
 
@@ -331,9 +328,11 @@ def vm_provision_process(node, vm_id, classname, no_of_vm, cpu_cores, ram):
         'guacamole_username' : guacamole_username
     }
     
-def vm_provision(request_entry):
+def vm_provision(id):
 
     node = "pve"
+    request_entry = get_object_or_404(RequestEntry, pk=id)
+    print(request_entry)
 
     vm_id = request_entry.template_id.vm_id
     request_use_case = get_object_or_404(RequestUseCase, pk=request_entry.id)
