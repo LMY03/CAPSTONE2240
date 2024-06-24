@@ -21,7 +21,7 @@ from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     path('ansible/', include("autotool.urls")),
-    path('monitoring/', include("monitoring.urls")),
+    # path('monitoring/', include("monitoring.urls")),
     path('guacamole/', include("guacamole.urls")),
     path('proxmox/', include("proxmox.urls")),
     path('ticketing/', include("ticketing.urls")),
