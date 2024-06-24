@@ -260,6 +260,8 @@ def request_confirm(request, id):
     request_entry = get_object_or_404(RequestEntry, pk=id)
     request_entry.status = RequestEntry.Status.PROCESSING
     request_entry.save()
+    
+    request_entry = get_object_or_404(RequestEntry, pk=id)
 
     vm_provision(request_entry)
 
