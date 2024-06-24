@@ -142,19 +142,21 @@ def new_form_submit(request):
     print ("new-form-submit")
     # TODO: authenticate if valid user(logged in & faculty/tsg)
     if request.method == "POST":
-        print ("new-form-submit2")
+        print ("new-form-submit-post")
         # get data
         requester = get_object_or_404(User, username=request.user)
         data = request.POST
         template_id = data.get("template_id")
         cores = data.get("cores")
         ram = data.get("ram")
-       #storage = data.get("storage")
+        # storage = data.get("storage")
         has_internet = data.get("has_internet") == 'true'
         date_needed = data.get ('date_needed')
         expiration_date = data.get('expiration_date')
         other_config = data.get("other_configs")
         vm_count = data.get("vm_count")
+        print("-----------------------")
+        print ("new-form-submit2")
         
         vmTemplateID = VMTemplates.objects.get(id = template_id)
         print("-----------------------")
