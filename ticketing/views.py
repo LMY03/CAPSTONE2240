@@ -261,6 +261,8 @@ def request_confirm(request, id):
     request_entry.status = RequestEntry.Status.CREATING
     request_entry.save()
 
+    vm_provision(request_entry)
+
     return HttpResponseRedirect(reverse("ticketing:index"))
 
 def vm_provision_process(node, vm_id, classname, no_of_vm, cpu_cores, ram):
