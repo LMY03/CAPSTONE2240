@@ -155,3 +155,12 @@ def edit_request(request, request_id):
     context['request_entry'] = request_entry
     print(context)
     return render(request, 'users/faculty_edit_request.html', context)
+
+
+def login (request):
+    data = request.POST
+    username = data.get("username")
+    password = data.get("password")
+
+    print(f"{username},{password}")
+    return redirect("users:faculty_home")

@@ -1,5 +1,6 @@
 let sectionCounts = {};
 let addCourseSectionClicked = 1;
+let addProtocolClicked = 1;
 
 
 function formatDate(date) {
@@ -26,95 +27,117 @@ document.getElementById('use_case').addEventListener('change', function () {
 });
 
 
-document.getElementById('useroption').addEventListener('change', function () {
-    let use_case = document.getElementById('use_case');
-    let studentgroup = document.getElementById('studentgroup');
-    let studentIndividual = document.getElementById('individual_student_container');
+// document.getElementById('useroption').addEventListener('change', function () {
+//     let use_case = document.getElementById('use_case');
+//     let studentgroup = document.getElementById('studentgroup');
+//     let studentIndividual = document.getElementById('individual_student_container');
 
-    if (use_case.value === 'CLASS_COURSE' && this.value === 'group') {
-        studentgroup.innerHTML = '';
-        studentgroup.style.display = 'block';
-        studentIndividual.style.display = 'none';
+//     if (use_case.value === 'CLASS_COURSE' && this.value === 'group') {
+//         studentgroup.innerHTML = '';
+//         studentgroup.style.display = 'block';
+//         studentIndividual.style.display = 'none';
 
-        for (let i = 0; i < addCourseSectionClicked; i++) {
-            const courseCodeInput = document.getElementById(`course_code${i + 1}`);
-            const section_code = courseCodeInput?.value.toString().split("_")?.[1];
-            let newGroupCounter = 0;
-            if (section_code) {
-                if (!sectionCounts[section_code]) {
-                    sectionCounts[section_code] = {
-                        "GroupCounter": 1
-                    };
-                }
-                const sectionDiv = document.createElement('div');
-                sectionDiv.id = `section_${section_code}`;
-                const newLabel = document.createElement('label');
-                newLabel.innerHTML = `<br>${courseCodeInput} Group 1:`;
+//         for (let i = 0; i < addCourseSectionClicked; i++) {
+//             const courseCodeInput = document.getElementById(`course_code${i + 1}`);
+//             const section_code = courseCodeInput?.value.toString().split("_")?.[1];
+//             let newGroupCounter = 0;
+//             if (section_code) {
+//                 if (!sectionCounts[section_code]) {
+//                     sectionCounts[section_code] = {
+//                         "GroupCounter": 1
+//                     };
+//                 }
+//                 const sectionDiv = document.createElement('div');
+//                 sectionDiv.id = `section_${section_code}`;
+//                 const newLabel = document.createElement('label');
+//                 newLabel.innerHTML = `<br>${courseCodeInput} Group 1:`;
 
-                const newTextArea = document.createElement('textarea');
-                newTextArea.className = 'form-control';
-                newTextArea.name = `student_user_${section_code}_1`;
-                newTextArea.id = `student_user_${section_code}_1`;
-                newTextArea.rows = 3;
+//                 const newTextArea = document.createElement('textarea');
+//                 newTextArea.className = 'form-control';
+//                 newTextArea.name = `student_user_${section_code}_1`;
+//                 newTextArea.id = `student_user_${section_code}_1`;
+//                 newTextArea.rows = 3;
 
-                const newButton = document.createElement('button');
-                newButton.innerText = 'Add Group';
-                newButton.type = 'button';
-                newButton.addEventListener('click', function () {
-                    const newSectionDiv = document.createElement('div');
-                    newSectionDiv.id = `div_${section_code}_Group${newGroupCounter}`
+//                 const newButton = document.createElement('button');
+//                 newButton.innerText = 'Add Group';
+//                 newButton.type = 'button';
+//                 newButton.addEventListener('click', function () {
+//                     const newSectionDiv = document.createElement('div');
+//                     newSectionDiv.id = `div_${section_code}_Group${newGroupCounter}`
 
 
-                    newGroupCounter = ++sectionCounts[section_code]["GroupCounter"];
-                    const newLabel = document.createElement('label');
-                    newLabel.innerHTML = `<br>${courseCodeInput} Group ${newGroupCounter}:`;
-                    newLabel.id = `label_${section_code}_Group${newGroupCounter}`
-                    const newTextArea = document.createElement('textarea');
-                    newTextArea.className = 'form-control';
-                    newTextArea.name = `student_user_${section_code}_${newGroupCounter}`;
-                    newTextArea.id = `student_user_${section_code}_${newGroupCounter}`;
-                    newTextArea.rows = 3;
+//                     newGroupCounter = ++sectionCounts[section_code]["GroupCounter"];
+//                     const newLabel = document.createElement('label');
+//                     newLabel.innerHTML = `<br>${courseCodeInput} Group ${newGroupCounter}:`;
+//                     newLabel.id = `label_${section_code}_Group${newGroupCounter}`
+//                     const newTextArea = document.createElement('textarea');
+//                     newTextArea.className = 'form-control';
+//                     newTextArea.name = `student_user_${section_code}_${newGroupCounter}`;
+//                     newTextArea.id = `student_user_${section_code}_${newGroupCounter}`;
+//                     newTextArea.rows = 3;
 
-                    const newRemoveButton = document.createElement('button');
-                    newRemoveButton.innerText = '-';
-                    newRemoveButton.type = 'button';
-                    newRemoveButton.addEventListener('click', function () {
-                        newSectionDiv.remove()
-                        sectionCounts[section_code]["GroupCounter"] = sectionCounts[section_code]["GroupCounter"] - 1;
-                    })
-                    newSectionDiv.appendChild(newLabel);
-                    newSectionDiv.appendChild(newTextArea);
-                    newSectionDiv.appendChild(newRemoveButton);
-                    sectionDiv.append(newSectionDiv);
-                });
+//                     const newRemoveButton = document.createElement('button');
+//                     newRemoveButton.innerText = '-';
+//                     newRemoveButton.type = 'button';
+//                     newRemoveButton.addEventListener('click', function () {
+//                         newSectionDiv.remove()
+//                         sectionCounts[section_code]["GroupCounter"] = sectionCounts[section_code]["GroupCounter"] - 1;
+//                     })
+//                     newSectionDiv.appendChild(newLabel);
+//                     newSectionDiv.appendChild(newTextArea);
+//                     newSectionDiv.appendChild(newRemoveButton);
+//                     sectionDiv.append(newSectionDiv);
+//                 });
 
-                sectionDiv.appendChild(newLabel);
-                sectionDiv.appendChild(newTextArea);
-                sectionDiv.appendChild(newButton);
-                studentgroup.appendChild(sectionDiv);
-            }
-        }
-    } else {
-        studentIndividual.style.display = 'block';
-        studentgroup.style.display = 'none';
-    }
-});
+//                 sectionDiv.appendChild(newLabel);
+//                 sectionDiv.appendChild(newTextArea);
+//                 sectionDiv.appendChild(newButton);
+//                 studentgroup.appendChild(sectionDiv);
+//             }
+//         }
+//     } else {
+//         studentIndividual.style.display = 'block';
+//         studentgroup.style.display = 'none';
+//     }
+// });
 
 document.getElementById('add_course_button').addEventListener('click', () => {
     addCourseSectionClicked++;
     let use_case = document.getElementById('use_case');
 
     if (use_case.value === 'CLASS_COURSE') {
-        var inputContainer = document.getElementById('class_course_input');
+        var inputContainer = document.getElementById('vm_and_coursecode');
         var newInput = document.createElement('input');
         let newLabel = document.createElement('label');
+
         newLabel.innerHTML = `<br>Course Code ${addCourseSectionClicked} with section:`
         newInput.type = 'text';
         newInput.className = 'form-control w-25';
         newInput.name = `course_code${addCourseSectionClicked}`;
         newInput.id = `course_code${addCourseSectionClicked}`
-        inputContainer.appendChild(newLabel);
-        inputContainer.appendChild(newInput);
+
+        const newCourseDiv = document.createElement('div');
+
+        newCourseDiv.classList.add('mb-3');
+        newCourseDiv.appendChild(newLabel);
+        newCourseDiv.appendChild(newInput);
+
+        const newVMLabel = document.createElement('label');
+        const newVMInput = document.createElement('input');
+
+        newVMLabel.innerHTML = `VM Count for section ${addCourseSectionClicked}: `
+        newVMInput.type = 'number'
+        newVMInput.id = `vm_count${addCourseSectionClicked}`
+
+        const newVMDiv = document.createElement('div');
+
+        newVMDiv.classList.add('mb-3');
+        newVMDiv.appendChild(newVMLabel);
+        newVMDiv.appendChild(newVMInput);
+
+
+        inputContainer.appendChild(newCourseDiv);
+        inputContainer.appendChild(newVMDiv);
 
     }
 });
@@ -164,3 +187,69 @@ window.onload = function () {
     document.getElementById('expiration_date').setAttribute('max', formatDate(expirationDateMax));
     document.getElementById('expiration_date').setAttribute('min', formatDate(expirationDateMin));
 }
+
+document.getElementById('external_access').addEventListener('change', function () {
+    let networkAccordion = document.getElementById('networkAccordion');
+    if (this.value == 'true') {
+        networkAccordion.style.display = 'block';
+    } else {
+        networkAccordion.style.display = 'none';
+    }
+});
+
+document.getElementById('addProtocolButton').addEventListener('click', function () {
+    addProtocolClicked++;
+    let accordion = document.getElementById('accordionBody_networkDetails');
+
+    const newDivProtocol = document.createElement('div');
+    newDivProtocol.classList.add('mb-3');
+    const newProtocolLabel = document.createElement('label');
+    newProtocolLabel.innerHTML = `Protocol ${addProtocolClicked}:`;
+    newProtocolLabel.classList.add('form-label');
+    newProtocolLabel.setAttribute('for', `protocol${addProtocolClicked}`);
+
+    const newProtocolSelect = document.createElement('select');
+    newProtocolSelect.className = 'form-control';
+    newProtocolSelect.id = `protocol${addProtocolClicked}`;
+    newProtocolSelect.name = `protocol${addProtocolClicked}`;
+    newProtocolSelect.classList.add('form-control');
+
+    let options = [
+        { value: 'TCP', text: 'TCP' },
+        { value: 'UDP', text: 'UDP' },
+        { value: 'ICMP', text: 'ICMP' },
+        { value: 'HTTP', text: 'HTTP' },
+        { value: 'HTTPS', text: 'HTTPS' }
+    ];
+
+    options.forEach(function (option) {
+        let opt = document.createElement('option');
+        opt.value = option.value;
+        opt.text = option.text;
+        newProtocolSelect.appendChild(opt);
+    });
+
+    newDivProtocol.appendChild(newProtocolLabel);
+    newDivProtocol.appendChild(newProtocolSelect);
+
+
+    const newDivDestination = document.createElement('div');
+    newDivDestination.classList.add('mb-3')
+    const newDestinationPortLabel = document.createElement('label');
+    newDestinationPortLabel.innerHTML = `Destination Port ${addProtocolClicked}:`;
+    newDestinationPortLabel.classList.add('form-label');
+    newDestinationPortLabel.setAttribute('for', `destination_port${addProtocolClicked}`);
+
+    const newDestinationPortInput = document.createElement('input');
+    newDestinationPortInput.type = 'text';
+    newDestinationPortInput.className = 'form-control';
+    newDestinationPortInput.id = `destination_port${addProtocolClicked}`;
+    newDestinationPortInput.name = `destination_port${addProtocolClicked}`;
+    newDestinationPortInput.classList.add('form-control');
+
+    newDivDestination.appendChild(newDestinationPortLabel);
+    newDivDestination.appendChild(newDestinationPortInput);
+
+    accordion.appendChild(newDivProtocol);
+    accordion.appendChild(newDivDestination);
+});

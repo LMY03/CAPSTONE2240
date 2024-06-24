@@ -74,11 +74,18 @@ New VM request form
                                 <option value="128">128 GB</option>
                             </select>
                         </div>
+                        <div class="mb-3">
+                            <label for="has_internet" class="form-label">External Access:</label>
+                            <select class="form-control" name="has_internet" id = "external_access">
+                                <option value="true">Yes</option>
+                                <option value="false" selected>No</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>
             {% comment %} Accordion for port rules {% endcomment %}
-            <div class="accordion" id="networkAccordion">
+            <div class="accordion" id="networkAccordion" style = 'display:none;'>
                 <!-- Accordion Item -->
                 <div class="accordion-item">
                     <h2 class="accordion-header" id="networkHeader">
@@ -87,44 +94,25 @@ New VM request form
                         </button>
                     </h2>
                     <div id="networkCollapse" class="accordion-collapse collapse show" aria-labelledby="networkHeader">
-                        <div class="accordion-body">
-                            <div class="mb-3">
-                                <label for="interface" class="form-label">Interface:</label>
-                                <input type="text" class="form-control" id="interface" name="interface">
-                            </div>
-                            <div class="mb-3">
-                                <label for="protocol" class="form-label">Protocol:</label>
-                                <select class="form-control" id="protocol" name="protocol">
-                                    <option value="TCP">TCP</option>
-                                    <option value="UDP">UDP</option>
-                                    <option value="ICMP">ICMP</option>
-                                    <option value="HTTP">HTTP</option>
-                                    <option value="HTTPS">HTTPS</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label for="source_address" class="form-label">Source Address:</label>
-                                <input type="text" class="form-control" id="source_address" name="source_address">
-                            </div>
-                            <div class="mb-3">
-                                <label for="source_ports" class="form-label">Source Ports:</label>
-                                <input type="text" class="form-control" id="source_ports" name="source_ports">
-                            </div> 
-                            <div class="mb-3">
-                                <label for="destination_address" class="form-label">Destination Address:</label>
-                                <input type="text" class="form-control" id="destination_address" name="destination_address">
-                            </div>
-                            <div class="mb-3">
-                                <label for="destination_port" class="form-label">Destination Port:</label>
-                                <input type="text" class="form-control" id="destination_port" name="destination_port">
-                            </div>
-                            <div class="mb-3">
-                                <label for="nat_ip" class="form-label">NAT IP:</label>
-                                <input type="text" class="form-control" id="nat_ip" name="nat_ip">
-                            </div>                          
-                            <div class="mb-3">
-                                <label for="nat_ports" class="form-label">NAT Ports:</label>
-                                <input type="text" class="form-control" id="nat_ports" name="nat_ports">
+                        <div class="accordion-body" >
+                            <div id = "accordionBody_networkDetails"> 
+                                <div class="mb-3">
+                                    <div class = 'd-flex justify-content-between mb-2 align-items-baseline'>
+                                        <label for="protocol" class="form-label">Protocol:</label>
+                                        <button type = "button" id = "addProtocolButton">Add protocol</button>
+                                    </div>
+                                    <select class="form-control" id="protocol" name="protocol">
+                                        <option value="TCP">TCP</option>
+                                        <option value="UDP">UDP</option>
+                                        <option value="ICMP">ICMP</option>
+                                        <option value="HTTP">HTTP</option>
+                                        <option value="HTTPS">HTTPS</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="destination_port" class="form-label">Destination Port:</label>
+                                    <input type="text" class="form-control" id="destination_port" name="destination_port">
+                                </div>
                             </div>
                             <div class="mb-3">
                                 <label for="description" class="form-label">Description:</label>
@@ -152,23 +140,18 @@ New VM request form
                                 <option value="CLASS_COURSE">Class Course</option>
                             </select>
                         </div>
-                        <div class="mb-3" id="class_course_input" style="display: none;">
-                            <div class = "d-flex justify-content-between">
-                                <label for="course_code" class="form-label">Course Code: Add the section at the end of the course code (e.g CCINFOM_S15)</label>
-                                <button type='button' id='add_course_button'>Add a section</button>
+                        <div id = 'vm_and_coursecode'>
+                            <div class="mb-3" id="class_course_input" style="display: none;">
+                                <div class = "d-flex justify-content-between">
+                                    <label for="course_code" class="form-label">Course Code: Add the section at the end of the course code (e.g CCINFOM_S15)</label>
+                                    <button type='button' id='add_course_button'>Add a section</button>
+                                </div>
+                                <input type="text" class="form-control w-25" id="course_code1" name="course_code1">
                             </div>
-                            <input type="text" class="form-control w-25" id="course_code1" name="course_code1">
-                        </div>
-                        <div class="mb-3">
-                            <label for="vm_count" class="form-label">VM Count:</label>
-                            <input type="number" id="vm_count" name="vm_count" min="1" max="40">
-                        </div>
-                        <div class="mb-3">
-                            <label for="has_internet" class="form-label">Internet Access:</label>
-                            <select class="form-control" id="has_internet" name="has_internet">
-                                <option value="true">Yes</option>
-                                <option value="false">No</option>
-                            </select>
+                            <div class="mb-3">
+                                <label for="vm_count" class="form-label">VM Count:</label>
+                                <input type="number" id="vm_count" name="vm_count" min="1" max="40">
+                            </div>
                         </div>
                         <div class="mb-3">
                             <label for="date_needed" class="form-label">Date Needed:</label>
@@ -177,19 +160,6 @@ New VM request form
                         <div class="mb-3">
                             <label for="expiration_date" class="form-label">Expiration Date:</label>
                             <input type="date" id="expiration_date" name="expiration_date">
-                        </div>
-                        <div class="mb-3">
-                            <label for="useroption" class="form-label">Add user:</label>
-                            <select class="form-control" id="useroption" name="useroption">
-                                <option value="individual">Individual</option>
-                                <option value="group">By group</option>
-                            </select>
-                        </div>
-                        <div class="mb-3" id="individual_student_container" style="display: block;">
-                            <textarea class="form-control" id="individual_students" name="individual_students" rows="2"></textarea>
-                        </div>
-                        <div class="mb-3" id="studentgroup" style="display: none;">
-                            <!-- Group container content -->
                         </div>
                     </div>
                 </div>
