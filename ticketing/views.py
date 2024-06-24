@@ -258,7 +258,7 @@ def log_request_entry_changes(request_entry, changed_by, new_data, user):
 
 def request_confirm(request, id):
     request_entry = get_object_or_404(RequestEntry, pk=id)
-    request_entry.status = RequestEntry.Status.CREATING
+    request_entry.status = RequestEntry.Status.PROCESSING
     request_entry.save()
 
     vm_provision(request_entry)
