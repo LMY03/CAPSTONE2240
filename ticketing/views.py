@@ -1,12 +1,12 @@
 from typing import Any
 from django import forms
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.shortcuts import get_object_or_404, render
 from django.urls import reverse
 from django.views import generic
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
-from .models import RequestEntry, Comment, RequestUseCase, GroupList, VMTemplates, UserProfile, RequestEntryAudit
+from .models import RequestEntry, Comment, RequestUseCase, VMTemplates, UserProfile, RequestEntryAudit, PortRules
 from django.shortcuts import redirect
 import json, datetime
 from django.forms.models import model_to_dict
@@ -143,21 +143,21 @@ def new_form_submit(request):
         template_id = data.get("template_id")
         cores = data.get("cores")
         ram = data.get("ram")
-       #storage = data.get("storage")
-        has_internet = data.get("has_internet") == 'true'
+        storage = data.get("storage")
+        has_internet = data.get("external_access") == 'true'
         date_needed = data.get ('date_needed')
         expiration_date = data.get('expiration_date')
         other_config = data.get("other_configs")
-        vm_count = data.get("vm_count")
+        use_case = data.get('use_case')
+        #vm_count = data.get("vm_count")
         
         vmTemplateID = VMTemplates.objects.get(id = template_id)
         print("-----------------------")
-        print(data)
+        print(f"{data}")
         print("-----------------------")
         # TODO: data verification
 
         # create request object
-        #print (vmTemplateID, requester)
         new_request = RequestEntry.objects.create(
             requester = requester,
             template = vmTemplateID,
@@ -166,58 +166,76 @@ def new_form_submit(request):
             #storage = storage,
             has_internet = has_internet,
             other_config = other_config,
-            vm_count = vm_count,
             date_needed = date_needed,
             expiration_date = expiration_date
             # status = RequestEntry.Status.PENDING,
         )
         
-        new_request_use_case = []
+        
+        if use_case == 'CLASS_COURSE':
+            for i in range(1, int(data['addCourseButtonClick']) + 1):
+                RequestUseCase.objects.create(
+                    request = new_request,
+                    request_use_case = data.get(f"course_code{i}"),
+                    vm_count = data.get(f"vm_count{i}")
+                )
+        else:
+            RequestUseCase.objects.create(
+                    request = new_request,
+                    request_use_case = use_case,
+                    vm_count = data.get(f"vm_count1")
+                )
 
-        for i in range(1, int(data['addCourseButtonClick']) + 1):
-            new_request_use_case.append(RequestUseCase.objects.create(
-                request = new_request,
-                request_use_case = data.get(f"course_code{i}")
-            ))
+        if has_internet:
+            for i in range(1, int(data['addProtocolClicked']) + 1):
+                protocol = data.get(f'protocol{i}')
+                dest_ports = data.get(f'destination_port{i}')
+                description = data.get('description')
+                print (f'{protocol}, {dest_ports}, {description}')
+                PortRules.objects.create(
+                    request = new_request,
+                    protocol = protocol,
+                    dest_ports = dest_ports,
+                    description = description
+                )
+        # sections = data.getlist('sections')
+        # section_counts = {section: int(data.get(f'{section}_group_count', 0)) for section in sections}
 
-        sections = data.getlist('sections')
-        section_counts = {section: int(data.get(f'{section}_group_count', 0)) for section in sections}
+        # section_groups = {}
 
-        section_groups = {}
+        # for section in sections:
+        #     group_count = section_counts[section]
+        #     groups = {}
 
-        for section in sections:
-            group_count = section_counts[section]
-            groups = {}
+        #     for group in range(1, group_count + 1):
+        #         group_key = f'student_user_{section}_{group}'
+        #         students = [student.strip() for student in data.get(group_key, '').split(',') if student.strip()]
 
-            for group in range(1, group_count + 1):
-                group_key = f'student_user_{section}_{group}'
-                students = [student.strip() for student in data.get(group_key, '').split(',') if student.strip()]
+        #         groups[f'Group{group}'] = [student.strip() for student in students]
 
-                groups[f'Group{group}'] = [student.strip() for student in students]
+        #     section_groups[section] = groups
+        # print (section_groups)
+        # print("-----------------------")
+        # if data.get('useroption') == 'group' and data.get('use_case') == 'CLASS_COURSE':
+        #     i = 0
+        #     for section, groups in section_groups.items():
+        #         j = 1
+        #         print(f"Section: {section}, groups: {groups}, j:{j}")
+        #         for group, students in groups.items():
+        #             print(f"Group: {group}, students: {students}")
+        #             for student in students:
+        #                 if (student != ''):
+        #                     print(f"Student:{student}")
+        #                     grouplist = GroupList.objects.create(
+        #                         user = student,
+        #                         request_use_case = new_request_use_case[i],
+        #                         group_number = j
+        #                     )
+        #                     print (f"Group List object: {grouplist.request_use_case}")
+        #             j += 1
+        #         i += 1
 
-            section_groups[section] = groups
-        print (section_groups)
-        print("-----------------------")
-        if data.get('useroption') == 'group' and data.get('use_case') == 'CLASS_COURSE':
-            i = 0
-            for section, groups in section_groups.items():
-                j = 1
-                print(f"Section: {section}, groups: {groups}, j:{j}")
-                for group, students in groups.items():
-                    print(f"Group: {group}, students: {students}")
-                    for student in students:
-                        if (student != ''):
-                            print(f"Student:{student}")
-                            grouplist = GroupList.objects.create(
-                                user = student,
-                                request_use_case = new_request_use_case[i],
-                                group_number = j
-                            )
-                            print (f"Group List object: {grouplist.request_use_case}")
-                    j += 1
-                i += 1
-
-    return redirect('users:faculty_home')
+    return JsonResponse({'status': 'ok'}, status=200)
 
 def log_request_entry_changes(request_entry, changed_by, new_data, user):
     old_data = model_to_dict(request_entry)

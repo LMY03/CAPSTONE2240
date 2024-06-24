@@ -51,7 +51,7 @@ class RequestEntry(models.Model):
     #storage = models.FloatField(default= 0)
     has_internet = models.BooleanField(default=False)
     other_config = models.TextField(blank=True, null=True)
-    vm_count = models.IntegerField(default=1)
+    
 
     def __str__(self):
         return f"{self.id} - {self.status}"
@@ -85,22 +85,18 @@ class RequestEntryAudit(models.Model):
 class RequestUseCase (models.Model):
     request = models.ForeignKey(RequestEntry, on_delete= models.CASCADE)
     request_use_case = models.CharField(max_length=45, null = True , default = 'CLASS_COURSE')
+    vm_count = models.IntegerField(default=1, null = True)
 
-class GroupList (models.Model):
-    user = models.CharField(null=False, max_length=50, default=" ")
-    request_use_case = models.ForeignKey(RequestUseCase, on_delete=models.CASCADE)
-    group_number = models.IntegerField(default=1)
+# class GroupList (models.Model):
+#     user = models.CharField(null=False, max_length=50, default=" ")
+#     request_use_case = models.ForeignKey(RequestUseCase, on_delete=models.CASCADE)
+#     group_number = models.IntegerField(default=1)
 
 
 class PortRules (models.Model):
-    interface = models.CharField (max_length=30)
-    protocol = models.CharField (max_length=45)
-    source_address = models.CharField (max_length=45)
-    source_ports = models.CharField (max_length=45)
-    dest_address = models.CharField(max_length=45)
-    dest_ports = models.CharField (max_length=45)
-    nat_ip = models.CharField (max_length=45)
-    nat_ports = models.CharField (max_length=45)
+    request = models.ForeignKey(RequestEntry, on_delete= models.CASCADE)
+    protocol = models.CharField (max_length=45, blank= True, null = True)
+    dest_ports = models.CharField (max_length=45, blank= True, null = True)
     description = models.TextField(blank= True, null = True)
 
 class UserProfile (models.Model):

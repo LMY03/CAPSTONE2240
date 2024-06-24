@@ -53,16 +53,33 @@ TSG Dashboard
                                     <p><strong>Expiration date:</strong> {{ request_entry.details.expiration_date }}</p>
                                 </div>
                             </div>
-                            <div class="col-md-4">
+                            {% if request_entry.details.use_case == 'Class Course' %}
+                            {% for use_case in request_entry.request_use_cases %}
+                            <div class="col-md-8">
                                 <div class="p-3 bg-light border">
-                                    <p id="vm_count"><strong>VM Count:</strong> {{ request_entry.details.vm_count }}</p>
+                                    <p><strong>Use case:</strong> {{ use_case.request_use_case }}</p>
                                 </div>
                             </div>
+                            <div class="col-md-4">
+                                <div class="p-3 bg-light border">
+                                    <p id="vm_count"><strong>VM Count:</strong> {{ use_case.vm_count }}</p>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            
+                            {% else %}
                             <div class="col-md-8">
                                 <div class="p-3 bg-light border">
                                     <p><strong>Use case:</strong> {{ request_entry.details.use_case }}</p>
                                 </div>
                             </div>
+                            <div class="col-md-4">
+                                <div class="p-3 bg-light border">
+                                    <p id="vm_count"><strong>VM Count:</strong> {{ request_entry.request_use_cases.first.vm_count }}</p>
+                                </div>
+                            </div>
+                            {% endif %}
+                            
                             <div class="col-12">
                                 <div class="p-3 bg-light border">
                                     <p><strong>Other configs:</strong> {{ request_entry.details.other_config }}</p>

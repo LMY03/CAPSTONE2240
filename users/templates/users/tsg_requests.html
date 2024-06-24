@@ -14,11 +14,10 @@ TSG Dashboard
       <div class="w-25 mb-3">
         <select class="form-select" onchange="window.location.href=this.value">
           <option value="{% url 'users:tsg_home' %}">All</option>
-          <option value="{% url 'users:home-filter' %}?status=CR" {% if status == 'CR' %} selected {% endif %}>Creating</option>
-          <option value="{% url 'users:home-filter' %}?status=P" {% if status == 'P' %} selected {% endif %}>Pending</option>
-          <option value="{% url 'users:home-filter' %}?status=FR" {% if status == 'FR' %} selected {% endif %}>For revision</option>
-          <option value="{% url 'users:home-filter' %}?status=CO" {% if status == 'CO' %} selected {% endif %}>Completed</option>
-          <option value="{% url 'users:home-filter' %}?status=D" {% if status == 'D' %} selected {% endif %}>Delete</option>
+          <option value="{% url 'users:home-filter' %}?status=P" {% if status == 'PENDING' %} selected {% endif %}>Pending</option>
+          <option value="{% url 'users:home-filter' %}?status=FR" {% if status == 'FOR_REVISION' %} selected {% endif %}>For revision</option>
+          <option value="{% url 'users:home-filter' %}?status=CO" {% if status == 'COMPLETED' %} selected {% endif %}>Completed</option>
+          <option value="{% url 'users:home-filter' %}?status=D" {% if status == 'DELETED' %} selected {% endif %}>Delete</option>
         </select>
         
       </div>
@@ -44,13 +43,13 @@ TSG Dashboard
                 <td>{{ request.has_internet }}</td>
                 {% if request.status == "CR" %}
                 <td>Creating</td>
-                {% elif request.status == "P" %}
+                {% elif request.status == "PENDING" %}
                 <td>Pending</td>
-                {% elif request.status == "FR" %}
+                {% elif request.status == "FOR_REVISION" %}
                 <td>For revision</td>
-                {% elif request.status == "CO" %}
+                {% elif request.status == "COMPLETED" %}
                 <td>Completed</td>
-                {% elif request.status == "D" %}
+                {% elif request.status == "DELETED" %}
                 <td>Delete</td>
                 {% endif %}
                 <td><a href="{% url 'users:request_details' request.id %}" class="btn btn-primary">Open</a></td>

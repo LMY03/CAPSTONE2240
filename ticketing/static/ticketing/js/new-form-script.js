@@ -148,28 +148,44 @@ document.getElementById('vm-form').addEventListener('submit', function (event) {
     event.preventDefault();
     const formData = new FormData(this);
     const formInputs = this.querySelectorAll('input[type="text"], select, textarea, input[type="number"], input[type="date"]');
-    const formDataInputs = Object.fromEntries(Array.from(formInputs).map(input => [input.id, input.value]));
-    for (let sectionCode in sectionCounts) {
-        const groupCount = sectionCounts[sectionCode]["GroupCounter"]
-        formDataInputs[`${sectionCode}_group_count`] = groupCount;
-        formData.append(`sections`, sectionCode)
-        formData.append(`${sectionCode}_group_count`, formDataInputs[`${sectionCode}_group_count`]);
-    }
+    const formDataInputs = {};
+    formInputs.forEach(input => {
+        formDataInputs[input.id] = input.value;
+    });
+    // for (let sectionCode in sectionCounts) {
+    //     const groupCount = sectionCounts[sectionCode]["GroupCounter"]
+    //     formDataInputs[`${sectionCode}_group_count`] = groupCount;
+    //     formData.append(`sections`, sectionCode)
+    //     formData.append(`${sectionCode}_group_count`, formDataInputs[`${sectionCode}_group_count`]);
+    // }
     formDataInputs[`addCourseButtonClick`] = addCourseSectionClicked;
-    formData.append('addCourseButtonClick', formDataInputs[`addCourseButtonClick`])
-    //formData.append()
+    formDataInputs[`addProtocolClicked`] = addProtocolClicked;
+    for (const key in formDataInputs) {
+        formData.append(key, formDataInputs[key]);
+    }
+    console.log(formData);
     fetch(this.action, {
         method: this.method,
         body: formData
     })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
         .then(data => {
-            // Handle the response from the backend
-            //console.log(data);
+            if (data.status === 'ok') {
+                // Redirect to a different page
+                window.location.href = '/users/faculty/home';
+            } else {
+                // Handle other statuses if needed
+                console.log('Unexpected status:', data.status);
+            }
         })
         .catch(error => {
-            console.log(error)
-        })
+            console.error('There was a problem with the fetch operation:', error);
+        });
 });
 
 // Set the min and max dates

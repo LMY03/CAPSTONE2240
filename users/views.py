@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.views import generic
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
-from ticketing.models import RequestEntry, Comment, RequestUseCase, GroupList, VMTemplates, UserProfile
+from ticketing.models import RequestEntry, Comment, RequestUseCase, VMTemplates, UserProfile
 from django.shortcuts import redirect
 import json
 from django.forms.models import model_to_dict
@@ -53,6 +53,7 @@ def tsg_requests (request):
             "template__vm_name"
         )
     context['request_list'] = datas
+    print (context)
     return render (request, 'users/tsg_requests.html', context= context)
 
 def request_details (request, request_id):
@@ -75,19 +76,32 @@ def request_details (request, request_id):
             "date_needed",
             'expiration_date',
             "other_config",
-            "vm_count",
             "template__storage"
     ).get(pk=pk)
 
-    if request_entry_details.get('storage') == 0.0:
-            request_entry_details['storage'] = request_entry_details.get('template__storage')
+
+    request_use_cases = RequestUseCase.objects.filter(request_id = request_entry_details.get('id'))
+
+    for request_use_case in request_use_cases:
+        if request_use_case.request_use_case == 'RESEARCH':
+            request_entry_details['use_case'] = 'Research'
+        elif request_use_case.request_use_case == 'THESIS':
+            request_entry_details['use_case'] = 'Thesis'
+        elif request_use_case.request_use_case == 'TEST':
+            request_entry_details['use_case'] = 'Test'
+        else:
+            request_entry_details['use_case'] = 'Class Course'
+
+    request_entry_details['storage'] = request_entry_details.get('template__storage')
+
 
     comments = Comment.objects.filter(request_entry=request_entry).order_by('-date_time')
     context['request_entry'] = {
         'details': request_entry_details,
-        'comments' : comments
+        'comments' : comments,
+        'request_use_cases': request_use_cases,
     }
-
+    print (request_use_cases)
     return render (request, 'users/tsg_request_details.html', context = context)
 
 def faculty_vm_details (request, vm_id):
@@ -124,31 +138,25 @@ def faculty_request_list(request):
 
 def edit_request(request, request_id):
     request_entry = get_object_or_404(RequestEntry, pk = request_id)
-    request_use_case = RequestUseCase.objects.filter(request_id = request_id)
-    context = {'Sections': {}}
-    for use_case in request_use_case:
-        if 'use_case' not in context: 
-            if use_case.request_use_case == 'RESEARCH':
-                context['use_case'] =  'RESEARCH'
-            elif use_case.request_use_case == 'THESIS':
-                context['use_case'] = 'THESIS'
-            elif use_case.request_use_case == 'TEST':
-                context['use_case'] = 'TEST'
-            else:
-                context['use_case'] = 'CLASS_COURSE'
+    request_use_cases = RequestUseCase.objects.filter(request_id = request_id)
+    context = {
+        'Sections': [],
+        'use_case': None 
+    }
+    for use_case in request_use_cases:
+        print (use_case)
+        if use_case.request_use_case == 'RESEARCH':
+            context['use_case'] = 'RESEARCH'
+        elif use_case.request_use_case == 'THESIS':
+            context['use_case'] = 'THESIS'
+        elif use_case.request_use_case == 'TEST':
+            context['use_case'] = 'TEST'
+        else:
+            context['use_case'] = 'CLASS_COURSE'
+        
+        # Append to Sections based on conditions
         if context['use_case'] == 'CLASS_COURSE':
-            context['Sections'][use_case.request_use_case] = {}
-            group_list = GroupList.objects.filter(request_use_case_id = use_case.id)
-            for student in group_list:
-                group_key = f'Group {student.group_number}'
-                if student.group_number >= 1: 
-                    context['isGrouped'] = 1
-                else:
-                    context['isGrouped'] = 0
-                if group_key not in context['Sections'][use_case.request_use_case]:
-                    context['Sections'][use_case.request_use_case][group_key] = []
-                
-                context['Sections'][use_case.request_use_case][group_key].append(student.user)
+            context['Sections'].append(use_case.request_use_case)
 
     vmtemplate_list = VMTemplates.objects.all().values_list('id', 'vm_name')
     context['vmtemplate_list'] = list(vmtemplate_list)
