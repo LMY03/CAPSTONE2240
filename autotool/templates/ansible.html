@@ -1,0 +1,10 @@
+<form action="{% url 'ansible:run' %}" method="post">
+    {% csrf_token %}
+
+    <!-- <label for="ip_add">IP Add: </label>
+    <input type="text" name="ip_add" id="ip_add" /><br /><br />
+    <label for="command">C: </label>
+    <input type="text" name="command" id="command" /> -->
+
+    <input type="submit" value="submit" />
+</form>

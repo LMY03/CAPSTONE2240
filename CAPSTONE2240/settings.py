@@ -22,11 +22,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-&r7xdaxzqbf*zz0_u@u36rizbuih)a7975a8&a283owv9p_2mo'
+# SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+# DEBUG = config('DEBUG')
 
 ALLOWED_HOSTS = ['*']
+# ALLOWED_HOSTS = config('ALLOWED_HOSTS')
 
 # ALLOWED_HOSTS = [
 #     # 'localhost',
@@ -38,7 +41,10 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
+    "autotool.apps.AutotoolConfig",
+    "monitoring.apps.MonitoringConfig",
     "ticketing.apps.TicketingConfig",
+    "guacamole.apps.GuacamoleConfig",
     "proxmox.apps.ProxmoxConfig",
     'django.contrib.admin',
     'django.contrib.auth',
@@ -93,11 +99,22 @@ DATABASES = {
         'NAME': 'cap2240db',
         'USER': 'cap-2240',
         'PASSWORD': 'CAP_2240',
-        'HOST': 'localhost',
-        # 'HOST': 'mysql',
+        # 'HOST': 'localhost',
+        'HOST': 'mysql',
         'PORT': 3306,
     }
 }
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': config('MYSQL_CAP2240_DATABASE'),
+#         'USER': config('MYSQL_CAP2240_USER'),
+#         'PASSWORD': config('MYSQL_CAP2240_PASSWORD'),
+#         'HOST': config('mysql'),  # Use 'db' as default from .env
+#         'PORT': config('DB_PORT'),  # Use '3306' as default from .env
+#     }
+# }
 
 
 # Password validation
