@@ -139,9 +139,10 @@ def redirect_based_on_user_type(request):
 
 #@login_required
 def new_form_submit(request):
-
+    print ("new-form-submit")
     # TODO: authenticate if valid user(logged in & faculty/tsg)
     if request.method == "POST":
+        print ("new-form-submit2")
         # get data
         requester = get_object_or_404(User, username=request.user)
         data = request.POST
@@ -259,3 +260,86 @@ def request_confirm(request, id):
 
     return HttpResponseRedirect(reverse("ticketing:index"))
 
+def vm_provision_process(node, vm_id, classname, no_of_vm, cpu_cores, ram):
+
+    protocol = "rdp"
+    port = {
+        'vnc': 5901,
+        'rdp': 3389,
+        'ssh': 22
+    }.get(protocol)
+    username = "jin"
+    password = "123456"
+    parent_identifier = "ROOT"
+
+    upids = []
+    new_vm_id = []
+    hostname = []
+    guacamole_connection_id = []
+    guacamole_username = []
+    guacamole_password = []
+
+    for i in range(no_of_vm):
+        # clone vm
+        new_vm_id.append(vm_id + i + 1)
+        upids.append(proxmox.clone_vm(node, vm_id, new_vm_id[i])['data'])
+
+    for i in range(no_of_vm):
+        # wait for vm to clone
+        proxmox.wait_for_task(node, upids[i])
+        # change vm configuration
+        proxmox.config_vm(node, new_vm_id[i], cpu_cores, ram)
+        # start vm
+        proxmox.start_vm(node, new_vm_id[i])
+
+    
+    for i in range(no_of_vm):
+        # wait for vm to start
+        proxmox.wait_for_vm_start(node, new_vm_id[i])
+        hostname.append(proxmox.wait_and_get_ip(node, new_vm_id[i]) )
+        # create connection
+        guacamole_username.append(f"{classname}-{i}")
+        # guacamole_password.append(User.objects.make_random_password())
+        guacamole_password.append("123456")
+        guacamole_connection_id.append(guacamole.create_connection(guacamole_username[i], protocol, port, hostname[i], username, password, parent_identifier))
+        guacamole.create_user(guacamole_username[i], guacamole_password[i])
+        guacamole.assign_connection(guacamole_username[i], guacamole_connection_id[i])
+
+        # set hostname and label in netdata
+    vm_user = []
+    vm_name = []
+    label = []
+
+    for i in range(no_of_vm):
+        vm_user.append("jin")
+        vm_name.append(classname + "-" + str(i))
+        label.append(classname)
+
+    ansible.run_playbook("netdata_conf.yml", hostname, vm_user, vm_name, label)
+
+    return { 
+        'vm_id' : new_vm_id, 
+        'guacamole_connection_id' : guacamole_connection_id, 
+        'guacamole_username' : guacamole_username
+    }
+    
+def vm_provision(request_entry):
+
+    node = "pve"
+
+    vm_id = request_entry.template_id.vm_id
+    request_use_case = get_object_or_404(RequestUseCase, pk=request_entry.id)
+    classname = request_use_case.request_use_case
+    no_of_vm = request_entry.vm_count
+    cpu_cores = request_entry.cores
+    ram = request_entry.ram
+
+    print("-------------------------------")
+    print(vm_id)
+    print(classname)
+    print(no_of_vm)
+    print(cpu_cores)
+    print(ram)
+    print("-------------------------------")
+
+    data = vm_provision_process(node, vm_id, classname, no_of_vm, cpu_cores, ram)
