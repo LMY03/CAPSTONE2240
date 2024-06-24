@@ -334,7 +334,7 @@ def vm_provision(id):
     request_entry = get_object_or_404(RequestEntry, pk=id)
     print(request_entry)
 
-    vm_id = request_entry.template_id.vm_id
+    vm_id = request_entry.template.vm_id
     request_use_case = get_object_or_404(RequestUseCase, pk=request_entry.id)
     classname = request_use_case.request_use_case
     no_of_vm = request_entry.vm_count
