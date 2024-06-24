@@ -335,4 +335,12 @@ def vm_provision(request_entry):
     cpu_cores = request_entry.cores
     ram = request_entry.ram
 
+    print("-------------------------------")
+    print(vm_id)
+    print(classname)
+    print(no_of_vm)
+    print(cpu_cores)
+    print(ram)
+    print("-------------------------------")
+
     data = vm_provision_process(node, vm_id, classname, no_of_vm, cpu_cores, ram)
