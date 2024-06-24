@@ -28,13 +28,21 @@ services:
     restart: always
     volumes:
       - .:/app
+      - /home/${USERNAME}/.ssh/id_rsa:/root/.ssh/id_rsa:ro
+      - /home/${USERNAME}/.ssh/id_rsa.pub:/root/.ssh/id_rsa.pub:ro
     ports:
       - "8000:8000"
+    environment:
+      ANSIBLE_HOST_KEY_CHECKING: "False"
     env_file:
       - .env
     depends_on:
       mysql:
         condition: service_healthy
+      # ansible:
+      #   condition: service_started
+    # links:
+    #   - ansible
 
   guacamole:
     image: guacamole/guacamole:latest
@@ -64,6 +72,7 @@ services:
   netdata:
     image: netdata/netdata:latest
     container_name: netdata
+    hostname: CAP-2240
     pid: host
     network_mode: host
     restart: unless-stopped
@@ -87,20 +96,20 @@ services:
       - /var/log:/host/var/log:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
 
-  ansible:
-    image: cytopia/ansible:latest
-    restart: always
-    container_name: ansible
-    volumes:
-      - ./playbooks:/playbooks
-      - ./inventory:/inventory
-      - /home/${USERNAME}/.ssh/id_rsa:/root/.ssh/id_rsa:ro
-      - /home/${USERNAME}/.ssh/id_rsa.pub:/root/.ssh/id_rsa.pub:ro
-    environment:
-      ANSIBLE_HOST_KEY_CHECKING: "False"
-    working_dir: /playbooks
-    entrypoint: ["sh", "-c"]
-    command: ["apk update && apk add --no-cache openssh-client && tail -f /dev/null"]
+  # ansible:
+  #   image: cytopia/ansible:latest
+  #   restart: always
+  #   container_name: ansible
+  #   volumes:
+  #     - /home/${USERNAME}/playbooks:/playbooks
+  #     - /home/${USERNAME}/inventory:/inventory
+  #     - /home/${USERNAME}/.ssh/id_rsa:/root/.ssh/id_rsa:ro
+  #     - /home/${USERNAME}/.ssh/id_rsa.pub:/root/.ssh/id_rsa.pub:ro
+  #   environment:
+  #     ANSIBLE_HOST_KEY_CHECKING: "False"
+  #   working_dir: /playbooks
+  #   entrypoint: ["sh", "-c"]
+  #   command: ["apk update && apk add --no-cache openssh-client && tail -f /dev/null"]
 
 volumes:
   mysql_data:
