@@ -4,6 +4,22 @@ git clone https://github.com/LMY03/CAPSTONE2240.git
 
 docker compose -f ~/CAPSTONE2240/docker-compose.yml up --build -d
 
+# MYSQL
+
+docker cp ~/CAPSTONE2240/init.sql mysql:init.sql
+
+docker exec -it mysql bash
+
+mysql -u root -p123456
+
+GRANT SELECT, UPDATE, INSERT, DELETE ON cap2240db.* TO 'cap-2240'@'%';
+
+flush privileges;
+
+exit;
+
+exit
+
 # GUACAMOLE
 
 mkdir -p ~/guacamole-initdb
@@ -17,7 +33,7 @@ docker exec -it mysql bash
 
 cd /docker-entrypoint-initdb.d
 
-mysql -u root -p
+mysql -u root -p123456
 
 
 CREATE DATABASE IF NOT EXISTS guacamole_db;
