@@ -144,8 +144,8 @@ def new_form_submit(request):
     if request.method == "POST":
         print ("new-form-submit-post")
         # get data
-        # requester = get_object_or_404(User, username=request.user)
-        requester = "1"
+        request.user = 1
+        requester = get_object_or_404(User, username=request.user)
         data = request.POST
         template_id = data.get("template_id")
         cores = data.get("cores")
