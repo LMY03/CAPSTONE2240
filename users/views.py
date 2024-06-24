@@ -97,6 +97,7 @@ def faculty_vm_details (request, vm_id):
      return render (request, 'users/faculty_vm_details.html', context = context)
 
 def faculty_request_list(request):
+   request.user.username = "jin"
    user = get_object_or_404(User, username=request.user.username)
    request_entries = RequestEntry.objects.filter(requester=user)
 
