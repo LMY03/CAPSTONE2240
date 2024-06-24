@@ -16,6 +16,8 @@ GRANT SELECT, UPDATE, INSERT, DELETE ON cap2240db.* TO 'cap-2240'@'%';
 
 flush privileges;
 
+source init.sql
+
 exit;
 
 exit
