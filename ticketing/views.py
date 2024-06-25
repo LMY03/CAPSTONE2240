@@ -12,7 +12,7 @@ import json, datetime
 
 from proxmox import proxmox
 from guacamole import guacamole
-# from autotool import ansible
+from autotool import ansible
 
 from .models import RequestEntry, Comment, RequestUseCase, PortRules, VMTemplates, UserProfile, RequestEntryAudit
 
