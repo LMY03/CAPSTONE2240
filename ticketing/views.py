@@ -145,6 +145,7 @@ def new_form_submit(request):
         print ("new-form-submit-post")
         # get data
         #request.user = "jin"
+        request.user = "faculty" # static
         requester = get_object_or_404(User, username=request.user)
         data = request.POST
         template_id = data.get("template_id")
