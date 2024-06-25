@@ -12,7 +12,7 @@ Edit request {{ vm_id }}
 
 {% block content %}
 <div class="col-md-10 content">
-    <form method="post" action="{% url 'ticketing:new-form-submit' %}" id="vm-form">
+    <form method="post" action="{% url 'ticketing:edit_form_submit' %}" id="vm-form">
         {% csrf_token %}
 
         <!-- Accordion for grouping form fields -->
@@ -58,27 +58,17 @@ Edit request {{ vm_id }}
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label for="storage" class="form-label">Storage:</label>
-                            <a href="#" class="tooltip-icon" data-bs-toggle="tooltip" data-bs-placement="top" title="Select a storage per VM, ONLY IF YOU OPTED OUT OF THE VM TEMPLATE">
-                                <i class="bi bi-info-circle"></i>
-                            </a>
-                            <select class="form-control" id="storage" name="storage">
-                                <option value="0" selected>0 GB</option>
-                                <option value="1">1 GB</option>
-                                <option value="2">2 GB</option>
-                                <option value="4">4 GB</option>
-                                <option value="8">8 GB</option>
-                                <option value="16">16 GB</option>
-                                <option value="32">32 GB</option>
-                                <option value="64">64 GB</option>
-                                <option value="128">128 GB</option>
+                            <label for="has_internet" class="form-label">External Access:</label>
+                            <select class="form-control" id="external_access" name="has_internet">
+                                <option value="true" {% if request_entry.has_internet == 1 %} selected {% endif %}>Yes</option>
+                                <option value="false"{% if request_entry.has_internet == 0 %} selected {% endif %}>No</option>
                             </select>
                         </div>
                     </div>
                 </div>
             </div>
             {% comment %} Accordion for port rules {% endcomment %}
-            <div class="accordion" id="networkAccordion">
+            <div class="accordion" id="networkAccordion" {% if request_entry.has_internet %} style = "display:block" {% else %} style = "display:none" {% endif %}>
                 <!-- Accordion Item -->
                 <div class="accordion-item">
                     <h2 class="accordion-header" id="networkHeader">
@@ -134,7 +124,6 @@ Edit request {{ vm_id }}
                     </div>
                 </div>
             </div>
-            <!-- Group 3: Use Case, VM Count, Internet Access, Dates, Add Users -->
             <div class="accordion-item">
                 <h2 class="accordion-header" id="additionalDetailsGroupHeader">
                     <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additionalDetailsCollapse" aria-expanded="false" aria-controls="additionalDetailsCollapse">
@@ -154,33 +143,40 @@ Edit request {{ vm_id }}
                         </div>
                         {% if use_case == 'CLASS_COURSE' %}
                         <div class="mb-3" id="class_course_input" {% if use_case == 'CLASS_COURSE' %} style="display: block;" {% else %} style="display: none;" {% endif %} >
-                            <div class = "d-flex justify-content-between">
-                                <label for="course_code" class="form-label">Course Code: Add the section at the end of the course code (e.g CCINFOM_S15)</label>
-                                <button type='button' id='add_course_button'>Add a section</button>
-                            </div>
-                            {% for section, groups in Sections.items %}
+                            <div id = 'vm_and_coursecode'>
+                                <div class = "d-flex justify-content-between">
+                                    <label for="course_code" class="form-label">Course Code: Add the section at the end of the course code (e.g CCINFOM_S15)</label>
+                                    <button type='button' id='add_course_button'>Add a section</button>
+                                </div>
+                            {% for section in Sections%}
                                 {% if forloop.first %}
                                     <!-- Display the first section -->
-                                    <input type="text" class="form-control w-25" id="course_code1" name="course_code1" value="{{ section }}">
+                                    <div class="mb-3">
+                                        <input type="text" class="form-control w-25" id="course_code1" name="course_code1" value="{{ section.request_use_case }}">
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="vm_count" class="form-label" >VM Count:</label>
+                                        <input type="number" id="vm_count1" name="vm_count1" min="1" max="40" value = "{{ section.vm_count }}">
+                                    </div>
+                            </div>
                                 {% else %}
-                                    <br>
-                                    <label>Course Code {{ forloop.counter }} with section:</label>
-                                    <input type="text" class="form-control w-25" id="course_code{{ forloop.counter }}" name="course_code{{ forloop.counter }}" value = {{ section }}>
+                                    <div id = "section_vm_count_{{ forloop.counter }}">
+                                        <div class = 'mb-3'>
+                                            <div class = 'd-flex justify-content-between'>
+                                                <label>Course Code {{ forloop.counter }} with section:</label>
+                                                <button type="button" class="btn btn-outline-danger" id ="remove_section_button{{forloop.counter}}">Remove Section {{forloop.counter}}</button>
+                                            </div>
+                                            <input type="text" class="form-control w-25" id="course_code{{ forloop.counter }}" name="course_code{{ forloop.counter }}" value = {{ section.request_use_case }}>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="vm_count" class="form-label" >VM Count:</label>
+                                            <input type="number" id="vm_count{{forloop.counter}}" name="vm_count{{forloop.counter}}" min="1" max="40" value = "{{ section.vm_count }}">
+                                        </div>
+                                    </div>
                                 {% endif %}
                             {% endfor %}
                         </div>
                         {% endif %}
-                        <div class="mb-3">
-                            <label for="vm_count" class="form-label" >VM Count:</label>
-                            <input type="number" id="vm_count" name="vm_count" min="1" max="40" value = "{{ request_entry.vm_count }}">
-                        </div>
-                        <div class="mb-3">
-                            <label for="has_internet" class="form-label">Internet Access:</label>
-                            <select class="form-control" id="has_internet" name="has_internet">
-                                <option value="true" {% if request_entry.has_internet == 1 %} selected {% endif %}>Yes</option>
-                                <option value="false"{% if request_entry.has_internet == 0 %} selected {% endif %}>No</option>
-                            </select>
-                        </div>
                         <div class="mb-3">
                             <label for="date_needed" class="form-label">Date Needed:</label>
                             <input type="date" id="date_needed" name="date_needed" value = "{{ request_entry.date_needed |date:'Y-m-d' }}">
@@ -189,36 +185,6 @@ Edit request {{ vm_id }}
                             <label for="expiration_date" class="form-label">Expiration Date:</label>
                             <input type="date" id="expiration_date" name="expiration_date" value = "{{ request_entry.expiration_date|date:'Y-m-d' }}">
                         </div>
-                        <div class="mb-3">
-                            <label for="useroption" class="form-label">Add user:</label>
-                            <select class="form-control" id="useroption" name="useroption">
-                                <option value="individual" {% if isGrouped == 0 %} selected {% endif %}>Individual</option>
-                                <option value="group" {% if isGrouped == 1 %} selected {% endif %}>By group</option>
-                            </select>
-                        </div>
-                        {% if isGrouped == 0 %}
-                        <div class="mb-3" id="individual_student_container" style="display: block;">
-                            <textarea class="form-control" id="individual_students" name="individual_students" rows="2"></textarea>
-                        </div>
-                        {% else %}
-                        <div class="mb-3" id="studentgroup" style="display: block;">
-                            {% for section, groups in Sections.items %}
-                                <div id="section_{{ section }}" class = 'mt-3 mb-3'>
-                                    {% for group_key, students in groups.items %}
-                                        <div class="d-flex justify-content-between align-items-center mt-2 mb-2" id = 'div_{{section}}_{{group_key}}'>
-                                            <label>{{ section }} {{ group_key }}:</label>
-                                            {% if forloop.first %}
-                                            <button type="button" class="btn btn-primary ms-3" id='add_group_button{{section}}'>Add Group</button>
-                                            {% else %}
-                                            <button type="button" class="btn btn-danger ms-3" id='remove_group_{{ section }}_{{ forloop.counter }}'>Remove</button>
-                                            {% endif %}
-                                        </div>
-                                        <textarea class="form-control" name="student_user_{{ section }}_{{ forloop.counter }}" id="student_user_{{ section }}_{{ forloop.counter }}" rows="3">{% for student in students %}{{ student }}{% if not forloop.last %}, {% endif %}{% endfor %}</textarea>
-                                    {% endfor %}
-                                </div>
-                            {% endfor %}
-                        </div>
-                        {% endif %}
                     </div>
                 </div>
             </div>
@@ -236,6 +202,7 @@ Edit request {{ vm_id }}
 {% block script %}
 <script>
     var sectionsData = {{ Sections|safe }};
+    let requestID = {{request_entry.id}}
 </script>
 <script src="{% static 'users/js/edit_request.js' %}"></script>
 {% endblock script %}

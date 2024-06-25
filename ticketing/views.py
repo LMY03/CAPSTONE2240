@@ -12,7 +12,7 @@ import json, datetime
 
 from proxmox import proxmox
 from guacamole import guacamole
-from autotool import ansible
+# from autotool import ansible
 
 from .models import RequestEntry, Comment, RequestUseCase, PortRules, VMTemplates, UserProfile, RequestEntryAudit
 
@@ -144,7 +144,7 @@ def new_form_submit(request):
     if request.method == "POST":
         print ("new-form-submit-post")
         # get data
-        request.user = "jin"
+        #request.user = "jin"
         requester = get_object_or_404(User, username=request.user)
         data = request.POST
         template_id = data.get("template_id")
@@ -366,3 +366,31 @@ def vm_provision(id):
     print("-------------------------------")
 
     data = vm_provision_process(node, vm_id, classname, no_of_vm, cpu_cores, ram)
+
+def edit_form_submit (request):
+    data = request.POST
+    user = request.user
+    request_entry_id = data.get("id")
+    request_entry = get_object_or_404(RequestEntry, id = request_entry_id)
+    newData = {}
+    newvmTemplateID = VMTemplates.objects.get(id=data.get("template_id"))
+    newData = {
+            'template_id': newvmTemplateID,
+            'cores': data.get("cores"),
+            'ram': data.get("ram"),
+            'has_internet': data.get("external_access") == 'true',
+            'date_needed': data.get('date_needed'),
+            'expiration_date': data.get('expiration_date'),
+            'other_configs': data.get("other_configs"),
+            'use_case': data.get('use_case'),
+        }
+    addCourseButtonClicked = data.get("addCourseButtonClick")
+    for i in range (1, addCourseButtonClicked + 1):
+        newData[f'courses_{i}'] = data.get('course_code{i}')
+        newData[f'vm_count{i}'] = data.get('vm_count{i}')
+
+    print(newData)
+    # if newData['has_internet'] == True: 
+    #     for i in range ()
+    log_request_entry_changes(request_entry, user, newData, user)
+    return JsonResponse({'status': 'ok'}, status=200)

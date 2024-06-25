@@ -1,6 +1,6 @@
 from django.shortcuts import render
 
-from . import ansible
+# from . import ansible
 
 # Create your views here.
 

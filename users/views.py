@@ -1,13 +1,13 @@
 from typing import Any
 from django import forms
 from django.http import HttpResponseRedirect
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, render, redirect
 from django.urls import reverse
 from django.views import generic
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth import authenticate, login
 from ticketing.models import RequestEntry, Comment, RequestUseCase, VMTemplates, UserProfile
-from django.shortcuts import redirect
 import json
 from django.forms.models import model_to_dict
 
@@ -111,7 +111,7 @@ def faculty_vm_details (request, vm_id):
      return render (request, 'users/faculty_vm_details.html', context = context)
 
 def faculty_request_list(request):
-   request.user.username = "jin"
+#    request.user.username = "jin"
    user = get_object_or_404(User, username=request.user.username)
    request_entries = RequestEntry.objects.filter(requester=user)
 
@@ -157,7 +157,10 @@ def edit_request(request, request_id):
         
         # Append to Sections based on conditions
         if context['use_case'] == 'CLASS_COURSE':
-            context['Sections'].append(use_case.request_use_case)
+            context['Sections'].append({
+                'request_use_case' : use_case.request_use_case,
+                'vm_count' : use_case.vm_count
+            })
 
     vmtemplate_list = VMTemplates.objects.all().values_list('id', 'vm_name')
     context['vmtemplate_list'] = list(vmtemplate_list)
@@ -166,10 +169,23 @@ def edit_request(request, request_id):
     return render(request, 'users/faculty_edit_request.html', context)
 
 
-def login (request):
+def login_view (request):
     data = request.POST
     username = data.get("username")
     password = data.get("password")
 
-    print(f"{username},{password}")
-    return redirect("users:faculty_home")
+    user = authenticate(request, username=username, password=password)
+        
+    if user is not None:
+        # Log in the user
+        login(request, user)
+        user_profile = request.user.userprofile
+        if user_profile.user_type == 'student':
+            return redirect('users:student_home')
+        elif user_profile.user_type == 'faculty':
+            return redirect('users:faculty_home')
+        elif user_profile.user_type == 'admin':
+            return redirect('users:tsg_home')
+    else:
+        # Handle invalid login
+        return render(request, 'login.html', {'error': 'Invalid username or password'})

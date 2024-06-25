@@ -205,6 +205,7 @@ window.onload = function () {
 }
 
 document.getElementById('external_access').addEventListener('change', function () {
+    console.log('external access changed')
     let networkAccordion = document.getElementById('networkAccordion');
     if (this.value == 'true') {
         networkAccordion.style.display = 'block';
