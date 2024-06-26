@@ -11,7 +11,7 @@ from autotool import ansible
 
 def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram):
 
-    vm_temp = get_object_or_404(VMTemplates, vm=vm_id)
+    vm_temp = get_object_or_404(VMTemplates, vm__vm_id=vm_id)
 
     protocol = "rdp"
     port = {
@@ -26,9 +26,9 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram):
     guacamole_connection_ids = []
     guacamole_passwords = []
 
-    # for i in range(no_of_vm):
+    for i in range(no_of_vm):
     #     # clone vm
-    #     new_vm_ids.append(vm_id + i + 1)
+        new_vm_ids.append(vm_id + i + 1)
     #     upids.append(proxmox.clone_vm(node, vm_id, new_vm_ids[i])['data'])
 
     # for i in range(no_of_vm):
@@ -39,7 +39,7 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram):
     #     # start vm
     #     proxmox.start_vm(node, new_vm_ids[i])
 
-    vm_user = get_object_or_404(VMUser, vm=vm_id)
+    vm_user = get_object_or_404(VMUser, vm__vm_id=vm_id)
     username = vm_user.username
     password = vm_user.password
 
@@ -51,7 +51,7 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram):
         # wait for vm to start
         # proxmox.wait_for_vm_start(node, new_vm_ids[i])
         # hostnames.append(proxmox.wait_and_get_ip(node, new_vm_ids[i]))
-        hostnames.append("10.10.10." + i)
+        hostnames.append("10.10.10." + str(i))
         
         temp_vm = VirtualMachines.objects.order_by('id').last().pk
 
@@ -71,7 +71,7 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram):
         vm_users.append("jin")
         labels.append(classnames[i])
 
-    ansible.run_playbook("netdata_conf.yml", hostnames, vm_users, classnames, labels)
+    # ansible.run_playbook("netdata_conf.yml", hostnames, vm_users, classnames, labels)
 
     return {
         'vm_id' : new_vm_ids, 
