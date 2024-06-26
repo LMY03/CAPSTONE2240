@@ -27,17 +27,17 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram):
     guacamole_passwords = []
 
     for i in range(no_of_vm):
-    #     # clone vm
+        # clone vm
         new_vm_ids.append(vm_id + i + 1)
-    #     upids.append(proxmox.clone_vm(node, vm_id, new_vm_ids[i])['data'])
+        upids.append(proxmox.clone_vm(node, vm_id, new_vm_ids[i], classnames[i])['data'])
 
-    # for i in range(no_of_vm):
-    #     # wait for vm to clone
-    #     proxmox.wait_for_task(node, upids[i])
-    #     # change vm configuration
-    #     proxmox.config_vm(node, new_vm_ids[i], cpu_cores, ram)
-    #     # start vm
-    #     proxmox.start_vm(node, new_vm_ids[i])
+    for i in range(no_of_vm):
+        # wait for vm to clone
+        proxmox.wait_for_task(node, upids[i])
+        # change vm configuration
+        proxmox.config_vm(node, new_vm_ids[i], cpu_cores, ram)
+        # start vm
+        proxmox.start_vm(node, new_vm_ids[i])
 
     vm_user = get_object_or_404(VMUser, vm__vm_id=vm_id)
     username = vm_user.username
@@ -49,13 +49,13 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram):
     
     for i in range(no_of_vm):
         # wait for vm to start
-        # proxmox.wait_for_vm_start(node, new_vm_ids[i])
-        # hostnames.append(proxmox.wait_and_get_ip(node, new_vm_ids[i]))
-        hostnames.append("10.10.10." + str(i))
+        proxmox.wait_for_vm_start(node, new_vm_ids[i])
+        hostnames.append(proxmox.wait_and_get_ip(node, new_vm_ids[i]))
+        # hostnames.append("10.10.10." + str(i))
         
         temp_vm = VirtualMachines.objects.order_by('id').last().pk
 
-        VirtualMachines(vm_id=temp_vm+i, vm_name=1, cores=cpu_cores, ram=ram, storage=vm_temp.vm.storage, ip_add=hostnames[i], status=VirtualMachines.Status.ACTIVE).save()
+        VirtualMachines(vm_id=temp_vm+i, vm_name=classnames[i], cores=cpu_cores, ram=ram, storage=vm_temp.vm.storage, ip_add=hostnames[i], status=VirtualMachines.Status.ACTIVE).save()
         # create connection
         # guacamole_password.append(User.objects.make_random_password())
         guacamole_passwords.append("123456")
