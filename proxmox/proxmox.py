@@ -59,7 +59,6 @@ def get_vm_status(node, vmid):
 def clone_vm(node, vmid, newid, name):
     session = get_authenticated_session()
     url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/qemu/{vmid}/clone"
-    print(name)
     config = {
         'newid': newid,
         'full': 1,
