@@ -95,7 +95,7 @@ def clone_vm(request) :
         vmid = data.get("vmid")
         new_vm_id = data.get("newid")
 
-        response = proxmox.clone_vm(node, vmid, new_vm_id, "Test")
+        response = proxmox.clone_vm(node, vmid, new_vm_id, "ITDBADM-S15-Group-1")
 
         return render(request, "data.html", { "data" : response })
         
