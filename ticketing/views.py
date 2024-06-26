@@ -295,7 +295,7 @@ def vm_provision(id):
             print("-----------------------------------")
             print(request_use_case['request_use_case'])
             classnames.append(f"{request_use_case['request_use_case'].replace('_', '-')}-Group-{i + 1}")
-            print(classnames(i))
+            print(classnames[i])
         total_no_of_vm += int(request_use_case['vm_count'])
 
     cpu_cores = int(request_entry.cores)
