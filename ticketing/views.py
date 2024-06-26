@@ -298,9 +298,6 @@ def vm_provision(id):
     cpu_cores = int(request_entry.cores)
     ram = int(request_entry.ram)
 
-    print("---------------------------")
-    print(classnames)
-
     data = views.vm_provision_process(node, vm_id, classnames, total_no_of_vm, cpu_cores, ram)
 
 def edit_form_submit (request):
