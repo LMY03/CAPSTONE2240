@@ -32,7 +32,7 @@ class IndexView(generic.ListView):
             "ram",
             "has_internet",
             "id",
-            "template__vm_name"
+            "template__vm__vm_name"
         )
         #.order_by('-requestDate')
         return queryset
@@ -286,18 +286,22 @@ def vm_provision(id):
     request_entry = get_object_or_404(RequestEntry, pk=id)
 
     vm_id = int(request_entry.template.vm.vm_id)
-    request_use_case = get_object_or_404(RequestUseCase, pk=request_entry.id)
-    classname = request_use_case.request_use_case
-    no_of_vm = int(request_entry.vm_count)
+    request_use_cases = []
+    request_use_cases = RequestUseCase.objects.filter(request=request_entry.pk).values('request_use_case', 'vm_count')
+    classnames = []
+    total_no_of_vm = 0
+    for request_use_case in request_use_cases:
+        for i in range(request_use_case['vm_count']):
+            classnames.append(f"{request_use_case['request_use_case']}_Group-{i + 1}")
+        total_no_of_vm += int(request_use_case['vm_count'])
+
     cpu_cores = int(request_entry.cores)
     ram = int(request_entry.ram)
 
-    classnames = []
-    # TODO: CHANGE classname setup
-    for i in range(no_of_vm):
-        classnames.append(f"{classname}-{i}")
+    print("---------------------------")
+    print(classnames)
 
-    data = views.vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram)
+    data = views.vm_provision_process(node, vm_id, classnames, total_no_of_vm, cpu_cores, ram)
 
 def edit_form_submit (request):
     data = request.POST
