@@ -289,15 +289,11 @@ def vm_provision(id):
     request_use_cases = []
     request_use_cases = RequestUseCase.objects.filter(request=request_entry.pk).values('request_use_case', 'vm_count')
     classnames = []
-    total_no_of_vm = 0
-    for request_use_case in request_use_cases:
-        for i in range(request_use_case['vm_count']):
-            request_use_case['request_use_case'].replace('_', '-')
-            print("-----------------------------------")
-            print(request_use_case['request_use_case'])
-            classnames.append(f"{request_use_case['request_use_case']}-Group{i + 1}")
-            print(classnames(i))
-        total_no_of_vm += int(request_use_case['vm_count'])
+    total_no_of_vm = sum(use_case['vm_count'] for use_case in request_use_cases)
+    for i, use_case in enumerate(request_use_cases):
+        request_use_case_with_hyphens = use_case['request_use_case'].replace('_', '-')
+        class_name = f"{request_use_case_with_hyphens}-Group-{i + 1}"
+        classnames.append(class_name)
 
     cpu_cores = int(request_entry.cores)
     ram = int(request_entry.ram)
