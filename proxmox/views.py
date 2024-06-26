@@ -1,10 +1,84 @@
 import time
 
-from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404, redirect, render
 
 from . import proxmox
+from . models import VirtualMachines, VMTemplates, VMUser
+from guacamole import guacamole
+from autotool import ansible
 
 # Create your views here.
+
+def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram):
+
+    vm_temp = get_object_or_404(VMTemplates, vm=vm_id)
+
+    protocol = "rdp"
+    port = {
+        'vnc': 5901,
+        'rdp': 3389,
+        'ssh': 22
+    }.get(protocol)
+
+    upids = []
+    new_vm_ids = []
+    hostnames = []
+    guacamole_connection_ids = []
+    guacamole_passwords = []
+
+    # for i in range(no_of_vm):
+    #     # clone vm
+    #     new_vm_ids.append(vm_id + i + 1)
+    #     upids.append(proxmox.clone_vm(node, vm_id, new_vm_ids[i])['data'])
+
+    # for i in range(no_of_vm):
+    #     # wait for vm to clone
+    #     proxmox.wait_for_task(node, upids[i])
+    #     # change vm configuration
+    #     proxmox.config_vm(node, new_vm_ids[i], cpu_cores, ram)
+    #     # start vm
+    #     proxmox.start_vm(node, new_vm_ids[i])
+
+    vm_user = get_object_or_404(VMUser, vm=vm_id)
+    username = vm_user.username
+    password = vm_user.password
+
+    parent_identifier = "ROOT"
+
+
+    
+    for i in range(no_of_vm):
+        # wait for vm to start
+        # proxmox.wait_for_vm_start(node, new_vm_ids[i])
+        # hostnames.append(proxmox.wait_and_get_ip(node, new_vm_ids[i]))
+        hostnames.append("10.10.10." + i)
+        
+        temp_vm = VirtualMachines.objects.order_by('id').last().pk
+
+        VirtualMachines(vm_id=temp_vm+i, vm_name=1, cores=cpu_cores, ram=ram, storage=vm_temp.vm.storage, ip_add=hostnames[i], status=VirtualMachines.Status.ACTIVE).save()
+        # create connection
+        # guacamole_password.append(User.objects.make_random_password())
+        guacamole_passwords.append("123456")
+        guacamole_connection_ids.append(guacamole.create_connection(classnames[i], protocol, port, hostnames[i], username, password, parent_identifier))
+        guacamole.create_user(classnames[i], guacamole_passwords[i])
+        guacamole.assign_connection(classnames[i], guacamole_connection_ids[i])
+
+    # set hostnames and label in netdata
+    vm_users = []
+    labels = []
+
+    for i in range(no_of_vm):
+        vm_users.append("jin")
+        labels.append(classnames[i])
+
+    ansible.run_playbook("netdata_conf.yml", hostnames, vm_users, classnames, labels)
+
+    return {
+        'vm_id' : new_vm_ids, 
+        'guacamole_connection_id' : guacamole_connection_ids,
+        'guacamole_username' : classnames,
+        'guacamole_passwords' : guacamole_passwords,
+    }
 
 node = "pve"
 

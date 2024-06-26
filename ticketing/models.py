@@ -7,16 +7,18 @@ from django.utils import timezone
 from datetime import date, timedelta
 import json
 
+from proxmox.models import VMTemplates
+
 def expiration_date_default():
     return date.today() + timedelta(days=90)
 
 def date_needed_default():
     return date.today() + timedelta(days=3)
 
-class VMTemplates (models.Model):
-    vm_id = models.CharField(max_length=45)
-    vm_name = models.CharField(max_length= 90)
-    storage = models.IntegerField(default= 1)
+# class VMTemplates (models.Model):
+#     vm_id = models.CharField(max_length=45)
+#     vm_name = models.CharField(max_length= 90)
+#     storage = models.IntegerField(default= 1)
 
 class RequestEntry(models.Model):
     expirationDateDefault = expiration_date_default

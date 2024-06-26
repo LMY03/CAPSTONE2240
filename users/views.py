@@ -41,7 +41,6 @@ def vm_details(request, vm_id):
     return render (request, 'users/student_vm_details.html', context= vm_data)
 
 def tsg_requests (request):
-    context = {}
     datas = RequestEntry.objects.select_related("requester", "template").values(
             "status",
             "requester__first_name",
@@ -50,9 +49,10 @@ def tsg_requests (request):
             "ram",
             "has_internet",
             "id",
-            "template__vm_name"
+            "template__vm__vm_name"
         )
-    context['request_list'] = datas
+    # context['request_list'] = datas
+    context = {'request_list': datas}
     print (context)
     return render (request, 'users/tsg_requests.html', context= context)
 
@@ -71,12 +71,12 @@ def request_details (request, request_id):
             #"storage",
             "has_internet",
             "id",
-            "template__vm_name",
+            "template__vm__vm_name",
             #"use_case",
             "date_needed",
             'expiration_date',
             "other_config",
-            "template__storage"
+            "template__vm__storage"
     ).get(pk=pk)
 
 
@@ -92,7 +92,7 @@ def request_details (request, request_id):
         else:
             request_entry_details['use_case'] = 'Class Course'
 
-    request_entry_details['storage'] = request_entry_details.get('template__storage')
+    request_entry_details['storage'] = request_entry_details.get('template__vm__storage')
 
 
     comments = Comment.objects.filter(request_entry=request_entry).order_by('-date_time')

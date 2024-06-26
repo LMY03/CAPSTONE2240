@@ -20,7 +20,7 @@ TSG Dashboard
                             </div>
                             <div class="col-md-6">
                                 <div class="p-3 bg-light border">
-                                    <p><strong>Template:</strong> {{ request_entry.details.template__vm_name }}</p>
+                                    <p><strong>Template:</strong> {{ request_entry.details.template__vm__vm_name }}</p>
                                 </div>
                             </div>
                             <div class="col-md-4">
@@ -130,7 +130,7 @@ TSG Dashboard
                     </div>
                     <div class="modal-body">
                         <p><strong>Requester ID:</strong> {{ request_entry.details.requester__first_name }} {{ request_entry.details.requester__last_name }} </p>
-                        <p><strong>Template:</strong> {{ request_entry.details.template__vm_name }}</p>
+                        <p><strong>Template:</strong> {{ request_entry.details.template__vm__vm_name }}</p>
                         <p><strong>Cores:</strong> {{ object.cores }}</p>
                         <p><strong>RAM:</strong> {{ object.ram }}</p>
                         <p><strong>Storage:</strong> {{ object.storage }}</p>

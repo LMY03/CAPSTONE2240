@@ -37,7 +37,7 @@ TSG Dashboard
             {% for request in request_list %}
               <tr>
                 <td>{{ request.requester__first_name }} {{ request.requester__last_name }}</td>
-                <td>{{ request.template__vm_name }}</td>
+                <td>{{ request.template__vm__vm_name }}</td>
                 <td>{{ request.cores }}</td>
                 <td>{{ request.ram }}</td>
                 <td>{{ request.has_internet }}</td>
