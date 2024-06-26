@@ -12,10 +12,6 @@ docker exec -it mysql bash
 
 mysql -u root -p123456
 
-GRANT SELECT, UPDATE, INSERT, DELETE ON cap2240db.* TO 'cap-2240'@'%';
-
-flush privileges;
-
 source init.sql
 
 exit;
