@@ -1,10 +1,37 @@
 from django.shortcuts import redirect, render
+from django.http import JsonResponse
+
+from django.contrib.auth.models import User
 
 from . import guacamole
+from proxmox import proxmox
 
 # Create your views here.
 
 parent_identifier = "ROOT"
+
+def launch_vm(request):
+
+    if request.method == "POST":
+
+        node = "pve"
+
+        data = request.POST
+        vm_id = data.get("vm_id")
+        connection_id = data.get("connection_id")
+        guacamole_username = data.get("username")
+        # guacamole_password = data.get("guacamole_password")
+        guacamole_password = "123456"
+
+        if proxmox.get_vm_status(node, vm_id) == "stopped" : proxmox.start_vm(node, vm_id)
+        hostname = proxmox.wait_and_get_ip(node, vm_id)
+        connection_details = guacamole.get_connection_parameter_details(connection_id)
+        if hostname != connection_details['hostname'] : guacamole.update_connection(connection_id, hostname)
+        
+        # redirect to new tab
+        url =  guacamole.get_connection_url(connection_id, guacamole_username, guacamole_password)
+        
+        return JsonResponse({"redirect_url": url})
 
 def renders(request) : 
     return render(request, "guacamole.html")

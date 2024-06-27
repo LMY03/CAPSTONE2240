@@ -11,6 +11,7 @@ from ticketing.models import RequestEntry, Comment, RequestUseCase, VMTemplates,
 import json
 from django.forms.models import model_to_dict
 from proxmox.models import VirtualMachines
+from guacamole.models import GuacamoleConnection
 
 # Create your views here.
 def home_filter_view (request):
@@ -30,7 +31,7 @@ def student_home(request):
 
 @login_required
 def faculty_home(request):
-    return render(request, 'users/faculty_home.html')
+    return render(request, 'users/faculty_home.html', {'data': get_student_vm()})
     
 
 @login_required
@@ -41,10 +42,11 @@ def tsg_home(request):
 @login_required
 def vm_details(request, vm_id):
     vm_data = VirtualMachines.objects.get(id=vm_id)
-
+    guacamole_connection_id = GuacamoleConnection.objects.get(user_id=request.user.id)
     context = {
         'vm_data': vm_data,
-        'data' : get_student_vm()
+        'data' : get_student_vm(),
+        'guacamole_connection_id' : guacamole_connection_id
     }
 
     return render(request, 'users/student_vm_details.html', context)
@@ -71,21 +73,21 @@ def request_details (request, request_id):
     request_entry = get_object_or_404(RequestEntry, pk=pk)
 
     request_entry_details = RequestEntry.objects.select_related("requester", "template").values(
-            "id",
-            "status",
-            "requester__first_name",
-            "requester__last_name",
-            "cores",
-            "ram",
-            #"storage",
-            "has_internet",
-            "id",
-            "template__vm_name"
-            #"use_case",
-            "date_needed",
-            'expiration_date',
-            "other_config",
-            "template__vm__storage"
+        "id",
+        "status",
+        "requester__first_name",
+        "requester__last_name",
+        "cores",
+        "ram",
+        #"storage",
+        "has_internet",
+        "id",
+        "template__vm_name",
+        #"use_case",
+        "date_needed",
+        'expiration_date',
+        "other_config",
+        "template__storage"
     ).get(pk=pk)
 
 
@@ -101,7 +103,7 @@ def request_details (request, request_id):
         else:
             request_entry_details['use_case'] = 'Class Course'
 
-    request_entry_details['storage'] = request_entry_details.get('template__vm__storage')
+    request_entry_details['storage'] = request_entry_details.get('template__storage')
 
 
     comments = Comment.objects.filter(request_entry=request_entry).order_by('-date_time')
@@ -114,17 +116,16 @@ def request_details (request, request_id):
     return render (request, 'users/tsg_request_details.html', context = context)
 
 def faculty_vm_details (request, vm_id):
-     context ={
-          'vm_id' : vm_id,
-     }
-     return render (request, 'users/faculty_vm_details.html', context = context)
+    context ={
+        'vm_id' : vm_id,
+    }
+    return render (request, 'users/faculty_vm_details.html', context = context)
 
 def faculty_request_list(request):
-#    request.user.username = "jin"
-   user = get_object_or_404(User, username=request.user.username)
-   request_entries = RequestEntry.objects.filter(requester=user)
+    user = get_object_or_404(User, username=request.user.username)
+    request_entries = RequestEntry.objects.filter(requester=user)
 
-   for request_entry in request_entries:
+    for request_entry in request_entries:
         category = 'Unknown'  
         request_use_case = RequestUseCase.objects.filter(request_id=request_entry).first()
         
@@ -140,11 +141,11 @@ def faculty_request_list(request):
         
         request_entry.category = category
 
-   context = {
+    context = {
         'request_entries': request_entries
     }
 
-   return render(request, 'users/faculty_request_list.html', context)
+    return render(request, 'users/faculty_request_list.html', context)
 
 def edit_request(request, request_id):
     request_entry = get_object_or_404(RequestEntry, pk = request_id)

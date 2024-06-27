@@ -29,27 +29,15 @@ Faculty Dashboard
                         </tr>
                     </thead>
                     <tbody>
+                        {% for vm in data %}
                         <tr>
-                            <td><i class="bi bi-display"></i> ITSYSAD-VM01</td>
+                            <td><i class="bi bi-display"></i>{{ vm.vm_name }}</td>
                             <td>Course</td>
-                            <td>ITSYSAD S15 Group 1</td>
+                            <td>{{ vm.request_use_case }}</td>
                             <td>123213</td>
-                            <td>Shutdown</td>
+                            <td>{{ vm.status }}</td>
                         </tr>
-                        <tr>
-                            <td><i class="bi bi-display"></i> CAPIT-VM02</td>
-                            <td>Course</td>
-                            <td>ITSYSAD S15 Group 1</td>
-                            <td>12345231</td>
-                            <td>Running</td>
-                        </tr>
-                        <tr>
-                            <td><i class="bi bi-display"></i> ITISSES-VM03</td>
-                            <td>Course</td>
-                            <td>ITSYSAD S15 Group 2</td>
-                            <td>12345</td>
-                            <td>Running</td>
-                        </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
             </div>

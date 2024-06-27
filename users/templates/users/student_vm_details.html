@@ -18,8 +18,17 @@ VM Details {{ vm_id }}
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2>VM Details: {{ vm_data.vm_name }}</h2>
             <div>
-                <button type="button" class="btn btn-danger me-2">Shutdown</button>
-                <button type="button" class="btn btn-success">Open VM</button>
+                <form action="">
+                    {% csrf_token %}
+                    <input type="hidden" name="vm_id" value="{{ vm_data.vm_id }}" />
+                    <button type="submit" class="btn btn-danger me-2">Shutdown</button>
+                </form>
+                <form action="">
+                    {% csrf_token %}
+                    <input type="hidden" name="vm_id" value="{{ guacamole_connection_id }}" />
+                    <input type="hidden" name="connection_id" value="" />
+                    <button type="submit" class="btn btn-success">Open VM</button>
+                </form>
             </div>
         </div>
         <!-- Content Area -->
