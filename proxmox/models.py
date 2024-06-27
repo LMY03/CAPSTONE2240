@@ -27,4 +27,3 @@ class VMUser (models.Model):
 class VMTemplates (models.Model):
     vm = models.OneToOneField(VirtualMachines, on_delete=models.SET_NULL, null=True)
     # os
-

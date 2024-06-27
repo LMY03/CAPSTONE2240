@@ -7,7 +7,7 @@ from django.views import generic
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
-from ticketing.models import RequestEntry, Comment, RequestUseCase, VMTemplates, UserProfile
+from ticketing.models import RequestEntry, Comment, RequestUseCase, UserProfile
 import json
 from django.forms.models import model_to_dict
 from proxmox.models import VirtualMachines, VMTemplates
@@ -18,19 +18,30 @@ def home_filter_view (request):
     request_list = RequestEntry.objects.filter(status = status)
     return render (request, 'users/tsg_requests.html', {'request_list': request_list, 'status': status})
 
-def get_student_vm ():
+def get_vm():
     # Get the list of VM IDs from VMTemplates
     template_vm_ids = VMTemplates.objects.values_list('vm_id', flat=True)
     # Filter VirtualMachines to exclude those in VMTemplates and with status 'DELETED'
-    return list(VirtualMachines.objects.exclude(id__in=template_vm_ids).exclude(status='DELETED').order_by('id').values())
+    data = VirtualMachines.objects.exclude(id__in=template_vm_ids).exclude(status='DELETED').order_by('id').values()
+    # Annotate the data with request_use_case from RequestUseCase model
+    data_dict = []
+    for vm in data:
+        try:
+            request_use_case = RequestUseCase.objects.get(request_id=vm['id']).request_use_case
+        except RequestUseCase.DoesNotExist:
+            request_use_case = None
+        vm['request_use_case'] = request_use_case
+        data_dict.append(vm)
+
+    return data_dict
 
 @login_required
 def student_home(request):
-    return render(request, 'users/student_home.html', {'data': get_student_vm()})
+    return render(request, 'users/student_home.html', {'data': get_vm()})
 
 @login_required
 def faculty_home(request):
-    return render(request, 'users/faculty_home.html')
+    return render(request, 'users/faculty_home.html', {'data': get_vm()})
     
 
 @login_required
@@ -44,7 +55,7 @@ def vm_details(request, vm_id):
 
     context = {
         'vm_data': vm_data,
-        'data' : get_student_vm()
+        'data' : get_vm()
     }
 
     return render(request, 'users/student_vm_details.html', context)
@@ -114,37 +125,37 @@ def request_details (request, request_id):
     return render (request, 'users/tsg_request_details.html', context = context)
 
 def faculty_vm_details (request, vm_id):
-     context ={
-          'vm_id' : vm_id,
-     }
-     return render (request, 'users/faculty_vm_details.html', context = context)
+    context ={
+        'vm_id' : vm_id,
+    }
+    return render (request, 'users/faculty_vm_details.html', context = context)
 
 def faculty_request_list(request):
-#    request.user.username = "jin"
-   user = get_object_or_404(User, username=request.user.username)
-   request_entries = RequestEntry.objects.filter(requester=user)
+    # request.user.username = "faculty"
+    user = get_object_or_404(User, username=request.user.username)
+    request_entries = RequestEntry.objects.filter(requester=user)
 
-   for request_entry in request_entries:
-        category = 'Unknown'  
-        request_use_case = RequestUseCase.objects.filter(request_id=request_entry).first()
-        
-        if request_use_case:
-            if request_use_case.request_use_case == 'RESEARCH':
-                category = 'Research'
-            elif request_use_case.request_use_case == 'TEST':
-                category = 'Test'
-            elif request_use_case.request_use_case == 'THESIS':
-                category = 'Thesis'
-            else:
-                category = 'Class Course'
-        
-        request_entry.category = category
+    for request_entry in request_entries:
+            category = 'Unknown'  
+            request_use_case = RequestUseCase.objects.filter(request_id=request_entry).first()
+            
+            if request_use_case:
+                if request_use_case.request_use_case == 'RESEARCH':
+                    category = 'Research'
+                elif request_use_case.request_use_case == 'TEST':
+                    category = 'Test'
+                elif request_use_case.request_use_case == 'THESIS':
+                    category = 'Thesis'
+                else:
+                    category = 'Class Course'
+            
+            request_entry.category = category
 
-   context = {
-        'request_entries': request_entries
-    }
+    context = {
+            'request_entries': request_entries
+        }
 
-   return render(request, 'users/faculty_request_list.html', context)
+    return render(request, 'users/faculty_request_list.html', context)
 
 def edit_request(request, request_id):
     request_entry = get_object_or_404(RequestEntry, pk = request_id)

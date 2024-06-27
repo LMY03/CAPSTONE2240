@@ -41,9 +41,9 @@
                             <i class="bi bi-server"></i> VM List
                         </a>
                         <ul class="dropdown-menu custom-dropdown-menu">
-                            <li><a class="dropdown-item" href="{% url 'users:vm_details_faculty' vm_id='VM01'%}">VM 1</a></li>
-                            <li><a class="dropdown-item" href="#">VM 2</a></li>
-                            <li><a class="dropdown-item" href="#">VM 3</a></li>
+                            {% for vm in data %}
+                            <li><a class="dropdown-item" href="{% url 'users:vm_details' vm.id %}">{{ vm.vm_name }}</a></li>
+                            {% endfor %}
                         </ul>
                     </li>
                     <li class="nav-item">
