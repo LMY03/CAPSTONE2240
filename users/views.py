@@ -10,7 +10,7 @@ from django.contrib.auth import authenticate, login
 from ticketing.models import RequestEntry, Comment, RequestUseCase, VMTemplates, UserProfile
 import json
 from django.forms.models import model_to_dict
-from proxmox.models import VirtualMachines, VMTemplates
+from proxmox.models import VirtualMachines
 
 # Create your views here.
 def home_filter_view (request):

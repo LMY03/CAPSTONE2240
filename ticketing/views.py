@@ -10,10 +10,10 @@ from django.forms.models import model_to_dict
 from django.http import JsonResponse
 import json, datetime
 
-from .models import RequestEntry, Comment, RequestUseCase, PortRules, UserProfile, RequestEntryAudit
+from .models import RequestEntry, Comment, RequestUseCase, PortRules, UserProfile, RequestEntryAudit, VMTemplates
 
 from proxmox import views
-from proxmox.models import VMTemplates, VirtualMachines
+from proxmox.models import VirtualMachines
 
 def login (request):
     return render(request, 'login.html')
@@ -120,7 +120,7 @@ class RequestFormView(generic.edit.FormView):
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
-        vmtemplate_list = VMTemplates.objects.all().values_list('id', 'vm__vm_name')
+        vmtemplate_list = VMTemplates.objects.all().values_list('id', 'vm_name')
         context['vmtemplate_list'] = list(vmtemplate_list)
         return context
 
