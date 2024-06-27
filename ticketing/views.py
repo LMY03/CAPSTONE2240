@@ -56,7 +56,7 @@ class DetailView(generic.DetailView):
             "requester__last_name",
             "cores",
             "ram",
-            #"storage",
+            "storage",
             "has_internet",
             "id",
             "template__vm_name",
@@ -65,7 +65,6 @@ class DetailView(generic.DetailView):
             'expiration_date',
             "other_config",
             "vm_count",
-            "template__storage"
         ).get(pk=pk)
 
 
@@ -137,13 +136,11 @@ def redirect_based_on_user_type(request):
 
 #@login_required
 def new_form_submit(request):
-    print ("new-form-submit")
     # TODO: authenticate if valid user(logged in & faculty/tsg)
+    print("submit form")
     if request.method == "POST":
-        print ("new-form-submit-post")
+        print("submit form post")
         # get data
-        #request.user = "jin"
-        request.user = "faculty" # static
         requester = get_object_or_404(User, username=request.user)
         data = request.POST
         template_id = data.get("template_id")
@@ -156,11 +153,10 @@ def new_form_submit(request):
         other_config = data.get("other_configs")
         use_case = data.get('use_case')
         #vm_count = data.get("vm_count")
-        
-        vmTemplateID = VMTemplates.objects.get(id = template_id)
         print("-----------------------")
         print(f"{data}")
         print("-----------------------")
+        vmTemplateID = VMTemplates.objects.get(id = template_id)
         # TODO: data verification
 
         # create request object
@@ -169,7 +165,7 @@ def new_form_submit(request):
             template = vmTemplateID,
             cores = cores,
             ram = ram,
-            #storage = storage,
+            # storage = storage,
             has_internet = has_internet,
             other_config = other_config,
             date_needed = date_needed,
@@ -295,7 +291,7 @@ def vm_provision(id):
     node = "pve"
     request_entry = get_object_or_404(RequestEntry, pk=id)
 
-    vm_id = int(request_entry.template.vm.vm_id)
+    vm_id = int(request_entry.template.vm_id)
     request_use_cases = []
     request_use_cases = RequestUseCase.objects.filter(request=request_entry.pk).values('request_use_case', 'vm_count')
     classnames = []
@@ -308,7 +304,7 @@ def vm_provision(id):
     cpu_cores = int(request_entry.cores)
     ram = int(request_entry.ram)
 
-    data = views.vm_provision_process(node, vm_id, classnames, total_no_of_vm, cpu_cores, ram)
+    data = views.vm_provision_process(node, vm_id, classnames, total_no_of_vm, cpu_cores, ram, id)
 
 def edit_form_submit (request):
     data = request.POST

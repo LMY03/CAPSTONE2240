@@ -18,6 +18,7 @@ class VMTemplates(models.Model):
     vm_name = models.CharField(max_length=90)
     cores = models.IntegerField()
     ram = models.IntegerField()
+    storage = models.IntegerField()
 
 class RequestEntry(models.Model):
     expirationDateDefault = expiration_date_default
