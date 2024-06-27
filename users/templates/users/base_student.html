@@ -23,22 +23,13 @@
                     </a>
                 </div>
                 <ul class="nav flex-column">
-                    {% comment %} Kailangan natin gawing dynamic ito  {% endcomment %}
+                    {% for vm in data %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'users:vm_details' vm_id='ITSYSAD-VM01' %}">
-                            <i class="bi bi-display"></i> ITSYSAD-VM01
+                        <a class="nav-link" href="{% url 'users:vm_details' vm.id %}">
+                            <i class="bi bi-display"></i> {{ vm.vm_name }}
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            <i class="bi bi-display"></i> CAPIT-VM02
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#">
-                            <i class="bi bi-display"></i> ITISSES-VM03
-                        </a>
-                    </li>
+                    {% endfor %}
                 </ul>
                 <a href="{% url 'logout' %}" class="logout">
                     <i class="bi bi-box-arrow-left"></i> Logout

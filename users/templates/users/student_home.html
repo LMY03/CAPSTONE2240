@@ -29,27 +29,15 @@ Student Dashboard
                         </tr>
                     </thead>
                     <tbody>
+                        {% for vm in data %}
                         <tr>
-                            <td><i class="bi bi-display"></i> ITSYSAD-VM01</td>
-                            <td>Course</td>
-                            <td>ITSYSAD</td>
-                            <td>Gregory Cu</td>
-                            <td>Shutdown</td>
-                        </tr>
-                        <tr>
-                            <td><i class="bi bi-display"></i> CAPIT-VM02</td>
+                            <td><i class="bi bi-display"></i>{{ vm.vm_name }}</td>
                             <td>Course</td>
                             <td>CAPSTONE</td>
                             <td>Estefanie Bertumen</td>
-                            <td>Running</td>
+                            <td>{{ vm.status }}</td>
                         </tr>
-                        <tr>
-                            <td><i class="bi bi-display"></i> ITISSES-VM03</td>
-                            <td>Course</td>
-                            <td>ITISSES</td>
-                            <td>Oliver Malabanan</td>
-                            <td>Running</td>
-                        </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
             </div>
