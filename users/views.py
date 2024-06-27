@@ -7,7 +7,7 @@ from django.views import generic
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
-from ticketing.models import RequestEntry, Comment, RequestUseCase, VMTemplates, UserProfile
+from ticketing.models import RequestEntry, Comment, RequestUseCase, VMTemplates, UserProfile, PortRules
 import json
 from django.forms.models import model_to_dict
 from proxmox.models import VirtualMachines
@@ -149,6 +149,7 @@ def faculty_request_list(request):
 def edit_request(request, request_id):
     request_entry = get_object_or_404(RequestEntry, pk = request_id)
     request_use_cases = RequestUseCase.objects.filter(request_id = request_id)
+    portRules = PortRules.objects.filter(request_id = request_id)
     context = {
         'Sections': [],
         'use_case': None 
@@ -168,12 +169,21 @@ def edit_request(request, request_id):
         if context['use_case'] == 'CLASS_COURSE':
             context['Sections'].append({
                 'request_use_case' : use_case.request_use_case,
-                'vm_count' : use_case.vm_count
+                'vm_count' : use_case.vm_count,
+                'id': use_case.id
             })
+        else:
+            context['vm_count'] = use_case.vm_count
 
     vmtemplate_list = VMTemplates.objects.all().values_list('id', 'vm_name')
     context['vmtemplate_list'] = list(vmtemplate_list)
     context['request_entry'] = request_entry
+
+    if portRules.exists():
+        port_rules_list = list(portRules.values())
+        context['port_rules'] = portRules
+        context['port_rules_js'] = json.dumps(port_rules_list)
+    
     print(context)
     return render(request, 'users/faculty_edit_request.html', context)
 
