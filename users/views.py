@@ -30,7 +30,7 @@ def student_home(request):
 
 @login_required
 def faculty_home(request):
-    return render(request, 'users/faculty_home.html')
+    return render(request, 'users/faculty_home.html', {'data': get_student_vm()})
     
 
 @login_required
