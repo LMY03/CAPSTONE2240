@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from . import proxmox
 from . models import VirtualMachines, VMTemplates, VMUser
 from guacamole import guacamole
-from autotool import ansible
+#from autotool import ansible
 
 # Create your views here.
 

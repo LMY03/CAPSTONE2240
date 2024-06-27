@@ -32,7 +32,7 @@ class IndexView(generic.ListView):
             "ram",
             "has_internet",
             "id",
-            "template__vm__vm_name"
+            "template__vm_name"
         )
         #.order_by('-requestDate')
         return queryset

@@ -58,7 +58,7 @@ def tsg_requests (request):
             "ram",
             "has_internet",
             "id",
-            "template__vm__vm_name"
+            "template__vm_name"
         )
     # context['request_list'] = datas
     context = {'request_list': datas}
@@ -80,7 +80,7 @@ def request_details (request, request_id):
             #"storage",
             "has_internet",
             "id",
-            "template__vm__vm_name",
+            "template__vm_name"
             #"use_case",
             "date_needed",
             'expiration_date',
