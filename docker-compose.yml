@@ -4,7 +4,7 @@ services:
     container_name: mysql
     restart: always
     ports:
-      - "3306:3306"
+      - "3307:3306"
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
       MYSQL_DATABASE: ${MYSQL_CAP2240_DATABASE}
@@ -23,7 +23,7 @@ services:
       dockerfile: Dockerfile
     container_name: CAP-2240
     # command: sh -c "python manage.py runserver 0.0.0.0:8000"
-    command: sh -c "python3 manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
+    command: sh -c "python3 manage.py makemigrations && python3 manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
     # command: sh -c "python3 manage.py migrate --noinput && python3 manage.py collectstatic --noinput && python manage.py runserver 0.0.0.0:8000"
     restart: always
     volumes:

@@ -15,5 +15,4 @@ urlpatterns = [
     path('faculty/requests_list', views.faculty_request_list, name='faculty_request_list'),
     path('faculty/edit_request/<str:request_id>', views.edit_request, name = 'faculty_edit_request'),
     path('login', views.login_view, name = "login"),
-
 ]

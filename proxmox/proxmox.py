@@ -56,13 +56,13 @@ def get_vm_status(node, vmid):
 
     return status
 
-def clone_vm(node, vmid, newid):
+def clone_vm(node, vmid, newid, name):
     session = get_authenticated_session()
     url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/qemu/{vmid}/clone"
     config = {
         'newid': newid,
         'full': 1,
-        # 'name': name,
+        'name': name,
         # 'target': ''
         # 'storage': 'local-lvm',
     }

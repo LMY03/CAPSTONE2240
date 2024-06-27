@@ -10,6 +10,7 @@ from django.contrib.auth import authenticate, login
 from ticketing.models import RequestEntry, Comment, RequestUseCase, VMTemplates, UserProfile, PortRules
 import json
 from django.forms.models import model_to_dict
+from proxmox.models import VirtualMachines, VMTemplates
 
 # Create your views here.
 def home_filter_view (request):
@@ -17,9 +18,15 @@ def home_filter_view (request):
     request_list = RequestEntry.objects.filter(status = status)
     return render (request, 'users/tsg_requests.html', {'request_list': request_list, 'status': status})
 
+def get_student_vm ():
+    # Get the list of VM IDs from VMTemplates
+    template_vm_ids = VMTemplates.objects.values_list('vm_id', flat=True)
+    # Filter VirtualMachines to exclude those in VMTemplates and with status 'DELETED'
+    return list(VirtualMachines.objects.exclude(id__in=template_vm_ids).exclude(status='DELETED').order_by('id').values())
+
 @login_required
 def student_home(request):
-    return render(request, 'users/student_home.html')
+    return render(request, 'users/student_home.html', {'data': get_student_vm()})
 
 @login_required
 def faculty_home(request):
@@ -33,15 +40,16 @@ def tsg_home(request):
 
 @login_required
 def vm_details(request, vm_id):
-    print(f"This is the VM ID: {vm_id}")
+    vm_data = VirtualMachines.objects.get(id=vm_id)
 
-    vm_data = {
-        'vm_id' : vm_id,
+    context = {
+        'vm_data': vm_data,
+        'data' : get_student_vm()
     }
-    return render (request, 'users/student_vm_details.html', context= vm_data)
+
+    return render(request, 'users/student_vm_details.html', context)
 
 def tsg_requests (request):
-    context = {}
     datas = RequestEntry.objects.select_related("requester", "template").values(
             "status",
             "requester__first_name",
@@ -50,9 +58,10 @@ def tsg_requests (request):
             "ram",
             "has_internet",
             "id",
-            "template__vm_name"
+            "template__vm__vm_name"
         )
-    context['request_list'] = datas
+    # context['request_list'] = datas
+    context = {'request_list': datas}
     print (context)
     return render (request, 'users/tsg_requests.html', context= context)
 
@@ -71,12 +80,12 @@ def request_details (request, request_id):
             #"storage",
             "has_internet",
             "id",
-            "template__vm_name",
+            "template__vm__vm_name",
             #"use_case",
             "date_needed",
             'expiration_date',
             "other_config",
-            "template__storage"
+            "template__vm__storage"
     ).get(pk=pk)
 
 
@@ -92,7 +101,7 @@ def request_details (request, request_id):
         else:
             request_entry_details['use_case'] = 'Class Course'
 
-    request_entry_details['storage'] = request_entry_details.get('template__storage')
+    request_entry_details['storage'] = request_entry_details.get('template__vm__storage')
 
 
     comments = Comment.objects.filter(request_entry=request_entry).order_by('-date_time')

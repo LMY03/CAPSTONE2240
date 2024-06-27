@@ -16,7 +16,7 @@ VM Details {{ vm_id }}
     <div class="container mt-4">
         <!-- Header with Buttons -->
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>VM Details: {{ vm_id }}</h2>
+            <h2>VM Details: {{ vm_data.vm_name }}</h2>
             <div>
                 <button type="button" class="btn btn-danger me-2">Shutdown</button>
                 <button type="button" class="btn btn-success">Open VM</button>
@@ -29,7 +29,7 @@ VM Details {{ vm_id }}
                 <div class="card">
                     <div class="card-header">Memory</div>
                     <div class="card-body">
-                        <!-- Add memory details here -->
+                        {{ vm_data.ram }} MB
                     </div>
                 </div>
             </div>
@@ -38,7 +38,7 @@ VM Details {{ vm_id }}
                 <div class="card">
                     <div class="card-header">Core Count</div>
                     <div class="card-body">
-                        <!-- Add core count details here -->
+                        {{ vm_data.cores }} Cores
                     </div>
                 </div>
             </div>
@@ -47,25 +47,25 @@ VM Details {{ vm_id }}
                 <div class="card">
                     <div class="card-header">Storage</div>
                     <div class="card-body">
-                        <!-- Add storage details here -->
+                        {{ vm_data.storage }} GB
                     </div>
                 </div>
             </div>
             <!-- Network -->
-            <div class="col-md-12 mb-4">
+            <!-- <div class="col-md-12 mb-4">
                 <div class="card">
                     <div class="card-header">Network</div>
                     <div class="card-body">
-                        <!-- Add network details here -->
+                        Add network details here
                     </div>
                 </div>
-            </div>
+            </div> -->
             <!-- Status -->
             <div class="col-md-12">
                 <div class="card">
                     <div class="card-header">Status</div>
                     <div class="card-body">
-                        <!-- Add status details here -->
+                        {{ vm_data.status }}
                     </div>
                 </div>
             </div>
