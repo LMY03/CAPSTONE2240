@@ -2,16 +2,19 @@ import time
 
 from django.shortcuts import get_object_or_404, redirect, render
 
-from . import proxmox
-from . models import VirtualMachines, VMTemplates, VMUser
 from guacamole import guacamole
 #from autotool import ansible
+
+from . import proxmox
+from . models import VirtualMachines, VMUser
+from ticketing.models import VMTemplates, UserProfile
+from django.contrib.auth.models import User
 
 # Create your views here.
 
 def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram):
 
-    vm_temp = get_object_or_404(VMTemplates, vm__vm_id=vm_id)
+    vm_temp = get_object_or_404(VMTemplates, vm_id=vm_id)
 
     protocol = "rdp"
     port = {
@@ -67,8 +70,12 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram):
     for i in range(no_of_vm):
         vm_users.append("jin")
         labels.append(classnames[i])
+        # User()
 
     # ansible.run_playbook("netdata_conf.yml", hostnames, vm_users, classnames, labels)
+
+    User(password="123456", )
+    UserProfile()
 
     return {
         'vm_id' : new_vm_ids, 
