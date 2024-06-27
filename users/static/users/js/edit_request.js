@@ -1,5 +1,6 @@
 let sectionCounts = {};
 let addCourseSectionClicked = 1;
+let useCaseIsChanged = 0;
 if (sectionsData.length !== 0) {
     addCourseSectionClicked = sectionsData.length;
     console.log('sectionsData is not empty')
@@ -68,6 +69,25 @@ function formatDate(date) {
 
 document.getElementById('use_case').addEventListener('change', function () {
     let classCourseInput = document.getElementById('class_course_input');
+
+    if (use_case === 'CLASS_COURSE' && useCaseIsChanged == 0) {
+        useCaseIsChanged = 1;
+        let vmCountLabel = document.createElement('label');
+        vmCountLabel.setAttribute('for', 'vm_count1');
+        vmCountLabel.setAttribute('class', 'form-label');
+        vmCountLabel.textContent = 'VM Count:';
+
+        let vm_and_coursecode = document.getElementById('vm_and_coursecode')
+        document.getElementById('vm_count1_div').remove()
+        vmCountInput = document.createElement('input');
+        vmCountInput.setAttribute('type', 'number');
+        vmCountInput.setAttribute('id', 'vm_count1');
+        vmCountInput.setAttribute('name', 'vm_count1');
+        vmCountInput.setAttribute('min', '1');
+        vmCountInput.setAttribute('max', '40');
+        vm_and_coursecode.appendChild(vmCountLabel);
+        vm_and_coursecode.appendChild(vmCountInput);
+    }
     if (this.value === 'CLASS_COURSE') {
         classCourseInput.style.display = 'block';
     } else {

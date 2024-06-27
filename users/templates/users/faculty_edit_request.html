@@ -51,10 +51,10 @@ Edit request {{ vm_id }}
                         <div class="mb-3">
                             <label for="ram" class="form-label">RAM:</label>
                             <select class="form-control" id="ram" name="ram">
-                                <option value="1" {% if request_entry.ram == 1 %} selected {% endif %}>1 GB</option>
-                                <option value="2" {% if request_entry.ram == 2 %} selected {% endif %}>2 GB</option>
-                                <option value="4" {% if request_entry.ram == 4 %} selected {% endif %}>4 GB</option>
-                                <option value="8" {% if request_entry.ram == 8 %} selected {% endif %}>8 GB</option>
+                                <option value="1024" {% if request_entry.ram == 1024 %} selected {% endif %}>1 GB</option>
+                                <option value="2048" {% if request_entry.ram == 2048 %} selected {% endif %}>2 GB</option>
+                                <option value="4096" {% if request_entry.ram == 4096 %} selected {% endif %}>4 GB</option>
+                                <option value="8192" {% if request_entry.ram == 8192 %} selected {% endif %}>8 GB</option>
                             </select>
                         </div>
                         <div class="mb-3">
@@ -154,7 +154,7 @@ Edit request {{ vm_id }}
                                         <div class="mb-3">
                                             <input type="text" class="form-control w-25" id="course_code1" name="course_code1" value="{{ section.request_use_case }}">
                                         </div>
-                                        <div class="mb-3">
+                                        <div class="mb-3" id = 'vm_count1_div'>
                                             <label for="vm_count" class="form-label" >VM Count:</label>
                                             <input type="number" id="vm_count1" name="vm_count1" min="1" max="40" value = "{{ section.vm_count }}">
                                         </div>
@@ -223,6 +223,7 @@ Edit request {{ vm_id }}
         var portRules = []
     {% endif %}
     let requestID = {{request_entry.id}}
+    let use_case = "{{ use_case | safe}}"
     
 </script>
 <script src="{% static 'users/js/edit_request.js' %}"></script>
