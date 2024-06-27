@@ -1,5 +1,4 @@
 from django.db import models
-from django.apps import apps
 
 # Remove the direct import
 from ticketing.models import RequestEntry

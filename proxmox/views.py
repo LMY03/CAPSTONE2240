@@ -8,6 +8,7 @@ from guacamole import guacamole
 from . import proxmox
 from . models import VirtualMachines, VMUser
 from ticketing.models import VMTemplates, UserProfile
+from guacamole.models import GuacamoleConnection
 from django.contrib.auth.models import User
 
 # Create your views here.
@@ -65,6 +66,7 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, requ
         guacamole_connection_ids.append(guacamole.create_connection(classnames[i], protocol, port, hostnames[i], username, password, parent_identifier))
         guacamole.create_user(classnames[i], guacamole_passwords[i])
         guacamole.assign_connection(classnames[i], guacamole_connection_ids[i])
+        GuacamoleConnection(user=User.objects.get(pk=1), connection_id=guacamole_connection_ids[i]).save()
 
     # set hostnames and label in netdata
     vm_users = []
@@ -73,6 +75,7 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, requ
     for i in range(no_of_vm):
         vm_users.append("jin")
         labels.append(classnames[i])
+
         # Create System Users
         # classname[i] is the username
 

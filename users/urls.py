@@ -2,6 +2,8 @@ from django.urls import path
 
 from . import views
 
+from guacamole.views import launch_vm
+
 app_name = "users"
 urlpatterns = [
     path('home-filter/', views.home_filter_view, name='home-filter'),
@@ -9,6 +11,7 @@ urlpatterns = [
     path('faculty/home/', views.faculty_home, name='faculty_home'),
     path('tsg/home/', views.tsg_home, name='tsg_home'),
     path('student/vm/<str:vm_id>/', views.vm_details, name='vm_details'),
+    path('student/vm/launch/', launch_vm, name='launch_vm'),
     path('tsg/requests/', views.tsg_requests, name = 'vm_requests'),
     path('tsg/request_details/<int:request_id>', views.request_details, name = 'request_details'),
     path('faculty/vm_details/<str:vm_id>', views.faculty_vm_details, name = 'vm_details_faculty'),

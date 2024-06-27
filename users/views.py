@@ -11,6 +11,7 @@ from ticketing.models import RequestEntry, Comment, RequestUseCase, VMTemplates,
 import json
 from django.forms.models import model_to_dict
 from proxmox.models import VirtualMachines
+from guacamole.models import GuacamoleConnection
 
 # Create your views here.
 def home_filter_view (request):
@@ -41,10 +42,11 @@ def tsg_home(request):
 @login_required
 def vm_details(request, vm_id):
     vm_data = VirtualMachines.objects.get(id=vm_id)
-
+    guacamole_connection_id = GuacamoleConnection.objects.get(user_id=request.user.id)
     context = {
         'vm_data': vm_data,
-        'data' : get_student_vm()
+        'data' : get_student_vm(),
+        'guacamole_connection_id' : guacamole_connection_id
     }
 
     return render(request, 'users/student_vm_details.html', context)
