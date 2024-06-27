@@ -7,10 +7,10 @@ from django.views import generic
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
-from ticketing.models import RequestEntry, Comment, RequestUseCase, UserProfile
+from ticketing.models import RequestEntry, Comment, RequestUseCase, VMTemplates, UserProfile, PortRules
 import json
 from django.forms.models import model_to_dict
-from proxmox.models import VirtualMachines, VMTemplates
+from proxmox.models import VirtualMachines
 
 # Create your views here.
 def home_filter_view (request):
@@ -18,30 +18,19 @@ def home_filter_view (request):
     request_list = RequestEntry.objects.filter(status = status)
     return render (request, 'users/tsg_requests.html', {'request_list': request_list, 'status': status})
 
-def get_vm():
+def get_student_vm ():
     # Get the list of VM IDs from VMTemplates
     template_vm_ids = VMTemplates.objects.values_list('vm_id', flat=True)
     # Filter VirtualMachines to exclude those in VMTemplates and with status 'DELETED'
-    data = VirtualMachines.objects.exclude(id__in=template_vm_ids).exclude(status='DELETED').order_by('id').values()
-    # Annotate the data with request_use_case from RequestUseCase model
-    data_dict = []
-    for vm in data:
-        try:
-            request_use_case = RequestUseCase.objects.get(request_id=vm['id']).request_use_case
-        except RequestUseCase.DoesNotExist:
-            request_use_case = None
-        vm['request_use_case'] = request_use_case
-        data_dict.append(vm)
-
-    return data_dict
+    return list(VirtualMachines.objects.exclude(id__in=template_vm_ids).exclude(status='DELETED').order_by('id').values())
 
 @login_required
 def student_home(request):
-    return render(request, 'users/student_home.html', {'data': get_vm()})
+    return render(request, 'users/student_home.html', {'data': get_student_vm()})
 
 @login_required
 def faculty_home(request):
-    return render(request, 'users/faculty_home.html', {'data': get_vm()})
+    return render(request, 'users/faculty_home.html')
     
 
 @login_required
@@ -55,7 +44,7 @@ def vm_details(request, vm_id):
 
     context = {
         'vm_data': vm_data,
-        'data' : get_vm()
+        'data' : get_student_vm()
     }
 
     return render(request, 'users/student_vm_details.html', context)
@@ -69,7 +58,7 @@ def tsg_requests (request):
             "ram",
             "has_internet",
             "id",
-            "template__vm__vm_name"
+            "template__vm_name"
         )
     # context['request_list'] = datas
     context = {'request_list': datas}
@@ -82,21 +71,21 @@ def request_details (request, request_id):
     request_entry = get_object_or_404(RequestEntry, pk=pk)
 
     request_entry_details = RequestEntry.objects.select_related("requester", "template").values(
-            "id",
-            "status",
-            "requester__first_name",
-            "requester__last_name",
-            "cores",
-            "ram",
-            #"storage",
-            "has_internet",
-            "id",
-            "template__vm__vm_name",
-            #"use_case",
-            "date_needed",
-            'expiration_date',
-            "other_config",
-            "template__vm__storage"
+        "id",
+        "status",
+        "requester__first_name",
+        "requester__last_name",
+        "cores",
+        "ram",
+        #"storage",
+        "has_internet",
+        "id",
+        "template__vm_name",
+        #"use_case",
+        "date_needed",
+        'expiration_date',
+        "other_config",
+        "template__storage"
     ).get(pk=pk)
 
 
@@ -112,7 +101,7 @@ def request_details (request, request_id):
         else:
             request_entry_details['use_case'] = 'Class Course'
 
-    request_entry_details['storage'] = request_entry_details.get('template__vm__storage')
+    request_entry_details['storage'] = request_entry_details.get('template__storage')
 
 
     comments = Comment.objects.filter(request_entry=request_entry).order_by('-date_time')
@@ -131,35 +120,35 @@ def faculty_vm_details (request, vm_id):
     return render (request, 'users/faculty_vm_details.html', context = context)
 
 def faculty_request_list(request):
-    # request.user.username = "faculty"
     user = get_object_or_404(User, username=request.user.username)
     request_entries = RequestEntry.objects.filter(requester=user)
 
     for request_entry in request_entries:
-            category = 'Unknown'  
-            request_use_case = RequestUseCase.objects.filter(request_id=request_entry).first()
-            
-            if request_use_case:
-                if request_use_case.request_use_case == 'RESEARCH':
-                    category = 'Research'
-                elif request_use_case.request_use_case == 'TEST':
-                    category = 'Test'
-                elif request_use_case.request_use_case == 'THESIS':
-                    category = 'Thesis'
-                else:
-                    category = 'Class Course'
-            
-            request_entry.category = category
+        category = 'Unknown'  
+        request_use_case = RequestUseCase.objects.filter(request_id=request_entry).first()
+        
+        if request_use_case:
+            if request_use_case.request_use_case == 'RESEARCH':
+                category = 'Research'
+            elif request_use_case.request_use_case == 'TEST':
+                category = 'Test'
+            elif request_use_case.request_use_case == 'THESIS':
+                category = 'Thesis'
+            else:
+                category = 'Class Course'
+        
+        request_entry.category = category
 
     context = {
-            'request_entries': request_entries
-        }
+        'request_entries': request_entries
+    }
 
     return render(request, 'users/faculty_request_list.html', context)
 
 def edit_request(request, request_id):
     request_entry = get_object_or_404(RequestEntry, pk = request_id)
     request_use_cases = RequestUseCase.objects.filter(request_id = request_id)
+    portRules = PortRules.objects.filter(request_id = request_id)
     context = {
         'Sections': [],
         'use_case': None 
@@ -179,12 +168,21 @@ def edit_request(request, request_id):
         if context['use_case'] == 'CLASS_COURSE':
             context['Sections'].append({
                 'request_use_case' : use_case.request_use_case,
-                'vm_count' : use_case.vm_count
+                'vm_count' : use_case.vm_count,
+                'id': use_case.id
             })
+        else:
+            context['vm_count'] = use_case.vm_count
 
     vmtemplate_list = VMTemplates.objects.all().values_list('id', 'vm_name')
     context['vmtemplate_list'] = list(vmtemplate_list)
     context['request_entry'] = request_entry
+
+    if portRules.exists():
+        port_rules_list = list(portRules.values())
+        context['port_rules'] = portRules
+        context['port_rules_js'] = json.dumps(port_rules_list)
+    
     print(context)
     return render(request, 'users/faculty_edit_request.html', context)
 

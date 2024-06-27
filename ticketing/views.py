@@ -10,10 +10,10 @@ from django.forms.models import model_to_dict
 from django.http import JsonResponse
 import json, datetime
 
-from .models import RequestEntry, Comment, RequestUseCase, PortRules, UserProfile, RequestEntryAudit
+from .models import RequestEntry, Comment, RequestUseCase, PortRules, UserProfile, RequestEntryAudit, VMTemplates
 
 from proxmox import views
-from proxmox.models import VMTemplates, VirtualMachines
+from proxmox.models import VirtualMachines
 
 def login (request):
     return render(request, 'login.html')
@@ -32,7 +32,7 @@ class IndexView(generic.ListView):
             "ram",
             "has_internet",
             "id",
-            "template__vm__vm_name"
+            "template__vm_name"
         )
         #.order_by('-requestDate')
         return queryset
@@ -56,7 +56,7 @@ class DetailView(generic.DetailView):
             "requester__last_name",
             "cores",
             "ram",
-            #"storage",
+            "storage",
             "has_internet",
             "id",
             "template__vm_name",
@@ -65,7 +65,6 @@ class DetailView(generic.DetailView):
             'expiration_date',
             "other_config",
             "vm_count",
-            "template__storage"
         ).get(pk=pk)
 
 
@@ -120,7 +119,7 @@ class RequestFormView(generic.edit.FormView):
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
-        vmtemplate_list = VMTemplates.objects.all().values_list('id', 'vm__vm_name')
+        vmtemplate_list = VMTemplates.objects.all().values_list('id', 'vm_name')
         context['vmtemplate_list'] = list(vmtemplate_list)
         return context
 
@@ -137,13 +136,11 @@ def redirect_based_on_user_type(request):
 
 #@login_required
 def new_form_submit(request):
-    print ("new-form-submit")
     # TODO: authenticate if valid user(logged in & faculty/tsg)
+    print("submit form")
     if request.method == "POST":
-        print ("new-form-submit-post")
+        print("submit form post")
         # get data
-        #request.user = "jin"
-        # request.user = "faculty" # static
         requester = get_object_or_404(User, username=request.user)
         data = request.POST
         template_id = data.get("template_id")
@@ -156,11 +153,10 @@ def new_form_submit(request):
         other_config = data.get("other_configs")
         use_case = data.get('use_case')
         #vm_count = data.get("vm_count")
-        
-        vmTemplateID = VMTemplates.objects.get(id = template_id)
         print("-----------------------")
         print(f"{data}")
         print("-----------------------")
+        vmTemplateID = VMTemplates.objects.get(id = template_id)
         # TODO: data verification
 
         # create request object
@@ -169,7 +165,7 @@ def new_form_submit(request):
             template = vmTemplateID,
             cores = cores,
             ram = ram,
-            #storage = storage,
+            # storage = storage,
             has_internet = has_internet,
             other_config = other_config,
             date_needed = date_needed,
@@ -247,16 +243,23 @@ def log_request_entry_changes(request_entry, changed_by, new_data, user):
     old_data = model_to_dict(request_entry)
     
 
+    for field, value in old_data.items():
+        if isinstance(value, datetime.date):
+            old_data[field] = value.isoformat()
+    
+    print(old_data)
     for field, value in new_data.items():
         if isinstance(value, User):
             new_data[field] = value.id  
         elif isinstance(value, datetime.date):
             new_data[field] = value.isoformat()
+        elif isinstance(value, VMTemplates):
+            new_data[field] = value.id
     
     changes = {field: {'old': old_data[field], 'new': new_data[field]}
                for field in new_data if old_data[field] != new_data[field]}
 
-
+    print(changes)
     RequestEntryAudit.objects.create(
         request_entry=request_entry,
         changed_by=changed_by,
@@ -267,6 +270,9 @@ def log_request_entry_changes(request_entry, changed_by, new_data, user):
     for field, value in new_data.items():
         if field == 'assigned_to':
            setattr(request_entry, field, loggedIn_user) 
+        elif field == 'template':
+            vm_template = get_object_or_404(VMTemplates, id = value)
+            setattr(request_entry, field, vm_template)
         else: 
             setattr(request_entry, field, value)
     request_entry.save()
@@ -285,7 +291,7 @@ def vm_provision(id):
     node = "pve"
     request_entry = get_object_or_404(RequestEntry, pk=id)
 
-    vm_id = int(request_entry.template.vm.vm_id)
+    vm_id = int(request_entry.template.vm_id)
     request_use_cases = []
     request_use_cases = RequestUseCase.objects.filter(request=request_entry.pk).values('request_use_case', 'vm_count')
     classnames = []
@@ -298,7 +304,7 @@ def vm_provision(id):
     cpu_cores = int(request_entry.cores)
     ram = int(request_entry.ram)
 
-    data = views.vm_provision_process(node, vm_id, classnames, total_no_of_vm, cpu_cores, ram)
+    data = views.vm_provision_process(node, vm_id, classnames, total_no_of_vm, cpu_cores, ram, id)
 
 def edit_form_submit (request):
     data = request.POST
@@ -308,22 +314,79 @@ def edit_form_submit (request):
     newData = {}
     newvmTemplateID = VMTemplates.objects.get(id=data.get("template_id"))
     newData = {
-            'template_id': newvmTemplateID,
+            'template': newvmTemplateID,
             'cores': data.get("cores"),
             'ram': data.get("ram"),
             'has_internet': data.get("external_access") == 'true',
             'date_needed': data.get('date_needed'),
             'expiration_date': data.get('expiration_date'),
-            'other_configs': data.get("other_configs"),
-            'use_case': data.get('use_case'),
+            'other_config': data.get("other_configs"),
         }
-    addCourseButtonClicked = data.get("addCourseButtonClick")
-    for i in range (1, addCourseButtonClicked + 1):
-        newData[f'courses_{i}'] = data.get('course_code{i}')
-        newData[f'vm_count{i}'] = data.get('vm_count{i}')
+    newUseCase = data.get('use_case')
+    addCourseButtonClicked = int(data.get("addCourseButtonClick"))
 
     print(newData)
-    # if newData['has_internet'] == True: 
-    #     for i in range ()
+
+    # TODO: Fix the protocol front end for the edit_request_html first and do the backend
+    # For the protocol
+
+    request_use_cases = RequestUseCase.objects.filter(request_id = request_entry_id)
+    request_use_case = request_use_cases.first()
+    
+
+    #Changes getting the use cases data
+    if request_use_case.request_use_case in ['RESEARCH', 'THESIS', 'TEST']:
+        dbUseCase = request_use_case.request_use_case
+    else:
+        dbUseCase = 'CLASS_COURSE'
+
+    print(dbUseCase)
+    # Changes of use case
+    if newUseCase in ['RESEARCH', 'THESIS', 'TEST'] and dbUseCase != 'CLASS_COURSE':
+        print('3 to 3')
+        request_use_case.request_use_case = newUseCase
+        request_use_case.vm_count = data.get('vm_count1')
+        request_use_case.save()
+    elif dbUseCase == 'CLASS_COURSE' and newUseCase in ['RESEARCH', 'THESIS', 'TEST']:
+        print('1 to 3')
+        if request_use_cases.count() == 1:
+            request_use_case.request_use_case = newUseCase
+            request_use_case.vm_count = data.get('vm_count1')
+            request_use_case.save()
+        elif request_use_cases.count() > 1:
+            request_use_cases.delete()
+            RequestUseCase.objects.create(
+                request=request_entry,
+                request_use_case=newUseCase,
+                vm_count= data.get('vm_count1')
+            )
+    elif newUseCase == 'CLASS_COURSE' :
+        print ('1 to 1, 3 to 1')
+        print (f'AddCourseButtonClicked: {addCourseButtonClicked}')
+        listRequestUseCase = list(request_use_cases)
+        for i in range(1, addCourseButtonClicked + 1):
+            course_code = data.get(f"course_code{i}")
+            vm_count = data.get(f"vm_count{i}")
+            print (f"{course_code}, {vm_count}, {len(request_use_cases)}, {i}")
+            if i <= len(request_use_cases):
+                print ('overwriting the same row')
+                list_request_use_case = listRequestUseCase[i - 1]
+                list_request_use_case.request_use_case = course_code
+                list_request_use_case.vm_count = vm_count
+                list_request_use_case.save()
+            else:
+                RequestUseCase.objects.create(
+                    request=request_entry,
+                    request_use_case=course_code,
+                    vm_count=vm_count
+                )
+
+        if len(request_use_cases) > addCourseButtonClicked:
+            for i in range(addCourseButtonClicked, len(request_use_cases)):
+                request_use_cases[i].delete()
+
+    #Changes for the vm details
     log_request_entry_changes(request_entry, user, newData, user)
+
+   
     return JsonResponse({'status': 'ok'}, status=200)

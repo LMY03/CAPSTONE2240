@@ -1,5 +1,11 @@
 let sectionCounts = {};
-let addCourseSectionClicked = sectionsData.length;
+let addCourseSectionClicked = 1;
+if (sectionsData.length !== 0) {
+    addCourseSectionClicked = sectionsData.length;
+    console.log('sectionsData is not empty')
+}
+
+console.log(portRules)
 let newAddedGroup = {};
 
 // for (let section in sectionsData) {
@@ -143,6 +149,16 @@ document.getElementById('vm-form').addEventListener('submit', function (event) {
     formDataInputs[`addCourseButtonClick`] = addCourseSectionClicked;
     formDataInputs[`id`] = requestID;
 
+    if (addCourseSectionClicked != 0) {
+        formDataInputs['sections'] = sectionsData;
+    }
+
+    if (portRules != []) {
+        formDataInputs['port_rules'] = portRules;
+    }
+
+    console.log(formDataInputs['port_rules'])
+    console.log(formDataInputs['request_use_case'])
     for (const key in formDataInputs) {
         formData.append(key, formDataInputs[key])
     }

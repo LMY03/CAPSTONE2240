@@ -2,16 +2,19 @@ import time
 
 from django.shortcuts import get_object_or_404, redirect, render
 
-from . import proxmox
-from . models import VirtualMachines, VMTemplates, VMUser
 from guacamole import guacamole
-from autotool import ansible
+#from autotool import ansible
+
+from . import proxmox
+from . models import VirtualMachines, VMUser
+from ticketing.models import VMTemplates, UserProfile
+from django.contrib.auth.models import User
 
 # Create your views here.
 
-def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram):
+def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, request_id):
 
-    vm_temp = get_object_or_404(VMTemplates, vm__vm_id=vm_id)
+    vm_temp = get_object_or_404(VMTemplates, vm_id=vm_id)
 
     protocol = "rdp"
     port = {
@@ -39,9 +42,12 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram):
         # # start vm
         # proxmox.start_vm(node, new_vm_ids[i])
 
-    vm_user = get_object_or_404(VMUser, vm__vm_id=vm_id)
-    username = vm_user.username
-    password = vm_user.password
+    # vm_user = get_object_or_404(VMUser, vm__vm_id=vm_id)
+    # username = vm_user.username
+    # password = vm_user.password
+
+    username = "jin"
+    password = "123456"
 
     parent_identifier = "ROOT"
     
@@ -52,7 +58,7 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram):
 
         hostnames.append("10.10.10." + str(i))
         
-        VirtualMachines(vm_id=new_vm_ids[i], vm_name=classnames[i], cores=cpu_cores, ram=ram, storage=vm_temp.vm.storage, ip_add=hostnames[i], status=VirtualMachines.Status.ACTIVE).save()
+        VirtualMachines(request_id=request_id, vm_id=new_vm_ids[i], vm_name=classnames[i], cores=cpu_cores, ram=ram, storage=vm_temp.storage, ip_add=hostnames[i], status=VirtualMachines.Status.ACTIVE).save()
         # create connection
         # guacamole_password.append(User.objects.make_random_password())
         guacamole_passwords.append("123456")
@@ -67,6 +73,8 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram):
     for i in range(no_of_vm):
         vm_users.append("jin")
         labels.append(classnames[i])
+        # Create System Users
+        # classname[i] is the username
 
     # ansible.run_playbook("netdata_conf.yml", hostnames, vm_users, classnames, labels)
 
