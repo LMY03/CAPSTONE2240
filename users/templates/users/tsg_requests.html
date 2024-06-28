@@ -53,6 +53,7 @@ TSG Dashboard
                 <td>Delete</td>
                 {% endif %}
                 <td><a href="{% url 'users:request_details' request.id %}" class="btn btn-primary">Open</a></td>
+                <td><a href="{% url 'users:request_details' request.id %}" class="btn btn-danger">Open</a></td>
               </tr>
             {% endfor %}
           </tbody>

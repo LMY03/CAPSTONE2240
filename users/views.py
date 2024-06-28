@@ -42,11 +42,13 @@ def tsg_home(request):
 @login_required
 def vm_details(request, vm_id):
     vm_data = VirtualMachines.objects.get(id=vm_id)
-    guacamole_connection_id = GuacamoleConnection.objects.get(user_id=request.user.id)
+    guacamole_connection = GuacamoleConnection.objects.get(vm=vm_data)
+    print("guacamole_connection")
+    print(guacamole_connection)
     context = {
         'vm_data': vm_data,
         'data' : get_student_vm(),
-        'guacamole_connection_id' : guacamole_connection_id
+        'guacamole_connection' : guacamole_connection
     }
 
     return render(request, 'users/student_vm_details.html', context)

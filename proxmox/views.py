@@ -59,14 +59,15 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, requ
 
         hostnames.append("10.10.10." + str(i))
         
-        VirtualMachines(request_id=request_id, vm_id=new_vm_ids[i], vm_name=classnames[i], cores=cpu_cores, ram=ram, storage=vm_temp.storage, ip_add=hostnames[i], status=VirtualMachines.Status.ACTIVE).save()
+        vm = VirtualMachines(request_id=request_id, vm_id=new_vm_ids[i], vm_name=classnames[i], cores=cpu_cores, ram=ram, storage=vm_temp.storage, ip_add=hostnames[i], status=VirtualMachines.Status.ACTIVE)
+        vm.save()
         # create connection
         # guacamole_password.append(User.objects.make_random_password())
         guacamole_passwords.append("123456")
         guacamole_connection_ids.append(guacamole.create_connection(classnames[i], protocol, port, hostnames[i], username, password, parent_identifier))
         guacamole.create_user(classnames[i], guacamole_passwords[i])
         guacamole.assign_connection(classnames[i], guacamole_connection_ids[i])
-        GuacamoleConnection(user=User.objects.get(pk=1), connection_id=guacamole_connection_ids[i]).save()
+        GuacamoleConnection(user=User.objects.get(pk=1), connection_id=guacamole_connection_ids[i], vm=vm).save()
 
     # set hostnames and label in netdata
     vm_users = []
