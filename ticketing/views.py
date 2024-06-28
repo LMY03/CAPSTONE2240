@@ -245,7 +245,9 @@ def request_confirm(request, id):
     request_entry.status = RequestEntry.Status.PROCESSING
     request_entry.save()
 
-    vm_provision(id)
+    data = vm_provision(id)
+
+    print(data)
 
     return HttpResponseRedirect(reverse("ticketing:index"))
     
@@ -267,7 +269,7 @@ def vm_provision(id):
     cpu_cores = int(request_entry.cores)
     ram = int(request_entry.ram)
 
-    data = views.vm_provision_process(node, vm_id, classnames, total_no_of_vm, cpu_cores, ram, id)
+    return views.vm_provision_process(node, vm_id, classnames, total_no_of_vm, cpu_cores, ram, id)
 
 def edit_form_submit (request):
     data = request.POST

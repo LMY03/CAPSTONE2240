@@ -25,8 +25,8 @@ VM Details {{ vm_id }}
                 </form>
                 <form id="start_vm_form" action="{% url 'users:launch_vm' %}" method="post" onsubmit="submitForm(event)">
                     {% csrf_token %}
-                    <input type="hidden" id="vm_id" name="vm_id" value="{{ guacamole_connection.vm_id }}" />
-                    <input type="hidden" id="connection_id" name="connection_id" value="{{ guacamole_connection.connection_id }}" />
+                    <input type="hidden" id="vm_id" name="vm_id" value="{{ vm_data.id }}" />
+                    <!-- <input type="hidden" id="connection_id" name="connection_id" value="{{ guacamole_connection.connection_id }}" /> -->
                     <button type="submit" class="btn btn-success">Open VM</button>
                 </form>
             </div>

@@ -42,13 +42,13 @@ def tsg_home(request):
 @login_required
 def vm_details(request, vm_id):
     vm_data = VirtualMachines.objects.get(id=vm_id)
-    guacamole_connection = GuacamoleConnection.objects.get(vm=vm_data)
-    print("guacamole_connection")
-    print(guacamole_connection)
+    # guacamole_connection = GuacamoleConnection.objects.get(vm=vm_data)
+    # print("guacamole_connection")
+    # print(guacamole_connection)
     context = {
         'vm_data': vm_data,
         'data' : get_student_vm(),
-        'guacamole_connection' : guacamole_connection
+        # 'guacamole_connection' : guacamole_connection
     }
 
     return render(request, 'users/student_vm_details.html', context)
@@ -195,7 +195,8 @@ def login_view (request):
     data = request.POST
     username = data.get("username")
     password = data.get("password")
-
+    request.user.password = password
+    print("password")
     user = authenticate(request, username=username, password=password)
         
     if user is not None:

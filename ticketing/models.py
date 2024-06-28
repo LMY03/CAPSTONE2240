@@ -1,11 +1,15 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
 from django.contrib.auth.models import User
-from django.db.models.signals import post_save
-from django.dispatch import receiver
 from django.utils import timezone
 from datetime import date, timedelta
 import json
+
+# from guacamole.models import GuacamoleUser
+
+# from guacamole import guacamole
+
+# from guacamole.views import create_guacamole_user
 
 def expiration_date_default():
     return date.today() + timedelta(days=90)
@@ -127,8 +131,24 @@ class Comment(models.Model):
     def __str__(self):
         return f"Comment {self.id} on {self.request_entry_id}"
 
-def create_or_update_user_profile(sender, instance, created, **kwargs):
-    if created:
-        UserProfile.objects.create(user=instance)
-    else:
-        instance.userprofile.save()
+# @reciever(post_save, sender=User)
+# def create_or_update_user_profile(sender, instance, created, **kwargs):
+#     # print("------------------------------")
+#     if created:
+#         UserProfile.objects.create(user=instance)
+#         # guacamole_username = instance.username
+#         # guacamole_password = instance.password
+#         # GuacamoleUser(user=instance, username=guacamole_username, password=guacamole_password)
+#         # guacamole.create_user(guacamole_username, guacamole_password)
+        
+#         # print("created system user")
+#         # create_guacamole_user(instance)
+#     else:
+#         instance.userprofile.save()
+
+# @receiver(post_save, sender=User)
+# def create_or_update_user_profile(sender, instance, created, **kwargs):
+#     print("------------------------------")
+#     if created:
+#         print("created system user")
+#     # else:

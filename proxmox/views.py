@@ -7,8 +7,10 @@ from guacamole import guacamole
 from . import proxmox
 from . models import VirtualMachines, VMUser
 from ticketing.models import VMTemplates, UserProfile
-from guacamole.models import GuacamoleConnection
+from guacamole.models import GuacamoleConnection, GuacamoleUser
 from django.contrib.auth.models import User
+
+from ticketing.models import RequestEntry, UserProfile
 
 # Create your views here.
 
@@ -27,20 +29,20 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, requ
     new_vm_ids = []
     hostnames = []
     guacamole_connection_ids = []
-    guacamole_passwords = []
+    passwords = []
 
     for i in range(no_of_vm):
-        # clone vm
+        # TODO : CREATE ALGO TO ASSIGN VM_IDS
         new_vm_ids.append(vm_id + i + 1)
-        # upids.append(proxmox.clone_vm(node, vm_id, new_vm_ids[i], classnames[i])['data'])
+        upids.append(proxmox.clone_vm(node, vm_id, new_vm_ids[i], classnames[i])['data'])
 
-    # for i in range(no_of_vm):
+    for i in range(no_of_vm):
         # wait for vm to clone
-        # proxmox.wait_for_task(node, upids[i])
-        # # change vm configuration
-        # proxmox.config_vm(node, new_vm_ids[i], cpu_cores, ram)
-        # # start vm
-        # proxmox.start_vm(node, new_vm_ids[i])
+        proxmox.wait_for_task(node, upids[i])
+        # change vm configuration
+        proxmox.config_vm(node, new_vm_ids[i], cpu_cores, ram)
+        # start vm
+        proxmox.start_vm(node, new_vm_ids[i])
 
     # vm_user = get_object_or_404(VMUser, vm__vm_id=vm_id)
     # username = vm_user.username
@@ -48,26 +50,37 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, requ
 
     username = "jin"
     password = "123456"
-
-    parent_identifier = "ROOT"
+    
+    requester = RequestEntry.objects.get(id=request_id).requester
+    faculty_guacamole_user = GuacamoleUser.objects.get(system_user=requester)
+    faculty_guacamole_username = faculty_guacamole_user.username
+    guacamole_connection_group_id = guacamole.create_connection_group(f"{request_id}")
     
     for i in range(no_of_vm):
         # wait for vm to start
         # proxmox.wait_for_vm_start(node, new_vm_ids[i])
         # hostnames.append(proxmox.wait_and_get_ip(node, new_vm_ids[i]))
 
-        hostnames.append("10.10.10." + str(i))
+        # hostnames.append("10.10.10." + str(i))
+        hostnames.append("172.20.10.5")
         
-        vm = VirtualMachines(request_id=request_id, vm_id=new_vm_ids[i], vm_name=classnames[i], cores=cpu_cores, ram=ram, storage=vm_temp.storage, ip_add=hostnames[i], status=VirtualMachines.Status.ACTIVE)
-        vm.save()
         # create connection
-        # guacamole_password.append(User.objects.make_random_password())
-        guacamole_passwords.append("123456")
-        guacamole_connection_ids.append(guacamole.create_connection(classnames[i], protocol, port, hostnames[i], username, password, parent_identifier))
-        guacamole.create_user(classnames[i], guacamole_passwords[i])
+        guacamole_connection_ids.append(guacamole.create_connection(classnames[i], protocol, port, hostnames[i], username, password, guacamole_connection_group_id))
+        # Create System User
+        passwords.append(User.objects.make_random_password())
+        # passwords.append("123456")
+        user = User(username=classnames[i])
+        user.set_password(passwords[i])
+        user.save()
+        UserProfile.objects.create(user=user)
         guacamole.assign_connection(classnames[i], guacamole_connection_ids[i])
-        GuacamoleConnection(user=User.objects.get(pk=1), connection_id=guacamole_connection_ids[i], vm=vm).save()
+        guacamole.assign_connection(faculty_guacamole_username, guacamole_connection_ids[i])
+        vm = VirtualMachines(request_id=request_id, vm_id=new_vm_ids[i], vm_name=classnames[i], cores=cpu_cores, ram=ram, storage=vm_temp.storage, ip_add=hostnames[i], node=node, status=VirtualMachines.Status.ACTIVE)
+        vm.save()
+        GuacamoleConnection(user=GuacamoleUser.objects.get(system_user=user), connection_id=guacamole_connection_ids[i], connection_group_id=guacamole_connection_group_id, vm=vm).save()
+        VMUser.objects.create(vm=vm, username=username, password=password)
 
+    guacamole.assign_connection_group(faculty_guacamole_username, guacamole_connection_group_id)
     # set hostnames and label in netdata
     vm_users = []
     labels = []
@@ -76,8 +89,8 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, requ
         vm_users.append("jin")
         labels.append(classnames[i])
 
-        password = generate_secure_random_string(15)
-        User.objects.create_user(username=classnames[i], password=password)
+        # password = generate_secure_random_string(15)
+        # User.objects.create_user(username=classnames[i], password=password)
 
         credentials.append({'username': classnames[i], 'password': password})
         # Create System Users
@@ -88,8 +101,8 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, requ
     return {
         'vm_id' : new_vm_ids, 
         'guacamole_connection_id' : guacamole_connection_ids,
-        'guacamole_username' : classnames,
-        'guacamole_passwords' : guacamole_passwords,
+        'username' : classnames,
+        'passwords' : passwords,
     }
 
 node = "pve"
