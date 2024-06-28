@@ -32,17 +32,7 @@ class Migration(migrations.Migration):
                 ('assigned_to', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='assigned_entries', to=settings.AUTH_USER_MODEL)),
                 ('fulfilled_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='fulfilled_entries', to=settings.AUTH_USER_MODEL)),
                 ('requester', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='requested_entries', to=settings.AUTH_USER_MODEL)),
-            ],
-        ),
-        migrations.CreateModel(
-            name='VMTemplates',
-            fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('vm_id', models.CharField(max_length=45)),
-                ('vm_name', models.CharField(max_length=90)),
-                ('cores', models.IntegerField()),
-                ('ram', models.IntegerField()),
-                ('storage', models.IntegerField()),
+                ('template', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to='proxmox.vmtemplates')),
             ],
         ),
         migrations.CreateModel(
