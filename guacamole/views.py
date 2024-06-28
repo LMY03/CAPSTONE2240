@@ -33,8 +33,8 @@ def launch_vm(request):
         
         guacamole_user = GuacamoleUser.objects.get(system_user=request.user)
         guacamole_username = guacamole_user.username
-        guacamole_username = guacamole_user.password
-        guacamole_password = request.user.password
+        guacamole_password = guacamole_user.password
+        # guacamole_password = request.user.password
         print("guacamole_username: " + guacamole_username)
         print("guacamole_password: " + guacamole_password)
         # guacamole_username = "guacadmin"
