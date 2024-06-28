@@ -23,10 +23,10 @@ VM Details {{ vm_id }}
                     <input type="hidden" name="vm_id" value="{{ vm_data.vm_id }}" />
                     <button type="submit" class="btn btn-danger me-2">Shutdown</button>
                 </form>
-                <form action="">
+                <form id="start_vm_form" action="{% url 'users:launch_vm' %}" method="post" onsubmit="submitForm(event)">
                     {% csrf_token %}
-                    <input type="hidden" name="vm_id" value="{{ guacamole_connection_id }}" />
-                    <input type="hidden" name="connection_id" value="" />
+                    <input type="hidden" id="vm_id" name="vm_id" value="{{ guacamole_connection.vm_id }}" />
+                    <input type="hidden" id="connection_id" name="connection_id" value="{{ guacamole_connection.connection_id }}" />
                     <button type="submit" class="btn btn-success">Open VM</button>
                 </form>
             </div>
@@ -81,4 +81,28 @@ VM Details {{ vm_id }}
         </div>
     </div>
 </div>
+<script>
+    function submitForm(event) {
+        event.preventDefault(); // Prevent default form submission
+
+        var form = document.getElementById('start_vm_form');
+        var formData = new FormData(form);
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', form.action, true);
+        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                var response = JSON.parse(xhr.responseText);
+                var redirectUrl = response.redirect_url;
+
+                // Open the URL in a new tab
+                window.open(redirectUrl, '_blank');
+            } else {
+                alert('An error occurred!');
+            }
+        };
+        xhr.send(formData);
+    }
+</script>
+
 {% endblock content %}
