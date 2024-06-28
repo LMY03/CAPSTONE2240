@@ -58,11 +58,11 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, requ
     
     for i in range(no_of_vm):
         # wait for vm to start
-        # proxmox.wait_for_vm_start(node, new_vm_ids[i])
-        # hostnames.append(proxmox.wait_and_get_ip(node, new_vm_ids[i]))
+        proxmox.wait_for_vm_start(node, new_vm_ids[i])
+        hostnames.append(proxmox.wait_and_get_ip(node, new_vm_ids[i]))
 
         # hostnames.append("10.10.10." + str(i))
-        hostnames.append("172.20.10.5")
+        # hostnames.append("172.20.10.5")
         
         # create connection
         guacamole_connection_ids.append(guacamole.create_connection(classnames[i], protocol, port, hostnames[i], username, password, guacamole_connection_group_id))
