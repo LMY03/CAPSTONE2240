@@ -99,7 +99,7 @@ class PortRules (models.Model):
     request = models.ForeignKey(RequestEntry, on_delete= models.CASCADE)
     protocol = models.CharField (max_length=45, blank= True, null = True)
     dest_ports = models.CharField (max_length=45, blank= True, null = True)
-    description = models.TextField(blank= True, null = True)
+    #description = models.TextField(blank= True, null = True)
 
 class UserProfile (models.Model):
     USER_TYPE_CHOICES = [
@@ -127,11 +127,8 @@ class Comment(models.Model):
     def __str__(self):
         return f"Comment {self.id} on {self.request_entry_id}"
 
-@receiver(post_save, sender=User)
-def create_user_profile(sender, instance, created, **kwargs):
+def create_or_update_user_profile(sender, instance, created, **kwargs):
     if created:
         UserProfile.objects.create(user=instance)
-
-@receiver(post_save, sender=User)
-def save_user_profile(sender, instance, **kwargs):
-    instance.userprofile.save()
+    else:
+        instance.userprofile.save()

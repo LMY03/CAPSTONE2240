@@ -1,10 +1,9 @@
-import time
+import time, secrets, string
 
 from django.shortcuts import get_object_or_404, redirect, render
 
 from guacamole import guacamole
 #from autotool import ansible
-
 from . import proxmox
 from . models import VirtualMachines, VMUser
 from ticketing.models import VMTemplates, UserProfile
@@ -71,11 +70,15 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, requ
     # set hostnames and label in netdata
     vm_users = []
     labels = []
-
+    credentials = []
     for i in range(no_of_vm):
         vm_users.append("jin")
         labels.append(classnames[i])
 
+        password = generate_secure_random_string(15)
+        User.objects.create_user(username=classnames[i], password=password)
+
+        credentials.append({'username': classnames[i], 'password': password})
         # Create System Users
         # classname[i] is the username
 
@@ -306,3 +309,8 @@ def config_lxc(request) :
         return render(request, "data.html", { "data" : response })
     
     return redirect("/proxmox")
+
+def generate_secure_random_string(length):
+    letters = string.ascii_letters + string.digits
+    result_str = ''.join(secrets.choice(letters) for i in range(length))
+    return result_str

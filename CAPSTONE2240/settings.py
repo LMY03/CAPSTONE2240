@@ -99,8 +99,8 @@ DATABASES = {
         'NAME': 'cap2240db',
         'USER': 'cap-2240',
         'PASSWORD': 'CAP_2240',
-        # 'HOST': 'localhost',
-        'HOST': 'mysql',
+        'HOST': 'localhost',
+        # 'HOST': 'mysql',
         'PORT': 3306,
     }
 }
@@ -177,7 +177,7 @@ SOCIAL_AUTH_PIPELINE = (
     'social_core.pipeline.social_auth.social_user',
     'social_core.pipeline.user.get_username',
     'social_core.pipeline.user.create_user',
-    'ticketing.pipeline.create_or_update_user_profile',  
+    #'ticketing.pipeline.create_or_update_user_profile',  
     'social_core.pipeline.social_auth.associate_user',
     'social_core.pipeline.social_auth.load_extra_data',
     'social_core.pipeline.user.user_details',

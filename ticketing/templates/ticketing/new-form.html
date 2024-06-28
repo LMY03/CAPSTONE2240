@@ -114,10 +114,10 @@ New VM request form
                                     <input type="text" class="form-control" id="destination_port1" name="destination_port1">
                                 </div>
                             </div>
-                            <div class="mb-3">
+                            {% comment %} <div class="mb-3">
                                 <label for="description" class="form-label">Description:</label>
                                 <textarea class="form-control" id="description" name="description" rows="3"></textarea>
-                            </div>
+                            </div> {% endcomment %}
                         </div>
                     </div>
                 </div>
@@ -165,9 +165,8 @@ New VM request form
                 </div>
             </div>
         </div>
-
         <div class="mb-3">
-            <label for="other_configs" class="form-label">Other configuration:</label>
+            <label for="other_configs" class="form-label">Other configuration / Request:</label>
             <textarea class="form-control" id="other_configs" name="other_configs" rows="2"></textarea>
         </div>
         <button type="submit" class="btn btn-primary">Submit</button>
