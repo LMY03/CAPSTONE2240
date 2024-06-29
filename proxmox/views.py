@@ -105,6 +105,23 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, requ
         'passwords' : passwords,
     }
 
+def shutdown_vm(request):
+    if request.method == "POST":
+        
+        data = request.POST
+        vm_id = data.get("vm_id")
+
+        vm = VirtualMachines.objects.get(vm_id=vm_id)
+
+        if vm.status == vm.Status.ACTIVE:
+            
+            proxmox.shutdown_vm(vm.node, vm_id)
+
+            vm.status = vm.Status.SHUTDOWN
+            vm.save()
+
+            return redirect("/users/student/vm/" + vm_id)
+
 node = "pve"
 
 def renders(request) : 
