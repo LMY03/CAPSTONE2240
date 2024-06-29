@@ -365,22 +365,21 @@ def delete_vms(request, request_id):
     print(vms)
 
     for vm in vms:
-        # proxmox.stop_vm(vm.node, vm.vm_id)
-        # proxmox.delete_vm(vm.node, vm.vm_id)
+        proxmox.stop_vm(vm.node, vm.vm_id)
+        proxmox.delete_vm(vm.node, vm.vm_id)
         vm.status = VirtualMachines.Status.DESTROYED
+        vm.save()
         guacamole_connection = get_object_or_404(GuacamoleConnection, vm=vm)
         guacamole_connection.status = GuacamoleConnection.Status.DELETED
+        guacamole_connection.save()
         guacamole_user = guacamole_connection.user
         guacamole_user.status = GuacamoleUser.Status.DELETED
+        guacamole_user.save()
         system_user = guacamole_user.system_user
         system_user.is_active = 0
-        
-        guacamole_connection.save()
-        guacamole_user.save()
         system_user.save()
-        vm.save()
         
     request_entry.status = RequestEntry.Status.DELETED
     request_entry.save()
 
-    return redirect('users/faculty/home/')
+    return redirect('/users/faculty/home/')
