@@ -121,7 +121,7 @@ def shutdown_vm(request):
             
         print("vm is active")
         
-        proxmox.shutdown_vm(vm.node, vm_id)
+        proxmox.shutdown_vm(vm.node, vm.vm_id)
         print("vm shutting down")
 
         vm.status = vm.Status.SHUTDOWN
