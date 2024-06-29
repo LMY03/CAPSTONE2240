@@ -111,9 +111,9 @@ def shutdown_vm(request):
         data = request.POST
         vm_id = data.get("vm_id")
 
-        vm = VirtualMachines.objects.get(vm_id=vm_id)
+        vm = get_object_or_404(VirtualMachines, id=vm_id)
 
-        if vm.status == vm.Status.ACTIVE:
+        if vm.status == VirtualMachines.Status.ACTIVE:
             
             proxmox.shutdown_vm(vm.node, vm_id)
 
