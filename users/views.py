@@ -11,7 +11,7 @@ from ticketing.models import RequestEntry, Comment, RequestUseCase, VMTemplates,
 import json
 from django.forms.models import model_to_dict
 from proxmox.models import VirtualMachines
-from guacamole.models import GuacamoleConnection
+from guacamole.models import GuacamoleConnection, GuacamoleUser
 
 # Create your views here.
 def home_filter_view (request):
@@ -24,6 +24,13 @@ def get_student_vm ():
     template_vm_ids = VMTemplates.objects.values_list('vm_id', flat=True)
     # Filter VirtualMachines to exclude those in VMTemplates and with status 'DELETED'
     return list(VirtualMachines.objects.exclude(id__in=template_vm_ids).exclude(status='DELETED').order_by('id').values())
+
+# def student_home(request):
+
+#     user = request.user
+#     context = { 'vm_data' : GuacamoleConnection.objects.get(user=GuacamoleUser.objects.get(system_user=user)).vm }
+    
+#     return render(request, "users/student_vm_details.html", context)
 
 @login_required
 def student_home(request):
@@ -195,8 +202,7 @@ def login_view (request):
     data = request.POST
     username = data.get("username")
     password = data.get("password")
-    request.user.password = password
-    print("password")
+    
     user = authenticate(request, username=username, password=password)
         
     if user is not None:
