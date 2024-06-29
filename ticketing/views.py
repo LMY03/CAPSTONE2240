@@ -366,6 +366,9 @@ def delete_vms(request, request_id):
 
     for vm in vms:
         proxmox.stop_vm(vm.node, vm.vm_id)
+
+    for vm in vms:
+        proxmox.wait_for_vm_stop(vm.node, vm.vm_id)
         proxmox.delete_vm(vm.node, vm.vm_id)
         vm.status = VirtualMachines.Status.DESTROYED
         vm.save()
@@ -373,7 +376,7 @@ def delete_vms(request, request_id):
         guacamole_connection.status = GuacamoleConnection.Status.DELETED
         guacamole_connection.save()
         guacamole_user = guacamole_connection.user
-        # guacamole_user.status = GuacamoleUser.Status.DELETED
+        guacamole_user.status = GuacamoleUser.Status.DELETED
         guacamole_user.save()
         system_user = guacamole_user.system_user
         system_user.is_active = 0
