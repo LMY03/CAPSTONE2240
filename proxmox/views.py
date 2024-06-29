@@ -117,17 +117,17 @@ def shutdown_vm(request):
         vm = get_object_or_404(VirtualMachines, id=vm_id)
         print(vm)
 
-        # if vm.status == VirtualMachines.Status.ACTIVE:
+        if vm.status == VirtualMachines.Status.ACTIVE:
             
-        print("vm is active")
-        
-        proxmox.shutdown_vm(vm.node, vm.vm_id)
-        print("vm shutting down")
+            print("vm is active")
+            
+            proxmox.shutdown_vm(vm.node, vm.vm_id)
+            print("vm shutting down")
 
-        vm.status = vm.Status.SHUTDOWN
-        vm.save()
+            vm.status = vm.Status.SHUTDOWN
+            vm.save()
 
-        return redirect("/users/student/vm/" + vm_id)
+            return redirect("/users/student/vm/" + vm_id)
 
 node = "pve"
 
