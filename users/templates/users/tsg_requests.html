@@ -41,22 +41,22 @@ TSG Dashboard
                 <td>{{ request.cores }}</td>
                 <td>{{ request.ram }}</td>
                 <td>{{ request.has_internet }}</td>
-                {% if request.status == "CR" %}
-                <td>Creating</td>
-                {% elif request.status == "PENDING" %}
-                <td>Pending</td>
-                {% elif request.status == "FOR_REVISION" %}
-                <td>For revision</td>
-                {% elif request.status == "COMPLETED" %}
-                <td>Completed</td>
-                {% elif request.status == "DELETED" %}
-                <td>Delete</td>
-                {% endif %}
+                <td>
+                  {% if request.status == "CR" %}
+                  Creating
+                  {% elif request.status == "PENDING" %}
+                  Pending
+                  {% elif request.status == "FOR_REVISION" %}
+                  For revision
+                  {% elif request.status == "COMPLETED" %}
+                  Completed
+                  {% elif request.status == "DELETED" %}
+                  Delete
+                  {% endif %}
+                </td>
                 <td>
                   <a href="{% url 'users:request_details' request.id %}" class="btn btn-primary">Open</a>
-                  {% if request.status == "COMPLETED" %}
-                  <a href="{% url 'users:request_details' request.id %}" class="btn btn-danger">Delete</a>
-                  {% endif %}
+                  <a href="{% url 'users:delete_vms' request.id %}" class="btn btn-danger">Delete</a>
                 </td>
               </tr>
             {% endfor %}
