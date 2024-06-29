@@ -156,18 +156,18 @@ def start_vm(request) :
         
     return redirect("/proxmox")
 
-def shutdown_vm(request) :
+# def shutdown_vm(request) :
 
-    if request.method == "POST":
+#     if request.method == "POST":
 
-        data = request.POST
-        vmid = data.get("vmid")
+#         data = request.POST
+#         vmid = data.get("vmid")
 
-        response = proxmox.shutdown_vm(node, vmid)
+#         response = proxmox.shutdown_vm(node, vmid)
 
-        return render(request, "data.html", { "data" : response })
+#         return render(request, "data.html", { "data" : response })
         
-    return redirect("/proxmox")
+#     return redirect("/proxmox")
 
 def delete_vm(request) :
 
