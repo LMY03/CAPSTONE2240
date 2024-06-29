@@ -12,6 +12,8 @@ import json, datetime
 
 from .models import RequestEntry, Comment, RequestUseCase, PortRules, UserProfile, RequestEntryAudit, VMTemplates
 
+from guacamole.models import GuacamoleConnection, GuacamoleUser
+from proxmox import proxmox
 from proxmox import views
 from proxmox.models import VirtualMachines
 
@@ -240,37 +242,6 @@ def log_request_entry_changes(request_entry, changed_by, new_data, user):
             setattr(request_entry, field, value)
     request_entry.save()
 
-def request_confirm(request, id):
-    request_entry = get_object_or_404(RequestEntry, pk=id)
-    request_entry.status = RequestEntry.Status.PROCESSING
-    request_entry.save()
-
-    data = vm_provision(id)
-
-    print(data)
-
-    return HttpResponseRedirect(reverse("ticketing:index"))
-    
-def vm_provision(id):
-
-    node = "pve"
-    request_entry = get_object_or_404(RequestEntry, pk=id)
-
-    vm_id = int(request_entry.template.vm_id)
-    request_use_cases = []
-    request_use_cases = RequestUseCase.objects.filter(request=request_entry.pk).values('request_use_case', 'vm_count')
-    classnames = []
-    total_no_of_vm = 0
-    for request_use_case in request_use_cases:
-        for i in range(request_use_case['vm_count']):
-            classnames.append(f"{request_use_case['request_use_case'].replace('_', '-')}-Group-{i + 1}")
-        total_no_of_vm += int(request_use_case['vm_count'])
-
-    cpu_cores = int(request_entry.cores)
-    ram = int(request_entry.ram)
-
-    return views.vm_provision_process(node, vm_id, classnames, total_no_of_vm, cpu_cores, ram, id)
-
 def edit_form_submit (request):
     data = request.POST
     user = request.user
@@ -355,3 +326,61 @@ def edit_form_submit (request):
 
    
     return JsonResponse({'status': 'ok'}, status=200)
+
+def request_confirm(request, id):
+    request_entry = get_object_or_404(RequestEntry, pk=id)
+    request_entry.status = RequestEntry.Status.PROCESSING
+    request_entry.save()
+
+    data = vm_provision(id)
+
+    print(data)
+
+    return HttpResponseRedirect(reverse("ticketing:index"))
+    
+def vm_provision(id):
+
+    node = "pve"
+    request_entry = get_object_or_404(RequestEntry, pk=id)
+
+    vm_id = int(request_entry.template.vm_id)
+    request_use_cases = []
+    request_use_cases = RequestUseCase.objects.filter(request=request_entry.pk).values('request_use_case', 'vm_count')
+    classnames = []
+    total_no_of_vm = 0
+    for request_use_case in request_use_cases:
+        for i in range(request_use_case['vm_count']):
+            classnames.append(f"{request_use_case['request_use_case'].replace('_', '-')}-Group-{i + 1}")
+        total_no_of_vm += int(request_use_case['vm_count'])
+
+    cpu_cores = int(request_entry.cores)
+    ram = int(request_entry.ram)
+
+    return views.vm_provision_process(node, vm_id, classnames, total_no_of_vm, cpu_cores, ram, id)
+
+def delete_vms(request, request_id):
+    request_entry = get_object_or_404(RequestEntry, pk=request_id)
+
+    vms = VirtualMachines.objects.filter(request=request_entry)
+    print(vms)
+
+    for vm in vms:
+        # proxmox.stop_vm(vm.node, vm.vm_id)
+        # proxmox.delete_vm(vm.node, vm.vm_id)
+        vm.status = VirtualMachines.Status.DESTROYED
+        guacamole_connection = get_object_or_404(GuacamoleConnection, vm=vm)
+        guacamole_connection.status = GuacamoleConnection.Status.DELETED
+        guacamole_user = guacamole_connection.user
+        guacamole_user.status = GuacamoleUser.Status.DELETED
+        system_user = guacamole_user.system_user
+        system_user.is_active = 0
+        
+        guacamole_connection.save()
+        guacamole_user.save()
+        system_user.save()
+        vm.save()
+        
+    request_entry.status = RequestEntry.Status.DELETED
+    request_entry.save()
+
+    return redirect('users/faculty/home/')
