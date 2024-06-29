@@ -18,15 +18,14 @@ VM Details {{ vm_id }}
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2>VM Details: {{ vm_data.vm_name }}</h2>
             <div>
-                <form action="">
+                <form action="{% url 'users:shutdown_vm' %}" method="post">
                     {% csrf_token %}
-                    <input type="hidden" name="vm_id" value="{{ vm_data.vm_id }}" />
+                    <input type="hidden" id="vm_id" name="vm_id" value="{{ vm_data.id }}" />
                     <button type="submit" class="btn btn-danger me-2">Shutdown</button>
                 </form>
                 <form id="start_vm_form" action="{% url 'users:launch_vm' %}" method="post" onsubmit="submitForm(event)">
                     {% csrf_token %}
                     <input type="hidden" id="vm_id" name="vm_id" value="{{ vm_data.id }}" />
-                    <!-- <input type="hidden" id="connection_id" name="connection_id" value="{{ guacamole_connection.connection_id }}" /> -->
                     <button type="submit" class="btn btn-success">Open VM</button>
                 </form>
             </div>
