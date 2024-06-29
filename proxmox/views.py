@@ -106,7 +106,7 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, requ
     }
 
 def shutdown_vm(request):
-    print("start vm -------------------------")
+    print("shutdown_vm -------------------------")
     if request.method == "POST":
         print("POST -------------------------")
         
@@ -119,7 +119,10 @@ def shutdown_vm(request):
 
         if vm.status == VirtualMachines.Status.ACTIVE:
             
+            print("vm is active")
+            
             proxmox.shutdown_vm(vm.node, vm_id)
+            print("vm shutting down")
 
             vm.status = vm.Status.SHUTDOWN
             vm.save()
