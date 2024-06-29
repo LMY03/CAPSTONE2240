@@ -52,12 +52,7 @@ def get_vm_status(node, vmid):
     url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/qemu/{vmid}/status/current"
     response = session.get(url)
 
-    print("-----------------------")
-    print(response)
-    print(response.json())
-
     status = response.json()['data']['qmpstatus']
-    print(status)
 
     return status
 
