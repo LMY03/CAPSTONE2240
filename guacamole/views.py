@@ -32,7 +32,10 @@ def launch_vm(request):
         guacamole_username = guacamole_user.username
         guacamole_password = guacamole_user.password
         connection_id = get_object_or_404(GuacamoleConnection, vm=vm).connection_id
-        if proxmox.get_vm_status(vm.node, vm.vm_id) == "stopped" : proxmox.start_vm(vm.node, vm.vm_id)
+        if proxmox.get_vm_status(vm.node, vm.vm_id) == "stopped" : 
+            proxmox.start_vm(vm.node, vm.vm_id)
+            vm.status = VirtualMachines.Status.ACTIVE
+            vm.save()
         hostname = proxmox.wait_and_get_ip(vm.node, vm.vm_id)
         connection_details = guacamole.get_connection_parameter_details(connection_id)
         if hostname != connection_details['hostname'] : guacamole.update_connection(connection_id, hostname)
