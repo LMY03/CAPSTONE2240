@@ -37,7 +37,10 @@ VM Details {{ vm_id }}
                 <td>{{ request.category }}</td>
                 <td>{{ request.requestDate}}</td>
                 <td>{{ request.status}}</td>
-                <td><a class="btn btn-outline-primary" href="{% url 'users:faculty_edit_request' request_id=request.id %}" role="button">Edit</a></td>
+                <td>
+                    {% if request.status == 'PENDING' or request.status == 'FOR_REVISION' %}
+                    <a class="btn btn-outline-primary" href="{% url 'users:faculty_edit_request' request_id=request.id %}" role="button">Edit</a>
+                </td>
             </tr>
             {% endfor %}
         </tbody>
