@@ -106,13 +106,15 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, requ
     }
 
 def shutdown_vm(request):
+    print("start vm -------------------------")
     if request.method == "POST":
+        print("POST -------------------------")
         
         data = request.POST
         vm_id = data.get("vm_id")
+        print(vm_id)
 
         vm = get_object_or_404(VirtualMachines, id=vm_id)
-        print("start vm -------------------------")
         print(vm)
 
         if vm.status == VirtualMachines.Status.ACTIVE:
