@@ -8,6 +8,16 @@ class GuacamoleUser(models.Model):
     username = models.CharField(max_length=150)
     password = models.CharField(max_length=128)
 
+    class Status(models.TextChoices):
+        ACTIVE = 'ACTIVE'
+        DELETED = 'DELETED'
+
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.ACTIVE
+    )
+
 class GuacamoleConnection(models.Model):
     user = models.ForeignKey(GuacamoleUser, on_delete=models.DO_NOTHING)
     vm = models.OneToOneField(VirtualMachines, on_delete=models.DO_NOTHING)
