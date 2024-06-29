@@ -373,7 +373,7 @@ def delete_vms(request, request_id):
         guacamole_connection.status = GuacamoleConnection.Status.DELETED
         guacamole_connection.save()
         guacamole_user = guacamole_connection.user
-        guacamole_user.status = GuacamoleUser.Status.DELETED
+        # guacamole_user.status = GuacamoleUser.Status.DELETED
         guacamole_user.save()
         system_user = guacamole_user.system_user
         system_user.is_active = 0
