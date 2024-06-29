@@ -112,6 +112,7 @@ def shutdown_vm(request):
         vm_id = data.get("vm_id")
 
         vm = get_object_or_404(VirtualMachines, id=vm_id)
+        print("start vm -------------------------")
         print(vm)
 
         if vm.status == VirtualMachines.Status.ACTIVE:
