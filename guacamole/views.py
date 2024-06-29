@@ -24,19 +24,14 @@ def launch_vm(request):
     print("launch vm ---------------------------")
     if request.method == "POST":
 
-        node = get_object_or_404(VirtualMachines, vm_id=vm_id).node
-
         data = request.POST
         vm_id = data.get("vm_id")
-        print(data)
-        print(vm_id)
+        node = VirtualMachines.objects.get(id=vm_id).node
         
         
         guacamole_user = GuacamoleUser.objects.get(system_user=request.user)
         guacamole_username = guacamole_user.username
         guacamole_password = guacamole_user.password
-        # guacamole_username = "guacadmin"
-        # guacamole_password = "guacadmin"
         connection_id = get_object_or_404(GuacamoleConnection, vm_id=vm_id).connection_id
         if proxmox.get_vm_status(node, vm_id) == "stopped" : proxmox.start_vm(node, vm_id)
         hostname = proxmox.wait_and_get_ip(node, vm_id)
