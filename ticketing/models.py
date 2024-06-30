@@ -62,7 +62,6 @@ class RequestEntry(models.Model):
     def __str__(self):
         return f"{self.id} - {self.status}"
 
-
 class RequestEntryAudit(models.Model):
     class Status(models.TextChoices):
         PENDING = 'PENDING', "PENDING"

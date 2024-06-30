@@ -141,6 +141,13 @@ def wait_and_get_ip(node, vmid):
 
 ###########################################################################################################
 
+def get_templates(node):
+    url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/aplinfo"
+    session = get_authenticated_session()
+    response = session.get(url)
+
+    return response.json()
+
 def create_lxc(node, ostemplate, vmid, cores, memory, storage):
     session = get_authenticated_session()
     url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/lxc"

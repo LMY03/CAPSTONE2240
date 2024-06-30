@@ -1,4 +1,4 @@
-import time, secrets, string
+import secrets, string
 
 from django.shortcuts import get_object_or_404, redirect, render
 
@@ -13,6 +13,18 @@ from django.contrib.auth.models import User
 from ticketing.models import RequestEntry, UserProfile
 
 # Create your views here.
+
+def generate_vm_ids(no_of_vm):
+    
+    existing_ids = VirtualMachines.objects.exclude(status=VirtualMachines.Status.DESTROYED)
+
+    new_ids = []
+    new_id = 10000  # Starting point for new VM IDs
+    while len(new_ids) < no_of_vm:
+        if new_id not in existing_ids : new_ids.append(new_id)
+        new_id += 1
+
+    return new_ids
 
 def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, request_id):
 
@@ -31,9 +43,11 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, requ
     guacamole_connection_ids = []
     passwords = []
 
+    # TODO : CREATE ALGO TO ASSIGN VM_IDS
+    new_vm_ids = generate_vm_ids(no_of_vm)
+
     for i in range(no_of_vm):
-        # TODO : CREATE ALGO TO ASSIGN VM_IDS
-        new_vm_ids.append(vm_id + i + 1)
+        # new_vm_ids.append(vm_id + i + 1)
         upids.append(proxmox.clone_vm(node, vm_id, new_vm_ids[i], classnames[i])['data'])
 
     for i in range(no_of_vm):
@@ -51,8 +65,8 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, requ
     username = "jin"
     password = "123456"
     
-    requester = RequestEntry.objects.get(id=request_id).requester
-    faculty_guacamole_user = GuacamoleUser.objects.get(system_user=requester)
+    requester = get_object_or_404(RequestEntry, id=request_id).requester
+    faculty_guacamole_user = get_object_or_404(GuacamoleUser, system_user=requester)
     faculty_guacamole_username = faculty_guacamole_user.username
     guacamole_connection_group_id = guacamole.create_connection_group(f"{request_id}")
     
@@ -347,6 +361,9 @@ def config_lxc(request) :
         return render(request, "data.html", { "data" : response })
     
     return redirect("/proxmox")
+
+def get_templates(request) : 
+    return render(request, "data.html", { "data" : proxmox.get_templates("pve") })
 
 def generate_secure_random_string(length):
     letters = string.ascii_letters + string.digits
