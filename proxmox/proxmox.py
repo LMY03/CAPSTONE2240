@@ -1,6 +1,5 @@
 import requests, time
 
-# Parameters
 PROXMOX_HOST = 'https://10.1.200.11:8006'
 USERNAME = 'root@pam'
 PASSWORD = 'cap2240'
