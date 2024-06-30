@@ -162,7 +162,7 @@ def create_lxc(node, ostemplate, vmid, cores, memory, storage):
         'rootfs' : f'{STORAGE}:{storage}',
         'password': '123456',
         # 'ssh-public-keys': ,
-        'start': True
+        # 'start': True
     }
     response = session.post(url, data=config)
     return response.json()
