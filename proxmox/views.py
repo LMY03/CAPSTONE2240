@@ -262,7 +262,7 @@ def create_lxc(request) :
 
         data = request.POST
         vmid = data.get("vmid")
-        ostemplate = "local:vztmpl/ubuntu-23.10-standard_23.10-1_amd64.tar.zst"
+        ostemplate = "local:vztmpl/ubuntu-23.10-1_amd64.tar.zst"
 
         response = proxmox.create_lxc(node, ostemplate, vmid, 1, 1024, 'local-lvm')
 
