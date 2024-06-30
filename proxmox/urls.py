@@ -15,6 +15,7 @@ urlpatterns = [
     path("ip_vm", views.ip_vm, name="ip_vm"),
     path("config_vm", views.config_vm, name="config_vm"),
     path("clone_lxc", views.clone_lxc, name="clone_lxc"),
+    path("create_lxc", views.create_lxc, name="create_lxc"),
     path("start_lxc", views.start_lxc, name="start_lxc"),
     path("shutdown_lxc", views.shutdown_lxc, name="shutdown_lxc"),
     path("delete_lxc", views.delete_lxc, name="delete_lxc"),

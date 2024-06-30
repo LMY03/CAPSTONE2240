@@ -74,6 +74,7 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, requ
         # wait for vm to start
         proxmox.wait_for_vm_start(node, new_vm_ids[i])
         hostnames.append(proxmox.wait_and_get_ip(node, new_vm_ids[i]))
+        proxmox.shutdown_vm(node, new_vm_ids[i])
 
         # hostnames.append("10.10.10." + str(i))
         # hostnames.append("172.20.10.5")
@@ -253,6 +254,20 @@ def config_vm(request) :
 
         return render(request, "data.html", { "data" : response })
     
+    return redirect("/proxmox")
+
+def create_lxc(request) :
+
+    if request.method == "POST":
+
+        data = request.POST
+        vmid = data.get("vmid")
+        ostemplate = "local:vztmpl/ubuntu-23.10-standard_23.10-1_amd64.tar.zst"
+
+        response = proxmox.create_lxc(node, ostemplate, vmid, 1, 1024, 'local-lvm')
+
+        return render(request, "data.html", { "data" : response })
+        
     return redirect("/proxmox")
 
 def clone_lxc(request) :
