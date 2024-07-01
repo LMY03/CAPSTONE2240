@@ -365,7 +365,8 @@ def delete_vms(request, request_id):
     print(vms)
 
     for vm in vms:
-        proxmox.stop_vm(vm.node, vm.vm_id)
+        if proxmox.get_vm_status == "stopped": 
+            proxmox.stop_vm(vm.node, vm.vm_id)
 
     for vm in vms:
         proxmox.wait_for_vm_stop(vm.node, vm.vm_id)

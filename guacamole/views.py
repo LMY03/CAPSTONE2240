@@ -18,21 +18,21 @@ from proxmox.models import VirtualMachines
 #     guacamole_user.save()
 #     print(guacamole.create_user(guacamole_username, guacamole_password))
 
-parent_identifier = "ROOT"
-
 def launch_vm(request):
     print("launch vm ---------------------------")
     if request.method == "POST":
 
         data = request.POST
         vm_id = data.get("vm_id")
+
         vm = get_object_or_404(VirtualMachines, id=vm_id)
         
         guacamole_user = GuacamoleUser.objects.get(system_user=request.user)
         guacamole_username = guacamole_user.username
         guacamole_password = guacamole_user.password
         connection_id = get_object_or_404(GuacamoleConnection, vm=vm).connection_id
-        if proxmox.get_vm_status(vm.node, vm.vm_id) == "stopped" : 
+        # if proxmox.get_vm_status(vm.node, vm.vm_id) == "stopped" : 
+        if vm.status == VirtualMachines.Status.SHUTDOWN : 
             proxmox.start_vm(vm.node, vm.vm_id)
             vm.status = VirtualMachines.Status.ACTIVE
             vm.save()
@@ -45,7 +45,9 @@ def launch_vm(request):
         
         return JsonResponse({"redirect_url": url})
     
-    return redirect("/users/student/vm/1")
+    return redirect("/users/student/vm/" + vm_id)
+
+parent_identifier = "ROOT"
 
 def renders(request) : 
     return render(request, "guacamole.html")

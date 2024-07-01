@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+
 from proxmox.models import VirtualMachines
 
 # Create your models here.
@@ -33,7 +34,3 @@ class GuacamoleConnection(models.Model):
         choices=Status.choices,
         default=Status.ACTIVE
     )
-
-# class GuacamoleConnectionGroup(models.Model):
-#     connection_group_id = models.IntegerField()
-#     connection = models.ForeignKey(GuacamoleConnection, on_delete=models.DO_NOTHING)

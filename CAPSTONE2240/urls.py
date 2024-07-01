@@ -23,6 +23,7 @@ urlpatterns = [
     path('ansible/', include("autotool.urls")),
     # path('monitoring/', include("monitoring.urls")),
     path('guacamole/', include("guacamole.urls")),
+    path('opnsense/', include("opnsense.urls")),
     path('proxmox/', include("proxmox.urls")),
     path('ticketing/', include("ticketing.urls")),
     path('redirect/', views.redirect_based_on_user_type, name= 'redirect_based_on_user_type'),

@@ -43,7 +43,6 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, requ
     guacamole_connection_ids = []
     passwords = []
 
-    # TODO : CREATE ALGO TO ASSIGN VM_IDS
     new_vm_ids = generate_vm_ids(no_of_vm)
 
     for i in range(no_of_vm):
@@ -92,7 +91,7 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, requ
         guacamole.assign_connection(faculty_guacamole_username, guacamole_connection_ids[i])
         vm = VirtualMachines(request_id=request_id, vm_id=new_vm_ids[i], vm_name=classnames[i], cores=cpu_cores, ram=ram, storage=vm_temp.storage, ip_add=hostnames[i], node=node, status=VirtualMachines.Status.ACTIVE)
         vm.save()
-        GuacamoleConnection(user=GuacamoleUser.objects.get(system_user=user), connection_id=guacamole_connection_ids[i], connection_group_id=guacamole_connection_group_id, vm=vm).save()
+        GuacamoleConnection(user=get_object_or_404(GuacamoleUser, system_user=user), connection_id=guacamole_connection_ids[i], connection_group_id=guacamole_connection_group_id, vm=vm).save()
         VMUser.objects.create(vm=vm, username=username, password=password)
 
     guacamole.assign_connection_group(faculty_guacamole_username, guacamole_connection_group_id)
