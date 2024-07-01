@@ -43,3 +43,9 @@ INSERT INTO cap2240db.auth_user (password, is_superuser, username, first_name, l
 
 INSERT INTO cap2240db.ticketing_userprofile (user_type, user_id) VALUES
 ("admin", 1);
+
+INSERT INTO cap2240db.auth_user (password, is_superuser, username, first_name, last_name, email, is_staff, is_active, date_joined) VALUES
+("pbkdf2_sha256$720000$5gL9pa3JAHZYMUbNgW3qqL$udv7QLPHZ/Fv5ijQQMvklg06MOZvEkkbGY2LJ17dIyM=", "0", "faculty", "faculty", "chan", "", "0", "1", NOW());
+
+INSERT INTO cap2240db.ticketing_userprofile (user_type, user_id) VALUES
+("faculty", 2);

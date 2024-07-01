@@ -13,9 +13,10 @@ import json, datetime
 from .models import RequestEntry, Comment, RequestUseCase, PortRules, UserProfile, RequestEntryAudit, VMTemplates
 
 from guacamole.models import GuacamoleConnection, GuacamoleUser
+from guacamole import guacamole
 from proxmox import proxmox
 from proxmox import views
-from proxmox.models import VirtualMachines
+from proxmox.models import VirtualMachines, VMUser
 
 def login (request):
     return render(request, 'login.html')
@@ -332,31 +333,100 @@ def request_confirm(request, id):
     request_entry.status = RequestEntry.Status.PROCESSING
     request_entry.save()
 
-    data = vm_provision(id)
+    # data = vm_provision(id)
 
-    print(data)
+    confirm_test_vm(id)
 
     return HttpResponseRedirect(reverse("ticketing:index"))
+
+def get_total_no_of_vm(request_entry):
+    request_use_cases = RequestUseCase.objects.filter(request=request_entry).values('request_use_case', 'vm_count')
+    total_no_of_vm = 0
+    for request_use_case in request_use_cases:
+        total_no_of_vm += int(request_use_case['vm_count'])
+    return total_no_of_vm
+
+def create_test_vm(id): 
+    new_vm_id = views.generate_vm_ids(1)
+    node = "pve"
+    request_entry = get_object_or_404(RequestEntry, pk=id)
+    vm_id = int(request_entry.template.vm_id)
+    request_use_case = RequestUseCase.objects.filter(request=request_entry.pk).values('request_use_case', 'vm_count')[0]
+    vm_name = f"{request_use_case['request_use_case'].replace('_', '-')}-Group-1"
+    cpu_cores = int(request_entry.cores)
+    ram = int(request_entry.ram)
     
+    # upid = proxmox.clone_vm(node, vm_id, new_vm_id, vm_name)
+    # proxmox.wait_for_task(upid)
+    # proxmox.config_vm(node, new_vm_id, cpu_cores, ram)
+    # proxmox.start_vm(node, new_vm_id)
+    # ip_add = proxmox.wait_and_get_ip(node, new_vm_id)
+    # proxmox.shutdown_vm(node, new_vm_id)
+
+    ip_add = "10.10.10.1"
+
+    faculty_guacamole_user = get_object_or_404(GuacamoleUser, system_user=request_entry.requester)
+    faculty_guacamole_username = faculty_guacamole_user.username
+    guacamole_connection_group_id = guacamole.create_connection_group(f"{id}")
+    guacamole.assign_connection_group(faculty_guacamole_username, guacamole_connection_group_id)
+    guacamole_connection_id = guacamole.create_connection(vm_name, "rdp", 3389, ip_add, "jin", "123456", guacamole_connection_group_id)
+    passwords = User.objects.make_random_password()
+    user = User(username=vm_name)
+    user.set_password(passwords)
+    user.save()
+    UserProfile.objects.create(user=user)
+    guacamole.assign_connection(vm_name, guacamole_connection_id)
+    guacamole.assign_connection(faculty_guacamole_username, guacamole_connection_id)
+    
+    vm = VirtualMachines(
+        vm_id=new_vm_id, 
+        vm_name=vm_name, 
+        cores=cpu_cores, 
+        ram=ram, 
+        storage=request_entry.template.storage, 
+        ip_add=ip_add, 
+        request=request_entry, 
+        node=node)
+    vm.save()
+    GuacamoleConnection(user=get_object_or_404(GuacamoleUser, system_user=user), connection_id=guacamole_connection_id, connection_group_id=guacamole_connection_group_id, vm=vm).save()
+    VMUser.objects.create(vm=vm, username="jin", password="123456")
+    
+def confirm_test_vm(request, id):
+    request_entry = get_object_or_404(RequestEntry, pk=id)
+    # list = VirtualMachines.objects.get(request_id=id)  
+    # print(list)
+    if get_total_no_of_vm(request_entry) != 1 : vm_provision(id) 
+    request_entry.status = RequestEntry.Status.ONGOING
+
+    return redirect("/users/faculty/home")
+
 def vm_provision(id):
 
     node = "pve"
     request_entry = get_object_or_404(RequestEntry, pk=id)
-
-    vm_id = int(request_entry.template.vm_id)
+    vm = get_object_or_404(VirtualMachines, request=request_entry)
+    if vm.status == VirtualMachines.Status.ACTIVE:
+        # proxmox.shutdown_vm(vm.node, vm.vm_id)
+        vm.status = VirtualMachines.Status.SHUTDOWN
+        vm.save()
     request_use_cases = []
     request_use_cases = RequestUseCase.objects.filter(request=request_entry.pk).values('request_use_case', 'vm_count')
     classnames = []
-    total_no_of_vm = 0
+    total_no_of_vm = get_total_no_of_vm(request_entry) - 1
+    
     for request_use_case in request_use_cases:
         for i in range(request_use_case['vm_count']):
-            classnames.append(f"{request_use_case['request_use_case'].replace('_', '-')}-Group-{i + 1}")
-        total_no_of_vm += int(request_use_case['vm_count'])
+            vm_name = f"{request_use_case['request_use_case'].replace('_', '-')}-Group-{i + 1}"
+            if vm.vm_name != vm_name:
+                classnames.append(vm_name)
+        # total_no_of_vm += int(request_use_case['vm_count'])
 
     cpu_cores = int(request_entry.cores)
     ram = int(request_entry.ram)
 
-    return views.vm_provision_process(node, vm_id, classnames, total_no_of_vm, cpu_cores, ram, id)
+    print(classnames)
+
+    data =  views.vm_provision_process(node, vm.vm_id, classnames, total_no_of_vm, cpu_cores, ram, id)
 
 def delete_vms(request, request_id):
     request_entry = get_object_or_404(RequestEntry, pk=request_id)

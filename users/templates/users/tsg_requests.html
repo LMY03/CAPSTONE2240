@@ -41,19 +41,7 @@ TSG Dashboard
                 <td>{{ request.cores }}</td>
                 <td>{{ request.ram }}</td>
                 <td>{{ request.has_internet }}</td>
-                <td>
-                  {% if request.status == "CR" %}
-                  Creating
-                  {% elif request.status == "PENDING" %}
-                  Pending
-                  {% elif request.status == "FOR_REVISION" %}
-                  For revision
-                  {% elif request.status == "COMPLETED" %}
-                  Completed
-                  {% elif request.status == "DELETED" %}
-                  Delete
-                  {% endif %}
-                </td>
+                <td>{{ request.status }}</td>
                 <td>
                   <a href="{% url 'users:request_details' request.id %}" class="btn btn-primary">Open</a>
                   <a href="{% url 'users:delete_vms' request.id %}" class="btn btn-danger">Delete</a>

@@ -114,14 +114,20 @@ def request_details (request, request_id):
 
     request_entry_details['storage'] = request_entry_details.get('template__storage')
 
+    user_role = get_object_or_404(UserProfile, user=request.user).user_type
+
+    action = False
+    if request_entry.status == RequestEntry.Status.PENDING and user_role == 'admin': action = True
+    elif request_entry.status == RequestEntry.Status.PROCESSING and user_role == 'faculty': action = True
 
     comments = Comment.objects.filter(request_entry=request_entry).order_by('-date_time')
     context['request_entry'] = {
         'details': request_entry_details,
         'comments' : comments,
         'request_use_cases': request_use_cases,
+        'action' : action,
+        'user_role': user_role,
     }
-    print (request_use_cases)
     return render (request, 'users/tsg_request_details.html', context = context)
 
 def faculty_vm_details (request, vm_id):
@@ -150,11 +156,15 @@ def faculty_request_list(request):
         
         request_entry.category = category
 
+        vm_list = VirtualMachines.objects.filter(request=request_entry)
+        if vm_list.exists():
+            request_entry.vm_id = vm_list[0].id
+
     context = {
-        'request_entries': request_entries
+        'request_entries': request_entries,
     }
 
-    return render(request, 'users/faculty_request_list.html', context)
+    return render(request, 'users/faculty_request_list.html', { 'request_entries': request_entries })
 
 def edit_request(request, request_id):
     request_entry = get_object_or_404(RequestEntry, pk = request_id)

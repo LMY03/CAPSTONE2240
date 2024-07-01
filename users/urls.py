@@ -4,7 +4,7 @@ from . import views
 
 from guacamole.views import launch_vm
 from proxmox.views import shutdown_vm
-from ticketing.views import delete_vms
+from ticketing.views import delete_vms, vm_provision
 
 app_name = "users"
 urlpatterns = [

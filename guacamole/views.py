@@ -19,32 +19,33 @@ from proxmox.models import VirtualMachines
 #     print(guacamole.create_user(guacamole_username, guacamole_password))
 
 def launch_vm(request):
-    print("launch vm ---------------------------")
+    print("launch vm -------------------------------")
     if request.method == "POST":
-
+        print("post")
         data = request.POST
         vm_id = data.get("vm_id")
-
+        print(f"VM ID: {vm_id}")
+        
         vm = get_object_or_404(VirtualMachines, id=vm_id)
         
-        guacamole_user = GuacamoleUser.objects.get(system_user=request.user)
+        guacamole_user = get_object_or_404(GuacamoleUser, system_user=request.user)
         guacamole_username = guacamole_user.username
         guacamole_password = guacamole_user.password
         connection_id = get_object_or_404(GuacamoleConnection, vm=vm).connection_id
-        # if proxmox.get_vm_status(vm.node, vm.vm_id) == "stopped" : 
-        if vm.status == VirtualMachines.Status.SHUTDOWN : 
-            proxmox.start_vm(vm.node, vm.vm_id)
+        
+        if vm.status == VirtualMachines.Status.SHUTDOWN:
             vm.status = VirtualMachines.Status.ACTIVE
             vm.save()
-        # hostname = proxmox.wait_and_get_ip(vm.node, vm.vm_id)
-        # connection_details = guacamole.get_connection_parameter_details(connection_id)
-        # if hostname != connection_details['hostname'] : guacamole.update_connection(connection_id, hostname)
         
-        # redirect to new tab
-        url =  guacamole.get_connection_url(connection_id, guacamole_username, guacamole_password)
+        print(f"connection_id: {connection_id}")
+        print(f"guacamole_username: {guacamole_username}")
+        print(f"guacamole_password: {guacamole_password}")
+        
+        url = guacamole.get_connection_url(connection_id, guacamole_username, guacamole_password)
+        print(f"Generated URL: {url}")
         
         return JsonResponse({"redirect_url": url})
-    
+
     return redirect("/users/student/vm/" + vm_id)
 
 parent_identifier = "ROOT"
