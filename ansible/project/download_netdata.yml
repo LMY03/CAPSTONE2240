@@ -1,0 +1,21 @@
+---
+- hosts: "{{ target_hosts | default('all') }}"
+  become: yes
+
+  tasks:
+    - name: Install dependencies
+      apt:
+        name:
+          - curl
+          - sudo
+        state: present
+        update_cache: yes
+
+    - name: Install Netdata
+      shell: bash <(curl -Ss https://my-netdata.io/kickstart.sh)
+
+    - name: Ensure Netdata is started and enabled on boot
+      systemd:
+        name: netdata
+        state: started
+        enabled: yes
