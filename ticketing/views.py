@@ -365,12 +365,14 @@ def delete_vms(request, request_id):
     print(vms)
 
     for vm in vms:
-        if proxmox.get_vm_status == "stopped": 
-            proxmox.stop_vm(vm.node, vm.vm_id)
+        if vm.status == VirtualMachines.Status.ACTIVE:
+            # proxmox.stop_vm(vm.node, vm.vm_id)
+            vm.status = VirtualMachines.Status.SHUTDOWN
+            vm.save()
 
     for vm in vms:
-        proxmox.wait_for_vm_stop(vm.node, vm.vm_id)
-        proxmox.delete_vm(vm.node, vm.vm_id)
+        # proxmox.wait_for_vm_stop(vm.node, vm.vm_id)
+        # proxmox.delete_vm(vm.node, vm.vm_id)
         vm.status = VirtualMachines.Status.DESTROYED
         vm.save()
         guacamole_connection = get_object_or_404(GuacamoleConnection, vm=vm)

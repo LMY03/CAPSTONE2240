@@ -36,9 +36,9 @@ def launch_vm(request):
             proxmox.start_vm(vm.node, vm.vm_id)
             vm.status = VirtualMachines.Status.ACTIVE
             vm.save()
-        hostname = proxmox.wait_and_get_ip(vm.node, vm.vm_id)
-        connection_details = guacamole.get_connection_parameter_details(connection_id)
-        if hostname != connection_details['hostname'] : guacamole.update_connection(connection_id, hostname)
+        # hostname = proxmox.wait_and_get_ip(vm.node, vm.vm_id)
+        # connection_details = guacamole.get_connection_parameter_details(connection_id)
+        # if hostname != connection_details['hostname'] : guacamole.update_connection(connection_id, hostname)
         
         # redirect to new tab
         url =  guacamole.get_connection_url(connection_id, guacamole_username, guacamole_password)

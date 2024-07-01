@@ -45,17 +45,16 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, requ
 
     new_vm_ids = generate_vm_ids(no_of_vm)
 
-    for i in range(no_of_vm):
-        # new_vm_ids.append(vm_id + i + 1)
-        upids.append(proxmox.clone_vm(node, vm_id, new_vm_ids[i], classnames[i])['data'])
+    # for i in range(no_of_vm):
+    #     upids.append(proxmox.clone_vm(node, vm_id, new_vm_ids[i], classnames[i])['data'])
 
-    for i in range(no_of_vm):
-        # wait for vm to clone
-        proxmox.wait_for_task(node, upids[i])
-        # change vm configuration
-        proxmox.config_vm(node, new_vm_ids[i], cpu_cores, ram)
-        # start vm
-        proxmox.start_vm(node, new_vm_ids[i])
+    # for i in range(no_of_vm):
+    #     # wait for vm to clone
+    #     proxmox.wait_for_task(node, upids[i])
+    #     # change vm configuration
+    #     proxmox.config_vm(node, new_vm_ids[i], cpu_cores, ram)
+    #     # start vm
+    #     proxmox.start_vm(node, new_vm_ids[i])
 
     # vm_user = get_object_or_404(VMUser, vm__vm_id=vm_id)
     # username = vm_user.username
@@ -71,12 +70,11 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, requ
     
     for i in range(no_of_vm):
         # wait for vm to start
-        proxmox.wait_for_vm_start(node, new_vm_ids[i])
-        hostnames.append(proxmox.wait_and_get_ip(node, new_vm_ids[i]))
-        proxmox.shutdown_vm(node, new_vm_ids[i])
+        # proxmox.wait_for_vm_start(node, new_vm_ids[i])
+        # hostnames.append(proxmox.wait_and_get_ip(node, new_vm_ids[i]))
+        # proxmox.shutdown_vm(node, new_vm_ids[i])
 
-        # hostnames.append("10.10.10." + str(i))
-        # hostnames.append("172.20.10.5")
+        hostnames.append("10.10.10." + str(i))
         
         # create connection
         guacamole_connection_ids.append(guacamole.create_connection(classnames[i], protocol, port, hostnames[i], username, password, guacamole_connection_group_id))
@@ -135,7 +133,7 @@ def shutdown_vm(request):
             
             print("vm is active")
             
-            proxmox.shutdown_vm(vm.node, vm.vm_id)
+            # proxmox.shutdown_vm(vm.node, vm.vm_id)
             print("vm shutting down")
 
             vm.status = vm.Status.SHUTDOWN
