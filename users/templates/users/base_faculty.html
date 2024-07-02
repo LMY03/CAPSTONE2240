@@ -31,8 +31,8 @@
                             </a>
                             <ul class="dropdown-menu custom-dropdown-menu">
                                 <li><a class="dropdown-item" href="{% url 'ticketing:new-form' %}">Request a new VM</a></li>
-                                <li><a class="dropdown-item" href="{% url "ticketing:new-form-container" %}">Request a new Container</a></li>
-                                <li><a class="dropdown-item" href="{% url 'users:faculty_request_list' %}">My requests</a></li>
+                                <li><a class="dropdown-item" href="{% url 'ticketing:new-form-container' %}">Request a new Container</a></li>
+                                <li><a class="dropdown-item" href="{% url 'ticketing:index' %}">My requests</a></li>
                             </ul>
                         </div>
                     </li>
@@ -42,7 +42,7 @@
                         </a>
                         <ul class="dropdown-menu custom-dropdown-menu">
                             {% for vm in data %}
-                            <li><a class="dropdown-item" href="{% url 'users:vm_details' vm.id %}">{{ vm.vm_name }}</a></li>
+                            <li><a class="dropdown-item" href="{% url 'proxmox:vm_details' vm.id %}">{{ vm.vm_name }}</a></li>
                             {% endfor %}
                         </ul>
                     </li>

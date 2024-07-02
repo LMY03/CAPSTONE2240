@@ -17,20 +17,22 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 from ticketing import views
+from users.views import render_home
 from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     path('ansible/', include("autotool.urls")),
-    # path('monitoring/', include("monitoring.urls")),
+    path('monitoring/', include("monitoring.urls")),
     path('guacamole/', include("guacamole.urls")),
     path('opnsense/', include("opnsense.urls")),
     path('proxmox/', include("proxmox.urls")),
     path('ticketing/', include("ticketing.urls")),
-    path('redirect/', views.redirect_based_on_user_type, name= 'redirect_based_on_user_type'),
-    path('', auth_views.LoginView.as_view(template_name='ticketing/login.html'), name='customLogin'),
-    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
-    path('accounts/', include('django.contrib.auth.urls')),
-    path('social-auth/', include('social_django.urls', namespace='social')),
     path('users/', include("users.urls")),
+    path('social-auth/', include('social_django.urls', namespace='social')),
+    path('accounts/', include('django.contrib.auth.urls')),
     path('admin/', admin.site.urls),
+    path('', auth_views.LoginView.as_view(template_name='users/login.html'), name='customLogin'),
+    # path('redirect/', views.redirect_based_on_user_type, name= 'redirect_based_on_user_type'),
+    path('redirect/', render_home, name= 'redirect_based_on_user_type'),
+    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
 ]

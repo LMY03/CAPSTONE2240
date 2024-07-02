@@ -18,19 +18,16 @@ from proxmox.models import VirtualMachines
 #     guacamole_user.save()
 #     print(guacamole.create_user(guacamole_username, guacamole_password))
 
-def launch_vm(request):
-    print("launch vm -------------------------------")
+def access_vm(request):
+    print("access_vm -------------------------------")
     if request.method == "POST":
-        print("post")
+
         data = request.POST
         vm_id = data.get("vm_id")
-        print(f"VM ID: {vm_id}")
         
         vm = get_object_or_404(VirtualMachines, id=vm_id)
         
         guacamole_user = get_object_or_404(GuacamoleUser, system_user=request.user)
-        guacamole_username = guacamole_user.username
-        guacamole_password = guacamole_user.password
         connection_id = get_object_or_404(GuacamoleConnection, vm=vm).connection_id
 
         if vm.status == VirtualMachines.Status.SHUTDOWN : 
@@ -38,11 +35,7 @@ def launch_vm(request):
             vm.status = VirtualMachines.Status.ACTIVE
             vm.save()
         
-        print(f"connection_id: {connection_id}")
-        print(f"guacamole_username: {guacamole_username}")
-        print(f"guacamole_password: {guacamole_password}")
-        
-        url = guacamole.get_connection_url(connection_id, guacamole_username, guacamole_password)
+        url = guacamole.get_connection_url(connection_id, guacamole_user.username, guacamole_user.password)
         print(f"Generated URL: {url}")
         
         return JsonResponse({"redirect_url": url})

@@ -1,6 +1,7 @@
-import secrets, string
-
 from django.shortcuts import get_object_or_404, redirect, render
+from django.contrib.auth.decorators import login_required
+
+import secrets, string
 
 from guacamole import guacamole
 #from autotool import ansible
@@ -13,6 +14,38 @@ from django.contrib.auth.models import User
 from ticketing.models import RequestEntry, UserProfile
 
 # Create your views here.
+
+@login_required
+def vm_list(request):
+    user_role = get_object_or_404(UserProfile, user=request.user).user_type
+    if user_role == 'faculty' : return faculty_vm_list(request)
+    elif user_role == 'admin' : return tsg_vm_list(request)
+    else : return redirect('/')
+
+def faculty_vm_list(request):
+    request_entries = RequestEntry.objects.filter(requester=request.user).exclude(is_vm_tested=False).order_by('-id')
+    
+    vm_list = []
+    for request_entry in request_entries : vm_list += VirtualMachines.objects.filter(request=request_entry).exclude(is_lxc=True).exclude(status=VirtualMachines.Status.DESTROYED)
+
+    return render(request, 'proxmox/faculty_vm_list.html', { 'vm_list': vm_list })
+    
+def tsg_vm_list(request):
+    return render(request, 'proxmox/tsg_vm_list.html', { 'vm_list': list(VirtualMachines.objects.all().exclude(status=VirtualMachines.Status.DESTROYED).exclude(is_lxc=True)) })
+
+@login_required
+def vm_details(request, vm_id):
+    user_role = get_object_or_404(UserProfile, user=request.user).user_type
+    if user_role == 'faculty' : return faculty_vm_details(request)
+    elif user_role == 'admin' : return tsg_vm_details(request)
+    else : return redirect('/')
+
+def faculty_vm_details(request, vm_id):
+    return render(request, 'proxmox/faculty_vm_details.html', { 'vm': get_object_or_404(VirtualMachines, id=vm_id) })
+    
+def tsg_vm_details(request, vm_id):
+    return render(request, 'proxmox/tsg_vm_details.html', { 'vm': get_object_or_404(VirtualMachines, id=vm_id) })
+
 
 def generate_vm_ids(no_of_vm):
     
@@ -124,29 +157,53 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, requ
         'passwords' : passwords,
     }
 
-def shutdown_vm(request):
-    print("shutdown_vm -------------------------")
-    if request.method == "POST":
-        print("POST -------------------------")
+def shutdown_vm(request, vm_id):
+
+    vm = get_object_or_404(VirtualMachines, id=vm_id)
+
+    if vm.status == VirtualMachines.Status.ACTIVE:
         
-        data = request.POST
-        vm_id = data.get("vm_id")
-        print(vm_id)
+        # proxmox.shutdown_vm(vm.node, vm.vm_id)
 
-        vm = get_object_or_404(VirtualMachines, id=vm_id)
-        print(vm)
+        vm.status = vm.Status.SHUTDOWN
+        vm.save()
 
-        if vm.status == VirtualMachines.Status.ACTIVE:
+        return redirect("/users/student/vm/" + vm_id)
+
+# def lxc_provision(): 
+#     node = "pve"
+#     vmid = 2240
+#     snapname = "CAP-2240-Snapshot"
+#     ostemplate = "local:vztmpl/debian-11-standard_11.0-1_amd64.tar.gz"
+#     storage = "local-lvm"
+#     hostname_prefix = "new-container-"
+
+#     # Step 1: Create a snapshot
+#     snapshot_response = create_snapshot(node, vmid, snapname)
+#     print("Snapshot response:", snapshot_response)
+
+#     # Check if snapshot was created successfully
+#     if snapshot_response.get("data"):
+#         # Step 2: Create multiple containers and restore the snapshot
+#         for i in range(1, 6):  # Adjust the range for the number of containers you need
+#             new_vmid = 101 + i
+#             hostname = f"{hostname_prefix}{i}"
             
-            print("vm is active")
+#             # Create new container
+#             create_container_response = create_container(node, new_vmid, ostemplate, storage, hostname)
+#             print(f"Create container {new_vmid} response:", create_container_response)
             
-            # proxmox.shutdown_vm(vm.node, vm.vm_id)
-            print("vm shutting down")
-
-            vm.status = vm.Status.SHUTDOWN
-            vm.save()
-
-            return redirect("/users/student/vm/" + vm_id)
+#             # Wait for the container to be created
+#             time.sleep(10)  # Adjust sleep time based on your Proxmox server's performance
+            
+#             # Restore snapshot to the new container
+#             restore_response = restore_snapshot_to_container(node, new_vmid, vmid, snapname)
+#             print(f"Restore snapshot to container {new_vmid} response:", restore_response)
+            
+#             # Wait a bit before creating the next container
+#             time.sleep(10)  # Adjust sleep time as needed
+#     else:
+#         print("Failed to create snapshot.")
 
 node = "pve"
 

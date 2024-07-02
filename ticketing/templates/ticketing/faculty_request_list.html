@@ -35,13 +35,13 @@ VM Details {{ vm_id }}
                 <td>{{ request.id }}</td>
                 <td>Virtual Machine</td>
                 <td>{{ request.category }}</td>
-                <td>{{ request.requestDate}}</td>
-                <td>{{ request.status}}</td>
+                <td>{{ request.requestDate }}</td>
+                <td>{{ request.status }}</td>
                 <td>
                     <div class = 'd-flex justify-content-evenly'>
-                    {% comment %} <a href="{% url 'users:request_details' request.id %}" class="btn btn-outline-primary">Open</a> {% endcomment %}
+                    <a href="{% url 'ticketing:request_details' request.id %}" class="btn btn-outline-primary">Open</a>
                     {% if request.status == 'PENDING' or request.status == 'FOR_REVISION' %}
-                    <a class="btn btn-outline-primary" href="{% url 'users:faculty_edit_request' request_id=request.id %}" role="button">Edit</a>
+                    <a class="btn btn-outline-primary" href="{% url 'ticketing:faculty_edit_request' request.id %}" role="button">Edit</a>
                     {% endif %}
                     </div>
                 </td>

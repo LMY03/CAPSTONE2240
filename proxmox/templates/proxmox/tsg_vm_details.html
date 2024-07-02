@@ -1,4 +1,4 @@
-{% extends 'users/base_student.html' %}
+{% extends 'users/base_tsg.html' %}
 
 {% block title %}
 VM Details {{ vm_id }}
@@ -16,18 +16,10 @@ VM Details {{ vm_id }}
     <div class="container mt-4">
         <!-- Header with Buttons -->
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2>VM Details: {{ vm_data.vm_name }}</h2>
+            <h2>VM Details: {{ vm.vm_name }}</h2>
             <div>
-                <form action="{% url 'users:shutdown_vm' %}" method="post">
-                    {% csrf_token %}
-                    <input type="hidden" id="vm_id" name="vm_id" value="{{ vm_data.id }}" />
-                    <button type="submit" class="btn btn-danger me-2">Shutdown</button>
-                </form>
-                <form id="start_vm_form" action="{% url 'users:launch_vm' %}" method="post" onsubmit="submitForm(event)">
-                    {% csrf_token %}
-                    <input type="hidden" id="vm_id" name="vm_id" value="{{ vm_data.id }}" />
-                    <button type="submit" class="btn btn-success">Open VM</button>
-                </form>
+                <a href="{% url 'proxmox:shutdown_vm' vm_id %}"><button type="submit" class="btn btn-danger me-2">Shutdown</button></a>
+                <a href="{% url 'guacamole:access_vm' vm_id %}"><button type="submit" class="btn btn-danger me-2">Open VM</button></a>
             </div>
         </div>
         <!-- Content Area -->
@@ -37,7 +29,7 @@ VM Details {{ vm_id }}
                 <div class="card">
                     <div class="card-header">Memory</div>
                     <div class="card-body">
-                        {{ vm_data.ram }} MB
+                        {{ vm.ram }} MB
                     </div>
                 </div>
             </div>
@@ -46,7 +38,7 @@ VM Details {{ vm_id }}
                 <div class="card">
                     <div class="card-header">Core Count</div>
                     <div class="card-body">
-                        {{ vm_data.cores }} Cores
+                        {{ vm.cores }} Cores
                     </div>
                 </div>
             </div>
@@ -55,7 +47,7 @@ VM Details {{ vm_id }}
                 <div class="card">
                     <div class="card-header">Storage</div>
                     <div class="card-body">
-                        {{ vm_data.storage }} GB
+                        {{ vm.storage }} GB
                     </div>
                 </div>
             </div>
@@ -73,7 +65,7 @@ VM Details {{ vm_id }}
                 <div class="card">
                     <div class="card-header">Status</div>
                     <div class="card-body">
-                        {{ vm_data.status }}
+                        {{ vm.status }}
                     </div>
                 </div>
             </div>

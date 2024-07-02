@@ -10,8 +10,8 @@ CREATE DEFINER=`root`@`%` TRIGGER `create_guac_user` AFTER INSERT ON `auth_user`
     SET @salt = UNHEX(SHA2(UUID(), 256));
     
     -- INSERT guacamole_user into cap2240db
-    INSERT INTO cap2240db.guacamole_guacamoleuser (username, password, system_user_id, status)
-    VALUES (NEW.username, NEW.password, NEW.id, 'ACTIVE');
+    INSERT INTO cap2240db.guacamole_guacamoleuser (username, password, system_user_id, is_active)
+    VALUES (NEW.username, NEW.password, NEW.id, 1);
     
     -- INSERT the new system user into guacamole_db.guacamole_entity
     INSERT INTO guacamole_db.guacamole_entity (name, type) VALUES (NEW.username, 'USER');

@@ -1,0 +1,47 @@
+{% extends 'users/base_tsg.html' %}
+
+{% block title %}
+Student Dashboard
+{% endblock title %}
+{% load static %}
+
+{% block css %} <link rel="stylesheet" href="{% static 'users/css/student_home.css' %}"> {% endblock css %} 
+
+{% block content %}
+        <!-- Main Content -->
+        <div class="col-md-10 content">
+            <h2>Virtual Machine List</h2>
+            <div class="table-container">
+                <div class="d-flex justify-content-between mb-3">
+                    <input type="text" class="form-control w-25" placeholder="Search">
+                    <button class="btn btn-outline-secondary">
+                        Filter by <i class="bi bi-funnel"></i>
+                    </button>
+                </div>
+                <table class="table table-hover">
+                    <thead class="table-light">
+                        <tr>
+                            <th scope="col">Virtual Machine ID</th>
+                            <th scope="col">Type</th>
+                            <th scope="col">Group</th>
+                            <th scope="col">Assigned By</th>
+                            <th scope="col">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for vm in vm_list %}
+                        <tr>
+                            <td><i class="bi bi-display"></i> {{ vm.vm_name }}</td>
+                            <td>Course</td>
+                            <td>CAPSTONE</td>
+                            <td>Estefanie Bertumen</td>
+                            <td>{{ vm.status }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}

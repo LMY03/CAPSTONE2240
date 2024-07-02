@@ -5,6 +5,8 @@ from . import views
 app_name = "guacamole"
 
 urlpatterns = [
+    path('access_vm', views.access_vm, name='access_vm'),
+
     path("", views.renders, name="form"),
     path("create_user", views.create_user, name="create_user"),
     path("delete_user", views.delete_user, name="delete_user"),
