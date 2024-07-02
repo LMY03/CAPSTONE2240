@@ -149,8 +149,21 @@ document.getElementById('vm-form').addEventListener('submit', function (event) {
     const formData = new FormData(this);
     const formInputs = this.querySelectorAll('input[type="text"], select, textarea, input[type="number"], input[type="date"]');
     const formDataInputs = {};
+    let i = 1, j = 1;
     formInputs.forEach(input => {
         formDataInputs[input.id] = input.value;
+        if (input.id.startsWith('protocol')) {
+            let protocolNumber = input.id.replace('protocol', '');
+            formDataInputs[`addProtocolClicked`] = '';
+            formDataInputs[`addProtocolClicked`] = protocolNumber;
+            i++;
+        }
+        if (input.id.startsWith('course_code')) {
+            let courseCodeNumber = input.id.replace('course_code', '');
+            formDataInputs[`addCourseButtonClick`] = '';
+            formDataInputs[`addCourseButtonClick`] = courseCodeNumber;
+        }
+
     });
     // for (let sectionCode in sectionCounts) {
     //     const groupCount = sectionCounts[sectionCode]["GroupCounter"]
@@ -158,8 +171,9 @@ document.getElementById('vm-form').addEventListener('submit', function (event) {
     //     formData.append(`sections`, sectionCode)
     //     formData.append(`${sectionCode}_group_count`, formDataInputs[`${sectionCode}_group_count`]);
     // }
-    formDataInputs[`addCourseButtonClick`] = addCourseSectionClicked;
-    formDataInputs[`addProtocolClicked`] = addProtocolClicked;
+
+
+
     for (const key in formDataInputs) {
         formData.append(key, formDataInputs[key]);
     }
@@ -214,12 +228,15 @@ document.getElementById('external_access').addEventListener('change', function (
     }
 });
 
+
 document.getElementById('addProtocolButton').addEventListener('click', function () {
     addProtocolClicked++;
     let accordion = document.getElementById('accordionBody_networkDetails');
 
     const newDivProtocol = document.createElement('div');
-    newDivProtocol.classList.add('mb-3');
+    newDivProtocol.classList.add('mb-3', 'protocol-group');
+    newDivProtocol.id = `protocolGroup${addProtocolClicked}`;
+
     const newProtocolLabel = document.createElement('label');
     newProtocolLabel.innerHTML = `Protocol ${addProtocolClicked}:`;
     newProtocolLabel.classList.add('form-label');
@@ -229,7 +246,6 @@ document.getElementById('addProtocolButton').addEventListener('click', function 
     newProtocolSelect.className = 'form-control';
     newProtocolSelect.id = `protocol${addProtocolClicked}`;
     newProtocolSelect.name = `protocol${addProtocolClicked}`;
-    newProtocolSelect.classList.add('form-control');
 
     let options = [
         { value: 'TCP', text: 'TCP' },
@@ -246,12 +262,27 @@ document.getElementById('addProtocolButton').addEventListener('click', function 
         newProtocolSelect.appendChild(opt);
     });
 
-    newDivProtocol.appendChild(newProtocolLabel);
+    const removeButton = document.createElement('button');
+    removeButton.type = 'button';
+    removeButton.classList.add('btn', 'btn-danger');
+    removeButton.innerText = 'Remove';
+    removeButton.addEventListener('click', function () {
+        accordion.removeChild(newDivProtocol);
+        accordion.removeChild(newDivDestination);
+        addProtocolClicked--;
+    });
+
+    const labelDiv = document.createElement('div');
+    labelDiv.classList.add('d-flex', 'align-items-center', 'justify-content-between', 'mb-3');
+    labelDiv.appendChild(newProtocolLabel);
+    labelDiv.appendChild(removeButton);
+
+    newDivProtocol.appendChild(labelDiv);
     newDivProtocol.appendChild(newProtocolSelect);
 
-
     const newDivDestination = document.createElement('div');
-    newDivDestination.classList.add('mb-3')
+    newDivDestination.classList.add('mb-3');
+    newDivDestination.id = `destinationGroup${addProtocolClicked}`;
     const newDestinationPortLabel = document.createElement('label');
     newDestinationPortLabel.innerHTML = `Destination Port ${addProtocolClicked}:`;
     newDestinationPortLabel.classList.add('form-label');
@@ -262,7 +293,6 @@ document.getElementById('addProtocolButton').addEventListener('click', function 
     newDestinationPortInput.className = 'form-control';
     newDestinationPortInput.id = `destination_port${addProtocolClicked}`;
     newDestinationPortInput.name = `destination_port${addProtocolClicked}`;
-    newDestinationPortInput.classList.add('form-control');
 
     newDivDestination.appendChild(newDestinationPortLabel);
     newDivDestination.appendChild(newDestinationPortInput);

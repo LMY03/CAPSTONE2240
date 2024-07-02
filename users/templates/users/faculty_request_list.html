@@ -21,23 +21,29 @@ VM Details {{ vm_id }}
     <table class="table table-bordered">
         <thead>
             <tr>
-                <th>Ticket ID</th>
-                <th>Category</th>
-                <th>Request Type</th>
-                <th>Date Requested</th>
-                <th>Status</th>
-                <th>Action</th>
+                <th class="text-center">Ticket ID</th>
+                <th class="text-center">Category</th>
+                <th class="text-center">Request Type</th>
+                <th class="text-center">Date Requested</th>
+                <th class="text-center">Status</th>
+                <th class="text-center">Action</th>
             </tr>
         </thead>
         <tbody>
             {% for request in request_entries  %}
             <tr>
-                <td>{{ request.id }}</td>
-                <td>Virtual Machine</td>
-                <td>{{ request.category }}</td>
-                <td>{{ request.requestDate}}</td>
-                <td>{{ request.status}}</td>
-                <td><a class="btn btn-outline-primary" href="{% url 'users:faculty_edit_request' request_id=request.id %}" role="button">Edit</a></td>
+                <td class="text-center">{{ request.id }}</td>
+                <td class="text-center">Virtual Machine</td>
+                <td class="text-center">{{ request.category }}</td>
+                <td class="text-center">{{ request.requestDate}}</td>
+                <td class="text-center"> {% if request.status == 'FOR_REVISION' %}FOR REVISION{% else %}{{ request.status}}{% endif %}</td>
+                {% if request.status == 'PROCESSING' %}
+                <td class="text-center"><div class = 'd-flex justify-content-evenly'>
+                        <a class="btn btn-outline-primary" href="{% url 'users:faculty_edit_request' request_id=request.id %}" role="button">Edit</a> <a class="btn btn-outline-primary" href="{% url 'users:faculty_test_vm' request_id=request.id %}" role="button">Test</a>
+                    </div></td>
+                {% else %}
+                <td class="text-center"><a class="btn btn-outline-primary" href="{% url 'users:faculty_edit_request' request_id=request.id %}" role="button">Edit</a></td>
+                {% endif %}
             </tr>
             {% endfor %}
         </tbody>

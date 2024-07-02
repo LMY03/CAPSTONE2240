@@ -1,7 +1,6 @@
 from django.urls import path
-
 from . import views
-
+from django.contrib.auth import views as auth_views
 from guacamole.views import launch_vm
 
 app_name = "users"
@@ -17,5 +16,6 @@ urlpatterns = [
     path('faculty/vm_details/<str:vm_id>', views.faculty_vm_details, name = 'vm_details_faculty'),
     path('faculty/requests_list', views.faculty_request_list, name='faculty_request_list'),
     path('faculty/edit_request/<str:request_id>', views.edit_request, name = 'faculty_edit_request'),
-    path('login', views.login_view, name = "login"),
+    path('faculty/test_vm/<int:request_id>', views.faculty_test_vm, name = 'faculty_test_vm'),
+    path('login/', views.login_view, name = "login"),
 ]

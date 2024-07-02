@@ -1,8 +1,8 @@
 from django.contrib import admin
-from .models import RequestEntry, UserProfile
+from .models import RequestEntry, UserProfile, VMTemplates
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import User
-from .forms import UserCreationForm, UserChangeForm
+from .forms import UserCreationForm, UserChangeForm, AddVMTemplates
 
 class UserProfileInline(admin.StackedInline):
     model = UserProfile
@@ -22,7 +22,11 @@ class CustomUserAdmin(BaseUserAdmin):
 
     inlines = (UserProfileInline,)
 
+class CustomVMTemplateAdmin(admin.ModelAdmin):
+    form = AddVMTemplates
+
 admin.site.unregister(User)
 admin.site.register(User, CustomUserAdmin)
-admin.site.register(UserProfile)
-admin.site.register(RequestEntry)
+admin.site.register(VMTemplates, CustomVMTemplateAdmin)
+# admin.site.register(UserProfile)
+# admin.site.register(RequestEntry)
