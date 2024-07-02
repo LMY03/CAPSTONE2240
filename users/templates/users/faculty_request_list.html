@@ -38,7 +38,8 @@ VM Details {{ vm_id }}
                 <td>{{ request.requestDate}}</td>
                 <td>{{ request.status}}</td>
                 <td>
-                    <a href="{% url 'users:request_details' request.id %}" class="btn btn-primary">Open</a>
+                    <div class = 'd-flex justify-content-evenly'>
+                    {% comment %} <a href="{% url 'users:request_details' request.id %}" class="btn btn-outline-primary">Open</a> {% endcomment %}
                     {% if request.status == 'PENDING' or request.status == 'FOR_REVISION' %}
                     <a class="btn btn-outline-primary" href="{% url 'users:faculty_edit_request' request_id=request.id %}" role="button">Edit</a>
                     {% endif %}
@@ -49,6 +50,7 @@ VM Details {{ vm_id }}
                         <button type="submit" class="btn btn-success">Open VM</button>
                     </form>
                     {% endif %}
+                    </div>
                 </td>
             </tr>
             {% endfor %}

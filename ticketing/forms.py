@@ -39,4 +39,18 @@ class AddVMTemplates(forms.ModelForm):
 
     class Meta:
         model = VMTemplates
-        fields = ('vm_id', 'vm_name')
+        fields = ('vm_id', 'vm_name', 'node')
+
+    def save (self, commit = True):
+        vmtemplate = super().save(commit=False)
+        #This is where the API call starts
+        #Where it ends
+
+        #Setting of the core ram and storage
+        vmtemplate.cores = 1
+        vmtemplate.ram = 2048
+        vmtemplate.storage = 8
+        vmtemplate.is_lxc = False
+        if commit:
+            vmtemplate.save()
+        return vmtemplate

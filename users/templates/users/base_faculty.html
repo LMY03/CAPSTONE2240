@@ -31,7 +31,7 @@
                             </a>
                             <ul class="dropdown-menu custom-dropdown-menu">
                                 <li><a class="dropdown-item" href="{% url 'ticketing:new-form' %}">Request a new VM</a></li>
-                                <li><a class="dropdown-item" href="#">Request a new Container</a></li>
+                                <li><a class="dropdown-item" href="{% url "ticketing:new-form-container" %}">Request a new Container</a></li>
                                 <li><a class="dropdown-item" href="{% url 'users:faculty_request_list' %}">My requests</a></li>
                             </ul>
                         </div>

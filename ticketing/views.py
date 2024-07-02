@@ -126,7 +126,7 @@ class RequestFormView(generic.edit.FormView):
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
-        vmtemplate_list = VMTemplates.objects.all().values_list('id', 'vm_name')
+        vmtemplate_list = VMTemplates.objects.all().values_list('id', 'vm_name', 'storage')
         context['vmtemplate_list'] = list(vmtemplate_list)
         return context
 
@@ -156,13 +156,11 @@ def new_form_submit(request):
         template_id = data.get("template_id")
         cores = data.get("cores")
         ram = data.get("ram")
-        storage = data.get("storage")
         has_internet = data.get("external_access") == 'true'
         date_needed = data.get ('date_needed')
         expiration_date = data.get('expiration_date')
         other_config = data.get("other_configs")
         use_case = data.get('use_case')
-        #vm_count = data.get("vm_count"
         vmTemplateID = VMTemplates.objects.get(id = template_id)
         # TODO: data verification
 
@@ -467,3 +465,10 @@ def delete_vms(request, request_id):
     request_entry.save()
 
     return redirect('/users/faculty/home/')
+
+def new_form_container (request):
+    container_template = VMTemplates.objects.filter(is_lxc = 1)
+    context = {}
+    context['container_template'] = container_template
+    print (context['container_template'])
+    return render (request, 'ticketing/new-form-container.html', context)

@@ -23,6 +23,8 @@ class VMTemplates(models.Model):
     cores = models.IntegerField()
     ram = models.IntegerField()
     storage = models.IntegerField()
+    node = models.CharField(max_length= 45)
+    is_lxc = models.BooleanField(default=False)
 
 
 class RequestEntry(models.Model):
