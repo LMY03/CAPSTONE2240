@@ -193,7 +193,17 @@ def edit_request(request, request_id):
         port_rules_list = list(portRules.values())
         context['port_rules'] = portRules
         context['port_rules_js'] = json.dumps(port_rules_list)
-    
+
+    comments = Comment.objects.filter(request_entry=request_entry).select_related("user").values(
+            "comment",
+            "user__first_name",
+            "user__last_name",
+            "date_time",
+        ).order_by('-date_time')
+
+    if comments.exists():
+        context['comments'] = comments
+
     print(context)
     return render(request, 'users/faculty_edit_request.html', context)
 
@@ -218,3 +228,19 @@ def login_view (request):
     else:
         # Handle invalid login
         return render(request, 'login.html', {'error': 'Invalid username or password'})
+    
+def faculty_test_vm (request, request_id):
+    vm = VirtualMachines.objects.filter(request_id=request_id, vm_name__startswith='test')
+    context = {}
+    request_entry = get_object_or_404(RequestEntry, pk = request_id)
+    context['vm_data'] = vm.first()
+    context ['comments'] = Comment.objects.filter(request_entry=request_entry).select_related("user").values(
+            "comment",
+            "user__first_name",
+            "user__last_name",
+            "date_time",
+        ).order_by('-date_time')
+    context['request_entry'] ={
+        'id' : request_id
+    }
+    return render(request, 'users/faculty_test_vm.html', context)

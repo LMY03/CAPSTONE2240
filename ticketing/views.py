@@ -59,7 +59,7 @@ class DetailView(generic.DetailView):
             "requester__last_name",
             "cores",
             "ram",
-            "storage",
+            #"storage",
             "has_internet",
             "id",
             "template__vm_name",
@@ -67,7 +67,7 @@ class DetailView(generic.DetailView):
             "date_needed",
             'expiration_date',
             "other_config",
-            "vm_count",
+            #"vm_count",
         ).get(pk=pk)
 
 
@@ -109,7 +109,11 @@ def add_comment(request, pk):
         if new_data:
             log_request_entry_changes(request_entry, user, new_data, user)
 
-    return redirect('ticketing:details', pk=pk)
+    
+    if user_profile.user_type == 'admin':
+        return redirect('ticketing:details', pk=pk)
+    else:
+        return redirect('users:edit_request', request_id = pk)
 
 class RequestForm(forms.ModelForm):
     class Meta:
@@ -179,11 +183,14 @@ def new_form_submit(request):
         
         if use_case == 'CLASS_COURSE':
             for i in range(1, int(data['addCourseButtonClick']) + 1):
-                RequestUseCase.objects.create(
-                    request = new_request,
-                    request_use_case = data.get(f"course_code{i}"),
-                    vm_count = data.get(f"vm_count{i}")
-                )
+                course_code = data.get(f"course_code{i}")
+                vm_count = data.get(f"vm_count{i}")
+                if course_code is not None:
+                    RequestUseCase.objects.create(
+                        request = new_request,
+                        request_use_case = course_code,
+                        vm_count = vm_count
+                    )
         else:
             RequestUseCase.objects.create(
                     request = new_request,
@@ -197,12 +204,13 @@ def new_form_submit(request):
                 dest_ports = data.get(f'destination_port{i}')
                 description = data.get('description')
                 print (f'{protocol}, {dest_ports}, {description}')
-                PortRules.objects.create(
-                    request = new_request,
-                    protocol = protocol,
-                    dest_ports = dest_ports,
-                    description = description
-                )
+                if protocol and dest_ports: 
+                    PortRules.objects.create(
+                        request = new_request,
+                        protocol = protocol,
+                        dest_ports = dest_ports,
+                        #description = description
+                    )
     return JsonResponse({'status': 'ok'}, status=200)
 
 def log_request_entry_changes(request_entry, changed_by, new_data, user):

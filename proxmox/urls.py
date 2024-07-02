@@ -24,4 +24,5 @@ urlpatterns = [
     path("ip_lxc", views.ip_lxc, name="ip_lxc"),
     path("config_lxc", views.config_lxc, name="config_lxc"),
     path("get_templates", views.get_templates, name="get_templates"),
+    path("accept_vm/<int:vm_id>", views.accept_vm, name = 'accept_vm')
 ]

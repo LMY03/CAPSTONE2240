@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
+from .models import VMTemplates
 
 class UserCreationForm(forms.ModelForm):
     password1 = forms.CharField(label='Password', widget=forms.PasswordInput)
@@ -33,3 +34,9 @@ class UserChangeForm(forms.ModelForm):
 
     def clean_password(self):
         return self.initial["password"]
+
+class AddVMTemplates(forms.ModelForm):
+
+    class Meta:
+        model = VMTemplates
+        fields = ('vm_id', 'vm_name')

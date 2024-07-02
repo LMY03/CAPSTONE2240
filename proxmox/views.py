@@ -104,6 +104,8 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, requ
         vm_users.append("jin")
         labels.append(classnames[i])
 
+        password = generate_secure_random_string(15)
+        User.objects.create_user(username=classnames[i], password=password)
         # password = generate_secure_random_string(15)
         # User.objects.create_user(username=classnames[i], password=password)
 
@@ -384,3 +386,6 @@ def generate_secure_random_string(length):
     letters = string.ascii_letters + string.digits
     result_str = ''.join(secrets.choice(letters) for i in range(length))
     return result_str
+
+def accept_vm (request, vm_id):
+    return (request, 'users:faculty_request_list')

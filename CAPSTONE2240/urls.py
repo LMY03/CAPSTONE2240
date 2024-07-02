@@ -27,7 +27,7 @@ urlpatterns = [
     path('proxmox/', include("proxmox.urls")),
     path('ticketing/', include("ticketing.urls")),
     path('redirect/', views.redirect_based_on_user_type, name= 'redirect_based_on_user_type'),
-    path('', auth_views.LoginView.as_view(template_name='ticketing/login.html'), name='login'),
+    path('', auth_views.LoginView.as_view(template_name='ticketing/login.html'), name='customLogin'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('accounts/', include('django.contrib.auth.urls')),
     path('social-auth/', include('social_django.urls', namespace='social')),

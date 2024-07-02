@@ -1,7 +1,6 @@
 from django.urls import path
-
 from . import views
-
+from django.contrib.auth import views as auth_views
 from guacamole.views import launch_vm
 from proxmox.views import shutdown_vm
 from ticketing.views import delete_vms, vm_provision
@@ -21,6 +20,7 @@ urlpatterns = [
     path('faculty/requests_list', views.faculty_request_list, name='faculty_request_list'),
     path('faculty/request_details/<int:request_id>', views.faculty_request_details, name = 'faculty_request_details'),
     path('faculty/edit_request/<str:request_id>', views.edit_request, name = 'faculty_edit_request'),
+    path('faculty/test_vm/<int:request_id>', views.faculty_test_vm, name = 'faculty_test_vm'),
+    path('login/', views.login_view, name = "login"),
     path('delete_vms/<int:request_id>', delete_vms, name='delete_vms'),
-    path('login', views.login_view, name = "login"),
 ]

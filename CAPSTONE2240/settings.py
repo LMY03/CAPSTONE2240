@@ -185,10 +185,10 @@ SOCIAL_AUTH_PIPELINE = (
 )
 
 
-LOGIN_URL = 'login'
+LOGIN_URL = 'customLogin'
 LOGIN_REDIRECT_URL = 'redirect_based_on_user_type'
 LOGOUT_URL = 'logout'
-LOGOUT_REDIRECT_URL = 'login'
+LOGOUT_REDIRECT_URL = 'customLogin'
 
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '987770968377-l0f3k7n7ihip6iaghgvpdkijqf53ks71.apps.googleusercontent.com'
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = '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'

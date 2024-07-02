@@ -24,6 +24,7 @@ class VMTemplates(models.Model):
     ram = models.IntegerField()
     storage = models.IntegerField()
 
+
 class RequestEntry(models.Model):
     expirationDateDefault = expiration_date_default
     dateNeededDefault = date_needed_default
