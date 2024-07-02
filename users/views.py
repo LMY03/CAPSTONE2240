@@ -11,7 +11,7 @@ from ticketing.models import RequestEntry, Comment, RequestUseCase, VMTemplates,
 import json
 from django.forms.models import model_to_dict
 from proxmox.models import VirtualMachines
-from guacamole.models import GuacamoleConnection
+from guacamole.models import GuacamoleConnection, GuacamoleUser
 
 # Create your views here.
 def home_filter_view (request):
@@ -24,6 +24,13 @@ def get_student_vm ():
     template_vm_ids = VMTemplates.objects.values_list('vm_id', flat=True)
     # Filter VirtualMachines to exclude those in VMTemplates and with status 'DELETED'
     return list(VirtualMachines.objects.exclude(id__in=template_vm_ids).exclude(status='DELETED').order_by('id').values())
+
+# def student_home(request):
+
+#     user = request.user
+#     context = { 'vm_data' : GuacamoleConnection.objects.get(user=GuacamoleUser.objects.get(system_user=user)).vm }
+    
+#     return render(request, "users/student_vm_details.html", context)
 
 @login_required
 def student_home(request):
@@ -42,13 +49,13 @@ def tsg_home(request):
 @login_required
 def vm_details(request, vm_id):
     vm_data = VirtualMachines.objects.get(id=vm_id)
-    guacamole_connection = GuacamoleConnection.objects.get(vm=vm_data)
-    print("guacamole_connection")
-    print(guacamole_connection)
+    # guacamole_connection = GuacamoleConnection.objects.get(vm=vm_data)
+    # print("guacamole_connection")
+    # print(guacamole_connection)
     context = {
         'vm_data': vm_data,
         'data' : get_student_vm(),
-        'guacamole_connection' : guacamole_connection
+        # 'guacamole_connection' : guacamole_connection
     }
 
     return render(request, 'users/student_vm_details.html', context)
@@ -107,14 +114,20 @@ def request_details (request, request_id):
 
     request_entry_details['storage'] = request_entry_details.get('template__storage')
 
+    user_role = get_object_or_404(UserProfile, user=request.user).user_type
+
+    action = False
+    if request_entry.status == RequestEntry.Status.PENDING and user_role == 'admin': action = True
+    elif request_entry.status == RequestEntry.Status.PROCESSING and user_role == 'faculty': action = True
 
     comments = Comment.objects.filter(request_entry=request_entry).order_by('-date_time')
     context['request_entry'] = {
         'details': request_entry_details,
         'comments' : comments,
         'request_use_cases': request_use_cases,
+        'action' : action,
+        'user_role': user_role,
     }
-    print (request_use_cases)
     return render (request, 'users/tsg_request_details.html', context = context)
 
 def faculty_vm_details (request, vm_id):
@@ -143,11 +156,15 @@ def faculty_request_list(request):
         
         request_entry.category = category
 
+        vm_list = VirtualMachines.objects.filter(request=request_entry)
+        if vm_list.exists():
+            request_entry.vm_id = vm_list[0].id
+
     context = {
-        'request_entries': request_entries
+        'request_entries': request_entries,
     }
 
-    return render(request, 'users/faculty_request_list.html', context)
+    return render(request, 'users/faculty_request_list.html', { 'request_entries': request_entries })
 
 def edit_request(request, request_id):
     request_entry = get_object_or_404(RequestEntry, pk = request_id)
@@ -205,7 +222,7 @@ def login_view (request):
     data = request.POST
     username = data.get("username")
     password = data.get("password")
-
+    
     user = authenticate(request, username=username, password=password)
         
     if user is not None:

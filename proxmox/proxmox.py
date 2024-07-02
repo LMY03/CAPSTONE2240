@@ -1,6 +1,5 @@
 import requests, time
 
-# Parameters
 PROXMOX_HOST = 'https://10.1.200.11:8006'
 USERNAME = 'root@pam'
 PASSWORD = 'cap2240'
@@ -140,6 +139,14 @@ def wait_and_get_ip(node, vmid):
         time.sleep(5)
 
 ###########################################################################################################
+STORAGE = 'local-lvm'
+def get_templates(node):
+    url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/aplinfo"
+    session = get_authenticated_session()
+    response = session.get(url)
+
+    return response.json()
+    
 
 def create_lxc(node, ostemplate, vmid, cores, memory, storage):
     session = get_authenticated_session()
@@ -150,8 +157,11 @@ def create_lxc(node, ostemplate, vmid, cores, memory, storage):
         # 'hostname': hostname,
         'cores': cores,
         'memory': memory,
-        'storage': storage,
+        'storage': STORAGE,
+        'rootfs' : f'{STORAGE}:{storage}',
+        'password': '123456',
         # 'ssh-public-keys': ,
+        # 'start': True
     }
     response = session.post(url, data=config)
     return response.json()

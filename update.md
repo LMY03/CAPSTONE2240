@@ -1,3 +1,7 @@
+sudo apt update -y
+
+sudo apt upgrade -y
+
 sudo df -h
 
 sudo du -ah / | sort -rh | head -n 20

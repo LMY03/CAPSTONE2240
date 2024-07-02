@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     # "monitoring.apps.MonitoringConfig",
     "ticketing.apps.TicketingConfig",
     "guacamole.apps.GuacamoleConfig",
+    "opnsense.apps.OpnsenseConfig",
     "proxmox.apps.ProxmoxConfig",
     'django.contrib.admin',
     'django.contrib.auth',
@@ -99,8 +100,8 @@ DATABASES = {
         'NAME': 'cap2240db',
         'USER': 'cap-2240',
         'PASSWORD': 'CAP_2240',
-        'HOST': 'localhost',
-        # 'HOST': 'mysql',
+        # 'HOST': 'localhost',
+        'HOST': 'mysql',
         'PORT': 3306,
     }
 }

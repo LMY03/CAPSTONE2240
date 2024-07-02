@@ -32,18 +32,24 @@ VM Details {{ vm_id }}
         <tbody>
             {% for request in request_entries  %}
             <tr>
-                <td class="text-center">{{ request.id }}</td>
-                <td class="text-center">Virtual Machine</td>
-                <td class="text-center">{{ request.category }}</td>
-                <td class="text-center">{{ request.requestDate}}</td>
-                <td class="text-center"> {% if request.status == 'FOR_REVISION' %}FOR REVISION{% else %}{{ request.status}}{% endif %}</td>
-                {% if request.status == 'PROCESSING' %}
-                <td class="text-center"><div class = 'd-flex justify-content-evenly'>
-                        <a class="btn btn-outline-primary" href="{% url 'users:faculty_edit_request' request_id=request.id %}" role="button">Edit</a> <a class="btn btn-outline-primary" href="{% url 'users:faculty_test_vm' request_id=request.id %}" role="button">Test</a>
-                    </div></td>
-                {% else %}
-                <td class="text-center"><a class="btn btn-outline-primary" href="{% url 'users:faculty_edit_request' request_id=request.id %}" role="button">Edit</a></td>
-                {% endif %}
+                <td>{{ request.id }}</td>
+                <td>Virtual Machine</td>
+                <td>{{ request.category }}</td>
+                <td>{{ request.requestDate}}</td>
+                <td>{{ request.status}}</td>
+                <td>
+                    <a href="{% url 'users:request_details' request.id %}" class="btn btn-primary">Open</a>
+                    {% if request.status == 'PENDING' or request.status == 'FOR_REVISION' %}
+                    <a class="btn btn-outline-primary" href="{% url 'users:faculty_edit_request' request_id=request.id %}" role="button">Edit</a>
+                    {% endif %}
+                    {% if request.status == 'PROCESSING' and request.vm_id != None %}
+                    <form id="start_vm_form" action="{% url 'users:launch_vm' %}" method="post" onsubmit="submitForm(event)">
+                        {% csrf_token %}
+                        <input type="hidden" id="vm_id" name="vm_id" value="{{ request.vm_id }}" />
+                        <button type="submit" class="btn btn-success">Open VM</button>
+                    </form>
+                    {% endif %}
+                </td>
             </tr>
             {% endfor %}
         </tbody>
@@ -53,5 +59,27 @@ VM Details {{ vm_id }}
     {% endif %}
     </div>
 </div>
+<script>
+    function submitForm(event) {
+        event.preventDefault(); // Prevent default form submission
 
+        var form = document.getElementById('start_vm_form');
+        var formData = new FormData(form);
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', form.action, true);
+        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                var response = JSON.parse(xhr.responseText);
+                var redirectUrl = response.redirect_url;
+
+                // Open the URL in a new tab
+                window.open(redirectUrl, '_blank');
+            } else {
+                alert('An error occurred!');
+            }
+        };
+        xhr.send(formData);
+    }
+</script>
 {% endblock content %}

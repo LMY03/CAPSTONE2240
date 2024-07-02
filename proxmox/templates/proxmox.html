@@ -92,6 +92,17 @@
 
 <hr />
 
+<form action="{% url 'proxmox:create_lxc' %}" method="post">
+    {% csrf_token %}
+    <h1>Create LXC</h1>
+    <label for="vmid">Original VM ID: </label>
+    <input type="text" name="vmid" id="vmid" /><br /><br />
+
+    <input type="submit" value="submit" />
+</form>
+
+<hr />
+
 <form action="{% url 'proxmox:clone_lxc' %}" method="post">
     {% csrf_token %}
     <h1>Clone LXC</h1>

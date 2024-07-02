@@ -1,4 +1,4 @@
-import time, secrets, string
+import secrets, string
 
 from django.shortcuts import get_object_or_404, redirect, render
 
@@ -7,14 +7,32 @@ from guacamole import guacamole
 from . import proxmox
 from . models import VirtualMachines, VMUser
 from ticketing.models import VMTemplates, UserProfile
-from guacamole.models import GuacamoleConnection
+from guacamole.models import GuacamoleConnection, GuacamoleUser
 from django.contrib.auth.models import User
+
+from ticketing.models import RequestEntry, UserProfile
 
 # Create your views here.
 
+def generate_vm_ids(no_of_vm):
+    
+    existing_ids = VirtualMachines.objects.exclude(status=VirtualMachines.Status.DESTROYED)
+
+    new_ids = []
+    new_id = 10000  # Starting point for new VM IDs
+    while len(new_ids) < no_of_vm:
+        if new_id not in existing_ids:
+            if no_of_vm == 1: return new_id
+            new_ids.append(new_id)
+        new_id += 1
+
+    return new_ids
+
 def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, request_id):
 
-    vm_temp = get_object_or_404(VMTemplates, vm_id=vm_id)
+    # vm_temp = get_object_or_404(VMTemplates, vm_id=vm_id)
+
+    orig_vm = get_object_or_404(VirtualMachines, vm_id=vm_id)
 
     protocol = "rdp"
     port = {
@@ -27,20 +45,20 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, requ
     new_vm_ids = []
     hostnames = []
     guacamole_connection_ids = []
-    guacamole_passwords = []
+    passwords = []
 
-    for i in range(no_of_vm):
-        # clone vm
-        new_vm_ids.append(vm_id + i + 1)
-        # upids.append(proxmox.clone_vm(node, vm_id, new_vm_ids[i], classnames[i])['data'])
+    new_vm_ids = generate_vm_ids(no_of_vm)
 
     # for i in range(no_of_vm):
-        # wait for vm to clone
-        # proxmox.wait_for_task(node, upids[i])
-        # # change vm configuration
-        # proxmox.config_vm(node, new_vm_ids[i], cpu_cores, ram)
-        # # start vm
-        # proxmox.start_vm(node, new_vm_ids[i])
+    #     upids.append(proxmox.clone_vm(node, vm_id, new_vm_ids[i], classnames[i])['data'])
+
+    # for i in range(no_of_vm):
+    #     # wait for vm to clone
+    #     proxmox.wait_for_task(node, upids[i])
+    #     # change vm configuration
+    #     proxmox.config_vm(node, new_vm_ids[i], cpu_cores, ram)
+    #     # start vm
+    #     proxmox.start_vm(node, new_vm_ids[i])
 
     # vm_user = get_object_or_404(VMUser, vm__vm_id=vm_id)
     # username = vm_user.username
@@ -48,25 +66,35 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, requ
 
     username = "jin"
     password = "123456"
-
-    parent_identifier = "ROOT"
+    
+    requester = get_object_or_404(RequestEntry, id=request_id).requester
+    faculty_guacamole_user = get_object_or_404(GuacamoleUser, system_user=requester)
+    faculty_guacamole_username = faculty_guacamole_user.username
+    guacamole_connection_group_id = get_object_or_404(GuacamoleConnection, vm=orig_vm).connection_group_id
     
     for i in range(no_of_vm):
         # wait for vm to start
         # proxmox.wait_for_vm_start(node, new_vm_ids[i])
         # hostnames.append(proxmox.wait_and_get_ip(node, new_vm_ids[i]))
+        # proxmox.shutdown_vm(node, new_vm_ids[i])
 
         hostnames.append("10.10.10." + str(i))
         
-        vm = VirtualMachines(request_id=request_id, vm_id=new_vm_ids[i], vm_name=classnames[i], cores=cpu_cores, ram=ram, storage=vm_temp.storage, ip_add=hostnames[i], status=VirtualMachines.Status.ACTIVE)
-        vm.save()
         # create connection
-        # guacamole_password.append(User.objects.make_random_password())
-        guacamole_passwords.append("123456")
-        guacamole_connection_ids.append(guacamole.create_connection(classnames[i], protocol, port, hostnames[i], username, password, parent_identifier))
-        guacamole.create_user(classnames[i], guacamole_passwords[i])
+        guacamole_connection_ids.append(guacamole.create_connection(classnames[i], protocol, port, hostnames[i], username, password, guacamole_connection_group_id))
+        # Create System User
+        passwords.append(User.objects.make_random_password())
+        # passwords.append("123456")
+        user = User(username=classnames[i])
+        user.set_password(passwords[i])
+        user.save()
+        UserProfile.objects.create(user=user)
         guacamole.assign_connection(classnames[i], guacamole_connection_ids[i])
-        GuacamoleConnection(user=User.objects.get(pk=1), connection_id=guacamole_connection_ids[i], vm=vm).save()
+        guacamole.assign_connection(faculty_guacamole_username, guacamole_connection_ids[i])
+        vm = VirtualMachines(request_id=request_id, vm_id=new_vm_ids[i], vm_name=classnames[i], cores=cpu_cores, ram=ram, storage=orig_vm.storage, ip_add=hostnames[i], node=node, status=VirtualMachines.Status.ACTIVE)
+        vm.save()
+        GuacamoleConnection(user=get_object_or_404(GuacamoleUser, system_user=user), connection_id=guacamole_connection_ids[i], connection_group_id=guacamole_connection_group_id, vm=vm).save()
+        VMUser.objects.create(vm=vm, username=username, password=password)
 
     # set hostnames and label in netdata
     vm_users = []
@@ -78,6 +106,9 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, requ
 
         password = generate_secure_random_string(15)
         User.objects.create_user(username=classnames[i], password=password)
+        # password = generate_secure_random_string(15)
+        # User.objects.create_user(username=classnames[i], password=password)
+
         credentials.append({'username': classnames[i], 'password': password})
         # Create System Users
         # classname[i] is the username
@@ -87,9 +118,33 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, requ
     return {
         'vm_id' : new_vm_ids, 
         'guacamole_connection_id' : guacamole_connection_ids,
-        'guacamole_username' : classnames,
-        'guacamole_passwords' : guacamole_passwords,
+        'username' : classnames,
+        'passwords' : passwords,
     }
+
+def shutdown_vm(request):
+    print("shutdown_vm -------------------------")
+    if request.method == "POST":
+        print("POST -------------------------")
+        
+        data = request.POST
+        vm_id = data.get("vm_id")
+        print(vm_id)
+
+        vm = get_object_or_404(VirtualMachines, id=vm_id)
+        print(vm)
+
+        if vm.status == VirtualMachines.Status.ACTIVE:
+            
+            print("vm is active")
+            
+            # proxmox.shutdown_vm(vm.node, vm.vm_id)
+            print("vm shutting down")
+
+            vm.status = vm.Status.SHUTDOWN
+            vm.save()
+
+            return redirect("/users/student/vm/" + vm_id)
 
 node = "pve"
 
@@ -123,18 +178,18 @@ def start_vm(request) :
         
     return redirect("/proxmox")
 
-def shutdown_vm(request) :
+# def shutdown_vm(request) :
 
-    if request.method == "POST":
+#     if request.method == "POST":
 
-        data = request.POST
-        vmid = data.get("vmid")
+#         data = request.POST
+#         vmid = data.get("vmid")
 
-        response = proxmox.shutdown_vm(node, vmid)
+#         response = proxmox.shutdown_vm(node, vmid)
 
-        return render(request, "data.html", { "data" : response })
+#         return render(request, "data.html", { "data" : response })
         
-    return redirect("/proxmox")
+#     return redirect("/proxmox")
 
 def delete_vm(request) :
 
@@ -201,6 +256,20 @@ def config_vm(request) :
 
         return render(request, "data.html", { "data" : response })
     
+    return redirect("/proxmox")
+
+def create_lxc(request) :
+
+    if request.method == "POST":
+
+        data = request.POST
+        vmid = data.get("vmid")
+        ostemplate = "local:vztmpl/ubuntu-23.10-1_amd64.tar.zst"
+
+        response = proxmox.create_lxc(node, ostemplate, vmid, 1, 1024, 'local-lvm')
+
+        return render(request, "data.html", { "data" : response })
+        
     return redirect("/proxmox")
 
 def clone_lxc(request) :
@@ -309,6 +378,9 @@ def config_lxc(request) :
         return render(request, "data.html", { "data" : response })
     
     return redirect("/proxmox")
+
+def get_templates(request) : 
+    return render(request, "data.html", { "data" : proxmox.get_templates("pve") })
 
 def generate_secure_random_string(length):
     letters = string.ascii_letters + string.digits
