@@ -362,7 +362,7 @@ def get_total_no_of_vm(request_entry):
     return total_no_of_vm
 
 def create_test_vm(tsg_user, id): 
-    new_vm_id = views.generate_vm_ids(1)
+    new_vm_id = views.generate_vm_ids(1)[0]
     node = "pve"
     request_entry = get_object_or_404(RequestEntry, pk=id)
     vm_id = int(request_entry.template.vm_id)
@@ -418,6 +418,7 @@ def confirm_test_vm(request, id):
     print(id)
     if get_total_no_of_vm(request_entry) != 1 : vm_provision(id) 
     request_entry.status = RequestEntry.Status.ONGOING
+    request_entry.save()
 
     return redirect("/users/faculty/home")
 
@@ -431,23 +432,42 @@ def vm_provision(id):
         vm.status = VirtualMachines.Status.SHUTDOWN
         vm.save()
     request_use_cases = []
+    vm_name = ""
     request_use_cases = RequestUseCase.objects.filter(request=request_entry.pk).values('request_use_case', 'vm_count')
     classnames = []
     total_no_of_vm = get_total_no_of_vm(request_entry) - 1
     
     for request_use_case in request_use_cases:
+        vm_name = f"{request_use_case['request_use_case']}-Group-1"
         for i in range(request_use_case['vm_count']):
-            vm_name = f"{request_use_case['request_use_case'].replace('_', '-')}-Group-{i + 1}"
+            # vm_name = f"{request_use_case['request_use_case'].replace('_', '-')}-Group-{i + 1}"
             if vm.vm_name != vm_name:
-                classnames.append(vm_name)
+                classnames.append(f"{request_use_case['request_use_case'].replace('_', '-')}-Group-{i}")
         # total_no_of_vm += int(request_use_case['vm_count'])
+
+    faculty_guacamole_username = get_object_or_404(GuacamoleUser, system_user=request_entry.requester).username
+    guacamole_connection = get_object_or_404(GuacamoleConnection, vm=vm)
+    guacamole.assign_connection_group(faculty_guacamole_username, guacamole_connection.connection_group_id)
+    tsg_guacamole_username = get_object_or_404(GuacamoleUser, system_user=request_entry.requester).username
+    guacamole.revoke_connection_group(tsg_guacamole_username, guacamole_connection.connection_group_id)
+    
+    # Create System and Guacamole User
+    passwords = User.objects.make_random_password()
+    user = User(username=vm_name)
+    user.set_password(passwords)
+    user.save()
+    UserProfile.objects.create(user=user)
+    guacamole.revoke_connection(tsg_guacamole_username, guacamole_connection.connection_id)
+    guacamole.assign_connection(vm_name, guacamole_connection.connection_id)
+    guacamole.assign_connection(faculty_guacamole_username, guacamole_connection.connection_id)
+    guacamole_connection.user = get_object_or_404(GuacamoleUser, system_user=user)
 
     cpu_cores = int(request_entry.cores)
     ram = int(request_entry.ram)
 
-    print(classnames)
+    data =  views.vm_provision_process(node, vm.id, classnames, total_no_of_vm, cpu_cores, ram, id)
 
-    data =  views.vm_provision_process(node, vm.vm_id, classnames, total_no_of_vm, cpu_cores, ram, id)
+    return
 
 def delete_vms(request, request_id):
     request_entry = get_object_or_404(RequestEntry, pk=request_id)

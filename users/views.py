@@ -38,7 +38,13 @@ def student_home(request):
 
 @login_required
 def faculty_home(request):
-    return render(request, 'users/faculty_home.html', {'data': get_student_vm()})
+    vm_list = []
+    request_entries = RequestEntry.objects.filter(requester=request.user).exclude(is_vm_tested=False).order_by('id')
+    
+    for request_entry in request_entries:
+        vm_list += VirtualMachines.objects.filter(request=request_entry)
+
+    return render(request, 'users/faculty_home.html', {'data': vm_list })
     
 
 @login_required

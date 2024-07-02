@@ -6,7 +6,7 @@ class Nodes(models.Model):
     name = models.CharField(max_length=45)
 
 class VirtualMachines(models.Model):
-    vm_id = models.CharField(max_length=45)
+    vm_id = models.IntegerField()
     vm_name = models.CharField(max_length=90)
     cores = models.IntegerField()
     ram = models.IntegerField()

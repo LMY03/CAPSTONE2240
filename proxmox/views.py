@@ -22,7 +22,6 @@ def generate_vm_ids(no_of_vm):
     new_id = 10000  # Starting point for new VM IDs
     while len(new_ids) < no_of_vm:
         if new_id not in existing_ids:
-            if no_of_vm == 1: return new_id
             new_ids.append(new_id)
         new_id += 1
 
@@ -32,7 +31,7 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, requ
 
     # vm_temp = get_object_or_404(VMTemplates, vm_id=vm_id)
 
-    orig_vm = get_object_or_404(VirtualMachines, vm_id=vm_id)
+    orig_vm = get_object_or_404(VirtualMachines, id=vm_id)
 
     protocol = "rdp"
     port = {
@@ -67,7 +66,8 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, requ
     username = "jin"
     password = "123456"
     
-    requester = get_object_or_404(RequestEntry, id=request_id).requester
+    request_entry = get_object_or_404(RequestEntry, id=request_id)
+    requester = request_entry.requester
     faculty_guacamole_user = get_object_or_404(GuacamoleUser, system_user=requester)
     faculty_guacamole_username = faculty_guacamole_user.username
     guacamole_connection_group_id = get_object_or_404(GuacamoleConnection, vm=orig_vm).connection_group_id
@@ -91,7 +91,9 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, requ
         UserProfile.objects.create(user=user)
         guacamole.assign_connection(classnames[i], guacamole_connection_ids[i])
         guacamole.assign_connection(faculty_guacamole_username, guacamole_connection_ids[i])
-        vm = VirtualMachines(request_id=request_id, vm_id=new_vm_ids[i], vm_name=classnames[i], cores=cpu_cores, ram=ram, storage=orig_vm.storage, ip_add=hostnames[i], node=node, status=VirtualMachines.Status.ACTIVE)
+        
+        print("new_id = " + str(new_vm_ids[i]))
+        vm = VirtualMachines(request=request_entry, vm_id=new_vm_ids[i], vm_name=classnames[i], cores=cpu_cores, ram=ram, storage=request_entry.template.storage, ip_add=hostnames[i], node=node)
         vm.save()
         GuacamoleConnection(user=get_object_or_404(GuacamoleUser, system_user=user), connection_id=guacamole_connection_ids[i], connection_group_id=guacamole_connection_group_id, vm=vm).save()
         VMUser.objects.create(vm=vm, username=username, password=password)
@@ -104,8 +106,8 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, requ
         vm_users.append("jin")
         labels.append(classnames[i])
 
-        password = generate_secure_random_string(15)
-        User.objects.create_user(username=classnames[i], password=password)
+        # password = generate_secure_random_string(15)
+        # User.objects.create_user(username=classnames[i], password=password)
         # password = generate_secure_random_string(15)
         # User.objects.create_user(username=classnames[i], password=password)
 
