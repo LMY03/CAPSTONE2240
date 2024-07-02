@@ -13,4 +13,5 @@ urlpatterns = [
     path('edit-form-submit/', views.edit_form_submit, name= 'edit_form_submit'),
     path('confirm_test_vm/<int:id>', views.confirm_test_vm, name='confirm_test_vm'),
     path('new-form-container/', views.new_form_container, name = 'new-form-container'),
+    path('request_test_vm_ready/<int:id>', views.request_test_vm_ready, name='request_test_vm_ready'),
 ]

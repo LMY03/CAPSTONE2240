@@ -1,10 +1,10 @@
-import requests
-import json
+from decouple import config
+import json, requests
 
-OPNSENSE_HOST = 'https://10.1.200.11:8006'
-API_KEY = 'API_KEY'
-API_SECRET = 'API_SECRET'
-CA_CRT = False
+OPNSENSE_HOST = config('OPNSENSE_HOST')
+API_KEY = config('OPNSENSE_API_KEY')
+API_SECRET = config('OPNSENSE_API_SECRET')
+CA_CRT = config('CA_CRT')
 
 def add_firewall_rule(ip_add, source_port, destination_port, protocol):
     url = f"{OPNSENSE_HOST}/api/firewall/rule/add"

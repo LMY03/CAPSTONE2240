@@ -76,59 +76,49 @@ def tsg_requests (request):
     print (context)
     return render (request, 'users/tsg_requests.html', context= context)
 
-def request_details (request, request_id):
-    context = {}
-    pk = request_id
-    request_entry = get_object_or_404(RequestEntry, pk=pk)
+def tsg_request_details (request, request_id):
+    request_entry = get_object_or_404(RequestEntry, pk=request_id)
 
-    request_entry_details = RequestEntry.objects.select_related("requester", "template").values(
-        "id",
-        "status",
-        "requester__first_name",
-        "requester__last_name",
-        "cores",
-        "ram",
-        #"storage",
-        "has_internet",
-        "id",
-        "template__vm_name",
-        #"use_case",
-        "date_needed",
-        'expiration_date',
-        "other_config",
-        "template__storage"
-    ).get(pk=pk)
-
-
-    request_use_cases = RequestUseCase.objects.filter(request_id = request_entry_details.get('id'))
+    request_use_cases = RequestUseCase.objects.filter(request=request_entry)
 
     for request_use_case in request_use_cases:
-        if request_use_case.request_use_case == 'RESEARCH':
-            request_entry_details['use_case'] = 'Research'
-        elif request_use_case.request_use_case == 'THESIS':
-            request_entry_details['use_case'] = 'Thesis'
-        elif request_use_case.request_use_case == 'TEST':
-            request_entry_details['use_case'] = 'Test'
-        else:
-            request_entry_details['use_case'] = 'Class Course'
+        if request_use_case.request_use_case == 'RESEARCH' : request_entry.use_case = 'Research'
+        elif request_use_case.request_use_case == 'THESIS' : request_entry.use_case = 'Thesis'
+        elif request_use_case.request_use_case == 'TEST' : request_entry.use_case = 'Test'
+        else: request_entry.use_case = 'Class Course'
 
-    request_entry_details['storage'] = request_entry_details.get('template__storage')
 
-    user_role = get_object_or_404(UserProfile, user=request.user).user_type
-
-    action = False
-    if request_entry.status == RequestEntry.Status.PENDING and user_role == 'admin': action = True
-    elif request_entry.status == RequestEntry.Status.PROCESSING and user_role == 'faculty': action = True
+    if request_entry.status == RequestEntry.Status.PROCESSING: request_entry.vm_id = get_object_or_404(VirtualMachines, request=request_entry)
 
     comments = Comment.objects.filter(request_entry=request_entry).order_by('-date_time')
-    context['request_entry'] = {
-        'details': request_entry_details,
+    context = {
+        'request_entry': request_entry,
         'comments' : comments,
         'request_use_cases': request_use_cases,
-        'action' : action,
-        'user_role': user_role,
     }
     return render (request, 'users/tsg_request_details.html', context = context)
+
+def faculty_request_details (request, request_id):
+    request_entry = get_object_or_404(RequestEntry, pk=request_id)
+
+    request_use_cases = RequestUseCase.objects.filter(request=request_entry)
+
+    for request_use_case in request_use_cases:
+        if request_use_case.request_use_case == 'RESEARCH' : request_entry.use_case = 'Research'
+        elif request_use_case.request_use_case == 'THESIS' : request_entry.use_case = 'Thesis'
+        elif request_use_case.request_use_case == 'TEST' : request_entry.use_case = 'Test'
+        else: request_entry.use_case = 'Class Course'
+
+    if request_entry.status == RequestEntry.Status.PROCESSING: request_entry.vm_id = get_object_or_404(VirtualMachines, request=request_entry)
+
+    comments = Comment.objects.filter(request_entry=request_entry).order_by('-date_time')
+    context = {
+        'request_entry': request_entry,
+        'comments' : comments,
+        'request_use_cases': request_use_cases,
+    }
+    request_entry.storage = request_entry.template.storage
+    return render (request, 'users/faculty_request_details.html', context = context)
 
 def faculty_vm_details (request, vm_id):
     context ={

@@ -32,8 +32,9 @@ def launch_vm(request):
         guacamole_username = guacamole_user.username
         guacamole_password = guacamole_user.password
         connection_id = get_object_or_404(GuacamoleConnection, vm=vm).connection_id
-        
-        if vm.status == VirtualMachines.Status.SHUTDOWN:
+
+        if vm.status == VirtualMachines.Status.SHUTDOWN : 
+            # proxmox.start_vm(vm.node, vm.vm_id)
             vm.status = VirtualMachines.Status.ACTIVE
             vm.save()
         
