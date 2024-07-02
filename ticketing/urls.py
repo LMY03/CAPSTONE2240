@@ -12,4 +12,5 @@ urlpatterns = [
     path('add_comment/<int:pk>/', views.add_comment, name='add_comment'),
     path('edit-form-submit/', views.edit_form_submit, name= 'edit_form_submit'),
     path('confirm_test_vm/<int:id>', views.confirm_test_vm, name='confirm_test_vm'),
+    path('request_test_vm_ready/<int:id>', views.request_test_vm_ready, name='request_test_vm_ready'),
 ]

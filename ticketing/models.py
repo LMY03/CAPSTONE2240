@@ -57,7 +57,7 @@ class RequestEntry(models.Model):
     #storage = models.FloatField(default= 0)
     has_internet = models.BooleanField(default=False)
     other_config = models.TextField(blank=True, null=True)
-    
+    is_vm_tested = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.id} - {self.status}"

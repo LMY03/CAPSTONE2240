@@ -10,12 +10,12 @@ TSG Dashboard
 {% endblock css %} 
 
 {% block content %}
-                    <div class="col-md-10 content mt-3">
+                <div class="col-md-10 content mt-3">
                         <h1>Detail View for the Request Ticket</h1>
-                        {% if request_entry.status == "PROCESSING" and request_entry.is_vm_tested == False %}
+                        {% if request_entry.status == "PROCESSING" and request_entry.is_vm_tested == True %}
                         <form id="start_vm_form" action="{% url 'users:launch_vm' %}" method="post" onsubmit="submitForm(event)">
                             {% csrf_token %}
-                            <input type="hidden" id="vm_id" name="request_entry.vm_id" value="{{ vm_id }}" />
+                            <input type="hidden" id="vm_id" name="vm_id" value="{{ request_entry.vm_id }}" />
                             <button type="submit" class="btn btn-success">Open VM</button>
                         </form>
                         {% endif %}
@@ -93,15 +93,12 @@ TSG Dashboard
                                 </div>
                             </div>
                         </div>
-                        {% if request_entry.status == "PENDING" or request_entry.status == "PROCESSING" %}
+
+                        {% if request_entry.status == "PROCESSING" and request_entry.is_vm_tested == True %}
                         <div class="row g-3 mt-3">
                             <div class="col">
-                                {% if request_entry.status == "PENDING"%}
-                                <button type="submit" class="btn btn-primary w-25" data-bs-toggle="modal" data-bs-target="#vmformsummary" id="accept_button">Accept</button>
+                                <a href="{% url 'ticketing:confirm_test_vm' request_entry.id %}"><button type="submit" class="btn btn-primary w-25">Accept</button></a>
                                 <button type="button" class="btn btn-danger w-25 ms-5" id="reject_button">Reject</button>
-                                {% elif request_entry.status == "PROCESSING" and request_entry.is_vm_tested == False  %}
-                                <a href="{% url 'ticketing:request_test_vm_ready' request_entry.id %}"><button type="submit" class="btn btn-primary w-25">Ready</button></a>
-                                {% endif %}
                             </div>
                         </div>
                     
@@ -131,39 +128,6 @@ TSG Dashboard
                             </form>
                         </div>
                     {% endif %}
-            </div>
-        </div>
-
-        <!-- Acceptance Form Summary -->
-        <div class="modal fade" id="vmformsummary" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLabel">VM Form Summary</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p><strong>Requester ID:</strong> {{ request_entry.requester.first_name }} {{ request_entry.requester.last_name }} </p>
-                        <p><strong>Template:</strong> {{ request_entry.template.vm_name }}</p>
-                        <p><strong>Cores:</strong> {{ object.cores }}</p>
-                        <p><strong>RAM:</strong> {{ object.ram }}</p>
-                        <p><strong>Storage:</strong> {{ object.storage }}</p>
-                        <p><strong>Has Internet:</strong> {{ object.has_internet }}</p>
-                        <p><strong>Date needed:</strong> {{ request_entry.date_needed }}</p>
-                        <p><strong>Expiration date:</strong> {{ request_entry.expiration_date }}</p>
-                        <p><strong>VM Count:</strong> {{ object.vm_count }}</p>
-                        <p><strong>Use case:</strong> {{ object.use_case }}</p>
-                        <p><strong>Other configs:</strong> {{ object.other_config }}</p>
-                        <h1>Total system usage:</h1>
-                        <p id="totalCores"></p>
-                        <p id="totalRam"></p>
-                        <p id="totalStorage"></p>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <a href="{% url 'ticketing:request-confirm' request_entry.id %}"><button type="button" class="btn btn-primary">Accept request</button></a>
-                    </div>
-                </div>
             </div>
         </div>
     </div>

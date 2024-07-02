@@ -335,9 +335,18 @@ def request_confirm(request, id):
 
     # data = vm_provision(id)
 
-    confirm_test_vm(id)
+    create_test_vm(request.user, id)
+
+    # confirm_test_vm(id)
 
     return HttpResponseRedirect(reverse("ticketing:index"))
+
+def request_test_vm_ready(request, id): 
+    request_entry = get_object_or_404(RequestEntry, pk=id)
+    request_entry.is_vm_tested = True
+    request_entry.save()
+
+    return redirect("/users/tsg/requests")
 
 def get_total_no_of_vm(request_entry):
     request_use_cases = RequestUseCase.objects.filter(request=request_entry).values('request_use_case', 'vm_count')
@@ -346,7 +355,7 @@ def get_total_no_of_vm(request_entry):
         total_no_of_vm += int(request_use_case['vm_count'])
     return total_no_of_vm
 
-def create_test_vm(id): 
+def create_test_vm(tsg_user, id): 
     new_vm_id = views.generate_vm_ids(1)
     node = "pve"
     request_entry = get_object_or_404(RequestEntry, pk=id)
@@ -365,19 +374,25 @@ def create_test_vm(id):
 
     ip_add = "10.10.10.1"
 
-    faculty_guacamole_user = get_object_or_404(GuacamoleUser, system_user=request_entry.requester)
-    faculty_guacamole_username = faculty_guacamole_user.username
+    # faculty_guacamole_username = get_object_or_404(GuacamoleUser, system_user=request_entry.requester).username
+    # guacamole_connection_group_id = guacamole.create_connection_group(f"{id}")
+    # guacamole.assign_connection_group(faculty_guacamole_username, guacamole_connection_group_id)
+    # guacamole_connection_id = guacamole.create_connection(vm_name, "rdp", 3389, ip_add, "jin", "123456", guacamole_connection_group_id)
+    # # Create System and Guacamole User
+    # passwords = User.objects.make_random_password()
+    # user = User(username=vm_name)
+    # user.set_password(passwords)
+    # user.save()
+    # UserProfile.objects.create(user=user)
+    # guacamole.assign_connection(vm_name, guacamole_connection_id)
+    # guacamole.assign_connection(faculty_guacamole_username, guacamole_connection_id)
+
+    tsg_gaucamole_user = get_object_or_404(GuacamoleUser, system_user=tsg_user)
     guacamole_connection_group_id = guacamole.create_connection_group(f"{id}")
-    guacamole.assign_connection_group(faculty_guacamole_username, guacamole_connection_group_id)
+    guacamole.assign_connection_group(tsg_gaucamole_user.username, guacamole_connection_group_id)
     guacamole_connection_id = guacamole.create_connection(vm_name, "rdp", 3389, ip_add, "jin", "123456", guacamole_connection_group_id)
-    passwords = User.objects.make_random_password()
-    user = User(username=vm_name)
-    user.set_password(passwords)
-    user.save()
-    UserProfile.objects.create(user=user)
-    guacamole.assign_connection(vm_name, guacamole_connection_id)
-    guacamole.assign_connection(faculty_guacamole_username, guacamole_connection_id)
-    
+    guacamole.assign_connection(tsg_gaucamole_user.username, guacamole_connection_id)
+
     vm = VirtualMachines(
         vm_id=new_vm_id, 
         vm_name=vm_name, 
@@ -388,13 +403,13 @@ def create_test_vm(id):
         request=request_entry, 
         node=node)
     vm.save()
-    GuacamoleConnection(user=get_object_or_404(GuacamoleUser, system_user=user), connection_id=guacamole_connection_id, connection_group_id=guacamole_connection_group_id, vm=vm).save()
+    GuacamoleConnection(user=get_object_or_404(GuacamoleUser, system_user=tsg_user), connection_id=guacamole_connection_id, connection_group_id=guacamole_connection_group_id, vm=vm).save()
     VMUser.objects.create(vm=vm, username="jin", password="123456")
     
 def confirm_test_vm(request, id):
     request_entry = get_object_or_404(RequestEntry, pk=id)
     # list = VirtualMachines.objects.get(request_id=id)  
-    # print(list)
+    print(id)
     if get_total_no_of_vm(request_entry) != 1 : vm_provision(id) 
     request_entry.status = RequestEntry.Status.ONGOING
 

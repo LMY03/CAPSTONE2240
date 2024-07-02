@@ -1,26 +1,28 @@
-import requests
-import json
+from decouple import config
+import json, requests, socket
 
-GUACAMOLE_HOST = 'http://guacamole:8080'
-# GUACAMOLE_HOST = "http://172.17.96.1:8080"
-USERNAME = 'guacadmin'
-PASSWORD = 'guacadmin'
-DATASOURCE = 'mysql'
+GUACAMOLE_HOST = config('GUACAMOLE_HOST')
+USERNAME = config('GUACAMOLE_USERNAME')
+PASSWORD = config('GUACAMOLE_PASSWORD')
+DATASOURCE = config('GUACAMOLE_DATASOURCE')
 
 
 # get token /
 def get_token():
-    # CA_CRT = '/path/to/ca_bundle.crt'
-    # CA_CRT = False # Disable SSL certificate verification
-    session = requests.Session()
-    # session.verify = CA_CRT
-    response = session.post(
-        f"{GUACAMOLE_HOST}/guacamole/api/tokens",
-        data={'username': USERNAME, 'password': PASSWORD},
-        # verify=CA_CRT
-    )
-    data = response.json()
-    return data['authToken']
+   return get_connection_token(USERNAME, PASSWORD)
+
+# def get_token():
+#     # CA_CRT = '/path/to/ca_bundle.crt'
+#     # CA_CRT = False # Disable SSL certificate verification
+#     session = requests.Session()
+#     # session.verify = CA_CRT
+#     response = session.post(
+#         f"{GUACAMOLE_HOST}/guacamole/api/tokens",
+#         data={'username': USERNAME, 'password': PASSWORD},
+#         # verify=CA_CRT
+#     )
+#     data = response.json()
+#     return data['authToken']
 
 # get session info TODO: avoid request again here
 def get_session_info():
@@ -194,7 +196,7 @@ def revoke_connection_group(username, connection_group_id):
 def get_connection_url(connection_id, username, password):
     token = get_connection_token(username, password)
     # token = get_token()
-    return f"http://172.17.96.1:8080/guacamole/#/client/{connection_id}?token={token}"
+    return f"{GUACAMOLE_HOST}/guacamole/#/client/{connection_id}?token={token}"
 
 # def get_connection_token(username, password):
 #     url = f"{GUACAMOLE_HOST}/guacamole/api/tokens"
@@ -205,11 +207,14 @@ def get_connection_url(connection_id, username, password):
 #     return data['authToken']
 
 def get_connection_token(username, password):
+    # CA_CRT = '/path/to/ca_bundle.crt'
+    # CA_CRT = False # Disable SSL certificate verification
     session = requests.Session()
+    # session.verify = CA_CRT
     response = session.post(
         f"{GUACAMOLE_HOST}/guacamole/api/tokens",
         data={'username': username, 'password': password},
     )
     data = response.json()
-    print(response)
+
     return data['authToken']

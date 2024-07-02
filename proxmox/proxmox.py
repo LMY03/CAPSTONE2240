@@ -1,10 +1,11 @@
+from decouple import config
 import requests, time
 
-PROXMOX_HOST = 'https://10.1.200.11:8006'
-USERNAME = 'root@pam'
-PASSWORD = 'cap2240'
-CA_CRT = False # Disable SSL certificate verification / self-signed certificates
-# CA_CRT = '/path/to/ca_bundle.crt'
+
+PROXMOX_HOST = config('PROXMOX_HOST')
+USERNAME = config('PROXMOX_USERNAME')
+PASSWORD = config('PROXMOX_PASSWORD')
+CA_CRT = config('CA_CRT')
 
 def get_proxmox_ticket():
     url = f"{PROXMOX_HOST}/api2/json/access/ticket"
