@@ -15,10 +15,10 @@
             <!-- Sidebar -->
             <div class="col-md-2 sidebar d-flex flex-column">
                 <div class="logo text-center mb-4">
-                    <img src={% static 'ticketing/images/De_La_Salle_University_Seal.svg.png' %} alt="Logo">
+                    <img src="{% static 'ticketing/images/De_La_Salle_University_Seal.svg.png' %}" alt="Logo">
                 </div>
                 <div class="logo text-center mb-4">
-                    <a href="{% url 'users:faculty_home' %}" class="text-decoration-none">
+                    <a href="{% url 'dashboard' %}" class="text-decoration-none">
                         <h5 class="text-white">Dashboard</h5>
                     </a>
                 </div>
@@ -27,7 +27,7 @@
                     <li class="nav-item">
                         <div class="dropdown">
                             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                <i class="bi bi-list"></i> Request
+                                <i class="bi bi-list"></i> Requests
                             </a>
                             <ul class="dropdown-menu custom-dropdown-menu">
                                 <li><a class="dropdown-item" href="{% url 'ticketing:new-form' %}">Request a new VM</a></li>
@@ -37,24 +37,14 @@
                         </div>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-server"></i> VM List
+                        <a class="nav-link" href="{% url 'proxmox:index' %}">
+                            <i class="bi bi-server"></i> VMs
                         </a>
-                        <ul class="dropdown-menu custom-dropdown-menu">
-                            {% for vm in data %}
-                            <li><a class="dropdown-item" href="{% url 'proxmox:vm_details' vm.id %}">{{ vm.vm_name }}</a></li>
-                            {% endfor %}
-                        </ul>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-terminal"></i> Container List
+                        <a class="nav-link" href="#">
+                            <i class="bi bi-terminal"></i> Containers
                         </a>
-                        <ul class="dropdown-menu custom-dropdown-menu">
-                            <li><a class="dropdown-item" href="#">Container 1</a></li>
-                            <li><a class="dropdown-item" href="#">Container 2</a></li>
-                            <li><a class="dropdown-item" href="#">Container 3</a></li>
-                        </ul>
                     </li>
                 </ul>
                 <a href="{% url 'logout' %}" class="logout">

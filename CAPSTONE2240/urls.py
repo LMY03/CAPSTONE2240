@@ -32,7 +32,8 @@ urlpatterns = [
     path('accounts/', include('django.contrib.auth.urls')),
     path('admin/', admin.site.urls),
     path('', auth_views.LoginView.as_view(template_name='users/login.html'), name='customLogin'),
-    # path('redirect/', views.redirect_based_on_user_type, name= 'redirect_based_on_user_type'),
-    path('redirect/', render_home, name= 'redirect_based_on_user_type'),
+    path('dashboard', render_home, name='dashboard'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    # path('redirect/', views.redirect_based_on_user_type, name= 'redirect_based_on_user_type'),
+    # path('redirect/', render_home, name= 'redirect_based_on_user_type'),
 ]

@@ -8,22 +8,43 @@ from proxmox.models import VirtualMachines
 from guacamole.models import GuacamoleUser, GuacamoleConnection
 
 # Create your views here.
+def login_view(request):
+    data = request.POST
+    username = data.get("username")
+    password = data.get("password")
+    
+    user = authenticate(request, username=username, password=password)
+        
+    if user is not None:
+        # Log in the user
+        login(request, user)
+        return redirect('dashboard')
+        # return render_home(request)
+        # user_profile = request.user.userprofile
+        # if user_profile.user_type == 'student':
+        #     return redirect('users:student_home')
+        # elif user_profile.user_type == 'faculty':
+        #     return redirect('users:faculty_home')
+        # elif user_profile.user_type == 'admin':
+        #     return redirect('users:tsg_home')
+    else:
+        # Handle invalid login
+        return render(request, 'users/login.html', {'error': 'Invalid username or password'})
 
 # Not Working
 @login_required
 def render_home(request):
-    print("--------------------------")
     user_role = request.user.userprofile.user_type
     if user_role == 'student': return student_home(request)
     elif user_role == 'faculty': return faculty_home(request)
     elif user_role == 'admin': return tsg_home(request)
 
-def home_filter_view (request):
+def home_filter_view(request):
     status = request.GET.get('status')
     request_list = RequestEntry.objects.filter(status=status)
     return render(request, 'users/tsg_requests.html', {'request_list': request_list, 'status': status})
 
-def get_student_vm ():
+def get_student_vm():
     # Get the list of VM IDs from VMTemplates
     template_vm_ids = VMTemplates.objects.values_list('vm_id', flat=True)
     # Filter VirtualMachines to exclude those in VMTemplates and with status 'DELETED'
@@ -46,9 +67,15 @@ def student_home(request):
 def faculty_home(request):
     vm_list = []
     request_entries = RequestEntry.objects.filter(requester=request.user).exclude(is_vm_tested=False).order_by('id')
+    request_entries = RequestEntry.objects.filter(requester=request.user) \
+        .exclude(
+            is_vm_tested=False,
+            status=RequestEntry.Status.DELETED
+        ) \
+        .order_by('id')
     
     for request_entry in request_entries:
-        vm_list += VirtualMachines.objects.filter(request=request_entry)
+        vm_list += VirtualMachines.objects.filter(request=request_entry).exclude(status=VirtualMachines.Status.DESTROYED)
 
     return render(request, 'users/faculty_home.html', {'data': vm_list })
     
@@ -169,26 +196,6 @@ def faculty_vm_list(request):
         vm_list.append(VirtualMachines.objects.filter(request=request_entry).exclude(status=VirtualMachines.Status.DESTROYED).order_by('id'))
     return render(request, 'users/faculty_vm_list.html', {'data': vm_list})
 
-def login_view (request):
-    data = request.POST
-    username = data.get("username")
-    password = data.get("password")
-    
-    user = authenticate(request, username=username, password=password)
-        
-    if user is not None:
-        # Log in the user
-        login(request, user)
-        user_profile = request.user.userprofile
-        if user_profile.user_type == 'student':
-            return redirect('users:student_home')
-        elif user_profile.user_type == 'faculty':
-            return redirect('users:faculty_home')
-        elif user_profile.user_type == 'admin':
-            return redirect('users:tsg_home')
-    else:
-        # Handle invalid login
-        return render(request, 'login.html', {'error': 'Invalid username or password'})
     
 def faculty_test_vm (request, request_id):
     vm = VirtualMachines.objects.filter(request_id=request_id, vm_name__startswith='test')

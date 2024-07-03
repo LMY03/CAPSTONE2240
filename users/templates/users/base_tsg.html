@@ -15,10 +15,10 @@
             <!-- Sidebar -->
             <div class="col-md-2 sidebar d-flex flex-column">
                 <div class="logo text-center mb-4">
-                    <img src={% static 'ticketing/images/De_La_Salle_University_Seal.svg.png' %} alt="Logo">
+                    <img src="{% static 'ticketing/images/De_La_Salle_University_Seal.svg.png' %}" alt="Logo">
                 </div>
                 <div class="logo text-center mb-4">
-                    <a href="{% url 'users:tsg_home' %}" class="text-decoration-none">
+                    <a href="{% url 'dashboard' %}" class="text-decoration-none">
                         <h5 class="text-white">Dashboard</h5>
                     </a>
                 </div>
@@ -26,17 +26,17 @@
                     {% comment %} Kailangan natin gawing dynamic ito  {% endcomment %}
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'ticketing:index' %}">
-                            <i class="bi bi-list-ul"></i> Open Requests
+                            <i class="bi bi-list-ul"></i> Requests
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'proxmox:index' %}">
-                            <i class="bi bi-server"></i> VM List
+                            <i class="bi bi-server"></i> VMs
                         </a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="#">
-                            <i class="bi bi-terminal"></i> Container List
+                            <i class="bi bi-terminal"></i> Containers
                         </a>
                     </li>
                     <li class="nav-item">

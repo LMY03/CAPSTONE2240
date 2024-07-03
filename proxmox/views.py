@@ -126,7 +126,7 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, requ
         guacamole.assign_connection(faculty_guacamole_username, guacamole_connection_ids[i])
         
         print("new_id = " + str(new_vm_ids[i]))
-        vm = VirtualMachines(request=request_entry, vm_id=new_vm_ids[i], vm_name=classnames[i], cores=cpu_cores, ram=ram, storage=request_entry.template.storage, ip_add=hostnames[i], node=node)
+        vm = VirtualMachines(request=request_entry, vm_id=new_vm_ids[i], vm_name=classnames[i], cores=cpu_cores, ram=ram, storage=request_entry.template.storage, ip_add=hostnames[i], node=node, status=VirtualMachines.Status.SHUTDOWN)
         vm.save()
         GuacamoleConnection(user=get_object_or_404(GuacamoleUser, system_user=user), connection_id=guacamole_connection_ids[i], connection_group_id=guacamole_connection_group_id, vm=vm).save()
         VMUser.objects.create(vm=vm, username=username, password=password)
@@ -151,10 +151,10 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, requ
     # ansible.run_playbook("netdata_conf.yml", hostnames, vm_users, classnames, labels)
 
     return {
-        'vm_id' : new_vm_ids, 
-        'guacamole_connection_id' : guacamole_connection_ids,
         'username' : classnames,
         'passwords' : passwords,
+        # 'vm_user': ,
+        # 'vm_pass': ,
     }
 
 def shutdown_vm(request, vm_id):

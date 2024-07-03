@@ -1,6 +1,6 @@
 from typing import Any
 from django import forms
-from django.http import HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect ,render
 from django.urls import reverse
 from django.views import generic
@@ -11,11 +11,11 @@ from django.http import JsonResponse
 import json, datetime
 
 from .models import RequestEntry, Comment, RequestUseCase, PortRules, UserProfile, RequestEntryAudit, VMTemplates
-
+from proxmox.models import VirtualMachines, VMUser
 from guacamole.models import GuacamoleConnection, GuacamoleUser
+
 from guacamole import guacamole
 from proxmox import views
-from proxmox.models import VirtualMachines, VMUser
 
 # Create your views here.
 
@@ -52,7 +52,7 @@ def faculty_request_list(request):
     return render(request, 'ticketing/faculty_request_list.html', { 'request_entries': request_entries })
 
 def tsg_requests_list(request):
-    return render(request, 'ticketing/tsg_request_list.html', { 'request_entries' : RequestEntry.objects.all() })
+    return render(request, 'ticketing/tsg_request_list.html', { 'request_entries' : RequestEntry.objects.all().order_by('-id') })
 
 @login_required
 def request_details(request, request_id):
@@ -192,15 +192,15 @@ class RequestFormView(generic.edit.FormView):
         context['vmtemplate_list'] = list(vmtemplate_list)
         return context
 
-@login_required
-def redirect_based_on_user_type(request):
-    user_profile = request.user.userprofile
-    if user_profile.user_type == 'student':
-        return redirect('users:student_home')
-    elif user_profile.user_type == 'faculty':
-        return redirect('users:faculty_home')
-    elif user_profile.user_type == 'tsg':
-        return redirect('users:tsg_home')
+# @login_required
+# def redirect_based_on_user_type(request):
+#     user_profile = request.user.userprofile
+#     if user_profile.user_type == 'student':
+#         return redirect('users:student_home')
+#     elif user_profile.user_type == 'faculty':
+#         return redirect('users:faculty_home')
+#     elif user_profile.user_type == 'tsg':
+#         return redirect('users:tsg_home')
 
 
 #@login_required
@@ -212,9 +212,6 @@ def new_form_submit(request):
         # get data
         requester = get_object_or_404(User, username=request.user)
         data = request.POST
-        print("-----------------------")
-        print(f"{data}")
-        print("-----------------------")
         template_id = data.get("template_id")
         cores = data.get("cores")
         ram = data.get("ram")
@@ -311,7 +308,7 @@ def log_request_entry_changes(request_entry, changed_by, new_data, user):
             setattr(request_entry, field, value)
     request_entry.save()
 
-def edit_form_submit (request):
+def edit_form_submit(request):
     data = request.POST
     user = request.user
     request_entry_id = data.get("id")
@@ -393,7 +390,6 @@ def edit_form_submit (request):
     #Changes for the vm details
     log_request_entry_changes(request_entry, user, newData, user)
 
-   
     return JsonResponse({'status': 'ok'}, status=200)
 
 def request_confirm(request, id):
@@ -402,8 +398,6 @@ def request_confirm(request, id):
     request_entry.save()
 
     create_test_vm(request.user, id)
-
-    # confirm_test_vm(id)
 
     return HttpResponseRedirect(reverse("ticketing:index"))
 
@@ -467,18 +461,61 @@ def create_test_vm(tsg_user, id):
         storage=request_entry.template.storage, 
         ip_add=ip_add, 
         request=request_entry, 
-        node=node)
+        node=node,
+        status=VirtualMachines.Status.SHUTDOWN
+    )
     vm.save()
     GuacamoleConnection(user=get_object_or_404(GuacamoleUser, system_user=tsg_user), connection_id=guacamole_connection_id, connection_group_id=guacamole_connection_group_id, vm=vm).save()
     VMUser.objects.create(vm=vm, username="jin", password="123456")
     
 def confirm_test_vm(request, id):
     request_entry = get_object_or_404(RequestEntry, pk=id)
-    if get_total_no_of_vm(request_entry) != 1 : vm_provision(id) 
+    credentials = vm_provision(id)
     request_entry.status = RequestEntry.Status.ONGOING
     request_entry.save()
 
-    return redirect("/users/faculty/home")
+    # download_details(credentials)
+    # redirect/render with credentials to download
+
+    return redirect('/dashboard')
+
+def download_credentials(request):
+    usernames = ["user1", "user2", "user3"]
+    passwords = ["pass1", "pass2", "pass3"]
+    vm_users = ["vm_user1", "vm_user2", "vm_user3"]
+    vm_passwords = ["vm_pass1", "vm_pass2", "vm_pass3"]
+
+    credentials = {
+        'username' : usernames,
+        'password' : passwords,
+        'vm_user': vm_users,
+        'vm_pass': vm_passwords,
+    }
+    details = credentials
+    # print(details)
+    usernames = details['username']
+    passwords = details['password']
+    vm_users = details['vm_user']
+    vm_passs = details['vm_pass']
+
+    # Create the content of the text file
+    file_content = ["VM Credentials\n"]
+    for username, password, vm_user, vm_pass in zip(usernames, passwords, vm_users, vm_passs):
+        file_content.append(f"Username: {username}")
+        file_content.append(f"Password: {password}")
+        file_content.append(f"VM_User: {vm_user}")
+        file_content.append(f"VM_Pass: {vm_pass}")
+        file_content.append("-------------------------------")
+
+    # Join the content into a single string with newlines
+    file_content_str = "\n".join(file_content)
+    print(file_content_str)
+
+    # Create the HttpResponse object with the plain text content
+    response = HttpResponse(file_content_str, content_type='text/plain')
+    response['Content-Disposition'] = 'attachment; filename=details.txt'
+
+    return response
 
 def reject_test_vm(request, id):
     request_entry = get_object_or_404(RequestEntry, pk=id)
@@ -540,13 +577,14 @@ def vm_provision(id):
     guacamole.assign_connection(vm_name, guacamole_connection.connection_id)
     guacamole.assign_connection(faculty_guacamole_username, guacamole_connection.connection_id)
     guacamole_connection.user = get_object_or_404(GuacamoleUser, system_user=user)
+    guacamole_connection.save()
 
     cpu_cores = int(request_entry.cores)
     ram = int(request_entry.ram)
 
-    data =  views.vm_provision_process(node, vm.id, classnames, total_no_of_vm, cpu_cores, ram, id)
+    return views.vm_provision_process(node, vm.id, classnames, total_no_of_vm, cpu_cores, ram, id)
 
-def delete_vms(request, request_id):
+def delete_request(request, request_id):
     request_entry = get_object_or_404(RequestEntry, pk=request_id)
 
     vms = VirtualMachines.objects.filter(request=request_entry)
@@ -559,10 +597,10 @@ def delete_vms(request, request_id):
             vm.save()
 
     for vm in vms:
-        # proxmox.wait_for_vm_stop(vm.node, vm.vm_id)
-        # proxmox.delete_vm(vm.node, vm.vm_id)
         vm.status = VirtualMachines.Status.DESTROYED
         vm.save()
+        # proxmox.wait_for_vm_stop(vm.node, vm.vm_id)
+        # proxmox.delete_vm(vm.node, vm.vm_id)
         guacamole_connection = get_object_or_404(GuacamoleConnection, vm=vm)
         guacamole_connection.is_active = False
         guacamole_connection.save()
@@ -570,13 +608,17 @@ def delete_vms(request, request_id):
         guacamole_user.is_active = False
         guacamole_user.save()
         system_user = guacamole_user.system_user
+        system_user.username = f"{system_user.username}_{request_id}"
         system_user.is_active = 0
         system_user.save()
+        guacamole.delete_user(guacamole_user.username)
+    
+    guacamole.delete_connection_group(guacamole_connection.connection_group_id)
         
     request_entry.status = RequestEntry.Status.DELETED
     request_entry.save()
 
-    return redirect('/users/faculty/home/')
+    return redirect('/ticketing')
 
 def edit_request(request, request_id):
     request_entry = get_object_or_404(RequestEntry, pk = request_id)
@@ -622,9 +664,9 @@ def edit_request(request, request_id):
         context['comments'] = comments
 
     print(context)
-    return render(request, 'users/faculty_edit_request.html', context)
+    return render(request, 'ticketing/faculty_edit_request.html', context)
 
-def get_comments (request_entry):
+def get_comments(request_entry):
     return Comment.objects.filter(request_entry=request_entry).select_related("user").values(
             "comment",
             "user__first_name",
@@ -632,7 +674,7 @@ def get_comments (request_entry):
             "date_time",
         ).order_by('-date_time')
 
-def new_form_container (request):
+def new_form_container(request):
     container_template = VMTemplates.objects.filter(is_lxc = 1)
     context = {}
     context['container_template'] = container_template
