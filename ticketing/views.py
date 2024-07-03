@@ -103,6 +103,7 @@ def tsg_request_details (request, request_id):
         'comments' : comments,
         'request_use_cases': request_use_cases,
     }
+    request_entry.storage = request_entry.template.storage
     return render (request, 'ticketing/tsg_request_details.html', context = context)
 
 class DetailView(generic.DetailView):
@@ -172,9 +173,9 @@ def add_comment(request, pk):
 
     
     if user_profile.user_type == 'admin':
-        return redirect('ticketing:details', pk=pk)
+        return redirect('ticketing:request_details', request_id=pk)
     else:
-        return redirect('users:edit_request', request_id = pk)
+        return redirect('ticketing:faculty_edit_request', request_id = pk)
 
 class RequestForm(forms.ModelForm):
     class Meta:
@@ -615,18 +616,21 @@ def edit_request(request, request_id):
         context['port_rules'] = portRules
         context['port_rules_js'] = json.dumps(port_rules_list)
 
-    comments = Comment.objects.filter(request_entry=request_entry).select_related("user").values(
-            "comment",
-            "user__first_name",
-            "user__last_name",
-            "date_time",
-        ).order_by('-date_time')
+    comments = get_comments(request_entry)
 
     if comments.exists():
         context['comments'] = comments
 
     print(context)
     return render(request, 'users/faculty_edit_request.html', context)
+
+def get_comments (request_entry):
+    return Comment.objects.filter(request_entry=request_entry).select_related("user").values(
+            "comment",
+            "user__first_name",
+            "user__last_name",
+            "date_time",
+        ).order_by('-date_time')
 
 def new_form_container (request):
     container_template = VMTemplates.objects.filter(is_lxc = 1)

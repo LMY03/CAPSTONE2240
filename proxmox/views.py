@@ -36,8 +36,8 @@ def tsg_vm_list(request):
 @login_required
 def vm_details(request, vm_id):
     user_role = get_object_or_404(UserProfile, user=request.user).user_type
-    if user_role == 'faculty' : return faculty_vm_details(request)
-    elif user_role == 'admin' : return tsg_vm_details(request)
+    if user_role == 'faculty' : return faculty_vm_details(request, vm_id)
+    elif user_role == 'admin' : return tsg_vm_details(request, vm_id)
     else : return redirect('/')
 
 def faculty_vm_details(request, vm_id):

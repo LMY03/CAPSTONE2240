@@ -101,22 +101,24 @@ Request Details
                                 <a href="{% url 'ticketing:reject_test_vm' request_entry.id %}"><button type="button" class="btn btn-danger w-25 ms-5" id="reject_button">Reject</button></a>
                             </div>
                         </div>
+                        {% endif %}
                     
+                        {% if comments %}
                         <!-- Comment Section -->
                         <div class="mt-5">
                             <h2>Comments</h2>
                             <!-- Display Comments -->
-                            {% if request_entry.comments %}
                                 <div class="list-group">
-                                    {% for comment in request_entry.comments %}
+                                    {% for comment in comments %}
                                         <div class="list-group-item">
-                                            <p><strong>{{ comment.user.first_name }} {{ comment.user.last_name }}:</strong> {{ comment.text }}</p>
+                                            <p><strong>{{ comment.user.first_name }} {{ comment.user.last_name }}:</strong> {{ comment.comment }}</p>
                                             <small class="text-muted">{{ comment.date_time }}</small>
                                         </div>
                                     {% endfor %}
                                 </div>
                             {% endif %}
-                    
+                                
+                            {% if request_entry.status != "COMPLETED" or request_entry.status != "REJECTED" or request_entry.status != "DELETED" %}
                             <!-- Add Comment Form -->
                             <form action="{% url 'ticketing:add_comment' request_entry.id %}" method="post" class="mt-3">
                                 {% csrf_token %}
