@@ -557,7 +557,6 @@ def vm_provision(id):
         vm.status = VirtualMachines.Status.SHUTDOWN
         vm.save()
     request_use_cases = []
-    vm_name = ""
     request_use_cases = RequestUseCase.objects.filter(request=request_entry.pk).values('request_use_case', 'vm_count')
     classnames = []
     total_no_of_vm = get_total_no_of_vm(request_entry) - 1
