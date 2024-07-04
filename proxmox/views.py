@@ -97,7 +97,7 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, requ
         print("----------------------")
         print("vm_name = " + classnames[i])
         print("vm_id = " + str(vm_id))
-        print("new_vm_id = " + new_vm_ids[i])
+        print("new_vm_id = " + str(new_vm_ids[i]))
         upid = proxmox.clone_vm(node, vm_id, new_vm_ids[i], classnames[i])
         print("upid = " + upid)
         upids.append(upid)
