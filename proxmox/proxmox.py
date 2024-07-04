@@ -5,7 +5,8 @@ import requests, time
 PROXMOX_HOST = config('PROXMOX_HOST')
 USERNAME = config('PROXMOX_USERNAME')
 PASSWORD = config('PROXMOX_PASSWORD')
-CA_CRT = config('CA_CRT')
+# CA_CRT = config('CA_CRT')
+CA_CRT = False
 
 def get_proxmox_ticket():
     url = f"{PROXMOX_HOST}/api2/json/access/ticket"
