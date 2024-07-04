@@ -5,8 +5,6 @@ GUACAMOLE_HOST = config('GUACAMOLE_HOST')
 USERNAME = config('GUACAMOLE_USERNAME')
 PASSWORD = config('GUACAMOLE_PASSWORD')
 DATASOURCE = config('GUACAMOLE_DATASOURCE')
-# CA_CRT = config('CA_CRT')
-CA_CRT = False
 
 # get token /
 def get_token():
