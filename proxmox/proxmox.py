@@ -67,6 +67,10 @@ def clone_vm(node, vmid, newid, name):
         # 'storage': 'local-lvm',
     }
     response = session.post(url, data=config)
+    print("---------------------------------")
+    print(response)
+    print(response.json())
+    print(response.json()['data'])
     return response.json()['data'] #upid
 
 # delete VM DELETE
