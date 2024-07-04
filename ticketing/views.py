@@ -570,23 +570,23 @@ def vm_provision(id):
     vm_name = classnames[0]
     classnames.pop(0)
 
-    # tsg_guacamole_username = get_object_or_404(GuacamoleUser, system_user=request_entry.requester).username
-    # faculty_guacamole_username = get_object_or_404(GuacamoleUser, system_user=request_entry.requester).username
-    # guacamole_connection = get_object_or_404(GuacamoleConnection, vm=vm)
-    # guacamole.assign_connection_group(faculty_guacamole_username, guacamole_connection.connection_group_id)
-    # guacamole.revoke_connection_group(tsg_guacamole_username, guacamole_connection.connection_group_id)
+    tsg_guacamole_username = get_object_or_404(GuacamoleUser, system_user=request_entry.requester).username
+    faculty_guacamole_username = get_object_or_404(GuacamoleUser, system_user=request_entry.requester).username
+    guacamole_connection = get_object_or_404(GuacamoleConnection, vm=vm)
+    guacamole.assign_connection_group(faculty_guacamole_username, guacamole_connection.connection_group_id)
+    guacamole.revoke_connection_group(tsg_guacamole_username, guacamole_connection.connection_group_id)
     
-    # # Create System and Guacamole User
-    # passwords = User.objects.make_random_password()
-    # user = User(username=vm_name)
-    # user.set_password(passwords)
-    # user.save()
-    # UserProfile.objects.create(user=user)
-    # guacamole.revoke_connection(tsg_guacamole_username, guacamole_connection.connection_id)
-    # guacamole.assign_connection(vm_name, guacamole_connection.connection_id)
-    # guacamole.assign_connection(faculty_guacamole_username, guacamole_connection.connection_id)
-    # guacamole_connection.user = get_object_or_404(GuacamoleUser, system_user=user)
-    # guacamole_connection.save()
+    # Create System and Guacamole User
+    passwords = User.objects.make_random_password()
+    user = User(username=vm_name)
+    user.set_password(passwords)
+    user.save()
+    UserProfile.objects.create(user=user)
+    guacamole.revoke_connection(tsg_guacamole_username, guacamole_connection.connection_id)
+    guacamole.assign_connection(vm_name, guacamole_connection.connection_id)
+    guacamole.assign_connection(faculty_guacamole_username, guacamole_connection.connection_id)
+    guacamole_connection.user = get_object_or_404(GuacamoleUser, system_user=user)
+    guacamole_connection.save()
 
     cpu_cores = int(request_entry.cores)
     ram = int(request_entry.ram)
