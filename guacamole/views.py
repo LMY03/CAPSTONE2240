@@ -31,7 +31,7 @@ def access_vm(request):
         connection_id = get_object_or_404(GuacamoleConnection, vm=vm).connection_id
 
         if vm.status == VirtualMachines.Status.SHUTDOWN : 
-            # proxmox.start_vm(vm.node, vm.vm_id)
+            proxmox.start_vm(vm.node, vm.vm_id)
             vm.status = VirtualMachines.Status.ACTIVE
             vm.save()
         
