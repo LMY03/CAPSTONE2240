@@ -46,7 +46,6 @@ def faculty_vm_details(request, vm_id):
 def tsg_vm_details(request, vm_id):
     return render(request, 'proxmox/tsg_vm_details.html', { 'vm': get_object_or_404(VirtualMachines, id=vm_id) })
 
-
 def generate_vm_ids(no_of_vm):
     
     existing_ids = VirtualMachines.objects.exclude(status=VirtualMachines.Status.DESTROYED)
