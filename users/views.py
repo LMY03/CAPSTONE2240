@@ -42,7 +42,8 @@ def render_home(request):
 def home_filter_view(request):
     status = request.GET.get('status')
     request_list = RequestEntry.objects.filter(status=status)
-    return render(request, 'users/tsg_requests.html', {'request_list': request_list, 'status': status})
+    print(request_list)
+    return render(request, 'ticketing/tsg_request_list.html', {'request_list': request_list, 'status': status})
 
 def get_student_vm():
     # Get the list of VM IDs from VMTemplates

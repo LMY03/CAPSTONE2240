@@ -14,10 +14,13 @@ TSG Dashboard
       <div class="w-25 mb-3">
         <select class="form-select" onchange="window.location.href=this.value">
           <option value="{% url 'users:tsg_home' %}">All</option>
-          <option value="{% url 'users:home-filter' %}?status=P" {% if status == 'PENDING' %} selected {% endif %}>Pending</option>
-          <option value="{% url 'users:home-filter' %}?status=FR" {% if status == 'FOR_REVISION' %} selected {% endif %}>For revision</option>
-          <option value="{% url 'users:home-filter' %}?status=CO" {% if status == 'COMPLETED' %} selected {% endif %}>Completed</option>
-          <option value="{% url 'users:home-filter' %}?status=D" {% if status == 'DELETED' %} selected {% endif %}>Delete</option>
+          <option value="{% url 'users:home-filter' %}?status=PENDING" {% if status == 'PENDING' %} selected {% endif %}>Pending</option>
+          <option value="{% url 'users:home-filter' %}?status=FOR_REVISION" {% if status == 'FOR_REVISION' %} selected {% endif %}>For revision</option>
+          <option value="{% url 'users:home-filter' %}?status=ONGOING" {% if status == 'ONGOING' %} selected {% endif %}>Ongoing</option>
+          <option value="{% url 'users:home-filter' %}?status=ONGOING" {% if status == 'PROCESSING' %} selected {% endif %}>Processing</option>
+          <option value="{% url 'users:home-filter' %}?status=COMPLETED" {% if status == 'COMPLETED' %} selected {% endif %}>Completed</option>
+          <option value="{% url 'users:home-filter' %}?status=DELETED" {% if status == 'DELETED' %} selected {% endif %}>Delete</option>
+          <option value="{% url 'users:home-filter' %}?status=DELETED" {% if status == 'REJECTED' %} selected {% endif %}>Rejected</option>
         </select>
         
       </div>
