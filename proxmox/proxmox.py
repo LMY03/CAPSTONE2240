@@ -67,7 +67,7 @@ def clone_vm(node, vmid, newid, name):
         # 'storage': 'local-lvm',
     }
     response = session.post(url, data=config)
-    return response.json()
+    return response.json()['data'] #upid
 
 # delete VM DELETE
 def delete_vm(node, vmid):
@@ -108,13 +108,10 @@ def config_vm(node, vmid, cpu_cores, memory_mb):
     response = session.put(url, data=config)
     return response.json()
 
-def wait_for_task(node, upid): 
-    time.sleep(5)
+def wait_for_task(node, upid):
     while True:
         task_status = get_task_status(node, upid)
-        print(task_status)
-        if task_status['data']['status'] == 'stopped':
-            return task_status['data']['exitstatus'] # OK
+        if task_status['data']['status'] == 'stopped' : return task_status['data']['exitstatus'] # OK
         time.sleep(5)
 
 def wait_for_vm_start(node, vmid):
