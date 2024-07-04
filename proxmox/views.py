@@ -65,7 +65,7 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, requ
 
     # vm_temp = get_object_or_404(VMTemplates, vm_id=vm_id)
 
-    orig_vm = get_object_or_404(VirtualMachines, id=vm_id)
+    orig_vm = get_object_or_404(VirtualMachines, vm_id=vm_id)
 
     protocol = "rdp"
     port = {

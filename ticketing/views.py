@@ -552,8 +552,6 @@ def vm_provision(id):
     node = "pve"
     request_entry = get_object_or_404(RequestEntry, pk=id)
     vm = get_object_or_404(VirtualMachines, request=request_entry)
-    print("--------------------")
-    print(vm)
     if vm.status == VirtualMachines.Status.ACTIVE:
         proxmox.shutdown_vm(vm.node, vm.vm_id)
         vm.status = VirtualMachines.Status.SHUTDOWN
