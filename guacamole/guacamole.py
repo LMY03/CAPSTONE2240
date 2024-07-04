@@ -6,7 +6,6 @@ USERNAME = config('GUACAMOLE_USERNAME')
 PASSWORD = config('GUACAMOLE_PASSWORD')
 DATASOURCE = config('GUACAMOLE_DATASOURCE')
 
-
 # get token /
 def get_token():
    return get_connection_token(USERNAME, PASSWORD)
