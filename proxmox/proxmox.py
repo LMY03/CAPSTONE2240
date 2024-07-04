@@ -112,6 +112,7 @@ def config_vm(node, vmid, cpu_cores, memory_mb):
 def wait_for_task(node, upid): 
     while True:
         task_status = get_task_status(node, upid)
+        print(task_status)
         if task_status['data']['status'] == 'stopped':
             return task_status['data']['exitstatus'] # OK
         time.sleep(5)
