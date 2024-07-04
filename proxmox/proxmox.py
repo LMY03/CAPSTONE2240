@@ -31,7 +31,7 @@ def get_task_status(node, upid):
     session = get_authenticated_session()
     response = session.get(url)
 
-    return response
+    return response.json()
 
 def get_qemu_status(node, vmid):
     url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/qemu/{vmid}/agent/info"
