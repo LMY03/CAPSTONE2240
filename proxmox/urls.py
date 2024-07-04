@@ -8,7 +8,7 @@ urlpatterns = [
     path('', views.vm_list, name='index'),
     path('<int:vm_id>/details', views.vm_details, name='vm_details'),
     path('shutdown_vm/<int:vm_id>', views.shutdown_vm, name='shutdown_vm'),
-
+    path("form", views.renders, name="form"),
 
     # path("", views.renders, name="form"),
     # path("clone_vm", views.clone_vm, name="clone_vm"),
