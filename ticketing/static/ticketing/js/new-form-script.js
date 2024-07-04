@@ -110,16 +110,27 @@ document.getElementById('add_course_button').addEventListener('click', () => {
         var newInput = document.createElement('input');
         let newLabel = document.createElement('label');
 
-        newLabel.innerHTML = `<br>Course Code ${addCourseSectionClicked} with section:`
+        newLabel.innerHTML = `<span>Course Code ${addCourseSectionClicked} with section:</span>`
         newInput.type = 'text';
         newInput.className = 'form-control w-25';
         newInput.name = `course_code${addCourseSectionClicked}`;
         newInput.id = `course_code${addCourseSectionClicked}`
 
         const newCourseDiv = document.createElement('div');
+        const newLabelButtonDiv = document.createElement('div');
+        newLabelButtonDiv.classList.add('d-flex', 'justify-content-between', 'align-items-center');
+        newLabelButtonDiv.append(newLabel);
+
+
+
+        const removeCourseBtn = document.createElement('button');
+        removeCourseBtn.type = 'button';
+        removeCourseBtn.classList.add('btn', 'btn-outline-danger');
+        removeCourseBtn.innerHTML = 'Remove Course';
 
         newCourseDiv.classList.add('mb-3');
-        newCourseDiv.appendChild(newLabel);
+        newLabelButtonDiv.appendChild(removeCourseBtn);
+        newCourseDiv.appendChild(newLabelButtonDiv);
         newCourseDiv.appendChild(newInput);
 
         const newVMLabel = document.createElement('label');
@@ -139,6 +150,12 @@ document.getElementById('add_course_button').addEventListener('click', () => {
         inputContainer.appendChild(newCourseDiv);
         inputContainer.appendChild(newVMDiv);
 
+
+        removeCourseBtn.addEventListener('click', function () {
+            newCourseDiv.remove();
+            newVMDiv.remove()
+            addCourseSectionClicked--;
+        });
     }
 });
 

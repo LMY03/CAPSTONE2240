@@ -58,7 +58,7 @@ Edit request {{ vm_id }}
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label for="has_internet" class="form-label">External Access:</label>
+                            <label for="has_internet" class="form-label">Port Forwarding:</label>
                             <select class="form-control" id="external_access" name="has_internet">
                                 <option value="true" {% if request_entry.has_internet == 1 %} selected {% endif %}>Yes</option>
                                 <option value="false"{% if request_entry.has_internet == 0 %} selected {% endif %}>No</option>
@@ -70,57 +70,34 @@ Edit request {{ vm_id }}
             {% comment %} Accordion for port rules {% endcomment %}
             <div class="accordion" id="networkAccordion" {% if request_entry.has_internet %} style = "display:block" {% else %} style = "display:none" {% endif %}>
                 <!-- Accordion Item -->
-                <div class="accordion-item">
+                 <div class = 'accordion-item'>
                     <h2 class="accordion-header" id="networkHeader">
                         <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#networkCollapse" aria-expanded="true" aria-controls="networkCollapse">
                             Network Details
                         </button>
                     </h2>
                     <div id="networkCollapse" class="accordion-collapse collapse show" aria-labelledby="networkHeader">
-                        <div class="accordion-body">
-                            <div class="mb-3">
-                                <label for="interface" class="form-label">Interface:</label>
-                                <input type="text" class="form-control" id="interface" name="interface">
+                            <div class="accordion-body" >
+                                <div id = "accordionBody_networkDetails"> 
+                                    <div class="mb-3">
+                                        <div class = 'd-flex justify-content-between mb-2 align-items-baseline'>
+                                            <label for="protocol" class="form-label">Protocol:</label>
+                                            <button type = "button" id = "addProtocolButton">Add protocol</button>
+                                        </div>
+                                        <select class="form-control" id="protocol1" name="protocol1">
+                                            <option value="TCP">TCP</option>
+                                            <option value="UDP">UDP</option>
+                                            <option value="ICMP">ICMP</option>
+                                            <option value="HTTP">HTTP</option>
+                                            <option value="HTTPS">HTTPS</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="destination_port" class="form-label">Destination Port:</label>
+                                        <input type="text" class="form-control" id="destination_port1" name="destination_port1">
+                                    </div>
+                                </div>
                             </div>
-                            <div class="mb-3">
-                                <label for="protocol" class="form-label">Protocol:</label>
-                                <select class="form-control" id="protocol" name="protocol">
-                                    <option value="TCP">TCP</option>
-                                    <option value="UDP">UDP</option>
-                                    <option value="ICMP">ICMP</option>
-                                    <option value="HTTP">HTTP</option>
-                                    <option value="HTTPS">HTTPS</option>
-                                </select>
-                            </div>
-                            <div class="mb-3">
-                                <label for="source_address" class="form-label">Source Address:</label>
-                                <input type="text" class="form-control" id="source_address" name="source_address">
-                            </div>
-                            <div class="mb-3">
-                                <label for="source_ports" class="form-label">Source Ports:</label>
-                                <input type="text" class="form-control" id="source_ports" name="source_ports">
-                            </div> 
-                            <div class="mb-3">
-                                <label for="destination_address" class="form-label">Destination Address:</label>
-                                <input type="text" class="form-control" id="destination_address" name="destination_address">
-                            </div>
-                            <div class="mb-3">
-                                <label for="destination_port" class="form-label">Destination Port:</label>
-                                <input type="text" class="form-control" id="destination_port" name="destination_port">
-                            </div>
-                            <div class="mb-3">
-                                <label for="nat_ip" class="form-label">NAT IP:</label>
-                                <input type="text" class="form-control" id="nat_ip" name="nat_ip">
-                            </div>                          
-                            <div class="mb-3">
-                                <label for="nat_ports" class="form-label">NAT Ports:</label>
-                                <input type="text" class="form-control" id="nat_ports" name="nat_ports">
-                            </div>
-                            <div class="mb-3">
-                                <label for="description" class="form-label">Description:</label>
-                                <textarea class="form-control" id="description" name="description" rows="3"></textarea>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>

@@ -118,16 +118,16 @@ DATABASES = {
 #     }
 # }
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': config('MYSQL_CAP2240_DATABASE'),
-        'USER': config('MYSQL_CAP2240_USER'),
-        'PASSWORD': config('MYSQL_CAP2240_PASSWORD'),
-        'HOST': config('MYSQL_HOST'),
-        'PORT': config('MYSQL_PORT'),
-    }
-}
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.mysql',
+#         'NAME': config('MYSQL_CAP2240_DATABASE'),
+#         'USER': config('MYSQL_CAP2240_USER'),
+#         'PASSWORD': config('MYSQL_CAP2240_PASSWORD'),
+#         'HOST': config('MYSQL_HOST'),
+#         'PORT': config('MYSQL_PORT'),
+#     }
+# }
 
 
 # Password validation
@@ -202,5 +202,5 @@ LOGIN_REDIRECT_URL = 'redirect_based_on_user_type'
 LOGOUT_URL = 'logout'
 LOGOUT_REDIRECT_URL = 'customLogin'
 
-SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = '987770968377-l0f3k7n7ihip6iaghgvpdkijqf53ks71.apps.googleusercontent.com'
-SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = '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'
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = config('GOOGLE_AUTH_KEY')
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = config('GOOGLE_SECRET')

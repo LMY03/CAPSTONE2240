@@ -85,7 +85,10 @@ def tsg_request_details (request, request_id):
         if request_use_case.request_use_case == 'RESEARCH' : request_entry.use_case = 'Research'
         elif request_use_case.request_use_case == 'THESIS' : request_entry.use_case = 'Thesis'
         elif request_use_case.request_use_case == 'TEST' : request_entry.use_case = 'Test'
-        else: request_entry.use_case = 'Class Course'
+        else: 
+            request_entry.use_case = 'Class Course'
+            request_entry.section_count = request_use_cases.count()
+
 
 
     if request_entry.status == RequestEntry.Status.PROCESSING: request_entry.vm_id = get_object_or_404(VirtualMachines, request=request_entry)

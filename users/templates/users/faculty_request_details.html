@@ -73,7 +73,6 @@ TSG Dashboard
                                 </div>
                             </div>
                             {% endfor %}
-                            
                             {% else %}
                             <div class="col-md-8">
                                 <div class="p-3 bg-light border">
@@ -82,7 +81,7 @@ TSG Dashboard
                             </div>
                             <div class="col-md-4">
                                 <div class="p-3 bg-light border">
-                                    <p id="vm_count"><strong>VM Count:</strong> {{ request_entry.request_use_cases.first.vm_count }}</p>
+                                    <p id="vm_count"><strong>VM Count:</strong> {{ request_use_cases.first.vm_count }}</p>
                                 </div>
                             </div>
                             {% endif %}

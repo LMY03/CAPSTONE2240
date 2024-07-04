@@ -126,7 +126,7 @@ class RequestFormView(generic.edit.FormView):
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
-        vmtemplate_list = VMTemplates.objects.all().values_list('id', 'vm_name', 'storage')
+        vmtemplate_list = VMTemplates.objects.filter(is_lxc = 0).values_list('id', 'vm_name', 'storage')
         context['vmtemplate_list'] = list(vmtemplate_list)
         return context
 
@@ -200,8 +200,8 @@ def new_form_submit(request):
             for i in range(1, int(data['addProtocolClicked']) + 1):
                 protocol = data.get(f'protocol{i}')
                 dest_ports = data.get(f'destination_port{i}')
-                description = data.get('description')
-                print (f'{protocol}, {dest_ports}, {description}')
+                #description = data.get('description')
+                print (f'{protocol}, {dest_ports}')
                 if protocol and dest_ports: 
                     PortRules.objects.create(
                         request = new_request,
