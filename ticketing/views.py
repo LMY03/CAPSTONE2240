@@ -592,7 +592,7 @@ def vm_provision(id):
     cpu_cores = int(request_entry.cores)
     ram = int(request_entry.ram)
 
-    return views.vm_provision_process(node, vm.id, classnames, total_no_of_vm, cpu_cores, ram, id)
+    return views.vm_provision_process(node, vm.vm_id, classnames, total_no_of_vm, cpu_cores, ram, id)
 
 def delete_request(request, request_id):
     request_entry = get_object_or_404(RequestEntry, pk=request_id)
