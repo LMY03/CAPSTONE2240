@@ -207,12 +207,17 @@ def clone_vm(request) :
     if request.method == "POST":
 
         data = request.POST
-        vmid = data.get("vmid")
+        vm_id = data.get("vmid")
         new_vm_id = data.get("newid")
 
-        response = proxmox.clone_vm(node, vmid, new_vm_id, "ITDBADM-S15-Group-1")
+        response = proxmox.clone_vm(node, vm_id, new_vm_id, "ITDBADM-S15-Group-1")
+        proxmox.wait_for_task(node, response)
+        proxmox.config_vm(node, new_vm_id, 2, 2048)
+        proxmox.start_vm(node, new_vm_id)
+        ip_add = proxmox.wait_and_get_ip(node, new_vm_id)
+        proxmox.shutdown_vm(node, new_vm_id)
 
-        return render(request, "data.html", { "data" : response })
+        return render(request, "data.html", { "data" : ip_add })
         
     return redirect("/proxmox")
 
