@@ -426,7 +426,7 @@ def create_test_vm(tsg_user, id):
     ram = int(request_entry.ram)
     
     upid = proxmox.clone_vm(node, vm_id, new_vm_id, vm_name)
-    proxmox.wait_for_task(upid)
+    proxmox.wait_for_task(node, upid)
     proxmox.config_vm(node, new_vm_id, cpu_cores, ram)
     proxmox.start_vm(node, new_vm_id)
     ip_add = proxmox.wait_and_get_ip(node, new_vm_id)
