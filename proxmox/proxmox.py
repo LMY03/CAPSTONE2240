@@ -67,6 +67,12 @@ def clone_vm(node, vmid, newid, name):
         # 'storage': 'local-lvm',
     }
     response = session.post(url, data=config)
+    if response.status_code == 200:
+        response_data = response.json()
+        print("Clone VM Response:", response_data)
+        if 'data' in response_data : return response_data['data']  # upid
+    print("Failed to clone VM:", response.text)
+    return None
     print("---------------------------------")
     print(response)
     print(response.json())
