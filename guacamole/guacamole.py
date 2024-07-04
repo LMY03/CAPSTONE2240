@@ -1,10 +1,12 @@
 from decouple import config
-import json, requests, socket
+import json, requests
 
 GUACAMOLE_HOST = config('GUACAMOLE_HOST')
 USERNAME = config('GUACAMOLE_USERNAME')
 PASSWORD = config('GUACAMOLE_PASSWORD')
 DATASOURCE = config('GUACAMOLE_DATASOURCE')
+# CA_CRT = config('CA_CRT')
+CA_CRT = False
 
 # get token /
 def get_token():
@@ -209,7 +211,7 @@ def get_connection_token(username, password):
     # CA_CRT = '/path/to/ca_bundle.crt'
     # CA_CRT = False # Disable SSL certificate verification
     session = requests.Session()
-    # session.verify = CA_CRT
+    session.verify = CA_CRT
     response = session.post(
         f"{GUACAMOLE_HOST}/guacamole/api/tokens",
         data={'username': username, 'password': password},
