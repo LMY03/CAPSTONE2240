@@ -9,9 +9,25 @@ sudo systemctl enable qemu-guest-agent
 
 sudo systemctl start qemu-guest-agent
 
+# XRDP
 
+sudo apt update -y
 
-# Netdata
+sudo apt upgrade -y
+
+sudo apt install xfce4 xfce4-goodies -y
+
+sudo apt install xrdp -y
+
+sudo systemctl status xrdp
+
+sudo systemctl start xrdp
+
+sudo nano /etc/xrdp/xrdp.ini
+
+sudo systemctl restart xrdp
+
+<!-- # Netdata
 
 wget -O /tmp/netdata-kickstart.sh https://get.netdata.cloud/kickstart.sh && sh /tmp/netdata-kickstart.sh
 
@@ -33,7 +49,7 @@ sudo nano /etc/netdata/netdata.conf
 
 sudo systemctl enable netdata
 
-sudo systemctl restart netdata
+sudo systemctl restart netdata -->
 
 
 # References

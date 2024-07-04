@@ -39,7 +39,7 @@ VM Details {{ vm_id }}
                 <td>{{ request.status}}</td>
                 <td>
                     <div class = 'd-flex justify-content-evenly'>
-                    <a href="{% url 'users:faculty_request_details' request.id %}" class="btn btn-outline-primary">Open</a>
+                    {% comment %} <a href="{% url 'users:request_details' request.id %}" class="btn btn-outline-primary">Open</a> {% endcomment %}
                     {% if request.status == 'PENDING' or request.status == 'FOR_REVISION' %}
                     <a class="btn btn-outline-primary" href="{% url 'users:faculty_edit_request' request_id=request.id %}" role="button">Edit</a>
                     {% endif %}

@@ -1,11 +1,11 @@
 from decouple import config
 import requests, time
 
-
 PROXMOX_HOST = config('PROXMOX_HOST')
 USERNAME = config('PROXMOX_USERNAME')
 PASSWORD = config('PROXMOX_PASSWORD')
-CA_CRT = config('CA_CRT')
+# CA_CRT = config('CA_CRT')
+CA_CRT = False
 
 def get_proxmox_ticket():
     url = f"{PROXMOX_HOST}/api2/json/access/ticket"
@@ -67,7 +67,11 @@ def clone_vm(node, vmid, newid, name):
         # 'storage': 'local-lvm',
     }
     response = session.post(url, data=config)
-    return response.json()
+    print("---------------------------------")
+    print(response)
+    print(response.json())
+    print(response.json()['data'])
+    return response.json()['data'] #upid
 
 # delete VM DELETE
 def delete_vm(node, vmid):
@@ -108,11 +112,10 @@ def config_vm(node, vmid, cpu_cores, memory_mb):
     response = session.put(url, data=config)
     return response.json()
 
-def wait_for_task(node, upid): 
+def wait_for_task(node, upid):
     while True:
         task_status = get_task_status(node, upid)
-        if task_status['data']['status'] == 'stopped':
-            return task_status['data']['exitstatus'] # OK
+        if task_status['data']['status'] == 'stopped' : return task_status['data']['exitstatus'] # OK
         time.sleep(5)
 
 def wait_for_vm_start(node, vmid):
@@ -265,3 +268,59 @@ def wait_and_get_lxc_ip(node, vmid):
                         ip = interface['inet'].split('/')[0]  # Split to remove subnet mask
                         return ip
         time.sleep(5)
+
+def create_snapshot(node, vmid, snapname):
+    session = get_authenticated_session()
+    url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/lxc/{vmid}/snapshot"
+    response = session.post(url, data={ "snapname": snapname })
+    return response.json()
+
+def list_snapshots(node, vmid):
+    session = get_authenticated_session()
+    url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/lxc/{vmid}/snapshot"
+    response = session.get(url)
+    return response.json()
+
+def create_backup(node, vmid, dumpdir="/var/lib/vz/dump"):
+    session = get_authenticated_session()
+    url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/vzdump"
+    data = {
+        "vmid": vmid,
+        "dumpdir": dumpdir
+    }
+    response = session.post(url, data=data)
+    return response.json()
+
+def create_container(node, new_vmid, ostemplate, storage, hostname):
+    session = get_authenticated_session()
+    url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/lxc"
+    data = {
+        "vmid": new_vmid,
+        "ostemplate": ostemplate,
+        "storage": storage,
+        "hostname": hostname
+    }
+    response = session.post(url, data=data)
+    return response.json()
+
+def restore_container(node, new_vmid, backup_file, storage, network_config):
+    session = get_authenticated_session()
+    url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/lxc/{new_vmid}/restore"
+    data = {
+        "vmid": new_vmid,
+        "restore-vmid": new_vmid,
+        "filename": backup_file,
+        "storage": storage
+    }
+    response = session.post(url, data=data)
+    
+    # Configure network settings if needed
+    if response.status_code == 200:
+        config_url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/lxc/{new_vmid}/config"
+        network_data = {
+            "net0": network_config
+        }
+        network_response = session.post(config_url, data=network_data)
+        return network_response.json()
+    
+    return response.json()

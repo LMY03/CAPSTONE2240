@@ -196,7 +196,7 @@ document.getElementById('vm-form').addEventListener('submit', function (event) {
         .then(data => {
             if (data.status === 'ok') {
                 // Redirect to a different page
-                window.location.href = '/users/faculty/home';
+                window.location.href = '/dashboard';
             } else {
                 // Handle other statuses if needed
                 console.log('Unexpected status:', data.status);

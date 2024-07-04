@@ -12,10 +12,10 @@ TSG Dashboard
 {% block content %}
                     <div class="col-md-10 content mt-3">
                         <h1>Detail View for the Request Ticket</h1>
-                        {% if request_entry.status == "PROCESSING" and request_entry.is_vm_tested == False %}
-                        <form id="start_vm_form" action="{% url 'users:launch_vm' %}" method="post" onsubmit="submitForm(event)">
+                        {% if request_entry.status == "PROCESSING" %}
+                        <form id="start_vm_form" action="{% url 'guacamole:access_vm' %}" method="post" onsubmit="submitForm(event)">
                             {% csrf_token %}
-                            <input type="hidden" id="vm_id" name="request_entry.vm_id" value="{{ vm_id }}" />
+                            <input type="hidden" id="vm_id" name="vm_id" value="{{ request_entry.vm_id }}" />
                             <button type="submit" class="btn btn-success">Open VM</button>
                         </form>
                         {% endif %}
@@ -93,10 +93,10 @@ TSG Dashboard
                                 </div>
                             </div>
                         </div>
-                        {% if request_entry.status == "PENDING" or request_entry.status == "PROCESSING" %}
+                        {% if request_entry.status == "PENDING" or request_entry.status == "PROCESSING" or request_entry.status == "FOR_REVISION" %}
                         <div class="row g-3 mt-3">
                             <div class="col">
-                                {% if request_entry.status == "PENDING"%}
+                                {% if request_entry.status == "PENDING" or request_entry.status == "FOR_REVISION" %}
                                 <button type="submit" class="btn btn-primary w-25" data-bs-toggle="modal" data-bs-target="#vmformsummary" id="accept_button">Accept</button>
                                 <button type="button" class="btn btn-danger w-25 ms-5" id="reject_button">Reject</button>
                                 {% elif request_entry.status == "PROCESSING" and request_entry.is_vm_tested == False  %}
@@ -104,22 +104,24 @@ TSG Dashboard
                                 {% endif %}
                             </div>
                         </div>
+                        {% endif %}
                     
+                        {% if comments %}
                         <!-- Comment Section -->
                         <div class="mt-5">
                             <h2>Comments</h2>
                             <!-- Display Comments -->
-                            {% if request_entry.comments %}
                                 <div class="list-group">
-                                    {% for comment in request_entry.comments %}
+                                    {% for comment in comments %}
                                         <div class="list-group-item">
-                                            <p><strong>{{ comment.user.first_name }} {{ comment.user.last_name }}:</strong> {{ comment.text }}</p>
+                                            <p><strong>{{ comment.user.first_name }} {{ comment.user.last_name }}:</strong> {{ comment.comment }}</p>
                                             <small class="text-muted">{{ comment.date_time }}</small>
                                         </div>
                                     {% endfor %}
                                 </div>
                             {% endif %}
-                    
+                            
+                            {% if request_entry.status != "COMPLETED" or request_entry.status != "REJECTED" or request_entry.status != "DELETED" %}
                             <!-- Add Comment Form -->
                             <form action="{% url 'ticketing:add_comment' request_entry.id %}" method="post" class="mt-3">
                                 {% csrf_token %}

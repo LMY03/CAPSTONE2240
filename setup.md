@@ -4,20 +4,6 @@ git clone https://github.com/LMY03/CAPSTONE2240.git
 
 docker compose -f ~/CAPSTONE2240/docker-compose.yml up --build -d
 
-# MYSQL
-
-docker cp ~/CAPSTONE2240/init.sql mysql:init.sql
-
-docker exec -it mysql bash
-
-mysql -u root -p123456
-
-source init.sql
-
-exit;
-
-exit
-
 # GUACAMOLE
 
 mkdir -p ~/guacamole-initdb
@@ -45,6 +31,20 @@ flush privileges;
 use guacamole_db;
 
 source initdb.sql;
+
+exit;
+
+exit
+
+# MYSQL
+
+docker cp ~/CAPSTONE2240/init.sql mysql:init.sql
+
+docker exec -it mysql bash
+
+mysql -u root -p123456
+
+source init.sql
 
 exit;
 

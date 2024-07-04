@@ -22,15 +22,19 @@ Faculty Dashboard
                     <thead class="table-light">
                         <tr>
                             <th scope="col">Virtual Machine ID</th>
-                            <th scope="col">Request Type</th>
+                            <th scope="col">Type</th>
+                            <th scope="col">Group & Section</th>
+                            <th scope="col">Assigned To</th>
                             <th scope="col">Status</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for vm in data %}
+                        {% for vm in vm_list %}
                         <tr>
                             <td><i class="bi bi-display"></i>{{ vm.vm_name }}</td>
                             <td>Course</td>
+                            <td>{{ vm.request_use_case }}</td>
+                            <td>123213</td>
                             <td>{{ vm.status }}</td>
                         </tr>
                         {% endfor %}

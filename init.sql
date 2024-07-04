@@ -10,8 +10,8 @@ CREATE DEFINER=`root`@`%` TRIGGER `create_guac_user` AFTER INSERT ON `auth_user`
     SET @salt = UNHEX(SHA2(UUID(), 256));
     
     -- INSERT guacamole_user into cap2240db
-    INSERT INTO cap2240db.guacamole_guacamoleuser (username, password, system_user_id, status)
-    VALUES (NEW.username, NEW.password, NEW.id, 'ACTIVE');
+    INSERT INTO cap2240db.guacamole_guacamoleuser (username, password, system_user_id, is_active)
+    VALUES (NEW.username, NEW.password, NEW.id, 1);
     
     -- INSERT the new system user into guacamole_db.guacamole_entity
     INSERT INTO guacamole_db.guacamole_entity (name, type) VALUES (NEW.username, 'USER');
@@ -33,10 +33,10 @@ DELIMITER ;
 
 -- cap2240db
 
-INSERT INTO cap2240db.ticketing_vmtemplates (vm_id, vm_name, cores, ram, storage) VALUES
-("3000", "Ubuntu-Desktop-22-RDP", 1, 1024, 20),
-("4000", "Ubuntu-Desktop-24-RDP", 1, 1024, 20),
-("5000", "Ubuntu-LXC-23", 1, 1024, 10);
+INSERT INTO cap2240db.ticketing_vmtemplates (vm_id, vm_name, cores, ram, storage, node, is_lxc) VALUES
+("3000", "Ubuntu-Desktop-22-RDP", 1, 1024, 20, "pve", 0),
+("4000", "Ubuntu-Desktop-24-RDP", 1, 1024, 20, "pve", 0),
+("5000", "Ubuntu-LXC-23", 1, 1024, 10, "pve", 1);
 
 INSERT INTO cap2240db.auth_user (password, is_superuser, username, first_name, last_name, email, is_staff, is_active, date_joined) VALUES
 ("pbkdf2_sha256$720000$5gL9pa3JAHZYMUbNgW3qqL$udv7QLPHZ/Fv5ijQQMvklg06MOZvEkkbGY2LJ17dIyM=", "1", "admin", "admin", "chan", "", "1", "1", NOW());

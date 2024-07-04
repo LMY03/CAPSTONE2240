@@ -21,30 +21,33 @@ TSG Dashboard
         </select>
         
       </div>
-      {% if request_list %}
+      {% if request_entries %}
         <table class="table table-bordered table-striped">
           <thead>
             <tr>
+              <th>Ticket ID</th>
               <th>Requester</th>
               <th>Template OS</th>
               <th>Cores</th>
               <th>RAM</th>
               <th>Internet Access</th>
               <th>Status</th>
+              <th>Action</th>
             </tr>
           </thead>
           <tbody>
-            {% for request in request_list %}
+            {% for request_entry in request_entries %}
               <tr>
-                <td>{{ request.requester__first_name }} {{ request.requester__last_name }}</td>
-                <td>{{ request.template__vm_name }}</td>
-                <td>{{ request.cores }}</td>
-                <td>{{ request.ram }}</td>
-                <td>{{ request.has_internet }}</td>
-                <td>{{ request.status }}</td>
+                <td>{{ request_entry.id }}</td>
+                <td>{{ request_entry.requester.first_name }} {{ request.requester.last_name }}</td>
+                <td>{{ request_entry.template__vm_name }}</td>
+                <td>{{ request_entry.cores }}</td>
+                <td>{{ request_entry.ram }}</td>
+                <td>{{ request_entry.has_internet }}</td>
+                <td>{{ request_entry.status }}</td>
                 <td>
-                  <a href="{% url 'users:request_details' request.id %}" class="btn btn-primary">Open</a>
-                  <a href="{% url 'users:delete_vms' request.id %}" class="btn btn-danger">Delete</a>
+                  <a href="{% url 'ticketing:request_details' request_entry.id %}" class="btn btn-primary">Open</a>
+                  <a href="{% url 'ticketing:delete_request' request_entry.id %}" class="btn btn-danger">Delete</a>
                 </td>
               </tr>
             {% endfor %}

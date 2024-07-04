@@ -15,22 +15,9 @@
             <!-- Sidebar -->
             <div class="col-md-2 sidebar d-flex flex-column">
                 <div class="logo text-center mb-4">
-                    <img src={% static 'ticketing/images/De_La_Salle_University_Seal.svg.png' %} alt="Logo">
+                    <img src="{% static 'ticketing/images/De_La_Salle_University_Seal.svg.png' %}" alt="Logo">
                 </div>
-                <div class="logo text-center mb-4">
-                    <a href="{% url 'users:student_home' %}" class="text-decoration-none">
-                        <h5 class="text-white">VM List</h5>
-                    </a>
-                </div>
-                <ul class="nav flex-column">
-                    {% for vm in data %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'users:vm_details' vm.id %}">
-                            <i class="bi bi-display"></i> {{ vm.vm_name }}
-                        </a>
-                    </li>
-                    {% endfor %}
-                </ul>
+                
                 <a href="{% url 'logout' %}" class="logout">
                     <i class="bi bi-box-arrow-left"></i> Logout
                 </a>

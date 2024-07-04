@@ -4,7 +4,8 @@ import json, requests
 OPNSENSE_HOST = config('OPNSENSE_HOST')
 API_KEY = config('OPNSENSE_API_KEY')
 API_SECRET = config('OPNSENSE_API_SECRET')
-CA_CRT = config('CA_CRT')
+# CA_CRT = config('CA_CRT')
+CA_CRT = False
 
 def add_firewall_rule(ip_add, source_port, destination_port, protocol):
     url = f"{OPNSENSE_HOST}/api/firewall/rule/add"
