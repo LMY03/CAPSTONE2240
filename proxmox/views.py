@@ -59,7 +59,7 @@ def generate_vm_ids(no_of_vm):
     return new_ids
 
 def generate_vm_id_view(request, no_of_vm):
-    return render(request, 'data.html' , { generate_vm_ids(no_of_vm) })
+    return render(request, 'data.html' , { 'data' : list(generate_vm_ids(no_of_vm)) })
 
 def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, request_id):
 
