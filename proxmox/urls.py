@@ -11,7 +11,7 @@ urlpatterns = [
     path("form", views.renders, name="form"),
 
     # path("", views.renders, name="form"),
-    # path("clone_vm", views.clone_vm, name="clone_vm"),
+    path("clone_vm", views.clone_vm, name="clone_vm"),
     # path("start_vm", views.start_vm, name="start_vm"),
     # path("shutdown_vm", views.shutdown_vm, name="shutdown_vm"),
     # path("delete_vm", views.delete_vm, name="delete_vm"),
