@@ -118,16 +118,16 @@ DATABASES = {
 #     }
 # }
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': config('MYSQL_CAP2240_DATABASE'),
-#         'USER': config('MYSQL_CAP2240_USER'),
-#         'PASSWORD': config('MYSQL_CAP2240_PASSWORD'),
-#         'HOST': config('MYSQL_HOST'),
-#         'PORT': config('MYSQL_PORT'),
-#     }
-# }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': config('MYSQL_CAP2240_DATABASE'),
+        'USER': config('MYSQL_CAP2240_USER'),
+        'PASSWORD': config('MYSQL_CAP2240_PASSWORD'),
+        'HOST': config('MYSQL_HOST'),
+        'PORT': config('MYSQL_PORT'),
+    }
+}
 
 
 # Password validation
