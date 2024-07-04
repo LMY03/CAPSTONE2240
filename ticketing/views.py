@@ -481,6 +481,8 @@ def confirm_test_vm(request, id):
     request_entry.status = RequestEntry.Status.ONGOING
     request_entry.save()
 
+    
+
     # download_details(credentials)
     # redirect/render with credentials to download
 
