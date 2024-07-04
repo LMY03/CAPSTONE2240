@@ -197,7 +197,7 @@ def revoke_connection_group(username, connection_group_id):
 def get_connection_url(connection_id, username, password):
     token = get_connection_token(username, password)
     # token = get_token()
-    return f"https://10.1.200.20/guacamole/#/client/{connection_id}?token={token}"
+    return f"https://10.1.200.20:8080/guacamole/#/client/{connection_id}?token={token}"
 
 # def get_connection_token(username, password):
 #     url = f"{GUACAMOLE_HOST}/guacamole/api/tokens"
