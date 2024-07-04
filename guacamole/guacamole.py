@@ -211,7 +211,7 @@ def get_connection_token(username, password):
     # CA_CRT = '/path/to/ca_bundle.crt'
     # CA_CRT = False # Disable SSL certificate verification
     session = requests.Session()
-    session.verify = CA_CRT
+    # session.verify = CA_CRT
     response = session.post(
         f"{GUACAMOLE_HOST}/guacamole/api/tokens",
         data={'username': username, 'password': password},
