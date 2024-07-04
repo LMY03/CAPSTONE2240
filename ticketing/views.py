@@ -475,9 +475,9 @@ def create_test_vm(tsg_user, id):
     GuacamoleConnection(user=get_object_or_404(GuacamoleUser, system_user=tsg_user), connection_id=guacamole_connection_id, connection_group_id=guacamole_connection_group_id, vm=vm).save()
     VMUser.objects.create(vm=vm, username="jin", password="123456")
     
-def confirm_test_vm(request, id):
-    request_entry = get_object_or_404(RequestEntry, pk=id)
-    credentials = vm_provision(id)
+def confirm_test_vm(request, request_id):
+    request_entry = get_object_or_404(RequestEntry, pk=request_id)
+    credentials = vm_provision(request_id)
     request_entry.status = RequestEntry.Status.ONGOING
     request_entry.save()
 
@@ -526,7 +526,7 @@ def download_credentials(request):
 
     return response
 
-def reject_test_vm(request, id):   
+def reject_test_vm(request, request_id):   
     request_entry = get_object_or_404(RequestEntry, pk=id)
     request_entry.status = RequestEntry.Status.REJECTED
     request_entry.save()
@@ -552,12 +552,14 @@ def vm_provision(id):
     node = "pve"
     request_entry = get_object_or_404(RequestEntry, pk=id)
     vm = get_object_or_404(VirtualMachines, request=request_entry)
+    print("--------------------")
+    print(vm)
     if vm.status == VirtualMachines.Status.ACTIVE:
         proxmox.shutdown_vm(vm.node, vm.vm_id)
         vm.status = VirtualMachines.Status.SHUTDOWN
         vm.save()
     request_use_cases = []
-    request_use_cases = RequestUseCase.objects.filter(request=request_entry.pk).values('request_use_case', 'vm_count')
+    request_use_cases = RequestUseCase.objects.filter(request=request_entry).values('request_use_case', 'vm_count')
     classnames = []
     total_no_of_vm = get_total_no_of_vm(request_entry) - 1
     
