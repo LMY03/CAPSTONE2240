@@ -82,8 +82,22 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, requ
 
     new_vm_ids = generate_vm_ids(no_of_vm)
 
+    if orig_vm.status == VirtualMachines.Status.ACTIVE:
+        
+        proxmox.shutdown_vm(orig_vm.node, orig_vm.vm_id)
+
+        orig_vm.status = orig_vm.Status.SHUTDOWN
+        orig_vm.save()
+
+        proxmox.wait_for_vm_stop(orig_vm.node, orig_vm.vm_id)
+
     for i in range(no_of_vm):
+        print("----------------------")
+        print("vm_name = " + classnames[i])
+        print("vm_id = " + vm_id)
+        print("new_vm_id = " + new_vm_ids[i])
         upid = proxmox.clone_vm(node, vm_id, new_vm_ids[i], classnames[i])
+        print("upid = " + upid)
         upids.append(upid)
 
     for i in range(no_of_vm):
@@ -109,7 +123,7 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, requ
         hostnames.append(proxmox.wait_and_get_ip(node, new_vm_ids[i]))
         proxmox.shutdown_vm(node, new_vm_ids[i])
 
-        hostnames.append("10.10.10." + str(i))
+        # hostnames.append("10.10.10." + str(i))
         
         guacamole_connection_ids.append(guacamole.create_connection(classnames[i], protocol, port, hostnames[i], username, password, guacamole_connection_group_id))
         passwords.append(User.objects.make_random_password())
