@@ -48,13 +48,12 @@ def tsg_vm_details(request, vm_id):
 
 def generate_vm_ids(no_of_vm):
     
-    existing_ids = VirtualMachines.objects.exclude(status=VirtualMachines.Status.DESTROYED)
+    existing_vms = set(VirtualMachines.objects.exclude(status=VirtualMachines.Status.DESTROYED))
 
     new_ids = []
     new_id = 10000  # Starting point for new VM IDs
     while len(new_ids) < no_of_vm:
-        if new_id not in existing_ids:
-            new_ids.append(new_id)
+        if new_id not in existing_vms : new_ids.append(new_id)
         new_id += 1
 
     return new_ids
