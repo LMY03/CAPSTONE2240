@@ -20,14 +20,19 @@ TSG Dashboard
                         </form>
                         {% endif %}
                         <div class="row g-3">
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <div class="p-3 bg-light border">
                                     <p><strong>Requester ID:</strong> {{ request_entry.requester.first_name }} {{ request_entry.requester.last_name }}</p>
                                 </div>
                             </div>
-                            <div class="col-md-6">
+                            <div class="col-md-4">
                                 <div class="p-3 bg-light border">
                                     <p><strong>Template:</strong> {{ request_entry.template.vm_name }}</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="p-3 bg-light border">
+                                    <p id="cores"><strong>Status:</strong> {{ request_entry.status }}</p>
                                 </div>
                             </div>
                             <div class="col-md-4">
@@ -98,7 +103,7 @@ TSG Dashboard
                             <div class="col">
                                 {% if request_entry.status == "PENDING" or request_entry.status == "FOR_REVISION" %}
                                 <button type="submit" class="btn btn-primary w-25" data-bs-toggle="modal" data-bs-target="#vmformsummary" id="accept_button">Accept</button>
-                                <button type="button" class="btn btn-danger w-25 ms-5" id="reject_button">Reject</button>
+                                <a href="{% url 'ticketing:request-reject' request_entry.id %}"><button type="button" class="btn btn-danger w-25 ms-5" id="reject_button">Reject</button></a>
                                 {% elif request_entry.status == "PROCESSING" and request_entry.is_vm_tested == False  %}
                                 <a href="{% url 'ticketing:request_test_vm_ready' request_entry.id %}"><button type="submit" class="btn btn-primary w-25">Ready</button></a>
                                 {% endif %}
@@ -147,15 +152,13 @@ TSG Dashboard
                     <div class="modal-body">
                         <p><strong>Requester ID:</strong> {{ request_entry.requester.first_name }} {{ request_entry.requester.last_name }} </p>
                         <p><strong>Template:</strong> {{ request_entry.template.vm_name }}</p>
-                        <p><strong>Cores:</strong> {{ object.cores }}</p>
-                        <p><strong>RAM:</strong> {{ object.ram }}</p>
-                        <p><strong>Storage:</strong> {{ object.storage }}</p>
-                        <p><strong>Has Internet:</strong> {{ object.has_internet }}</p>
+                        <p><strong>Cores:</strong> {{ request_entry.cores }}</p>
+                        <p><strong>RAM:</strong> {{ request_entry.ram }} MB</p>
+                        <p><strong>Has Internet:</strong> {{ request_entry.has_internet }}</p>
                         <p><strong>Date needed:</strong> {{ request_entry.date_needed }}</p>
                         <p><strong>Expiration date:</strong> {{ request_entry.expiration_date }}</p>
-                        <p><strong>VM Count:</strong> {{ object.vm_count }}</p>
-                        <p><strong>Use case:</strong> {{ object.use_case }}</p>
-                        <p><strong>Other configs:</strong> {{ object.other_config }}</p>
+                        <p><strong>Use case:</strong> {{ request_entry.use_case }}</p>
+                        <p><strong>Other configs:</strong> {{ request_entry.other_config }}</p>
                         <h1>Total system usage:</h1>
                         <p id="totalCores"></p>
                         <p id="totalRam"></p>

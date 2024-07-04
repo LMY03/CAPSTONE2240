@@ -401,6 +401,13 @@ def request_confirm(request, id):
 
     return HttpResponseRedirect(reverse("ticketing:index"))
 
+def request_reject(request, id):
+    request_entry = get_object_or_404(RequestEntry, pk=id)
+    request_entry.status = RequestEntry.Status.REJECTED
+    request_entry.save()
+
+    return HttpResponseRedirect(reverse("ticketing:index"))
+
 def request_test_vm_ready(request, id): 
     request_entry = get_object_or_404(RequestEntry, pk=id)
     request_entry.is_vm_tested = True
@@ -517,10 +524,11 @@ def download_credentials(request):
 
     return response
 
-def reject_test_vm(request, id):
+def reject_test_vm(request, id):   
     request_entry = get_object_or_404(RequestEntry, pk=id)
     request_entry.status = RequestEntry.Status.REJECTED
     request_entry.save()
+
     vm = get_object_or_404(VirtualMachines, request=request_entry)
     guacamole_connection = get_object_or_404(GuacamoleConnection, vm=vm)
     guacamole_connection.is_active = False

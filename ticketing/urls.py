@@ -10,6 +10,7 @@ urlpatterns = [
     path('new-form-container/', views.new_form_container, name = 'new-form-container'),
     path("new-form-submit/", views.new_form_submit, name="new-form-submit"),
     path("request-confirm/<int:id>/", views.request_confirm, name="request-confirm"),
+    path("request-reject/<int:id>/", views.request_reject, name="request-reject"),
     path('add_comment/<int:pk>/', views.add_comment, name='add_comment'),
     path('edit-form-submit/', views.edit_form_submit, name= 'edit_form_submit'),
     path('request_test_vm_ready/<int:id>', views.request_test_vm_ready, name='request_test_vm_ready'),
