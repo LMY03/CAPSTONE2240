@@ -81,7 +81,8 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, requ
     new_vm_ids = generate_vm_ids(no_of_vm)
 
     for i in range(no_of_vm):
-        upids.append(proxmox.clone_vm(node, vm_id, new_vm_ids[i], classnames[i])['data'])
+        upid = proxmox.clone_vm(node, vm_id, new_vm_ids[i], classnames[i])
+        upids.append(upid)
 
     for i in range(no_of_vm):
         proxmox.wait_for_task(node, upids[i])
