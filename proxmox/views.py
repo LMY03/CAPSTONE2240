@@ -48,7 +48,7 @@ def tsg_vm_details(request, vm_id):
 
 def generate_vm_ids(no_of_vm):
     
-    existing_vms = set(VirtualMachines.objects.exclude(status=VirtualMachines.Status.DESTROYED))
+    existing_vms = set(VirtualMachines.objects.exclude(status=VirtualMachines.Status.DESTROYED).values_list('vm_id', flat=True))
 
     new_ids = []
     new_id = 10000  # Starting point for new VM IDs
