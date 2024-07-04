@@ -1,7 +1,6 @@
 from decouple import config
 import requests, time
 
-
 PROXMOX_HOST = config('PROXMOX_HOST')
 USERNAME = config('PROXMOX_USERNAME')
 PASSWORD = config('PROXMOX_PASSWORD')
@@ -110,6 +109,7 @@ def config_vm(node, vmid, cpu_cores, memory_mb):
     return response.json()
 
 def wait_for_task(node, upid): 
+    time.sleep(5)
     while True:
         task_status = get_task_status(node, upid)
         print(task_status)
