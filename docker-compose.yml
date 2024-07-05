@@ -140,3 +140,4 @@ volumes:
 
 # https://medium.com/@akshatgadodia/dockerizing-a-django-and-mysql-application-a-step-by-step-guide-d4ba181d3de5
 # https://www.youtube.com/watch?v=GGb1C-4mTCw
+# https://community.influxdata.com/t/docker-compose-example/25627

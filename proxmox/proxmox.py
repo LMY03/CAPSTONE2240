@@ -133,7 +133,8 @@ def wait_for_vm_start(node, vmid):
 def wait_for_vm_stop(node, vmid):
     while True:
         status = get_vm_status(node, vmid)
-        if status == "stopped" : return status
+        if status != None:
+            if status == "stopped" : return status
         time.sleep(5)
 
 def wait_and_get_ip(node, vmid):
