@@ -185,29 +185,10 @@ TSG Dashboard
     </div>
 </div>
 <script>
-    function submitForm(event) {
-        event.preventDefault(); // Prevent default form submission
-
-        var form = document.getElementById('start_vm_form');
-        var formData = new FormData(form);
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', form.action, true);
-        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-        xhr.onload = function() {
-            if (xhr.status === 200) {
-                var response = JSON.parse(xhr.responseText);
-                var redirectUrl = response.redirect_url;
-
-                // Open the URL in a new tab
-                window.open(redirectUrl, '_blank');
-            } else {
-                alert('An error occurred!');
-            }
-        };
-        xhr.send(formData);
-    }
     let section_count = {{ request_entry.section_count|default:0 }};
 </script>
+<script src="{% static 'guacamole/js/launch-vm.js' %}"></script>
+<script src="{% static 'ticketing/js/download-credentials.js' %}"></script>
 {% endblock content %}
 
 {% block script %}
