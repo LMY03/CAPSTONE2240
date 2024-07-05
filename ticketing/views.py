@@ -74,7 +74,7 @@ def faculty_request_details (request, request_id):
 
     if request_entry.status == RequestEntry.Status.PROCESSING: request_entry.vm_id = get_object_or_404(VirtualMachines, request=request_entry).id
 
-    comments = Comment.objects.filter(request_entry=request_entry).order_by('-date_time')
+    comments = Comment.objects.filter(request_entry=request_entry).order_by('date_time')
     context = {
         'request_entry': request_entry,
         'comments' : comments,
@@ -97,7 +97,7 @@ def tsg_request_details (request, request_id):
 
     if request_entry.status == RequestEntry.Status.PROCESSING: request_entry.vm_id = get_object_or_404(VirtualMachines, request=request_entry).id
 
-    comments = Comment.objects.filter(request_entry=request_entry).order_by('-date_time')
+    comments = Comment.objects.filter(request_entry=request_entry).order_by('date_time')
     context = {
         'request_entry': request_entry,
         'comments' : comments,
@@ -136,7 +136,7 @@ class DetailView(generic.DetailView):
         request_use_cases = RequestUseCase.objects.filter(request_id=pk)
 
 
-        comments = Comment.objects.filter(request_entry=request_entry).order_by('-date_time')
+        comments = Comment.objects.filter(request_entry=request_entry).order_by('date_time')
         context['request_entry'] = {
             'details': request_entry_details,
             'comments' : comments,
@@ -481,7 +481,9 @@ def confirm_test_vm(request, request_id):
     request_entry.status = RequestEntry.Status.ONGOING
     request_entry.save()
 
-    
+    print("---------------------------------")
+    print("credentials")
+    print(credentials)
 
     # download_details(credentials)
     # redirect/render with credentials to download
@@ -681,7 +683,7 @@ def get_comments(request_entry):
             "user__first_name",
             "user__last_name",
             "date_time",
-        ).order_by('-date_time')
+        ).order_by('date_time')
 
 def new_form_container(request):
     container_template = VMTemplates.objects.filter(is_lxc = 1)
