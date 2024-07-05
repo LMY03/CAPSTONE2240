@@ -139,5 +139,8 @@ Request Details
         </div>
     </div>
 </div>
-<script src="{% static 'guacamole/js/launch-vm.js' %}"></script>
 {% endblock content %}
+
+{% block script %}
+<script src="{% static 'guacamole/js/launch-vm.js' %}"></script>
+{% endblock  %}

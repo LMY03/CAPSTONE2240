@@ -187,13 +187,10 @@ TSG Dashboard
         </div>
     </div>
 </div>
-<script>
-    let section_count = {{ request_entry.section_count|default:0 }};
-</script>
-<script src="{% static 'guacamole/js/launch-vm.js' %}"></script>
-<script src="{% static 'ticketing/js/download-credentials.js' %}"></script>
 {% endblock content %}
 
 {% block script %}
+<script src="{% static 'guacamole/js/launch-vm.js' %}"></script>
+<script src="{% static 'ticketing/js/download-credentials.js' %}"></script>
 <script src="{% static 'ticketing/js/detail-script.js' %}"></script>
 {% endblock  %}
