@@ -67,12 +67,7 @@ def student_home(request):
 @login_required
 def faculty_home(request):
     vm_list = []
-    request_entries = RequestEntry.objects.filter(requester=request.user) \
-        .exclude(
-            is_vm_tested=False,
-            status=RequestEntry.Status.DELETED
-        ) \
-        .order_by('id')
+    request_entries = RequestEntry.objects.filter(requester=request.user, is_vm_tested=True).exclude(status=RequestEntry.Status.DELETED).order_by('-id')
     
     for request_entry in request_entries:
         vm_list += VirtualMachines.objects.filter(request=request_entry).exclude(is_lxc=True, status=VirtualMachines.Status.DESTROYED)

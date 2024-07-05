@@ -23,7 +23,7 @@ def vm_list(request):
     else : return redirect('/')
 
 def faculty_vm_list(request):
-    request_entries = RequestEntry.objects.filter(requester=request.user).exclude(is_vm_tested=False, status=RequestEntry.Status.DELETED).order_by('-id')
+    request_entries = RequestEntry.objects.filter(requester=request.user, is_vm_tested=True).exclude(status=RequestEntry.Status.DELETED).order_by('-id')
     
     vm_list = []
     for request_entry in request_entries: 
