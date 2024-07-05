@@ -208,7 +208,7 @@ document.getElementById('vm-form').addEventListener('submit', function (event) {
         .then(data => {
             if (data.status === 'ok') {
                 // Redirect to a different page
-                window.location.href = '/dashboard';
+                window.location.href = '/ticketing/';
             } else {
                 // Handle other statuses if needed
                 console.log('Unexpected status:', data.status);
