@@ -67,7 +67,6 @@ def student_home(request):
 @login_required
 def faculty_home(request):
     vm_list = []
-    request_entries = RequestEntry.objects.filter(requester=request.user).exclude(is_vm_tested=False).order_by('id')
     request_entries = RequestEntry.objects.filter(requester=request.user) \
         .exclude(
             is_vm_tested=False,
@@ -76,7 +75,7 @@ def faculty_home(request):
         .order_by('id')
     
     for request_entry in request_entries:
-        vm_list += VirtualMachines.objects.filter(request=request_entry).exclude(status=VirtualMachines.Status.DESTROYED)
+        vm_list += VirtualMachines.objects.filter(request=request_entry).exclude(is_lxc=True, status=VirtualMachines.Status.DESTROYED)
 
     return render(request, 'users/faculty_home.html', {'data': vm_list })
     
