@@ -16,7 +16,6 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import include, path
-from ticketing import views
 from users.views import render_home
 from django.contrib.auth import views as auth_views
 
@@ -25,7 +24,8 @@ urlpatterns = [
     path('monitoring/', include("monitoring.urls")),
     path('guacamole/', include("guacamole.urls")),
     path('opnsense/', include("opnsense.urls")),
-    path('proxmox/', include("proxmox.urls")),
+    # path('containers/', include("proxmox.urls")),
+    path('vm/', include("proxmox.urls")),
     path('ticketing/', include("ticketing.urls")),
     path('users/', include("users.urls")),
     path('social-auth/', include('social_django.urls', namespace='social')),

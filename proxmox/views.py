@@ -23,10 +23,11 @@ def vm_list(request):
     else : return redirect('/')
 
 def faculty_vm_list(request):
-    request_entries = RequestEntry.objects.filter(requester=request.user).exclude(is_vm_tested=False).order_by('-id')
+    request_entries = RequestEntry.objects.filter(requester=request.user, is_vm_tested=True).exclude(status=RequestEntry.Status.DELETED).order_by('-id')
     
     vm_list = []
-    for request_entry in request_entries : vm_list += VirtualMachines.objects.filter(request=request_entry).exclude(is_lxc=True).exclude(status=VirtualMachines.Status.DESTROYED)
+    for request_entry in request_entries: 
+        vm_list += VirtualMachines.objects.filter(request=request_entry).exclude(is_lxc=True, status=VirtualMachines.Status.DESTROYED)
 
     return render(request, 'proxmox/faculty_vm_list.html', { 'vm_list': vm_list })
     
@@ -48,22 +49,26 @@ def tsg_vm_details(request, vm_id):
 
 def generate_vm_ids(no_of_vm):
     
-    existing_ids = VirtualMachines.objects.exclude(status=VirtualMachines.Status.DESTROYED)
+    existing_vms = set(VirtualMachines.objects.exclude(status=VirtualMachines.Status.DESTROYED).values_list('vm_id', flat=True))
 
     new_ids = []
     new_id = 10000  # Starting point for new VM IDs
     while len(new_ids) < no_of_vm:
-        if new_id not in existing_ids:
-            new_ids.append(new_id)
+        if new_id not in existing_vms : new_ids.append(new_id)
         new_id += 1
 
     return new_ids
+
+def generate_vm_id_view(request, no_of_vm):
+    return render(request, 'data.html' , { 'data' : list(generate_vm_ids(no_of_vm)) })
 
 def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, request_id):
 
     # vm_temp = get_object_or_404(VMTemplates, vm_id=vm_id)
 
-    orig_vm = get_object_or_404(VirtualMachines, id=vm_id)
+    print("-------------------")
+    print(str(vm_id))
+    orig_vm = get_object_or_404(VirtualMachines, vm_id=vm_id)
 
     protocol = "rdp"
     port = {
@@ -80,8 +85,22 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, requ
 
     new_vm_ids = generate_vm_ids(no_of_vm)
 
+    if orig_vm.status == VirtualMachines.Status.ACTIVE:
+        
+        proxmox.shutdown_vm(orig_vm.node, orig_vm.vm_id)
+
+        orig_vm.status = orig_vm.Status.SHUTDOWN
+        orig_vm.save()
+
+        proxmox.wait_for_vm_stop(orig_vm.node, orig_vm.vm_id)
+
     for i in range(no_of_vm):
+        print("----------------------")
+        print("vm_name = " + classnames[i])
+        print("vm_id = " + str(vm_id))
+        print("new_vm_id = " + str(new_vm_ids[i]))
         upid = proxmox.clone_vm(node, vm_id, new_vm_ids[i], classnames[i])
+        print("upid = " + upid)
         upids.append(upid)
 
     for i in range(no_of_vm):
@@ -107,7 +126,7 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, requ
         hostnames.append(proxmox.wait_and_get_ip(node, new_vm_ids[i]))
         proxmox.shutdown_vm(node, new_vm_ids[i])
 
-        hostnames.append("10.10.10." + str(i))
+        # hostnames.append("10.10.10." + str(i))
         
         guacamole_connection_ids.append(guacamole.create_connection(classnames[i], protocol, port, hostnames[i], username, password, guacamole_connection_group_id))
         passwords.append(User.objects.make_random_password())
@@ -161,7 +180,9 @@ def shutdown_vm(request, vm_id):
         vm.status = vm.Status.SHUTDOWN
         vm.save()
 
-        return redirect(f'proxmox/{vm_id}/details')
+        proxmox.wait_for_vm_stop(vm.node, vm.vm_id)
+
+    return redirect('proxmox:vm_details', vm_id=vm_id)
 
 # def lxc_provision(): 
 #     node = "pve"

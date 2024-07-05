@@ -69,6 +69,22 @@ services:
     restart: always
     ports:
       - "4822:4822"
+    
+  influxdb:
+    image: influxdb:latest
+    container_name: influxdb
+    restart: always
+    ports:
+      - "8086:8086"
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: ${INFLUXDB_USERNAME}
+      DOCKER_INFLUXDB_INIT_PASSWORD: ${INFLUXDB_PASSWORD}
+      DOCKER_INFLUXDB_INIT_ORG: ${INFLUXDB_ORG}
+      DOCKER_INFLUXDB_INIT_BUCKET: ${INFLUXDB_BUCKET}
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+      - influxdb_config:/etc/influxdb2
 
   # netdata:
   #   image: netdata/netdata:latest
@@ -114,6 +130,8 @@ services:
 
 volumes:
   mysql_data:
+  influxdb_data:
+  influxdb_config:
   # netdataconfig:
   # netdatalib:
   # netdatacache:
@@ -122,3 +140,4 @@ volumes:
 
 # https://medium.com/@akshatgadodia/dockerizing-a-django-and-mysql-application-a-step-by-step-guide-d4ba181d3de5
 # https://www.youtube.com/watch?v=GGb1C-4mTCw
+# https://community.influxdata.com/t/docker-compose-example/25627
