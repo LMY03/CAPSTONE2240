@@ -31,7 +31,7 @@ Student Dashboard
                     <tbody>
                         {% for vm in vm_list %}
                         <tr>
-                            <td><i class="bi bi-display"></i> {{ vm.vm_name }}</td>
+                            <td><a href = "{% url 'proxmox:vm_details' vm.id %}"><i class="bi bi-display"></i> {{ vm.vm_name }}</a></td>
                             <td>Course</td>
                             <td>CAPSTONE</td>
                             <td>Estefanie Bertumen</td>
