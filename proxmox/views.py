@@ -23,10 +23,11 @@ def vm_list(request):
     else : return redirect('/')
 
 def faculty_vm_list(request):
-    request_entries = RequestEntry.objects.filter(requester=request.user).exclude(is_vm_tested=False).order_by('-id')
+    request_entries = RequestEntry.objects.filter(requester=request.user).exclude(is_vm_tested=False, status=RequestEntry.Status.DELETED).order_by('-id')
     
     vm_list = []
-    for request_entry in request_entries : vm_list += VirtualMachines.objects.filter(request=request_entry).exclude(is_lxc=True).exclude(status=VirtualMachines.Status.DESTROYED)
+    for request_entry in request_entries: 
+        vm_list += VirtualMachines.objects.filter(request=request_entry).exclude(is_lxc=True, status=VirtualMachines.Status.DESTROYED)
 
     return render(request, 'proxmox/faculty_vm_list.html', { 'vm_list': vm_list })
     
