@@ -134,6 +134,9 @@ def wait_for_vm_stop(node, vmid):
     while True:
         status = get_vm_status(node, vmid)
         if status != None:
+            print("-------------------")
+            print("status")
+            print(status)
             if status == "stopped" : return status
         time.sleep(5)
 
