@@ -180,6 +180,8 @@ def shutdown_vm(request, vm_id):
         vm.status = vm.Status.SHUTDOWN
         vm.save()
 
+        proxmox.wait_for_vm_stop(vm.node, vm.vm_id)
+
     return redirect('proxmox:vm_details', vm_id=vm_id)
 
 # def lxc_provision(): 
