@@ -18,7 +18,7 @@ VM Details {{ vm_id }}
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2>VM Details: {{ vm.vm_name }}</h2>
             <div>
-                <form id="start_vm_form" action="{% url 'guacamole:access_vm' %}" method="post">
+                <form id="start_vm_form" action="{% url 'guacamole:access_vm' %}" method="post" onsubmit="submitForm(event)">
                     {% csrf_token %}
                     <input type="hidden" id="vm_id" name="vm_id" value="{{ vm.id }}" />
                     <button type="submit" class="btn btn-primary me-2">Open VM</button>
