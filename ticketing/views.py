@@ -432,8 +432,7 @@ def request_test_vm_ready(request, id):
 def get_total_no_of_vm(request_entry):
     request_use_cases = RequestUseCase.objects.filter(request=request_entry).values('request_use_case', 'vm_count')
     total_no_of_vm = 0
-    for request_use_case in request_use_cases:
-        total_no_of_vm += int(request_use_case['vm_count'])
+    for request_use_case in request_use_cases : total_no_of_vm += int(request_use_case['vm_count'])
     return total_no_of_vm
 
 def create_test_vm(tsg_user, id): 
@@ -568,20 +567,19 @@ def vm_provision(id):
     node = "pve"
     request_entry = get_object_or_404(RequestEntry, pk=id)
     vm = get_object_or_404(VirtualMachines, request=request_entry)
+
     if vm.status == VirtualMachines.Status.ACTIVE:
         proxmox.shutdown_vm(vm.node, vm.vm_id)
         vm.status = VirtualMachines.Status.SHUTDOWN
         vm.save()
+        proxmox.wait_for_vm_stop(vm.node, vm.vm_id)
     request_use_cases = RequestUseCase.objects.filter(request=request_entry).values('request_use_case', 'vm_count')
     classnames = []
     total_no_of_vm = get_total_no_of_vm(request_entry) - 1
     
     for request_use_case in request_use_cases:
         for i in range(request_use_case['vm_count']):
-            # vm_name = f"{request_use_case['request_use_case'].replace('_', '-')}-Group-{i + 1}"
-            # if vm.vm_name != vm_name:
                 classnames.append(f"{request_use_case['request_use_case'].replace('_', '-')}-Group-{i + 1}")
-        # total_no_of_vm += int(request_use_case['vm_count'])
     vm_name = classnames[0]
     classnames.pop(0)
     
