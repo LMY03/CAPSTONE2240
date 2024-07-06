@@ -16,9 +16,11 @@ def renders(request) :
 def run(request):
     if request.method == "POST":
         node = "pve"
-        vm_id = 1000
-        proxmox.get_vm_ip(node, vm_id)
-        response = ansible.resize_vm_disk(node, vm_id, proxmox.get_vm_ip(node, vm_id))
+        new_vm_id = 1000
+        proxmox.wait_for_task(node, proxmox.clone_vm(node, 3000, new_vm_id, 'Tester'))
+        proxmox.start_vm(node, new_vm_id)
+        ip_add = proxmox.wait_and_get_ip(node, new_vm_id)
+        response = ansible.resize_vm_disk(node, new_vm_id, ip_add)
 
         return render(request, "data.html", { "data" : response })
 
