@@ -37,9 +37,9 @@ class RequestEntry(models.Model):
         PROCESSING = 'PROCESSING', "PROCESSING"
         ONGOING = 'ONGOING', "ONGOING"  # Tentative
         COMPLETED = 'COMPLETED', "COMPLETED"
+        ACCEPTED = 'ACCEPTED', "ACCEPTED"
         REJECTED = 'REJECTED', "REJECTED"
         DELETED = 'DELETED', "DELETED"
-
 
     status = models.CharField(
         max_length=20, 

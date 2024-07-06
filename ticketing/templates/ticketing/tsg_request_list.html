@@ -50,7 +50,9 @@ TSG Dashboard
                 <td>{{ request_entry.status }}</td>
                 <td>
                   <a href="{% url 'ticketing:request_details' request_entry.id %}" class="btn btn-primary">Open</a>
+                  {% if request_entry.status == "ONGOING" %}
                   <a href="{% url 'ticketing:delete_request' request_entry.id %}" class="btn btn-danger">Delete</a>
+                  {% endif %}
                 </td>
               </tr>
             {% endfor %}

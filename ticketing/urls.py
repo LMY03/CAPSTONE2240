@@ -15,9 +15,11 @@ urlpatterns = [
     path('edit-form-submit/', views.edit_form_submit, name= 'edit_form_submit'),
     path('request_test_vm_ready/<int:id>', views.request_test_vm_ready, name='request_test_vm_ready'),
     path('confirm_test_vm/<int:request_id>', views.confirm_test_vm, name='confirm_test_vm'),
+    path('accept_test_vm/<int:request_id>', views.accept_test_vm, name='accept_test_vm'),
     path('reject_test_vm/<int:request_id>', views.reject_test_vm, name='reject_test_vm'),
     path('delete_request/<int:request_id>', views.delete_request, name='delete_request'),
     path('faculty_edit_request/<int:request_id>', views.edit_request, name = 'faculty_edit_request'),
+    path('clear_credential', views.clear_credential, name = 'clear_credential'),
 
-    path("download_credentials", views.download_credentials, name="download_credentials"),
+    path('download_credentials', views.download_credentials, name='download_credentials'),
 ]

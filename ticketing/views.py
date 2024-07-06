@@ -61,7 +61,7 @@ def request_details(request, request_id):
     elif user_role == 'admin' : return tsg_request_details(request, request_id)
     else : return redirect('/')
 
-def faculty_request_details (request, request_id):
+def faculty_request_details(request, request_id):
     request_entry = get_object_or_404(RequestEntry, pk=request_id)
 
     request_use_cases = RequestUseCase.objects.filter(request=request_entry)
@@ -72,16 +72,18 @@ def faculty_request_details (request, request_id):
         elif request_use_case.request_use_case == 'TEST' : request_entry.use_case = 'Test'
         else: request_entry.use_case = 'Class Course'
 
-    if request_entry.status == RequestEntry.Status.PROCESSING: request_entry.vm_id = get_object_or_404(VirtualMachines, request=request_entry).id
+    if request_entry.status == RequestEntry.Status.PROCESSING : request_entry.vm_id = get_object_or_404(VirtualMachines, request=request_entry).id
 
     comments = Comment.objects.filter(request_entry=request_entry).order_by('date_time')
+
     context = {
         'request_entry': request_entry,
         'comments' : comments,
         'request_use_cases': request_use_cases,
     }
+    if 'credentials' in request.session : request_entry.has_credentials = True
     request_entry.storage = request_entry.template.storage
-    return render (request, 'ticketing/faculty_request_details.html', context = context)
+    return render (request, 'ticketing/faculty_request_details.html', context=context)
 
 def tsg_request_details (request, request_id):
     request_entry = get_object_or_404(RequestEntry, pk=request_id)
@@ -399,7 +401,7 @@ def request_confirm(request, id):
 
     create_test_vm(request.user, id)
 
-    return HttpResponseRedirect(reverse("ticketing:index"))
+    return redirect(f'/ticketing/{id}/details')
 
 def request_reject(request, id):
     request_entry = get_object_or_404(RequestEntry, pk=id)
@@ -452,7 +454,7 @@ def create_test_vm(tsg_user, id):
     ip_add = proxmox.wait_and_get_ip(node, new_vm_id)
     proxmox.shutdown_vm(node, new_vm_id)
 
-    # ip_add = "10.10.10.1"
+    ip_add = "10.10.10.1"
 
     # faculty_guacamole_username = get_object_or_404(GuacamoleUser, system_user=request_entry.requester).username
     # guacamole_connection_group_id = guacamole.create_connection_group(f"{id}")
@@ -490,44 +492,33 @@ def create_test_vm(tsg_user, id):
     
 def confirm_test_vm(request, request_id):
     request_entry = get_object_or_404(RequestEntry, pk=request_id)
-    credentials = vm_provision(request_id)
+    request.session['credentials'] = vm_provision(request_id)
+
     request_entry.status = RequestEntry.Status.ONGOING
     request_entry.save()
 
-    print("---------------------------------")
-    print("credentials")
-    print(credentials)
+    return redirect(f'/ticketing/{request_id}/details')
 
-    # download_details(credentials)
-    # redirect/render with credentials to download
+def accept_test_vm(request, request_id):
+    request_entry = get_object_or_404(RequestEntry, pk=request_id)
+    request_entry.status = RequestEntry.Status.ACCEPTED
+    request_entry.save()
 
-    return redirect('/dashboard')
+    return redirect(f'/ticketing/{request_id}/details')
 
 def download_credentials(request):
-    usernames = ["user1", "user2", "user3"]
-    passwords = ["pass1", "pass2", "pass3"]
-    vm_users = ["vm_user1", "vm_user2", "vm_user3"]
-    vm_passwords = ["vm_pass1", "vm_pass2", "vm_pass3"]
-
-    credentials = {
-        'username' : usernames,
-        'password' : passwords,
-        'vm_user': vm_users,
-        'vm_pass': vm_passwords,
-    }
-    details = credentials
-    # print(details)
-    usernames = details['username']
-    passwords = details['password']
-    vm_users = details['vm_user']
-    vm_passs = details['vm_pass']
+    details = request.session['credentials']
+    usernames = details['usernames']
+    passwords = details['passwords']
+    # vm_users = details['vm_user']
+    vm_passs = details['vm_passs']
 
     # Create the content of the text file
     file_content = ["VM Credentials\n"]
-    for username, password, vm_user, vm_pass in zip(usernames, passwords, vm_users, vm_passs):
+    for username, password, vm_pass in zip(usernames, passwords, vm_passs):
         file_content.append(f"Username: {username}")
         file_content.append(f"Password: {password}")
-        file_content.append(f"VM_User: {vm_user}")
+        # file_content.append(f"VM_User: {vm_user}")
         file_content.append(f"VM_Pass: {vm_pass}")
         file_content.append("-------------------------------")
 
@@ -538,11 +529,11 @@ def download_credentials(request):
     # Create the HttpResponse object with the plain text content
     response = HttpResponse(file_content_str, content_type='text/plain')
     response['Content-Disposition'] = 'attachment; filename=details.txt'
-
+    
     return response
 
 def reject_test_vm(request, request_id):   
-    request_entry = get_object_or_404(RequestEntry, pk=id)
+    request_entry = get_object_or_404(RequestEntry, pk=request_id)
     request_entry.status = RequestEntry.Status.REJECTED
     request_entry.save()
 
@@ -560,7 +551,7 @@ def reject_test_vm(request, request_id):
     vm.status = VirtualMachines.Status.DESTROYED
     vm.save()
 
-    return redirect(f'/ticketing/{id}/details')
+    return HttpResponseRedirect(reverse("ticketing:index"))
 
 def vm_provision(id):
 
@@ -704,3 +695,9 @@ def new_form_container(request):
     context['container_template'] = container_template
     print (context['container_template'])
     return render (request, 'ticketing/new-form-container.html', context)
+
+def clear_credential(request):
+    if 'credentials' in request.session:
+        request.session.pop('credentials', None)
+        return JsonResponse({'status': 'success'})
+    return JsonResponse({'status': 'invalid method'}, status=405)

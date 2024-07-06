@@ -1,6 +1,7 @@
 from django.shortcuts import render
 
-# from . import ansible
+from . import ansible
+from ticketing.models import RequestEntry
 
 # Create your views here.
 
@@ -15,34 +16,14 @@ def run(request):
     if request.method == "POST":
 
         data = request.POST
-        # command = data.get("command")
-        # ip_add = data.get("ip_add")
-
-        # vm_user = "jin"
-        # ansible.update_inventory_hosts(ip_add, vm_user)
-
-        # ansible.run_command(command)
-        # response = ansible.run_playbook(command)
-        # ansible.update_inventory_hosts()
-        # response = ansible.run_playbook()
         playbook = "netdata_conf.yml"
         no_of_vm = 2
         classname = "Test"
-        hostname = ["192.168.254.155", "192.168.254.156"]
-        vm_user = []
-        vm_name = []
-        label = []
-
-        for i in range(no_of_vm):
-            vm_user.append("jin")
-            vm_name.append(classname + "-" + str(i))
-            label.append(classname)
-        response = ansible.run_playbook(playbook, hostname, vm_user, vm_name, label)
+        hostname = ["192.168.1.17", "192.168.1.18"]
+        vm_passwords = ['password1', 'password2']
+        response = ansible.change_vm_default_userpass(16, vm_passwords)
 
         return render(request, "data.html", { "data" : response })
-
-def get_ansible_variables():
-    data = list()
 
 # def run_ansible_playbook():
 #     try:

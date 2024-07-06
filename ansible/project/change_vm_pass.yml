@@ -1,0 +1,10 @@
+---
+- name: Change VM passwords
+  hosts: all
+  become: yes
+  tasks:
+    - name: Change user password
+      user:
+        name: "{{ username }}"
+        password: "{{ item | password_hash('sha512') }}"
+      loop: "{{ passwords }}"
