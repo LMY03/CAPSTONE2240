@@ -98,9 +98,9 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, requ
 
     vm_user = get_object_or_404(VMUser, vm=orig_vm)
 
-    username = "CCS_Student"
-    password = "DLSU1234!"
-    
+    username = vm_user.username
+    password = vm_user.password
+
     request_entry = get_object_or_404(RequestEntry, id=request_id)
     requester = request_entry.requester
     faculty_guacamole_user = get_object_or_404(GuacamoleUser, system_user=requester)
