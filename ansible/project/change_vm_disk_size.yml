@@ -3,7 +3,7 @@
   gather_facts: no
   tasks:
     - name: Resize the filesystem (ext4)
-      shell: sudo resize2fs /dev/sda1
+      shell: sudo resize2fs /dev/sda2
       become: yes
       become_method: sudo
       delegate_to: "{{ vm_ip }}"
