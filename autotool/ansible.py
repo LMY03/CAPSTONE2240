@@ -26,13 +26,6 @@ def change_vm_default_userpass(request_id, vm_passwords):
 
 def resize_vm_disk(node, vm_id, new_disk_size, ip_add): 
     extra_vars = {
-        'proxmox_host': config('PROXMOX_HOST'),
-        'proxmox_user': config('PROXMOX_USERNAME'),
-        'proxmox_pass': config('PROXMOX_PASSWORD'),
-        'node': node,
-        'vm_id': vm_id,
-        'disk': 'scsi0',
-        'new_disk_size': new_disk_size,
         'vm_ip': ip_add,
         'vm_password': config('DEFAULT_VM_PASSWORD'),
     }
