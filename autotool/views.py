@@ -20,9 +20,9 @@ def run(request):
         proxmox.wait_for_task(node, proxmox.clone_vm(node, 3000, new_vm_id, 'Tester'))
         proxmox.config_vm_disk(node, new_vm_id, "50G")
         proxmox.start_vm(node, new_vm_id)
-        response = ansible.resize_vm_disk(proxmox.wait_and_get_ip(node, new_vm_id))
+        # response = ansible.resize_vm_disk(proxmox.wait_and_get_ip(node, new_vm_id))
 
-        return render(request, "data.html", { "data" : response })
+        return render(request, "data.html")
 
 # def run_ansible_playbook():
 #     try:
