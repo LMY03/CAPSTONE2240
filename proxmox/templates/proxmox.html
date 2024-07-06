@@ -92,7 +92,7 @@
 
 <hr />
 
-<form action="{% url 'proxmox:config_vm_disk %}" method="post">
+<form action="{% url 'proxmox:config_vm_disk' %}" method="post">
     {% csrf_token %}
     <h1>Reconfigure VM</h1>
     <label for="vmid">VM ID: </label>
