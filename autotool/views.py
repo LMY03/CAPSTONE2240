@@ -1,7 +1,8 @@
 from django.shortcuts import render
+from decouple import config
 
 from . import ansible
-from ticketing.models import RequestEntry
+from proxmox import proxmox
 
 # Create your views here.
 
@@ -14,14 +15,10 @@ def renders(request) :
 
 def run(request):
     if request.method == "POST":
-
-        data = request.POST
-        playbook = "netdata_conf.yml"
-        no_of_vm = 2
-        classname = "Test"
-        hostname = ["192.168.1.17", "192.168.1.18"]
-        vm_passwords = ['password1', 'password2']
-        response = ansible.change_vm_default_userpass(16, vm_passwords)
+        node = "pve"
+        vm_id = 1000
+        proxmox.get_vm_ip(node, vm_id)
+        response = ansible.resize_vm_disk(node, vm_id, proxmox.get_vm_ip(node, vm_id))
 
         return render(request, "data.html", { "data" : response })
 

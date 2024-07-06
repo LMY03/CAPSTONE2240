@@ -3,7 +3,7 @@ from decouple import config
 import ansible_runner
 import json
 
-from proxmox.views import get_vm_ip_adds, get_vm_userpass
+from proxmox.views import get_vm_ip_adds
 # ansible all -i /ansible/inventory/hosts -m ping -e 'ansible_ssh_common_args="-o StrictHostKeyChecking=no"'
 
 INVENTORY_HOSTS_PATH = '/app/ansible/inventory/hosts'
@@ -11,9 +11,6 @@ DEFAULT_VM_USERNAME = config('DEFAULT_VM_USERNAME')
 DEFAULT_VM_PASSWORD = config('DEFAULT_VM_PASSWORD')
 
 def change_vm_default_userpass(request_id, vm_passwords):
-    # vm_userpass = get_vm_userpass(request_id)
-    # vm_usernames = vm_userpass['username']
-    # vm_passwords = vm_userpass['password']
 
     extra_vars = {
         'username': DEFAULT_VM_USERNAME,
@@ -26,6 +23,22 @@ def change_vm_default_userpass(request_id, vm_passwords):
     for i in range(len(hostnames)) : inventory += f"{hostnames[i]} ansible_user={DEFAULT_VM_USERNAME} ansible_ssh_pass={DEFAULT_VM_PASSWORD}\n"
 
     return run_playbook('change_vm_pass.yml', inventory, extra_vars)
+
+def resize_vm_disk(node, vm_id, new_disk_size, ip_add): 
+    extra_vars = {
+        'proxmox_host': config('PROXMOX_HOST'),
+        'proxmox_user': config('PROXMOX_USERNAME'),
+        'proxmox_pass': config('PROXMOX_PASSWORD'),
+        'node': node,
+        'vm_id': vm_id,
+        'disk': 'scsi0',
+        'new_disk_size': new_disk_size,
+        'vm_ip': ip_add,
+        'vm_password': config('DEFAULT_VM_PASSWORD'),
+    }
+    inventory = f"{ip_add} ansible_user={DEFAULT_VM_USERNAME}\n"
+
+    return run_playbook('change_vm_disk_size.yml', inventory, extra_vars)
 
 def run_playbook(playbook, inventory, extra_vars):
     result = ansible_runner.run(

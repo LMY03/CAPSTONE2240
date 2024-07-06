@@ -1,0 +1,38 @@
+---
+- name: Resize Proxmox VM disk and filesystem
+  hosts: localhost
+  gather_facts: no
+  tasks:
+    - name: Resize the disk
+      community.general.proxmox_kvm:
+        node: "{{ node }}"
+        vmid: "{{ vm_id }}"
+        api_host: "{{ proxmox_host }}"
+        api_user: "{{ proxmox_user }}"
+        api_password: "{{ proxmox_pass }}"
+        api_port: 8006
+        validate_certs: no
+        disk: "{{ disk }}"
+        size: "{{ new_disk_size }}"
+      delegate_to: localhost
+
+    - name: Wait for VM to resize the disk
+      pause:
+        minutes: 1
+
+    - name: Ensure VM is reachable
+      wait_for:
+        host: "{{ vm_ip }}"
+        port: 22
+        timeout: 300
+
+    - name: Resize the filesystem (ext4)
+      community.general.shell:
+        cmd: |
+          echo "{{ vm_password }}" | sudo -S resize2fs /dev/sda1  # Adjust based on your partition
+        executable: /bin/bash
+      become: yes
+      become_method: sudo
+      vars:
+        ansible_ssh_pass: "{{ vm_password }}"
+      delegate_to: "{{ vm_ip }}"
