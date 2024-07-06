@@ -1,13 +1,51 @@
-- name: Resize Proxmox VM disk and filesystem
-  hosts: localhost
-  gather_facts: no
+---
+- name: Resize disk and filesystem
+  hosts: all
+  become: yes
   tasks:
-    - name: Resize the filesystem (ext4)
-      shell: sudo resize2fs /dev/sda2
-      become: yes
-      become_method: sudo
-      delegate_to: "{{ vm_ip }}"
-      vars:
-        ansible_ssh_user: "{{ vm_user }}"
-        ansible_ssh_private_key_file: ~/.ssh/id_rsa
-        ansible_become_password: "{{ vm_password }}"
+    - name: Check the current disk size
+      command: lsblk -o NAME,SIZE
+      register: disk_info_before
+
+    - name: Print disk information before resizing
+      debug:
+        var: disk_info_before.stdout_lines
+
+    - name: Rescan the disk to recognize the new size
+      command: sudo partprobe
+
+    - name: Resize partition using parted
+      parted:
+        device: /dev/sda
+        number: 1
+        state: present
+        resize: yes
+        end: 100%
+      notify: resize_filesystem
+
+    - name: Check the current partition size
+      command: lsblk -o NAME,SIZE
+      register: disk_info_after
+
+    - name: Print disk information after resizing
+      debug:
+        var: disk_info_after.stdout_lines
+
+  handlers:
+    - name: resize_filesystem
+      block:
+        - name: Resize ext4 filesystem
+          command: sudo resize2fs /dev/sda1
+          when: filesystem_type == "ext4"
+
+        - name: Resize xfs filesystem
+          command: sudo xfs_growfs /
+          when: filesystem_type == "xfs"
+
+    - name: Verify the new disk size
+      command: df -h
+      register: disk_usage
+
+    - name: Print disk usage
+      debug:
+        var: disk_usage.stdout_lines

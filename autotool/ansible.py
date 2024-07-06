@@ -24,22 +24,17 @@ def change_vm_default_userpass(request_id, vm_passwords):
 
     return run_playbook('change_vm_pass.yml', inventory, extra_vars)
 
-def resize_vm_disk(node, vm_id, new_disk_size, ip_add): 
-    extra_vars = {
-        'vm_user': DEFAULT_VM_USERNAME,
-        'vm_ip': ip_add,
-        'vm_password': DEFAULT_VM_PASSWORD,
-    }
+def resize_vm_disk(ip_add): 
     inventory = f"{ip_add} ansible_user={DEFAULT_VM_USERNAME}\n"
 
-    return run_playbook('change_vm_disk_size.yml', inventory, extra_vars)
+    return run_playbook('change_vm_disk_size.yml', inventory)
 
-def run_playbook(playbook, inventory, extra_vars):
+def run_playbook(playbook, inventory):
     result = ansible_runner.run(
         private_data_dir='/app/ansible',
         playbook=playbook,
         inventory=inventory,
-        extravars=extra_vars
+        extravars={"ansible_become_pass": DEFAULT_VM_USERNAME}
     )
 
     if result.rc == 0 : return JsonResponse({'status': 'Playbook executed successfully'})
