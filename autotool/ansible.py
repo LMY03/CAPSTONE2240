@@ -26,8 +26,8 @@ def change_vm_default_userpass(request_id, vm_passwords):
 
 def resize_vm_disk(node, vm_id, new_disk_size, ip_add): 
     extra_vars = {
+        'vm_user': DEFAULT_VM_USERNAME,
         'vm_ip': ip_add,
-        'vm_password': config('DEFAULT_VM_PASSWORD'),
     }
     inventory = f"{ip_add} ansible_user={DEFAULT_VM_USERNAME}\n"
 
