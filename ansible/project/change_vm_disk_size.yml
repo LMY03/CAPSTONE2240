@@ -2,12 +2,11 @@
   hosts: localhost
   gather_facts: no
   tasks:
-
     - name: Resize the filesystem (ext4)
-      shell: |
-        echo "{{ vm_password }}" | sudo -S resize2fs /dev/sda1  # Adjust based on your partition
+      shell: sudo resize2fs /dev/sda1
       become: yes
       become_method: sudo
-      vars:
-        ansible_ssh_pass: "{{ vm_password }}"
       delegate_to: "{{ vm_ip }}"
+      vars:
+        ansible_ssh_user: "{{ vm_user }}"
+        ansible_ssh_private_key_file: ~/.ssh/id_rsa
