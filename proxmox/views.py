@@ -336,7 +336,7 @@ def config_vm_disk(request) :
 
         return render(request, "data.html", { "data" : response })
     
-    return redirect("/proxmox")
+    return redirect("/vm")
 
 def create_lxc(request) :
 
