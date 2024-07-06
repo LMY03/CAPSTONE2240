@@ -1,12 +1,13 @@
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth.decorators import login_required
+from decouple import config
 
 import secrets, string
 
 from guacamole import guacamole
 from autotool import ansible
 from . import proxmox
-from . models import VirtualMachines, VMUser
+from . models import VirtualMachines
 from ticketing.models import RequestEntry, UserProfile
 from guacamole.models import GuacamoleConnection, GuacamoleUser
 from django.contrib.auth.models import User
@@ -74,7 +75,6 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, requ
     upids = []
     new_vm_ids = []
     hostnames = []
-    guacamole_connection_ids = []
     passwords = []
     vm_passwords = []
 
@@ -82,24 +82,19 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, requ
 
     if orig_vm.status == VirtualMachines.Status.ACTIVE:
         
-        proxmox.shutdown_vm(orig_vm.node, orig_vm.vm_id)
+        # proxmox.shutdown_vm(orig_vm.node, orig_vm.vm_id)
 
         orig_vm.status = orig_vm.Status.SHUTDOWN
         orig_vm.save()
 
-        proxmox.wait_for_vm_stop(orig_vm.node, orig_vm.vm_id)
+        # proxmox.wait_for_vm_stop(orig_vm.node, orig_vm.vm_id)
 
-    for i in range(no_of_vm) : upids.append(proxmox.clone_vm(node, vm_id, new_vm_ids[i], classnames[i]))
+    # for i in range(no_of_vm) : upids.append(proxmox.clone_vm(node, vm_id, new_vm_ids[i], classnames[i]))
 
-    for i in range(no_of_vm):
-        proxmox.wait_for_task(node, upids[i])
-        proxmox.config_vm(node, new_vm_ids[i], cpu_cores, ram)
-        proxmox.start_vm(node, new_vm_ids[i])
-
-    vm_user = get_object_or_404(VMUser, vm=orig_vm)
-
-    username = vm_user.username
-    password = vm_user.password
+    # for i in range(no_of_vm):
+    #     proxmox.wait_for_task(node, upids[i])
+    #     proxmox.config_vm(node, new_vm_ids[i], cpu_cores, ram)
+    #     proxmox.start_vm(node, new_vm_ids[i])
 
     request_entry = get_object_or_404(RequestEntry, id=request_id)
     requester = request_entry.requester
@@ -111,35 +106,40 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, requ
     vms.append(orig_vm)
 
     for i in range(no_of_vm):
-        proxmox.wait_for_vm_start(node, new_vm_ids[i])
-        hostnames.append(proxmox.wait_and_get_ip(node, new_vm_ids[i]))
-        proxmox.shutdown_vm(node, new_vm_ids[i])
-        proxmox.wait_for_vm_stop(node, new_vm_ids[i])
+        # proxmox.wait_for_vm_start(node, new_vm_ids[i])
+        # hostnames.append(proxmox.wait_and_get_ip(node, new_vm_ids[i]))
+        # proxmox.shutdown_vm(node, new_vm_ids[i])
+        # proxmox.wait_for_vm_stop(node, new_vm_ids[i])
 
         hostnames.append("10.10.10." + str(i))
-        
-        guacamole_connection_ids.append(guacamole.create_connection(classnames[i], protocol, port, hostnames[i], username, password, guacamole_connection_group_id))
+
+    vm_username = config('DEFAULT_VM_USERNAME')
+
+    for i in range(no_of_vm):
         passwords.append(User.objects.make_random_password())
+        vm_passwords.append(User.objects.make_random_password())
+
+        # guacamole_connection_ids.append(guacamole.create_connection(classnames[i], protocol, port, hostnames[i], vm_username, passwords[i], guacamole_connection_group_id))
+        guacamole_connection_id = guacamole.create_connection(classnames[i], protocol, port, hostnames[i], vm_username, vm_passwords[i], guacamole_connection_group_id)
+        UserProfile.objects.create(user=user)
+        guacamole.assign_connection(classnames[i], guacamole_connection_id)
+        guacamole.assign_connection(faculty_guacamole_username, guacamole_connection_id)
+        
         user = User(username=classnames[i])
         user.set_password(passwords[i])
         user.save()
-        UserProfile.objects.create(user=user)
-        guacamole.assign_connection(classnames[i], guacamole_connection_ids[i])
-        guacamole.assign_connection(faculty_guacamole_username, guacamole_connection_ids[i])
-        
-        vm = VirtualMachines(request=request_entry, vm_id=new_vm_ids[i], vm_name=classnames[i], cores=cpu_cores, ram=ram, storage=request_entry.template.storage, ip_add=hostnames[i], node=node, status=VirtualMachines.Status.SHUTDOWN)
+        vm = VirtualMachines(request=request_entry, vm_id=new_vm_ids[i], vm_name=classnames[i], cores=cpu_cores, ram=ram, storage=request_entry.template.storage, ip_add=hostnames[i], vm_password=vm_passwords[i], node=node, status=VirtualMachines.Status.SHUTDOWN)
         vm.save()
         vms.append(vm)
-        GuacamoleConnection(user=get_object_or_404(GuacamoleUser, system_user=user), connection_id=guacamole_connection_ids[i], connection_group_id=guacamole_connection_group_id, vm=vm).save()
+        GuacamoleConnection(user=get_object_or_404(GuacamoleUser, system_user=user), connection_id=guacamole_connection_id, connection_group_id=guacamole_connection_group_id, vm=vm).save()
 
-    for vm in vms:
-        vm_passwords.append(User.objects.make_random_password())
-        VMUser.objects.create(vm=vm, username=username, password=vm_passwords[i])
-
+    orig_vm.vm_password = User.objects.make_random_password()
     classnames.insert(0, orig_vm.vm_name)
     passwords.insert(0, User.objects.make_random_password())
-    # ansible.run_playbook("netdata_conf.yml", hostnames, vm_users, classnames, labels)
+    vm_passwords.insert(0, orig_vm.vm_password)
+    
     ansible.change_vm_default_userpass(request_id, vm_passwords)
+
     return {
         'usernames' : classnames,
         'passwords' : passwords,
@@ -152,12 +152,12 @@ def shutdown_vm(request, vm_id):
 
     if vm.status == VirtualMachines.Status.ACTIVE:
         
-        proxmox.shutdown_vm(vm.node, vm.vm_id)
+        # proxmox.shutdown_vm(vm.node, vm.vm_id)
 
         vm.status = vm.Status.SHUTDOWN
         vm.save()
 
-        proxmox.wait_for_vm_stop(vm.node, vm.vm_id)
+        # proxmox.wait_for_vm_stop(vm.node, vm.vm_id)
 
     return redirect('proxmox:vm_details', vm_id=vm_id)
 
@@ -319,6 +319,20 @@ def config_vm(request) :
         memory = data.get("memory")
 
         response = proxmox.config_vm(node, vmid, cpu_cores, memory)
+
+        return render(request, "data.html", { "data" : response })
+    
+    return redirect("/proxmox")
+
+def config_vm_disk(request) : 
+
+    if request.method == "POST":
+
+        data = request.POST
+        vmid = data.get("vmid")
+        size = data.get("size")
+
+        response = proxmox.config_vm_disk(node, vmid, size)
 
         return render(request, "data.html", { "data" : response })
     

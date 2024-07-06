@@ -10,7 +10,8 @@ urlpatterns = [
     path('shutdown_vm/<int:vm_id>', views.shutdown_vm, name='shutdown_vm'),
     path('generate_vm_ids/<int:no_of_vm>', views.generate_vm_id_view, name='generate_vm_ids'),
     
-    # path("form", views.renders, name="form"),
+    path("form", views.renders, name="form"),
+    path("config_vm_disk", views.config_vm_disk, name="config_vm_disk"),
     # path("clone_vm", views.clone_vm, name="clone_vm"),
     # path("start_vm", views.start_vm, name="start_vm"),
     # path("shutdown_vm", views.shutdown_vm, name="shutdown_vm"),
