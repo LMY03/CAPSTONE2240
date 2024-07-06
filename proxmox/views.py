@@ -4,14 +4,12 @@ from django.contrib.auth.decorators import login_required
 import secrets, string
 
 from guacamole import guacamole
-#from autotool import ansible
+from autotool import ansible
 from . import proxmox
 from . models import VirtualMachines, VMUser
-from ticketing.models import VMTemplates, UserProfile
+from ticketing.models import RequestEntry, UserProfile
 from guacamole.models import GuacamoleConnection, GuacamoleUser
 from django.contrib.auth.models import User
-
-from ticketing.models import RequestEntry, UserProfile
 
 # Create your views here.
 
@@ -64,10 +62,6 @@ def generate_vm_id_view(request, no_of_vm):
 
 def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, request_id):
 
-    # vm_temp = get_object_or_404(VMTemplates, vm_id=vm_id)
-
-    print("-------------------")
-    print(str(vm_id))
     orig_vm = get_object_or_404(VirtualMachines, vm_id=vm_id)
 
     protocol = "rdp"
@@ -82,6 +76,7 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, requ
     hostnames = []
     guacamole_connection_ids = []
     passwords = []
+    vm_passwords = []
 
     new_vm_ids = generate_vm_ids(no_of_vm)
 
@@ -94,26 +89,16 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, requ
 
         proxmox.wait_for_vm_stop(orig_vm.node, orig_vm.vm_id)
 
-    for i in range(no_of_vm):
-        print("----------------------")
-        print("vm_name = " + classnames[i])
-        print("vm_id = " + str(vm_id))
-        print("new_vm_id = " + str(new_vm_ids[i]))
-        upid = proxmox.clone_vm(node, vm_id, new_vm_ids[i], classnames[i])
-        print("upid = " + upid)
-        upids.append(upid)
+    for i in range(no_of_vm) : upids.append(proxmox.clone_vm(node, vm_id, new_vm_ids[i], classnames[i]))
 
     for i in range(no_of_vm):
         proxmox.wait_for_task(node, upids[i])
         proxmox.config_vm(node, new_vm_ids[i], cpu_cores, ram)
         proxmox.start_vm(node, new_vm_ids[i])
 
-    vm_user = get_object_or_404(VMUser, vm__vm_id=vm_id)
+    vm_user = get_object_or_404(VMUser, vm=orig_vm)
     username = vm_user.username
     password = vm_user.password
-
-    username = "jin"
-    password = "123456"
     
     request_entry = get_object_or_404(RequestEntry, id=request_id)
     requester = request_entry.requester
@@ -121,12 +106,16 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, requ
     faculty_guacamole_username = faculty_guacamole_user.username
     guacamole_connection_group_id = get_object_or_404(GuacamoleConnection, vm=orig_vm).connection_group_id
     
+    vms = []
+    vms.append(orig_vm)
+
     for i in range(no_of_vm):
         proxmox.wait_for_vm_start(node, new_vm_ids[i])
         hostnames.append(proxmox.wait_and_get_ip(node, new_vm_ids[i]))
         proxmox.shutdown_vm(node, new_vm_ids[i])
+        proxmox.wait_for_vm_stop(node, new_vm_ids[i])
 
-        # hostnames.append("10.10.10." + str(i))
+        hostnames.append("10.10.10." + str(i))
         
         guacamole_connection_ids.append(guacamole.create_connection(classnames[i], protocol, port, hostnames[i], username, password, guacamole_connection_group_id))
         passwords.append(User.objects.make_random_password())
@@ -137,36 +126,23 @@ def vm_provision_process(node, vm_id, classnames, no_of_vm, cpu_cores, ram, requ
         guacamole.assign_connection(classnames[i], guacamole_connection_ids[i])
         guacamole.assign_connection(faculty_guacamole_username, guacamole_connection_ids[i])
         
-        print("new_id = " + str(new_vm_ids[i]))
         vm = VirtualMachines(request=request_entry, vm_id=new_vm_ids[i], vm_name=classnames[i], cores=cpu_cores, ram=ram, storage=request_entry.template.storage, ip_add=hostnames[i], node=node, status=VirtualMachines.Status.SHUTDOWN)
         vm.save()
+        vms.append(vm)
         GuacamoleConnection(user=get_object_or_404(GuacamoleUser, system_user=user), connection_id=guacamole_connection_ids[i], connection_group_id=guacamole_connection_group_id, vm=vm).save()
-        VMUser.objects.create(vm=vm, username=username, password=password)
 
-    # set hostnames and label in netdata
-    vm_users = []
-    labels = []
-    credentials = []
-    for i in range(no_of_vm):
-        vm_users.append("jin")
-        labels.append(classnames[i])
+    for vm in vms:
+        vm_passwords.append(User.objects.make_random_password())
+        VMUser.objects.create(vm=vm, username=username, password=vm_passwords[i])
 
-        # password = generate_secure_random_string(15)
-        # User.objects.create_user(username=classnames[i], password=password)
-        # password = generate_secure_random_string(15)
-        # User.objects.create_user(username=classnames[i], password=password)
-
-        credentials.append({'username': classnames[i], 'password': password})
-        # Create System Users
-        # classname[i] is the username
-
+    classnames.insert(0, orig_vm.vm_name)
+    passwords.insert(0, User.objects.make_random_password())
     # ansible.run_playbook("netdata_conf.yml", hostnames, vm_users, classnames, labels)
-
+    ansible.change_vm_default_userpass(request_id, vm_passwords)
     return {
-        'username' : classnames,
+        'usernames' : classnames,
         'passwords' : passwords,
-        # 'vm_user': ,
-        # 'vm_pass': ,
+        'vm_passs': vm_passwords,
     }
 
 def shutdown_vm(request, vm_id):
@@ -183,6 +159,17 @@ def shutdown_vm(request, vm_id):
         proxmox.wait_for_vm_stop(vm.node, vm.vm_id)
 
     return redirect('proxmox:vm_details', vm_id=vm_id)
+
+def get_vm_ip_adds(request_id):
+    return list(VirtualMachines.objects.filter(request_id=request_id).values_list('ip_add', flat=True))
+
+def get_vm_userpass(request_id):
+    vm_userpass = {'username': [], 'password': []}
+    vms = VirtualMachines.objects.filter(request_id=request_id).order_by('id')
+    for vm in vms:
+        vm_userpass['username'].append(vm.get_vm_userpass()['username'])
+        vm_userpass['password'].append(vm.get_vm_userpass()['password'])
+    return vm_userpass
 
 # def lxc_provision(): 
 #     node = "pve"

@@ -28,7 +28,7 @@ Faculty Dashboard
                     </thead>
                     <tbody>
                         {% for vm in data %}
-                        <a href = "{% url "proxmox:vm_details" vm_id = vm.id %}"><tr>
+                        <a href = "{% url 'proxmox:vm_details' vm.id %}"><tr>
                             <td><i class="bi bi-display"></i>{{ vm.vm_name }}</td>
                             <td>Course</td>
                             <td>{{ vm.status }}</td>
