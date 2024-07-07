@@ -113,9 +113,6 @@ Request Details
                                 <a href="{% url 'ticketing:reject_test_vm' request_entry.id %}"><button type="button" class="btn btn-danger w-25 ms-5" id="reject_button">Reject Test VM</button></a>
                             </div>
                         </div>
-                        {% elif request_entry.has_credentials == True %}
-                        <a href="{% url 'ticketing:download_credentials' %}"><button type="submit" class="btn btn-primary w-25">Download</button></a>
-                        {% endif %}
                     
                         {% if comments %}
                         <!-- Comment Section -->
@@ -151,19 +148,4 @@ Request Details
 {% endblock content %}
 {% block script %}
 <script src="{% static 'guacamole/js/launch-vm.js' %}"></script>
-<script>
-    function clear_credential() {
-        fetch("{% url 'ticketing:clear_credential' %}", {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': '{{ csrf_token }}',
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({})
-        });
-    }
-    window.addEventListener('beforeunload', function (e) {
-        if (!document.activeElement.href.includes('generate_txt')) clear_credential()
-    });
-</script>
 {% endblock script %}

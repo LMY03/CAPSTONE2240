@@ -106,7 +106,7 @@ TSG Dashboard
                                 </div>
                             </div>
                         </div>
-                        {% if request_entry.status == "PENDING" or request_entry.status == "PROCESSING" or request_entry.status == "FOR_REVISION" %}
+                        {% if request_entry.status == "PENDING" or request_entry.status == "PROCESSING" or request_entry.status == "FOR_REVISION" or request_entry.status == "ACCEPTED"%}
                         <div class="row g-3 mt-3">
                             <div class="col">
                                 {% if request_entry.status == "PENDING" or request_entry.status == "FOR_REVISION" %}
@@ -114,13 +114,11 @@ TSG Dashboard
                                 <a href="{% url 'ticketing:request-reject' request_entry.id %}"><button type="button" class="btn btn-danger w-25 ms-5" id="reject_button">Reject Request</button></a>
                                 {% elif request_entry.status == "PROCESSING" and request_entry.is_vm_tested == False  %}
                                 <a href="{% url 'ticketing:request_test_vm_ready' request_entry.id %}"><button type="submit" class="btn btn-primary w-25">Test VM is Ready</button></a>
-                            </div>
-                        </div>
-                        {% endif %}
-                        {% elif request_entry.status == "ACCEPTED" and request_entry.is_vm_tested == True  %}
-                        <div class="row g-3 mt-3">
-                            <div class="col">
-                                <a href="{% url 'ticketing:confirm_test_vm' request_entry.id %}"><button type="submit" class="btn btn-primary w-25">Mass Provision the Requested VMs</button></a>
+                                {% elif request_entry.status == "ACCEPTED" and request_entry.is_vm_tested == True  %}
+                                        <a href="{% url 'ticketing:confirm_test_vm' request_entry.id %}"><button type="submit" class="btn btn-primary w-25">Mass Provision the Requested VMs</button></a>
+                                {% elif request_entry.has_credentials == True %}
+                                <a href="{% url 'ticketing:download_credentials' %}"><button type="submit" class="btn btn-primary w-25">Download</button></a>
+                                {% endif %}
                             </div>
                         </div>   
                         {% endif %}

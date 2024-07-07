@@ -11,11 +11,12 @@ from django.http import JsonResponse
 import json, datetime
 
 from .models import RequestEntry, Comment, RequestUseCase, PortRules, UserProfile, RequestEntryAudit, VMTemplates
-from proxmox.models import VirtualMachines, VMUser
+from proxmox.models import VirtualMachines
 from guacamole.models import GuacamoleConnection, GuacamoleUser
 
 from guacamole import guacamole
-from proxmox import views, proxmox
+from proxmox import views
+from autotool import ansible
 
 # Create your views here.
 
@@ -447,14 +448,16 @@ def create_test_vm(tsg_user, id):
     cpu_cores = int(request_entry.cores)
     ram = int(request_entry.ram)
     
-    upid = proxmox.clone_vm(node, vm_id, new_vm_id, vm_name)
-    proxmox.wait_for_task(node, upid)
-    proxmox.config_vm(node, new_vm_id, cpu_cores, ram)
-    proxmox.start_vm(node, new_vm_id)
-    ip_add = proxmox.wait_and_get_ip(node, new_vm_id)
-    proxmox.shutdown_vm(node, new_vm_id)
-
     ip_add = "10.10.10.1"
+
+    # upid = proxmox.clone_vm(node, vm_id, new_vm_id, vm_name)
+    # proxmox.wait_for_task(node, upid)
+    # proxmox.config_vm(node, new_vm_id, cpu_cores, ram)
+    # proxmox.start_vm(node, new_vm_id)
+    # ip_add = proxmox.wait_and_get_ip(node, new_vm_id)
+    # ansible.resize_vm_disk(node, vm_id, ip_add)
+    # proxmox.shutdown_vm(node, new_vm_id)
+
 
     # faculty_guacamole_username = get_object_or_404(GuacamoleUser, system_user=request_entry.requester).username
     # guacamole_connection_group_id = guacamole.create_connection_group(f"{id}")
@@ -488,7 +491,7 @@ def create_test_vm(tsg_user, id):
     )
     vm.save()
     GuacamoleConnection(user=get_object_or_404(GuacamoleUser, system_user=tsg_user), connection_id=guacamole_connection_id, connection_group_id=guacamole_connection_group_id, vm=vm).save()
-    VMUser.objects.create(vm=vm, username="jin", password="123456")
+    # VMUser.objects.create(vm=vm, username="jin", password="123456")
     
 def confirm_test_vm(request, request_id):
     request_entry = get_object_or_404(RequestEntry, pk=request_id)
@@ -542,12 +545,19 @@ def reject_test_vm(request, request_id):
     guacamole_connection.is_active = False
     guacamole_connection.save()
     guacamole.delete_connection_group(guacamole_connection.connection_group_id)
+
     if vm.status == VirtualMachines.Status.ACTIVE:
-        proxmox.stop_vm(vm.node, vm.vm_id)
+
+        # proxmox.stop_vm(vm.node, vm.vm_id)
+
         vm.status = VirtualMachines.Status.SHUTDOWN
         vm.save()
-    proxmox.wait_for_vm_stop(vm.node, vm.vm_id)
-    proxmox.delete_vm(vm.node, vm.vm_id)
+
+        # proxmox.wait_for_vm_stop(vm.node, vm.vm_id)
+
+    
+    # proxmox.delete_vm(vm.node, vm.vm_id)
+
     vm.status = VirtualMachines.Status.DESTROYED
     vm.save()
 
@@ -560,10 +570,10 @@ def vm_provision(id):
     vm = get_object_or_404(VirtualMachines, request=request_entry)
 
     if vm.status == VirtualMachines.Status.ACTIVE:
-        proxmox.shutdown_vm(vm.node, vm.vm_id)
+        # proxmox.shutdown_vm(vm.node, vm.vm_id)
         vm.status = VirtualMachines.Status.SHUTDOWN
         vm.save()
-        proxmox.wait_for_vm_stop(vm.node, vm.vm_id)
+        # proxmox.wait_for_vm_stop(vm.node, vm.vm_id)
     request_use_cases = RequestUseCase.objects.filter(request=request_entry).values('request_use_case', 'vm_count')
     classnames = []
     total_no_of_vm = get_total_no_of_vm(request_entry) - 1
@@ -607,15 +617,15 @@ def delete_request(request, request_id):
 
     for vm in vms:
         if vm.status == VirtualMachines.Status.ACTIVE:
-            proxmox.stop_vm(vm.node, vm.vm_id)
+            # proxmox.stop_vm(vm.node, vm.vm_id)
             vm.status = VirtualMachines.Status.SHUTDOWN
             vm.save()
 
     for vm in vms:
         vm.status = VirtualMachines.Status.DESTROYED
         vm.save()
-        proxmox.wait_for_vm_stop(vm.node, vm.vm_id)
-        proxmox.delete_vm(vm.node, vm.vm_id)
+        # proxmox.wait_for_vm_stop(vm.node, vm.vm_id)
+        # proxmox.delete_vm(vm.node, vm.vm_id)
         guacamole_connection = get_object_or_404(GuacamoleConnection, vm=vm)
         guacamole_connection.is_active = False
         guacamole_connection.save()
