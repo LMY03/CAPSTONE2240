@@ -17,20 +17,21 @@
       debug:
         var: fdisk_output.stdout_lines
 
-    - name: Delete partition /dev/sda2
-      parted:
-        device: /dev/sda
-        number: 2
-        state: absent
-
-    - name: Create new primary partition on /dev/sda
-      parted:
-        device: /dev/sda
-        number: 2
-        part_start: 0%
-        part_end: 100%
-        fs_type: ext4
-        state: present
+    - name: Use fdisk to delete and recreate the partition
+      expect:
+        command: fdisk /dev/sda
+        responses:
+          'Command (m for help):': 'p\n'
+          'Command (m for help):': 'd\n'
+          'Partition number (1, 2, default 2):': '2\n'
+          'Command (m for help):': 'n\n'
+          'Select (default p):': 'p\n'
+          'Partition number (2-4, default 2):': '2\n'
+          'First sector': '\n'
+          'Last sector, +sectors or +size{K,M,G,T,P} (2048-104857599, default 104857599):': '\n'
+          'Do you want to remove the signature? [Y]es/[N]o:': 'N\n'
+          'Command (m for help):': 'w\n'
+        timeout: 60
 
     - name: Resize the filesystem
       command: resize2fs /dev/sda2
