@@ -1,42 +1,52 @@
 ---
-- name: Resize disk and file system
-  hosts: all
+- name: Resize disk and filesystem dynamically
+  hosts: your_host_group
   become: yes
   tasks:
-    - name: Ensure parted and gdisk are installed
+    - name: Ensure parted is installed
       apt:
-        name:
-          - parted
-          - gdisk
+        name: parted
         state: present
 
-    - name: Print current partition table
-      command: fdisk -l /dev/sda
-      register: fdisk_output
-      ignore_errors: yes
+    - name: Check current partition layout
+      command: lsblk -no NAME,MOUNTPOINT | grep -E "\s/$"
+      register: root_partition_output
 
-    - name: Print current partition table to logs
+    - name: Set root partition fact
+      set_fact:
+        root_partition: "/dev/{{ root_partition_output.stdout.split()[0] }}"
+
+    - name: Print root partition
       debug:
-        var: fdisk_output.stdout_lines
+        msg: "Root partition is {{ root_partition }}"
 
-    - name: Unmount all partitions on /dev/sda
-      command: umount /dev/sda2
-      ignore_errors: yes
+    - name: Backup partition table
+      command: sfdisk --dump {{ root_partition | regex_replace('/[^/]+$', '') }} > /root/partition_table.bak
+      when: not ansible_check_mode
 
-    - name: Use sgdisk to delete and recreate the partition
-      shell: |
-        sgdisk --delete=2 /dev/sda
-        sgdisk --new=2:0:0 /dev/sda
-        partprobe /dev/sda
-      ignore_errors: yes
+    - name: Repartition the disk
+      parted:
+        device: "{{ root_partition | regex_replace('/[^/]+$', '') }}"
+        number: "{{ root_partition | regex_replace('^.*([0-9]+)$', '\\1') }}"
+        state: present
+        part_type: primary
+        fs_type: ext4
+        resize: yes
+        start: "{{ root_partition | regex_replace('^.*([0-9]+)$', '\\1') }}s"
+        end: 100%
+      when: not ansible_check_mode
 
     - name: Resize the filesystem
-      command: resize2fs /dev/sda2
+      filesystem:
+        fstype: ext4
+        dev: "{{ root_partition }}"
+        resizefs: yes
+      when: not ansible_check_mode
 
-    - name: Print the new disk usage
-      command: df -h
-      register: disk_usage
+    - name: Verify the filesystem size
+      command: df -h "{{ root_partition }}"
+      register: df_output
 
-    - name: Print new disk usage to logs
+    - name: Print df output
       debug:
-        var: disk_usage.stdout_lines
+        msg: "{{ df_output.stdout }}"
