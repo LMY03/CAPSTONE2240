@@ -34,7 +34,7 @@ def run_playbook(playbook, inventory):
         private_data_dir='/app/ansible',
         playbook=playbook,
         inventory=inventory,
-        extravars={"ansible_become_pass": DEFAULT_VM_USERNAME}
+        extravars={"ansible_become_pass": DEFAULT_VM_PASSWORD}
     )
 
     if result.rc == 0 : return JsonResponse({'status': 'Playbook executed successfully'})
