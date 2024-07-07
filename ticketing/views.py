@@ -399,7 +399,7 @@ def request_confirm(request, request_id):
     request_entry = get_object_or_404(RequestEntry, pk=request_id)
 
     create_test_vm(request.user, request_id)
-    
+
     request_entry.status = RequestEntry.Status.PROCESSING
     request_entry.save()
 
@@ -475,7 +475,7 @@ def create_test_vm(tsg_user, id):
     tsg_gaucamole_user = get_object_or_404(GuacamoleUser, system_user=tsg_user)
     guacamole_connection_group_id = guacamole.create_connection_group(f"{id}")
     guacamole.assign_connection_group(tsg_gaucamole_user.username, guacamole_connection_group_id)
-    guacamole_connection_id = guacamole.create_connection(vm_name, "rdp", 3389, ip_add, config('ccs_user'), config('DLSU1234'), guacamole_connection_group_id)
+    guacamole_connection_id = guacamole.create_connection(vm_name, "rdp", 3389, ip_add, config('DEFAULT_VM_USERNAME'), config('DEFAULT_VM_PASSWORD'), guacamole_connection_group_id)
     guacamole.assign_connection(tsg_gaucamole_user.username, guacamole_connection_id)
 
     vm = VirtualMachines(
