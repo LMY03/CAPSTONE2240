@@ -14,7 +14,7 @@ TSG Dashboard
                         <div class="d-flex justify-content-between align-items-center">
                             <h1>Detail View for the Request Ticket</h1>
                             <div>
-                                {% if request_entry.status == "PROCESSING" %}
+                                {% if request_entry.status == "PROCESSING" and request_entry.is_vm_tested == False %}
                                 <form id="start_vm_form" action="{% url 'guacamole:access_vm' %}" method="post" onsubmit="submitForm(event)" class="d-inline">
                                     {% csrf_token %}
                                     <input type="hidden" id="vm_id" name="vm_id" value="{{ request_entry.vm_id }}" />
