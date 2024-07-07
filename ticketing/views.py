@@ -16,7 +16,6 @@ from guacamole.models import GuacamoleConnection, GuacamoleUser
 
 from guacamole import guacamole
 from proxmox import views
-from autotool import ansible
 
 # Create your views here.
 
@@ -455,7 +454,6 @@ def create_test_vm(tsg_user, id):
     # proxmox.config_vm(node, new_vm_id, cpu_cores, ram)
     # proxmox.start_vm(node, new_vm_id)
     # ip_add = proxmox.wait_and_get_ip(node, new_vm_id)
-    # ansible.resize_vm_disk(node, vm_id, ip_add)
     # proxmox.shutdown_vm(node, new_vm_id)
 
 
