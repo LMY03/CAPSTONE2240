@@ -1,51 +1,44 @@
 ---
-- name: Resize disk and filesystem
+- name: Resize disk and file system
   hosts: all
   become: yes
   tasks:
-    - name: Check the current disk size
-      command: lsblk -o NAME,SIZE
-      register: disk_info_before
+    - name: Ensure parted is installed
+      apt:
+        name: parted
+        state: present
 
-    - name: Print disk information before resizing
+    - name: Print current partition table
+      command: fdisk -l /dev/sda
+      register: fdisk_output
+      ignore_errors: yes
+
+    - name: Print current partition table to logs
       debug:
-        var: disk_info_before.stdout_lines
+        var: fdisk_output.stdout_lines
 
-    - name: Rescan the disk to recognize the new size
-      command: sudo partprobe
-
-    - name: Resize partition using parted
+    - name: Delete partition /dev/sda2
       parted:
         device: /dev/sda
-        number: 1
+        number: 2
+        state: absent
+
+    - name: Create new primary partition on /dev/sda
+      parted:
+        device: /dev/sda
+        number: 2
+        part_start: 0%
+        part_end: 100%
+        fs_type: ext4
         state: present
-        resize: yes
-        end: 100%
-      notify: resize_filesystem
 
-    - name: Check the current partition size
-      command: lsblk -o NAME,SIZE
-      register: disk_info_after
+    - name: Resize the filesystem
+      command: resize2fs /dev/sda2
 
-    - name: Print disk information after resizing
-      debug:
-        var: disk_info_after.stdout_lines
-
-  handlers:
-    - name: resize_filesystem
-      block:
-        - name: Resize ext4 filesystem
-          command: sudo resize2fs /dev/sda1
-          when: filesystem_type == "ext4"
-
-        - name: Resize xfs filesystem
-          command: sudo xfs_growfs /
-          when: filesystem_type == "xfs"
-
-    - name: Verify the new disk size
+    - name: Print the new disk usage
       command: df -h
       register: disk_usage
 
-    - name: Print disk usage
+    - name: Print new disk usage to logs
       debug:
         var: disk_usage.stdout_lines
