@@ -19,9 +19,7 @@ from proxmox.models import VirtualMachines
 #     print(guacamole.create_user(guacamole_username, guacamole_password))
 
 def access_vm(request):
-    print("access_vm -------------------------------")
     if request.method == "POST":
-        print("-------------------------------")
 
         data = request.POST
         vm_id = data.get("vm_id")
@@ -32,10 +30,8 @@ def access_vm(request):
         connection_id = get_object_or_404(GuacamoleConnection, vm=vm).connection_id
 
         if vm.status == VirtualMachines.Status.SHUTDOWN:
-            # proxmox.start_vm(vm.node, vm.vm_id)
-            # ip_add = proxmox.wait_and_get_ip(vm.node, vm.vm_id)
-
-            ip_add = vm.ip_add
+            proxmox.start_vm(vm.node, vm.vm_id)
+            ip_add = proxmox.wait_and_get_ip(vm.node, vm.vm_id)
 
             if ip_add != vm.ip_add:
                 guacamole.update_connection(connection_id, vm_id)
