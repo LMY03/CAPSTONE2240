@@ -9,7 +9,7 @@
         state: present
 
     - name: Check current partition layout
-      command: lsblk -no NAME,MOUNTPOINT | grep -E "\s/$"
+      command: lsblk -o NAME,MOUNTPOINT | grep ' /$'
       register: root_partition_output
 
     - name: Set root partition fact
