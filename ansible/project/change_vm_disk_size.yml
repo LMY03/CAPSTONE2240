@@ -1,6 +1,6 @@
 ---
 - name: Resize disk and filesystem dynamically
-  hosts: your_host_group
+  hosts: all
   become: yes
   tasks:
     - name: Ensure parted is installed
