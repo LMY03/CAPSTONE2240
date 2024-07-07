@@ -27,7 +27,6 @@ def access_vm(request):
         vm_id = data.get("vm_id")
         
         vm = get_object_or_404(VirtualMachines, id=vm_id)
-        
         guacamole_user = get_object_or_404(GuacamoleUser, system_user=request.user)
         connection_id = get_object_or_404(GuacamoleConnection, vm=vm).connection_id
 
