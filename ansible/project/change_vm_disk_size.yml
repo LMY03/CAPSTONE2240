@@ -3,9 +3,11 @@
   hosts: all
   become: yes
   tasks:
-    - name: Ensure parted is installed
+    - name: Ensure parted and gdisk are installed
       apt:
-        name: parted
+        name:
+          - parted
+          - gdisk
         state: present
 
     - name: Print current partition table
@@ -17,21 +19,16 @@
       debug:
         var: fdisk_output.stdout_lines
 
-    - name: Use fdisk to delete and recreate the partition
-      expect:
-        command: fdisk /dev/sda
-        responses:
-          'Command (m for help):': 'p\n'
-          'Command (m for help):': 'd\n'
-          'Partition number (1, 2, default 2):': '2\n'
-          'Command (m for help):': 'n\n'
-          'Select (default p):': 'p\n'
-          'Partition number (2-4, default 2):': '2\n'
-          'First sector': '\n'
-          'Last sector, +sectors or +size{K,M,G,T,P} (2048-104857599, default 104857599):': '\n'
-          'Do you want to remove the signature? [Y]es/[N]o:': 'N\n'
-          'Command (m for help):': 'w\n'
-        timeout: 60
+    - name: Unmount all partitions on /dev/sda
+      command: umount /dev/sda2
+      ignore_errors: yes
+
+    - name: Use sgdisk to delete and recreate the partition
+      shell: |
+        sgdisk --delete=2 /dev/sda
+        sgdisk --new=2:0:0 /dev/sda
+        partprobe /dev/sda
+      ignore_errors: yes
 
     - name: Resize the filesystem
       command: resize2fs /dev/sda2
