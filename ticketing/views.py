@@ -8,6 +8,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.forms.models import model_to_dict
 from django.http import JsonResponse
+from decouple import config
 import json, datetime
 
 from .models import RequestEntry, Comment, RequestUseCase, PortRules, UserProfile, RequestEntryAudit, VMTemplates
@@ -473,7 +474,7 @@ def create_test_vm(tsg_user, id):
     tsg_gaucamole_user = get_object_or_404(GuacamoleUser, system_user=tsg_user)
     guacamole_connection_group_id = guacamole.create_connection_group(f"{id}")
     guacamole.assign_connection_group(tsg_gaucamole_user.username, guacamole_connection_group_id)
-    guacamole_connection_id = guacamole.create_connection(vm_name, "rdp", 3389, ip_add, "jin", "123456", guacamole_connection_group_id)
+    guacamole_connection_id = guacamole.create_connection(vm_name, "rdp", 3389, ip_add, config('ccs_user'), config('DLSU1234'), guacamole_connection_group_id)
     guacamole.assign_connection(tsg_gaucamole_user.username, guacamole_connection_id)
 
     vm = VirtualMachines(
