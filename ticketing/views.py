@@ -397,10 +397,11 @@ def edit_form_submit(request):
 
 def request_confirm(request, request_id):
     request_entry = get_object_or_404(RequestEntry, pk=request_id)
-    request_entry.status = RequestEntry.Status.PROCESSING
-    request_entry.save()
 
     create_test_vm(request.user, request_id)
+    
+    request_entry.status = RequestEntry.Status.PROCESSING
+    request_entry.save()
 
     return redirect('ticketing:request_details', request_id)
 
