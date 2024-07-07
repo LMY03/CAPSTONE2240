@@ -19,7 +19,9 @@ from proxmox.models import VirtualMachines
 #     print(guacamole.create_user(guacamole_username, guacamole_password))
 
 def access_vm(request):
+    print("access_vm -------------------------------")
     if request.method == "POST":
+        print("-------------------------------")
 
         data = request.POST
         vm_id = data.get("vm_id")
