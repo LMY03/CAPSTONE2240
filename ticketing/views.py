@@ -449,12 +449,12 @@ def create_test_vm(tsg_user, id):
     
     # ip_add = "10.10.10.1"
 
-    upid = proxmox.clone_vm(node, vm_id, new_vm_id, vm_name)
-    proxmox.wait_for_task(node, upid)
-    proxmox.config_vm(node, new_vm_id, cpu_cores, ram)
-    proxmox.start_vm(node, new_vm_id)
-    ip_add = proxmox.wait_and_get_ip(node, new_vm_id)
-    proxmox.shutdown_vm(node, new_vm_id)
+    upid = proxmox.clone_vm(node.name, vm_id, new_vm_id, vm_name)
+    proxmox.wait_for_task(node.name, upid)
+    proxmox.config_vm(node.name, new_vm_id, cpu_cores, ram)
+    proxmox.start_vm(node.name, new_vm_id)
+    ip_add = proxmox.wait_and_get_ip(node.name, new_vm_id)
+    proxmox.shutdown_vm(node.name, new_vm_id)
 
 
     # faculty_guacamole_username = get_object_or_404(GuacamoleUser, system_user=request_entry.requester).username
