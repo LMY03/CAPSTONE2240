@@ -106,7 +106,7 @@ TSG Dashboard
                                 </div>
                             </div>
                         </div>
-                        {% if request_entry.status == "PENDING" or request_entry.status == "PROCESSING" or request_entry.status == "FOR_REVISION" or request_entry.status == "ACCEPTED"%}
+                        {% if request_entry.status == "PENDING" or request_entry.status == "PROCESSING" or request_entry.status == "FOR_REVISION" or request_entry.status == "ACCEPTED" or request_entry.status == "ONGOING"%}
                         <div class="row g-3 mt-3">
                             <div class="col">
                                 {% if request_entry.status == "PENDING" or request_entry.status == "FOR_REVISION" %}

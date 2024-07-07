@@ -11,11 +11,11 @@ from django.http import JsonResponse
 import json, datetime
 
 from .models import RequestEntry, Comment, RequestUseCase, PortRules, UserProfile, RequestEntryAudit, VMTemplates
-from proxmox.models import VirtualMachines
+from proxmox.models import VirtualMachines, Nodes
 from guacamole.models import GuacamoleConnection, GuacamoleUser
 
 from guacamole import guacamole
-from proxmox import views
+from proxmox import views, proxmox
 
 # Create your views here.
 
@@ -81,11 +81,10 @@ def faculty_request_details(request, request_id):
         'comments' : comments,
         'request_use_cases': request_use_cases,
     }
-    if 'credentials' in request.session : request_entry.has_credentials = True
     request_entry.storage = request_entry.template.storage
     return render (request, 'ticketing/faculty_request_details.html', context=context)
 
-def tsg_request_details (request, request_id):
+def tsg_request_details(request, request_id):
     request_entry = get_object_or_404(RequestEntry, pk=request_id)
 
     request_use_cases = RequestUseCase.objects.filter(request=request_entry)
@@ -105,6 +104,7 @@ def tsg_request_details (request, request_id):
         'comments' : comments,
         'request_use_cases': request_use_cases,
     }
+    if 'credentials' in request.session : request_entry.has_credentials = True
     request_entry.storage = request_entry.template.storage
     return render (request, 'ticketing/tsg_request_details.html', context = context)
 
@@ -394,14 +394,14 @@ def edit_form_submit(request):
 
     return JsonResponse({'status': 'ok'}, status=200)
 
-def request_confirm(request, id):
-    request_entry = get_object_or_404(RequestEntry, pk=id)
+def request_confirm(request, request_id):
+    request_entry = get_object_or_404(RequestEntry, pk=request_id)
     request_entry.status = RequestEntry.Status.PROCESSING
     request_entry.save()
 
-    create_test_vm(request.user, id)
+    create_test_vm(request.user, request_id)
 
-    return redirect(f'/ticketing/{id}/details')
+    return redirect('ticketing:request_details', request_id)
 
 def request_reject(request, id):
     request_entry = get_object_or_404(RequestEntry, pk=id)
@@ -439,7 +439,7 @@ def get_total_no_of_vm(request_entry):
 
 def create_test_vm(tsg_user, id): 
     new_vm_id = views.generate_vm_ids(1)[0]
-    node = "pve"
+    node = get_object_or_404(Nodes, name="pve")
     request_entry = get_object_or_404(RequestEntry, pk=id)
     vm_id = int(request_entry.template.vm_id)
     request_use_case = RequestUseCase.objects.filter(request=request_entry.pk).values('request_use_case', 'vm_count')[0]
@@ -447,14 +447,14 @@ def create_test_vm(tsg_user, id):
     cpu_cores = int(request_entry.cores)
     ram = int(request_entry.ram)
     
-    ip_add = "10.10.10.1"
+    # ip_add = "10.10.10.1"
 
-    # upid = proxmox.clone_vm(node, vm_id, new_vm_id, vm_name)
-    # proxmox.wait_for_task(node, upid)
-    # proxmox.config_vm(node, new_vm_id, cpu_cores, ram)
-    # proxmox.start_vm(node, new_vm_id)
-    # ip_add = proxmox.wait_and_get_ip(node, new_vm_id)
-    # proxmox.shutdown_vm(node, new_vm_id)
+    upid = proxmox.clone_vm(node, vm_id, new_vm_id, vm_name)
+    proxmox.wait_for_task(node, upid)
+    proxmox.config_vm(node, new_vm_id, cpu_cores, ram)
+    proxmox.start_vm(node, new_vm_id)
+    ip_add = proxmox.wait_and_get_ip(node, new_vm_id)
+    proxmox.shutdown_vm(node, new_vm_id)
 
 
     # faculty_guacamole_username = get_object_or_404(GuacamoleUser, system_user=request_entry.requester).username
@@ -546,32 +546,34 @@ def reject_test_vm(request, request_id):
 
     if vm.status == VirtualMachines.Status.ACTIVE:
 
-        # proxmox.stop_vm(vm.node, vm.vm_id)
+        proxmox.stop_vm(vm.node.name, vm.vm_id)
 
         vm.status = VirtualMachines.Status.SHUTDOWN
         vm.save()
 
-        # proxmox.wait_for_vm_stop(vm.node, vm.vm_id)
-
+        proxmox.wait_for_vm_stop(vm.node.name, vm.vm_id)
     
-    # proxmox.delete_vm(vm.node, vm.vm_id)
+    proxmox.delete_vm(vm.node.name, vm.vm_id)
 
     vm.status = VirtualMachines.Status.DESTROYED
     vm.save()
 
     return HttpResponseRedirect(reverse("ticketing:index"))
 
-def vm_provision(id):
+def vm_provision(request_id):
 
-    node = "pve"
-    request_entry = get_object_or_404(RequestEntry, pk=id)
+    request_entry = get_object_or_404(RequestEntry, pk=request_id)
     vm = get_object_or_404(VirtualMachines, request=request_entry)
 
     if vm.status == VirtualMachines.Status.ACTIVE:
-        # proxmox.shutdown_vm(vm.node, vm.vm_id)
+
+        proxmox.shutdown_vm(vm.node.name, vm.vm_id)
+
         vm.status = VirtualMachines.Status.SHUTDOWN
         vm.save()
-        # proxmox.wait_for_vm_stop(vm.node, vm.vm_id)
+
+        proxmox.wait_for_vm_stop(vm.node.name, vm.vm_id)
+        
     request_use_cases = RequestUseCase.objects.filter(request=request_entry).values('request_use_case', 'vm_count')
     classnames = []
     total_no_of_vm = get_total_no_of_vm(request_entry) - 1
@@ -579,10 +581,10 @@ def vm_provision(id):
     for request_use_case in request_use_cases:
         for i in range(request_use_case['vm_count']):
                 classnames.append(f"{request_use_case['request_use_case'].replace('_', '-')}-Group-{i + 1}")
-    vm_name = classnames[0]
+    # vm_name = classnames[0]
     classnames.pop(0)
     
-    guacamole_connection = get_object_or_404(GuacamoleConnection, vm=vm)
+    # guacamole_connection = get_object_or_404(GuacamoleConnection, vm=vm)
 
     # tsg_guacamole_username = get_object_or_404(GuacamoleUser, system_user=request_entry.requester).username
     # faculty_guacamole_username = get_object_or_404(GuacamoleUser, system_user=request_entry.requester).username
@@ -590,22 +592,22 @@ def vm_provision(id):
     # guacamole.revoke_connection_group(tsg_guacamole_username, guacamole_connection.connection_group_id)
     
     # Create System and Guacamole User
-    passwords = User.objects.make_random_password()
-    user = User(username=vm_name)
-    user.set_password(passwords)
-    user.save()
-    UserProfile.objects.create(user=user)
+    # passwords = User.objects.make_random_password()
+    # user = User(username=vm_name)
+    # user.set_password(passwords)
+    # user.save()
+    # UserProfile.objects.create(user=user)
 
     # guacamole.revoke_connection(tsg_guacamole_username, guacamole_connection.connection_id)
     # guacamole.assign_connection(vm_name, guacamole_connection.connection_id)
     # guacamole.assign_connection(faculty_guacamole_username, guacamole_connection.connection_id)
-    guacamole_connection.user = get_object_or_404(GuacamoleUser, system_user=user)
-    guacamole_connection.save()
+    # guacamole_connection.user = get_object_or_404(GuacamoleUser, system_user=user)
+    # guacamole_connection.save()
 
     cpu_cores = int(request_entry.cores)
     ram = int(request_entry.ram)
 
-    return views.vm_provision_process(node, vm.vm_id, classnames, total_no_of_vm, cpu_cores, ram, id)
+    return views.vm_provision_process(vm.vm_id, classnames, total_no_of_vm, cpu_cores, ram, request_id)
 
 def delete_request(request, request_id):
     request_entry = get_object_or_404(RequestEntry, pk=request_id)
@@ -615,15 +617,18 @@ def delete_request(request, request_id):
 
     for vm in vms:
         if vm.status == VirtualMachines.Status.ACTIVE:
-            # proxmox.stop_vm(vm.node, vm.vm_id)
+
+            proxmox.stop_vm(vm.node.name, vm.vm_id)
+
             vm.status = VirtualMachines.Status.SHUTDOWN
             vm.save()
 
     for vm in vms:
         vm.status = VirtualMachines.Status.DESTROYED
         vm.save()
-        # proxmox.wait_for_vm_stop(vm.node, vm.vm_id)
-        # proxmox.delete_vm(vm.node, vm.vm_id)
+
+        proxmox.wait_for_vm_stop(vm.node.name, vm.vm_id)
+        proxmox.delete_vm(vm.node.name, vm.vm_id)
         guacamole_connection = get_object_or_404(GuacamoleConnection, vm=vm)
         guacamole_connection.is_active = False
         guacamole_connection.save()

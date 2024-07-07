@@ -20,7 +20,7 @@ def change_vm_default_userpass(request_id, vm_passwords):
     hostnames = get_vm_ip_adds(request_id)
     # inventory = "[request]\n"
     inventory = ""
-    for i in range(len(hostnames)) : inventory += f"{hostnames[i]} ansible_user={DEFAULT_VM_USERNAME} ansible_ssh_pass={DEFAULT_VM_PASSWORD}\n"
+    for i in range(len(hostnames)) : inventory += f"{hostnames[i]} ansible_user={DEFAULT_VM_USERNAME}\n"
 
     return run_playbook('change_vm_pass.yml', inventory, extra_vars)
 
@@ -29,12 +29,12 @@ def resize_vm_disk(ip_add):
 
     return run_playbook('change_vm_disk_size.yml', inventory)
 
-def run_playbook(playbook, inventory):
+def run_playbook(playbook, inventory, extra_vars):
     result = ansible_runner.run(
         private_data_dir='/app/ansible',
         playbook=playbook,
         inventory=inventory,
-        extravars={"ansible_become_pass": DEFAULT_VM_PASSWORD}
+        extravars=extra_vars
     )
 
     if result.rc == 0 : return JsonResponse({'status': 'Playbook executed successfully'})

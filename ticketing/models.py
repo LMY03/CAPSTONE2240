@@ -5,12 +5,6 @@ from django.utils import timezone
 from datetime import date, timedelta
 import json
 
-# from guacamole.models import GuacamoleUser
-
-# from guacamole import guacamole
-
-# from guacamole.views import create_guacamole_user
-
 def expiration_date_default():
     return date.today() + timedelta(days=90)
 
@@ -26,55 +20,46 @@ class VMTemplates(models.Model):
     node = models.CharField(max_length= 45)
     is_lxc = models.BooleanField(default=False)
 
-
 class RequestEntry(models.Model):
-    expirationDateDefault = expiration_date_default
-    dateNeededDefault = date_needed_default
+
+    ram = models.IntegerField(default=2)
+    #storage = models.FloatField(default= 0)
+    has_internet = models.BooleanField(default=False)
+    other_config = models.TextField(blank=True, null=True)
     
     class Status(models.TextChoices):
-        PENDING = 'PENDING', "PENDING"
-        FOR_REVISION = 'FOR_REVISION', "FOR REVISION"
-        PROCESSING = 'PROCESSING', "PROCESSING"
-        ONGOING = 'ONGOING', "ONGOING"  # Tentative
-        COMPLETED = 'COMPLETED', "COMPLETED"
-        ACCEPTED = 'ACCEPTED', "ACCEPTED"
-        REJECTED = 'REJECTED', "REJECTED"
-        DELETED = 'DELETED', "DELETED"
+        PENDING = 'PENDING'
+        FOR_REVISION = 'FOR REVISION'
+        PROCESSING = 'PROCESSING'
+        ONGOING = 'ONGOING'
+        COMPLETED = 'COMPLETED'
+        ACCEPTED = 'ACCEPTED'
+        DELETED = 'DELETED'
+        REJECTED = 'REJECTED'
 
     status = models.CharField(
         max_length=20, 
         choices=Status.choices,
         default=Status.PENDING)
 
-    requester = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='requested_entries')
+    requester = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name='requested_entries')
     fulfilled_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='fulfilled_entries')
-    assigned_to = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='assigned_entries')
-    template = models.ForeignKey(VMTemplates, on_delete=models.SET_NULL, null=True)
+    # assigned_to = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='assigned_entries')
+    template = models.ForeignKey(VMTemplates, on_delete=models.DO_NOTHING)
     cores = models.IntegerField(default=1)
     # security options
-    date_needed = models.DateField(default = dateNeededDefault)
-    expiration_date = models.DateField(default = expirationDateDefault)
     isExpired = models.BooleanField(default=False)
     requestDate = models.DateTimeField (default = timezone.now)
-    ram = models.IntegerField(default=2)
-    #storage = models.FloatField(default= 0)
-    has_internet = models.BooleanField(default=False)
-    other_config = models.TextField(blank=True, null=True)
+
+    date_needed = models.DateField(default=expiration_date_default)
+    expiration_date = models.DateField(default=date_needed_default)
+
     is_vm_tested = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.id} - {self.status}"
 
 class RequestEntryAudit(models.Model):
-    class Status(models.TextChoices):
-        PENDING = 'PENDING', "PENDING"
-        FOR_REVISION = 'FOR_REVISION', "FOR REVISION"
-        PROCESSING = 'PROCESSING', "PROCESSING"
-        ONGOING = 'ONGOING', "ONGOING"  # Tentative
-        COMPLETED = 'COMPLETED', "COMPLETED"
-        REJECTED = 'REJECTED', "REJECTED"
-        DELETED = 'DELETED', "DELETED"
-
     request_entry = models.ForeignKey('RequestEntry', on_delete=models.CASCADE, related_name='audits')
     changed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     change_date = models.DateTimeField(auto_now_add=True)
