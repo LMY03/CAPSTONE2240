@@ -31,9 +31,9 @@ class RequestEntry(models.Model):
         PENDING = 'PENDING'
         FOR_REVISION = 'FOR REVISION'
         PROCESSING = 'PROCESSING'
+        ACCEPTED = 'ACCEPTED'
         ONGOING = 'ONGOING'
         COMPLETED = 'COMPLETED'
-        ACCEPTED = 'ACCEPTED'
         DELETED = 'DELETED'
         REJECTED = 'REJECTED'
 
@@ -56,6 +56,27 @@ class RequestEntry(models.Model):
 
     is_vm_tested = models.BooleanField(default=False)
 
+    def is_pending(self) : return self.status == RequestEntry.Status.PENDING
+    def is_for_revision(self) : return self.status == RequestEntry.Status.FOR_REVISION
+    def is_processing(self) : return self.status == RequestEntry.Status.PROCESSING
+    def is_ongoing(self) : return self.status == RequestEntry.Status.ONGOING
+    def is_completed(self) : return self.status == RequestEntry.Status.COMPLETED
+    def is_accepted(self) : return self.status == RequestEntry.Status.ACCEPTED
+    def is_deleted(self) : return self.status == RequestEntry.Status.DELETED
+    def is_rejected(self) : return self.status == RequestEntry.Status.REJECTED
+
+    def get_request_type(self):
+        request_use_case = RequestUseCase.objects.filter(request=self)[0].request_use_case
+        if request_use_case == 'RESEARCH' : return 'Research'
+        elif request_use_case == 'THESIS' : return 'Thesis'
+        elif request_use_case == 'TEST' : return 'Test'
+        else : return 'Class Course'
+
+    def is_course(self) : return self.get_request_type() == 'Class Course'
+    def is_research(self) : return self.get_request_type() == 'Research'
+    def is_thesis(self) : return self.get_request_type() == 'Thesis'
+    def is_test(self) : return self.get_request_type() == 'Test'
+
     def __str__(self):
         return f"{self.id} - {self.status}"
 
@@ -77,8 +98,8 @@ class RequestEntryAudit(models.Model):
 
 class RequestUseCase (models.Model):
     request = models.ForeignKey(RequestEntry, on_delete= models.CASCADE)
-    request_use_case = models.CharField(max_length=45, null = True , default = 'CLASS_COURSE')
-    vm_count = models.IntegerField(default=1, null = True)
+    request_use_case = models.CharField(max_length=45, null=True, default='CLASS_COURSE')
+    vm_count = models.IntegerField(default=1, null=True)
 
 # class GroupList (models.Model):
 #     user = models.CharField(null=False, max_length=50, default=" ")
@@ -88,8 +109,8 @@ class RequestUseCase (models.Model):
 
 class PortRules (models.Model):
     request = models.ForeignKey(RequestEntry, on_delete= models.CASCADE)
-    protocol = models.CharField (max_length=45, blank= True, null = True)
-    dest_ports = models.CharField (max_length=45, blank= True, null = True)
+    protocol = models.CharField (max_length=45, blank=True, null=True)
+    dest_ports = models.CharField (max_length=45, blank=True, null=True)
     #description = models.TextField(blank= True, null = True)
 
 class UserProfile (models.Model):

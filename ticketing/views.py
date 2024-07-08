@@ -96,57 +96,19 @@ def tsg_request_details(request, request_id):
         elif request_use_case.request_use_case == 'TEST' : request_entry.use_case = 'Test'
         else: request_entry.use_case = 'Class Course'
 
-
-    if request_entry.status == RequestEntry.Status.PROCESSING: request_entry.vm_id = get_object_or_404(VirtualMachines, request=request_entry).id
+    if request_entry.is_processing() : request_entry.vm_id = get_object_or_404(VirtualMachines, request=request_entry).id
 
     comments = Comment.objects.filter(request_entry=request_entry).order_by('date_time')
     context = {
         'request_entry': request_entry,
         'comments' : comments,
         'request_use_cases': request_use_cases,
+        'no_vm': get_total_no_of_vm(request_entry)
     }
+    if request_entry.is_pending() : context['nodes'] = Nodes.objects.all().values_list('name', flat=True)
     if 'credentials' in request.session : request_entry.has_credentials = True
     request_entry.storage = request_entry.template.storage
-    return render (request, 'ticketing/tsg_request_details.html', context = context)
-
-class DetailView(generic.DetailView):
-    model = RequestEntry
-    template_name = "ticketing/detail.html"
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        pk = self.kwargs.get('pk')
-        request_entry = get_object_or_404(RequestEntry, pk=pk)
-
-        request_entry_details = RequestEntry.objects.select_related("requester", "template").values(
-            "status",
-            "requester__first_name",
-            "requester__last_name",
-            "cores",
-            "ram",
-            #"storage",
-            "has_internet",
-            "id",
-            "template__vm_name",
-            #"use_case",
-            "date_needed",
-            'expiration_date',
-            "other_config",
-            #"vm_count",
-        ).get(pk=pk)
-
-
-        request_use_cases = RequestUseCase.objects.filter(request_id=pk)
-
-
-        comments = Comment.objects.filter(request_entry=request_entry).order_by('date_time')
-        context['request_entry'] = {
-            'details': request_entry_details,
-            'comments' : comments,
-            'request_use_case': request_use_cases
-        }
-        print(context)
-        return context
+    return render (request, 'ticketing/tsg_request_details.html', context=context)
 
 @login_required
 def add_comment(request, pk):
@@ -396,23 +358,31 @@ def edit_form_submit(request):
     return JsonResponse({'status': 'ok'}, status=200)
 
 def request_confirm(request, request_id):
-    request_entry = get_object_or_404(RequestEntry, pk=request_id)
 
-    create_test_vm(request.user, request_id)
+    if request.method == 'POST':
 
-    request_entry.status = RequestEntry.Status.PROCESSING
-    request_entry.save()
+        data = request.POST
+        node = data.get('node')
+
+        request_entry = get_object_or_404(RequestEntry, pk=request_id)
+
+        create_test_vm(request.user, request_id, node)
+
+        request_entry.status = RequestEntry.Status.PROCESSING
+        request_entry.save()
 
     return redirect('ticketing:request_details', request_id)
 
 def request_reject(request, id):
+
     request_entry = get_object_or_404(RequestEntry, pk=id)
     request_entry.status = RequestEntry.Status.REJECTED
     request_entry.save()
 
     return HttpResponseRedirect(reverse("ticketing:index"))
 
-def request_test_vm_ready(request, id): 
+def request_test_vm_ready(request, id):
+    
     request_entry = get_object_or_404(RequestEntry, pk=id)
     request_entry.is_vm_tested = True
     request_entry.save()
@@ -439,13 +409,19 @@ def get_total_no_of_vm(request_entry):
     for request_use_case in request_use_cases : total_no_of_vm += int(request_use_case['vm_count'])
     return total_no_of_vm
 
-def create_test_vm(tsg_user, id): 
+def create_test_vm(tsg_user, request_id, node): 
     new_vm_id = views.generate_vm_ids(1)[0]
-    node = get_object_or_404(Nodes, name="pve")
-    request_entry = get_object_or_404(RequestEntry, pk=id)
+    node = get_object_or_404(Nodes, name=node)
+    request_entry = get_object_or_404(RequestEntry, pk=request_id)
     vm_id = int(request_entry.template.vm_id)
+
     request_use_case = RequestUseCase.objects.filter(request=request_entry.pk).values('request_use_case', 'vm_count')[0]
-    vm_name = f"{request_use_case['request_use_case'].replace('_', '-')}-Group-1"
+
+    if request_entry.is_course(): vm_name = f"{request_use_case['request_use_case'].replace('_', '-')}"
+    else: vm_name = f"{request_entry.get_request_type()}-{request_entry.requester.last_name}-{request_entry.id}"
+
+    if get_total_no_of_vm(request_entry) != 1 : vm_name = f"{vm_name}-Group-1"
+
     cpu_cores = int(request_entry.cores)
     ram = int(request_entry.ram)
     
@@ -458,22 +434,8 @@ def create_test_vm(tsg_user, id):
     ip_add = proxmox.wait_and_get_ip(node.name, new_vm_id)
     proxmox.shutdown_vm(node.name, new_vm_id)
 
-
-    # faculty_guacamole_username = get_object_or_404(GuacamoleUser, system_user=request_entry.requester).username
-    # guacamole_connection_group_id = guacamole.create_connection_group(f"{id}")
-    # guacamole.assign_connection_group(faculty_guacamole_username, guacamole_connection_group_id)
-    # guacamole_connection_id = guacamole.create_connection(vm_name, "rdp", 3389, ip_add, "jin", "123456", guacamole_connection_group_id)
-    # # Create System and Guacamole User
-    # passwords = User.objects.make_random_password()
-    # user = User(username=vm_name)
-    # user.set_password(passwords)
-    # user.save()
-    # UserProfile.objects.create(user=user)
-    # guacamole.assign_connection(vm_name, guacamole_connection_id)
-    # guacamole.assign_connection(faculty_guacamole_username, guacamole_connection_id)
-
     tsg_gaucamole_user = get_object_or_404(GuacamoleUser, system_user=tsg_user)
-    guacamole_connection_group_id = guacamole.create_connection_group(f"{id}")
+    guacamole_connection_group_id = guacamole.create_connection_group(f"{request_id}")
     guacamole.assign_connection_group(tsg_gaucamole_user.username, guacamole_connection_group_id)
     guacamole_connection_id = guacamole.create_connection(vm_name, "rdp", 3389, ip_add, config('DEFAULT_VM_USERNAME'), config('DEFAULT_VM_PASSWORD'), guacamole_connection_group_id)
     guacamole.assign_connection(tsg_gaucamole_user.username, guacamole_connection_id)
@@ -494,20 +456,24 @@ def create_test_vm(tsg_user, id):
     # VMUser.objects.create(vm=vm, username="jin", password="123456")
     
 def confirm_test_vm(request, request_id):
-    request_entry = get_object_or_404(RequestEntry, pk=request_id)
+
     request.session['credentials'] = vm_provision(request_id)
 
+    request_entry = get_object_or_404(RequestEntry, pk=request_id)
     request_entry.status = RequestEntry.Status.ONGOING
     request_entry.save()
 
-    return redirect(f'/ticketing/{request_id}/details')
+    return redirect('ticketing:request_details', request_id)
+    # return redirect(f'/ticketing/{request_id}/details')
 
 def accept_test_vm(request, request_id):
+
     request_entry = get_object_or_404(RequestEntry, pk=request_id)
     request_entry.status = RequestEntry.Status.ACCEPTED
     request_entry.save()
-
-    return redirect(f'/ticketing/{request_id}/details')
+    
+    return redirect('ticketing:request_details', request_id)
+    # return redirect(f'/ticketing/{request_id}/details')
 
 def download_credentials(request):
     details = request.session['credentials']
@@ -583,28 +549,7 @@ def vm_provision(request_id):
     for request_use_case in request_use_cases:
         for i in range(request_use_case['vm_count']):
                 classnames.append(f"{request_use_case['request_use_case'].replace('_', '-')}-Group-{i + 1}")
-    # vm_name = classnames[0]
     classnames.pop(0)
-    
-    # guacamole_connection = get_object_or_404(GuacamoleConnection, vm=vm)
-
-    # tsg_guacamole_username = get_object_or_404(GuacamoleUser, system_user=request_entry.requester).username
-    # faculty_guacamole_username = get_object_or_404(GuacamoleUser, system_user=request_entry.requester).username
-    # guacamole.assign_connection_group(faculty_guacamole_username, guacamole_connection.connection_group_id)
-    # guacamole.revoke_connection_group(tsg_guacamole_username, guacamole_connection.connection_group_id)
-    
-    # Create System and Guacamole User
-    # passwords = User.objects.make_random_password()
-    # user = User(username=vm_name)
-    # user.set_password(passwords)
-    # user.save()
-    # UserProfile.objects.create(user=user)
-
-    # guacamole.revoke_connection(tsg_guacamole_username, guacamole_connection.connection_id)
-    # guacamole.assign_connection(vm_name, guacamole_connection.connection_id)
-    # guacamole.assign_connection(faculty_guacamole_username, guacamole_connection.connection_id)
-    # guacamole_connection.user = get_object_or_404(GuacamoleUser, system_user=user)
-    # guacamole_connection.save()
 
     cpu_cores = int(request_entry.cores)
     ram = int(request_entry.ram)

@@ -31,9 +31,11 @@ def access_vm(request):
         connection_id = get_object_or_404(GuacamoleConnection, vm=vm).connection_id
 
         if vm.status == VirtualMachines.Status.SHUTDOWN:
-            
+
             proxmox.start_vm(vm.node.name, vm.vm_id)
             ip_add = proxmox.wait_and_get_ip(vm.node.name, vm.vm_id)
+
+            # ip_add = vm.ip_add
 
             if ip_add != vm.ip_add:
                 guacamole.update_connection(connection_id, vm_id)
