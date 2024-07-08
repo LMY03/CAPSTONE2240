@@ -94,7 +94,20 @@ TSG Dashboard
                                 </div>
                             </div>
                             {% endif %}
-                            
+                            {% if request_entry.has_internet == 1 %}
+                                {% for port in port_rules %}
+                                <div class="col-md-8">
+                                    <div class="p-3 bg-light border">
+                                        <p><strong>Port:</strong> {{ port.protocol }}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="p-3 bg-light border">
+                                        <p><strong>Destination Ports:</strong> {{ port.dest_ports }}</p>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% endif %}
                             <div class="col-12">
                                 <div class="p-3 bg-light border">
                                     <p><strong>Other configs:</strong> {{ request_entry.other_config }}</p>
@@ -172,11 +185,11 @@ TSG Dashboard
                                 <p><strong>VM Count:</strong> {{ request_use_cases.first.vm_count }}</p>    
                             {% endif %}
                         
-                        <p><strong>Other configs:</strong> {{ object.other_config }}</p>
+                        <p><strong>Other configs:</strong> {{ request_entry.other_config }}</p>
                         <h1>Total system usage:</h1>
-                        <p id="totalCores"></p>
-                        <p id="totalRam"></p>
-                        <p id="totalStorage"></p>
+                        <p id="totalCores"><strong>Total Cores:</strong> {{ total_request_details.total_cores }}</p>
+                        <p id="totalRam"><strong>Total Ram:</strong> {{ total_request_details.total_ram }} </p>
+                        <p id="totalStorage"><strong>Total Storage:</strong> {{ total_request_details.total_storage }} GB</p>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -195,5 +208,5 @@ TSG Dashboard
 {% endblock content %}
 
 {% block script %}
-<script src="{% static 'ticketing/js/detail-script.js' %}"></script>
+{% comment %} <script src="{% static 'ticketing/js/detail-script.js' %}"></script> {% endcomment %}
 {% endblock  %}

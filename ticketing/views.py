@@ -98,10 +98,27 @@ def tsg_request_details (request, request_id):
     if request_entry.status == RequestEntry.Status.PROCESSING: request_entry.vm_id = get_object_or_404(VirtualMachines, request=request_entry).id
 
     comments = Comment.objects.filter(request_entry=request_entry).order_by('date_time')
+    vm_counts = 0
+    for use_case in request_use_cases:
+        vm_counts += use_case.vm_count
+    
+    total_request_cores = request_entry.cores * vm_counts
+    total_request_ram = (request_entry.ram * vm_counts) / 1024
+    total_request_storage = request_entry.template.storage * vm_counts
+
+    total_request_details ={
+        'total_cores' : total_request_cores,
+        'total_ram' : total_request_ram,
+        'total_storage' : total_request_storage
+    }
+
+    portRules = PortRules.objects.filter(request_id = request_id)
     context = {
         'request_entry': request_entry,
         'comments' : comments,
         'request_use_cases': request_use_cases,
+        'total_request_details' : total_request_details,
+        'port_rules' : portRules
     }
     request_entry.storage = request_entry.template.storage
     return render (request, 'ticketing/tsg_request_details.html', context = context)
@@ -332,6 +349,40 @@ def edit_form_submit(request):
     # TODO: Fix the protocol front end for the edit_request_html first and do the backend
     # For the protocol
 
+    if newData['has_internet'] == True:
+        addProtocolClicked = int(data.get('addProtocolClicked'))
+        port_rules = PortRules.objects.filter(request_id = request_entry_id)
+        last_index = 0
+        overwrite_times = 0
+        for i in range(1, addProtocolClicked + 1):
+            protocol = data.get(f"protocol{i}")
+            dest_ports = data.get(f"destination_port{i}")
+            print (f"{protocol}, {dest_ports}, {len(port_rules)}, {i} , {last_index},{overwrite_times}")
+            if protocol is not None:
+                if i <= len(port_rules) or overwrite_times < len(port_rules):
+                    if i <= len(port_rules): 
+                        print ('overwriting the same row')
+                        list_portRules = port_rules[i - 1]
+                        last_index = i - 1
+                    else: 
+                        print ('overwriting the same row')
+                        list_portRules = port_rules[last_index + 1]
+                        last_index = i + 1
+                    list_portRules.protocol = protocol
+                    list_portRules.dest_ports = dest_ports
+                    list_portRules.save()
+                    overwrite_times += 1
+                else:
+                    PortRules.objects.create(
+                        request=request_entry,
+                        protocol=protocol,
+                        dest_ports=dest_ports
+                    )
+
+        if len(port_rules) > addProtocolClicked:
+            for i in range(addProtocolClicked, len(port_rules)):
+                request_use_cases[i].delete()
+
     request_use_cases = RequestUseCase.objects.filter(request_id = request_entry_id)
     request_use_case = request_use_cases.first()
     
@@ -366,22 +417,31 @@ def edit_form_submit(request):
         print ('1 to 1, 3 to 1')
         print (f'AddCourseButtonClicked: {addCourseButtonClicked}')
         listRequestUseCase = list(request_use_cases)
+        last_index = 0
+        overwrite_times = 0
         for i in range(1, addCourseButtonClicked + 1):
             course_code = data.get(f"course_code{i}")
             vm_count = data.get(f"vm_count{i}")
-            print (f"{course_code}, {vm_count}, {len(request_use_cases)}, {i}")
-            if i <= len(request_use_cases):
-                print ('overwriting the same row')
-                list_request_use_case = listRequestUseCase[i - 1]
-                list_request_use_case.request_use_case = course_code
-                list_request_use_case.vm_count = vm_count
-                list_request_use_case.save()
-            else:
-                RequestUseCase.objects.create(
-                    request=request_entry,
-                    request_use_case=course_code,
-                    vm_count=vm_count
-                )
+            print (f"{course_code}, {vm_count}, {len(request_use_cases)}, {i}, {last_index},{overwrite_times}")
+            if course_code is not None:
+                if i <= len(request_use_cases) or overwrite_times < len(request_use_cases):
+                    if i <= len (request_use_cases):
+                        print ('overwriting the same row')
+                        list_request_use_case = listRequestUseCase[i - 1]
+                        last_index = i - 1
+                    else:
+                        list_request_use_case = listRequestUseCase[last_index + 1]
+                        last_index = i + 1
+                    list_request_use_case.request_use_case = course_code
+                    list_request_use_case.vm_count = vm_count
+                    list_request_use_case.save()  
+                    overwrite_times += 1
+                else:
+                    RequestUseCase.objects.create(
+                        request=request_entry,
+                        request_use_case=course_code,
+                        vm_count=vm_count
+                    )
 
         if len(request_use_cases) > addCourseButtonClicked:
             for i in range(addCourseButtonClicked, len(request_use_cases)):

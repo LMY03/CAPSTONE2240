@@ -43,7 +43,7 @@ def home_filter_view(request):
     status = request.GET.get('status')
     request_list = RequestEntry.objects.filter(status=status)
     print(request_list)
-    return render(request, 'ticketing/tsg_request_list.html', {'request_list': request_list, 'status': status})
+    return render(request, 'ticketing/tsg_request_list.html', {'request_entries': request_list, 'status': status})
 
 def get_student_vm():
     # Get the list of VM IDs from VMTemplates
@@ -76,7 +76,11 @@ def faculty_home(request):
     
 @login_required
 def tsg_home(request):
-    return render(request, 'users/tsg_home.html')
+    request_entry = RequestEntry.objects.filter(status = 'PENDING')
+    count = request_entry.count()
+    context = {}
+    context['open_request_count'] = count
+    return render(request, 'users/tsg_home.html', context)
 
 
 @login_required

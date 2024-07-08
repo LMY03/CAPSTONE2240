@@ -6,6 +6,10 @@ if (sectionsData.length !== 0) {
     console.log('sectionsData is not empty')
 }
 
+let addProtocolClicked = 1;
+if (portRules.length !== 0) {
+    addProtocolClicked = portRules.length;
+}
 console.log(portRules)
 let newAddedGroup = {};
 
@@ -166,8 +170,23 @@ document.getElementById('vm-form').addEventListener('submit', function (event) {
     //     formData.append(`sections`, sectionCode)
     //     formData.append(`${sectionCode}_group_count`, formDataInputs[`${sectionCode}_group_count`]);
     // }
-    formDataInputs[`addCourseButtonClick`] = addCourseSectionClicked;
     formDataInputs[`id`] = requestID;
+    let i = 1;
+    formInputs.forEach(input => {
+        formDataInputs[input.id] = input.value;
+        if (input.id.startsWith('protocol')) {
+            let protocolNumber = input.id.replace('protocol', '');
+            formDataInputs[`addProtocolClicked`] = '';
+            formDataInputs[`addProtocolClicked`] = protocolNumber;
+            i++;
+        }
+        if (input.id.startsWith('course_code')) {
+            let courseCodeNumber = input.id.replace('course_code', '');
+            formDataInputs[`addCourseButtonClick`] = '';
+            formDataInputs[`addCourseButtonClick`] = courseCodeNumber;
+        }
+
+    });
 
     if (addCourseSectionClicked != 0) {
         formDataInputs['sections'] = sectionsData;
@@ -180,7 +199,7 @@ document.getElementById('vm-form').addEventListener('submit', function (event) {
     console.log(formDataInputs['port_rules'])
     console.log(formDataInputs['request_use_case'])
     for (const key in formDataInputs) {
-        formData.append(key, formDataInputs[key])
+        formData.append(key, formDataInputs[key]);
     }
     console.log(formDataInputs);
     fetch(this.action, {
@@ -214,6 +233,15 @@ for (let index = 2; index <= sectionsData.length; index++) {
     });
 }
 
+for (let index = 2; index <= portRules.length; index++) {
+    document.getElementById(`remove_protocol_button${index}`).addEventListener('click', function () {
+        console.log("Remove Protocol button clicked")
+        document.getElementById(`protocolGroup${index}`).remove()
+        document.getElementById(`destinationGroup${index}`).remove()
+        addProtocolClicked--;
+    })
+}
+
 
 
 // Set the min and max dates
@@ -240,3 +268,75 @@ window.onload = function () {
         }
     });
 }
+
+document.getElementById('addProtocolButton').addEventListener('click', function () {
+    addProtocolClicked++;
+    let accordion = document.getElementById('accordionBody_networkDetails');
+
+    const newDivProtocol = document.createElement('div');
+    newDivProtocol.classList.add('mb-3', 'protocol-group');
+    newDivProtocol.id = `protocolGroup${addProtocolClicked}`;
+
+    const newProtocolLabel = document.createElement('label');
+    newProtocolLabel.innerHTML = `Protocol ${addProtocolClicked}:`;
+    newProtocolLabel.classList.add('form-label');
+    newProtocolLabel.setAttribute('for', `protocol${addProtocolClicked}`);
+
+    const newProtocolSelect = document.createElement('select');
+    newProtocolSelect.className = 'form-control';
+    newProtocolSelect.id = `protocol${addProtocolClicked}`;
+    newProtocolSelect.name = `protocol${addProtocolClicked}`;
+
+    let options = [
+        { value: 'TCP', text: 'TCP' },
+        { value: 'UDP', text: 'UDP' },
+        { value: 'ICMP', text: 'ICMP' },
+        { value: 'HTTP', text: 'HTTP' },
+        { value: 'HTTPS', text: 'HTTPS' }
+    ];
+
+    options.forEach(function (option) {
+        let opt = document.createElement('option');
+        opt.value = option.value;
+        opt.text = option.text;
+        newProtocolSelect.appendChild(opt);
+    });
+
+    const removeButton = document.createElement('button');
+    removeButton.type = 'button';
+    removeButton.classList.add('btn', 'btn-danger');
+    removeButton.innerText = 'Remove';
+    removeButton.addEventListener('click', function () {
+        accordion.removeChild(newDivProtocol);
+        accordion.removeChild(newDivDestination);
+        addProtocolClicked--;
+    });
+
+    const labelDiv = document.createElement('div');
+    labelDiv.classList.add('d-flex', 'align-items-center', 'justify-content-between', 'mb-3');
+    labelDiv.appendChild(newProtocolLabel);
+    labelDiv.appendChild(removeButton);
+
+    newDivProtocol.appendChild(labelDiv);
+    newDivProtocol.appendChild(newProtocolSelect);
+
+    const newDivDestination = document.createElement('div');
+    newDivDestination.classList.add('mb-3');
+    newDivDestination.id = `destinationGroup${addProtocolClicked}`;
+    const newDestinationPortLabel = document.createElement('label');
+    newDestinationPortLabel.innerHTML = `Destination Port ${addProtocolClicked}:`;
+    newDestinationPortLabel.classList.add('form-label');
+    newDestinationPortLabel.setAttribute('for', `destination_port${addProtocolClicked}`);
+
+    const newDestinationPortInput = document.createElement('input');
+    newDestinationPortInput.type = 'text';
+    newDestinationPortInput.className = 'form-control';
+    newDestinationPortInput.id = `destination_port${addProtocolClicked}`;
+    newDestinationPortInput.name = `destination_port${addProtocolClicked}`;
+
+    newDivDestination.appendChild(newDestinationPortLabel);
+    newDivDestination.appendChild(newDestinationPortInput);
+
+    accordion.appendChild(newDivProtocol);
+    accordion.appendChild(newDivDestination);
+});

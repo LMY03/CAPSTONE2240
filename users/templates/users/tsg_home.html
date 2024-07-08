@@ -45,7 +45,7 @@ TSG Dashboard
                 <div class="card">
                     <div class="card-header">Open Requests</div>
                     <div class="card-body">
-                        <!-- Add open tickets details here -->
+                        <a href = "{% url 'users:home-filter' %}?status=PENDING"> {{ open_request_count }} </a>
                     </div>
                 </div>
             </div>

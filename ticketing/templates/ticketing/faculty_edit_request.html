@@ -78,7 +78,48 @@ Edit request {{ vm_id }}
                     </h2>
                     <div id="networkCollapse" class="accordion-collapse collapse show" aria-labelledby="networkHeader">
                             <div class="accordion-body" >
-                                <div id = "accordionBody_networkDetails"> 
+                                <div id = "accordionBody_networkDetails">
+                                    {% if port_rules %}
+                                        {% for port in port_rules %}
+                                            {% if forloop.first %}
+                                                <div class="mb-3">
+                                                    <div class = 'd-flex justify-content-between mb-2 align-items-baseline'>
+                                                        <label for="protocol" class="form-label">Protocol:</label>
+                                                        <button type = "button" id = "addProtocolButton">Add protocol</button>
+                                                    </div>
+                                                    <select class="form-control" id="protocol1" name="protocol1">
+                                                        <option value="TCP" {% if port.protocol == "TCP" %} selected {% endif %}>TCP</option>
+                                                        <option value="UDP" {% if port.protocol == "UDP" %} selected {% endif %}>UDP</option>
+                                                        <option value="ICMP" {% if port.protocol == "ICMP" %} selected {% endif %}>ICMP</option>
+                                                        <option value="HTTP" {% if port.protocol == "HTTP" %} selected {% endif %}>HTTP</option>
+                                                        <option value="HTTPS" {% if port.protocol == "HTTPS" %} selected {% endif %}>HTTPS</option>
+                                                    </select>
+                                                    <div class="mb-3">
+                                                        <label for="destination_port" class="form-label">Destination Port:</label>
+                                                        <input type="text" class="form-control" id="destination_port1" name="destination_port1" value = {{port.dest_ports}}>
+                                                    </div>
+                                                </div>
+                                            {% else %}
+                                            <div class="mb-3 protocol-group" id="protocolGroup{{ forloop.counter }}">
+                                                <div class="d-flex align-items-center justify-content-between mb-3">
+                                                    <label class="form-label" for="protocol{{ forloop.counter }}">Protocol 2:</label>
+                                                    <button type="button" class="btn btn-danger" id= "remove_protocol_button{{forloop.counter}}">Remove</button>
+                                                </div>
+                                                <select class="form-control" id="protocol{{ forloop.counter }}" name="protocol{{ forloop.counter }}">
+                                                    <option value="TCP" {% if port.protocol == "TCP" %} selected {% endif %}>TCP</option>
+                                                    <option value="UDP" {% if port.protocol == "UDP" %} selected {% endif %}>UDP</option>
+                                                    <option value="ICMP" {% if port.protocol == "ICMP" %} selected {% endif %}>ICMP</option>
+                                                    <option value="HTTP" {% if port.protocol == "HTTP" %} selected {% endif %}>HTTP</option>
+                                                    <option value="HTTPS" {% if port.protocol == "HTTPS" %} selected {% endif %}>HTTPS</option>
+                                                </select>
+                                            </div>
+                                            <div class="mb-3" id="destinationGroup{{ forloop.counter }}">
+                                                <label class="form-label" for="destination_port{{ forloop.counter }}">Destination Port {{ forloop.counter }}:</label>
+                                                <input type="text" class="form-control" id="destination_port{{ forloop.counter }}" name="destination_port{{ forloop.counter }}" value = {{ port.dest_ports }}>
+                                            </div>
+                                            {% endif %}
+                                        {% endfor %}
+                                    {% else %}
                                     <div class="mb-3">
                                         <div class = 'd-flex justify-content-between mb-2 align-items-baseline'>
                                             <label for="protocol" class="form-label">Protocol:</label>
@@ -91,11 +132,12 @@ Edit request {{ vm_id }}
                                             <option value="HTTP">HTTP</option>
                                             <option value="HTTPS">HTTPS</option>
                                         </select>
+                                        <div class="mb-3">
+                                            <label for="destination_port" class="form-label">Destination Port:</label>
+                                            <input type="text" class="form-control" id="destination_port1" name="destination_port1">
+                                        </div>
                                     </div>
-                                    <div class="mb-3">
-                                        <label for="destination_port" class="form-label">Destination Port:</label>
-                                        <input type="text" class="form-control" id="destination_port1" name="destination_port1">
-                                    </div>
+                                    {% endif %}
                                 </div>
                             </div>
                     </div>
