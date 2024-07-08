@@ -18,12 +18,12 @@ VM Details {{ vm_id }}
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2>VM Details: {{ vm.vm_name }}</h2>
             <div>
-                <form id="start_vm_form" action="{% url 'guacamole:access_vm' %}" method="post" onsubmit="submitForm(event)">
+                <form id="start_vm_form" action="{% url 'guacamole:access_vm' %}" method="post" onsubmit="submitForm(event)" class="d-inline">
                     {% csrf_token %}
                     <input type="hidden" id="vm_id" name="vm_id" value="{{ vm.id }}" />
-                    <button type="submit" class="btn btn-primary me-2">Open VM</button>
+                    <button type="submit" class="btn btn-success me-1">Open VM</button>
                 </form>
-                <a href="{% url 'proxmox:shutdown_vm' vm.id %}"><button type="submit" class="btn btn-danger me-2">Shutdown</button></a>
+                <a href="{% url 'proxmox:shutdown_vm' vm.id %}" class="d-inline"><button type="submit" class="btn btn-danger">Shutdown</button></a>
             </div>
         </div>
         <!-- Content Area -->

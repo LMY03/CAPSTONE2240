@@ -1,104 +1,43 @@
 from django.http import JsonResponse
-# from jinja2 import Environment, FileSystemLoader
+from decouple import config
 import ansible_runner
 import json
+
+from proxmox.views import get_vm_ip_adds
 # ansible all -i /ansible/inventory/hosts -m ping -e 'ansible_ssh_common_args="-o StrictHostKeyChecking=no"'
 
 INVENTORY_HOSTS_PATH = '/app/ansible/inventory/hosts'
+DEFAULT_VM_USERNAME = config('DEFAULT_VM_USERNAME')
+DEFAULT_VM_PASSWORD = config('DEFAULT_VM_PASSWORD')
 
-# def update_inventory_hosts(ip_add, vm_user):
-#     inventory_content = """
-#     [all]
-#     10.10.10.11 ansible_user=jin
-#     10.10.10.12 ansible_user=jin
-#     """
-#     with open(INVENTORY_HOSTS_PATH, 'w') as file:
-#         file.write(inventory_content)
-#         # file.write(ip_add + ' ansible_user=' + vm_user)
-#     # return "File has been edited successfully."
+def change_vm_default_userpass(request_id, vm_passwords):
 
-def update_inventory_hosts():
-    inventory_content = """
-    [all]
-    10.10.10.11 ansible_user=jin
-    10.10.10.12 ansible_user=jin
-    """
-    with open(INVENTORY_HOSTS_PATH, 'w') as file:
-        file.write(inventory_content)
-        # file.write(ip_add + ' ansible_user=' + vm_user)
-    # return "File has been edited successfully."
+    extra_vars = {
+        'username': DEFAULT_VM_USERNAME,
+        'passwords': vm_passwords
+    }
 
-# def fetch_hosts():
-#     hosts_data = [
-#         {"ip": "192.168.254.152", "ansible_user": "jin", "hostname": "Node_2", "label": "S12"},
-#         {"ip": "192.168.254.153", "ansible_user": "jin", "hostname": "Node_3", "label": "S13"}
-#     ]
+    hostnames = get_vm_ip_adds(request_id)
+    # inventory = "[request]\n"
+    inventory = ""
+    for i in range(len(hostnames)) : inventory += f"{hostnames[i]} ansible_user={DEFAULT_VM_USERNAME}\n"
 
-#     # The JSON structure expected by Ansible
-#     inventory = {
-#         "test": {
-#             "hosts": {},
-#             "vars": {}
-#         },
-#         "_meta": {
-#             "hostvars": {}
-#         }
-#     }
+    return run_playbook('change_vm_pass.yml', inventory, extra_vars)
 
-#     for host in hosts_data:
-#         # Use IP as the key and assign an empty dict as its value
-#         inventory['test']['hosts'][host['ip']] = {}
-#         # Add variables specific to each host
-#         inventory["_meta"]["hostvars"][host['ip']] = {
-#             "ansible_user": host['ansible_user'],
-#             "hostname": host['hostname'],
-#             "label": host['label']
-#         }
+def resize_vm_disk(ip_add): 
+    inventory = f"{ip_add} ansible_user={DEFAULT_VM_USERNAME}\n"
 
-#     return json.dumps(inventory, indent=4)
+    return run_playbook('change_vm_disk_size.yml', inventory)
 
-def fetch_hosts():
-    hosts_data = [
-        {"ip": "192.168.254.155", "ansible_user": "jin", "hostname": "Node 2", "label": "S12"},
-        {"ip": "192.168.254.156", "ansible_user": "jin", "hostname": "Node 3", "label": "S13"}
-    ]
-
-    # Start with the group header
-    inventory = "[test]\n"
-    
-    # Add each host with its variables inline
-    for host in hosts_data:
-        inventory += f"{host['ip']} ansible_user={host['ansible_user']} hostname={host['hostname']} label={host['label']}\n"
-
-    return inventory
-
-def get_inventory(hostname, vm_user, vm_name, label):
-
-    inventory = "[test]\n"
-    # Add each host with its variables inline
-    for i in range(len(hostname)):
-        inventory += f"{hostname[i]} ansible_user={vm_user[i]} hostname={vm_name[i]} label={label[i]}\n"
-
-    return inventory
-
-# def change_vm_userpass():
-#     inventory = get_inventory(hostname, vm_user, vm_name, label)
-
-def run_playbook(playbook, hostname, vm_user, vm_name, label):
-    inventory = get_inventory(hostname, vm_user, vm_name, label)
+def run_playbook(playbook, inventory, extra_vars):
     result = ansible_runner.run(
         private_data_dir='/app/ansible',
         playbook=playbook,
         inventory=inventory,
-        extravars={"ansible_become_pass": "123456"}
+        extravars=extra_vars
     )
 
-    # print("{}: {}".format(r.status, r.rc))
-    # # Output the stdout
-    # print("stdout: " + r.stdout.read())
-
-    if result.rc == 0:
-        return JsonResponse({'status': 'Playbook executed successfully'})
+    if result.rc == 0 : return JsonResponse({'status': 'Playbook executed successfully'})
     else:
         return JsonResponse({
             'status': 'Playbook execution failed', 
@@ -106,6 +45,49 @@ def run_playbook(playbook, hostname, vm_user, vm_name, label):
             # 'details': result.stdout.read() if result.stdout else ''
             'message': 'Playbook execution failed'
         })
+
+# def fetch_hosts():
+#     hosts_data = [
+#         {"ip": "192.168.254.155", "ansible_user": "jin", "hostname": "Node 2", "label": "S12"},
+#         {"ip": "192.168.254.156", "ansible_user": "jin", "hostname": "Node 3", "label": "S13"}
+#     ]
+
+#     # Start with the group header
+#     inventory = "[test]\n"
+    
+#     # Add each host with its variables inline
+#     for host in hosts_data:
+#         inventory += f"{host['ip']} ansible_user={host['ansible_user']} hostname={host['hostname']} label={host['label']}\n"
+
+#     return inventory
+
+# def get_inventory(hostname, vm_user, vm_name, label):
+
+#     inventory = "[test]\n"
+#     # Add each host with its variables inline
+#     for i in range(len(hostname)):
+#         inventory += f"{hostname[i]} ansible_user={vm_user[i]} hostname={vm_name[i]} label={label[i]}\n"
+
+#     return inventory
+
+# def run_playbook(playbook, hostname, vm_user, vm_name, label):
+#     inventory = get_inventory(hostname, vm_user, vm_name, label)
+#     result = ansible_runner.run(
+#         private_data_dir='/app/ansible',
+#         playbook=playbook,
+#         inventory=inventory,
+#         extravars={"ansible_become_pass": "123456"}
+#     )
+
+#     if result.rc == 0:
+#         return JsonResponse({'status': 'Playbook executed successfully'})
+#     else:
+#         return JsonResponse({
+#             'status': 'Playbook execution failed', 
+#             'details': result.stdout.read() if result.stdout else 'No output available',
+#             # 'details': result.stdout.read() if result.stdout else ''
+#             'message': 'Playbook execution failed'
+#         })
 
 
 # def run_playbook():

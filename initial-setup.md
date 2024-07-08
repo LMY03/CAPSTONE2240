@@ -1,8 +1,8 @@
 # Download the Ubuntu 24 Server ISO
 https://ubuntu.com/download/server
 
-sudo adduser USER_NAME
-sudo usermod -aG sudo USER_NAME
+adduser USER_NAME
+usermod -aG sudo USER_NAME
 
 
 # Run the following command to uninstall all conflicting packages:

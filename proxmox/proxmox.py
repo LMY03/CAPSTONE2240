@@ -118,6 +118,16 @@ def config_vm(node, vmid, cpu_cores, memory_mb):
     response = session.put(url, data=config)
     return response.json()
 
+def config_vm_disk(node, vmid, size):
+    session = get_authenticated_session()
+    url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/qemu/{vmid}/resize"
+    config = {
+        'disk': 'scsi0',
+        'size': size,
+    }
+    response = session.put(url, data=config)
+    return response.json()
+
 def wait_for_task(node, upid):
     while True:
         task_status = get_task_status(node, upid)

@@ -40,7 +40,7 @@ VM Details {{ vm_id }}
                 <td>
                     <div class = 'd-flex justify-content-evenly'>
                     <a href="{% url 'ticketing:request_details' request.id %}" class="btn btn-outline-primary">Open</a>
-                    {% if request.status == 'PENDING' or request.status == 'FOR_REVISION' %}
+                    {% if request.status == 'PENDING' or request.status == 'FOR REVISION' %}
                     <a class="btn btn-outline-primary" href="{% url 'ticketing:faculty_edit_request' request.id %}" role="button">Edit</a>
                     {% endif %}
                     </div>

@@ -92,6 +92,19 @@
 
 <hr />
 
+<form action="{% url 'proxmox:config_vm_disk' %}" method="post">
+    {% csrf_token %}
+    <h1>Reconfigure VM</h1>
+    <label for="vmid">VM ID: </label>
+    <input type="text" name="vmid" id="vmid" /><br /><br />
+    <label for="size">Disk Size: </label>
+    <input type="text" name="size" id="size" /><br /><br />
+
+    <input type="submit" value="submit" />
+</form>
+
+<hr />
+
 <form action="{% url 'proxmox:create_lxc' %}" method="post">
     {% csrf_token %}
     <h1>Create LXC</h1>

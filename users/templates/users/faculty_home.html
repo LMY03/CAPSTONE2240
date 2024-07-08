@@ -27,17 +27,13 @@ Faculty Dashboard
                         </tr>
                     </thead>
                     <tbody>
-                        {% if data %}
-                            {% for vm in data %}
-                            <a href = "{% url "proxmox:vm_details"  vm.id %}">
-                                <tr>
-                                <td><i class="bi bi-display"></i>{{ vm.vm_name }}</td>
-                                <td>Course</td>
-                                <td>{{ vm.status }}</td>
-                                </tr>
-                            </a>
-                            {% endfor %}
-                        {% endif %}
+                        {% for vm in data %}
+                        <tr>
+                            <td><a href="{% url 'proxmox:vm_details' vm_id=vm.id %}"><i class="bi bi-display"></i> {{ vm.vm_name }}</a></td>
+                            <td>Course</td>
+                            <td>{{ vm.status }}</td>
+                        </tr>
+                        {% endfor %}
                     </tbody>
                 </table>
             </div>

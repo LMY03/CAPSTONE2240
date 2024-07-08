@@ -1,0 +1,42 @@
+---
+- name: Resize disk and file system
+  hosts: all
+  become: yes
+  tasks:
+    - name: Ensure parted and gdisk are installed
+      apt:
+        name:
+          - parted
+          - gdisk
+        state: present
+
+    - name: Print current partition table
+      command: fdisk -l /dev/sda
+      register: fdisk_output
+      ignore_errors: yes
+
+    - name: Print current partition table to logs
+      debug:
+        var: fdisk_output.stdout_lines
+
+    - name: Unmount all partitions on /dev/sda
+      command: umount /dev/sda2
+      ignore_errors: yes
+
+    - name: Use sgdisk to delete and recreate the partition
+      shell: |
+        sgdisk --delete=2 /dev/sda
+        sgdisk --new=2:0:0 /dev/sda
+        partprobe /dev/sda
+      ignore_errors: yes
+
+    - name: Resize the filesystem
+      command: resize2fs /dev/sda2
+
+    - name: Print the new disk usage
+      command: df -h
+      register: disk_usage
+
+    - name: Print new disk usage to logs
+      debug:
+        var: disk_usage.stdout_lines

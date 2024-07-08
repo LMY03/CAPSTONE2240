@@ -1,6 +1,8 @@
 from django.shortcuts import render
+from decouple import config
 
-# from . import ansible
+from . import ansible
+from proxmox import proxmox
 
 # Create your views here.
 
@@ -13,36 +15,14 @@ def renders(request) :
 
 def run(request):
     if request.method == "POST":
-
-        data = request.POST
-        # command = data.get("command")
-        # ip_add = data.get("ip_add")
-
-        # vm_user = "jin"
-        # ansible.update_inventory_hosts(ip_add, vm_user)
-
-        # ansible.run_command(command)
-        # response = ansible.run_playbook(command)
-        # ansible.update_inventory_hosts()
-        # response = ansible.run_playbook()
-        playbook = "netdata_conf.yml"
-        no_of_vm = 2
-        classname = "Test"
-        hostname = ["192.168.254.155", "192.168.254.156"]
-        vm_user = []
-        vm_name = []
-        label = []
-
-        for i in range(no_of_vm):
-            vm_user.append("jin")
-            vm_name.append(classname + "-" + str(i))
-            label.append(classname)
-        response = ansible.run_playbook(playbook, hostname, vm_user, vm_name, label)
+        node = "pve"
+        new_vm_id = 1000
+        # proxmox.wait_for_task(node, proxmox.clone_vm(node, 3001, new_vm_id, 'Tester'))
+        # proxmox.config_vm_disk(node, new_vm_id, "50G")
+        # proxmox.start_vm(node, new_vm_id)
+        response = ansible.resize_vm_disk(proxmox.wait_and_get_ip(node, new_vm_id))
 
         return render(request, "data.html", { "data" : response })
-
-def get_ansible_variables():
-    data = list()
 
 # def run_ansible_playbook():
 #     try:
