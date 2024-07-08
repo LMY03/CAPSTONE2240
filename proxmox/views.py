@@ -152,7 +152,7 @@ def vm_provision_process(vm_id, classnames, no_of_vm, cpu_cores, ram, request_id
     passwords.insert(0, password)
     vm_passwords.insert(0, orig_vm.vm_password)
     
-    # ansible.change_vm_default_userpass(request_id, vm_passwords)
+    ansible.change_vm_default_userpass(request_id, vm_passwords)
 
     return {
         'usernames' : classnames,
