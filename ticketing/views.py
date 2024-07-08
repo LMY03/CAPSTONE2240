@@ -362,7 +362,9 @@ def request_confirm(request, request_id):
     if request.method == 'POST':
 
         data = request.POST
-        node = data.get('node')
+        # node = data.get('node')
+
+        node = "pve"
 
         request_entry = get_object_or_404(RequestEntry, pk=request_id)
 
@@ -548,7 +550,10 @@ def vm_provision(request_id):
     
     for request_use_case in request_use_cases:
         for i in range(request_use_case['vm_count']):
-                classnames.append(f"{request_use_case['request_use_case'].replace('_', '-')}-Group-{i + 1}")
+                if request_entry.is_course(): vm_name = f"{request_use_case['request_use_case'].replace('_', '-')}"
+                else: vm_name = f"{request_entry.get_request_type()}-{request_entry.requester.last_name}-{request_entry.id}"
+                vm_name = f"{vm_name}-Group-{i + 1}"
+                classnames.append(vm_name)
     classnames.pop(0)
 
     cpu_cores = int(request_entry.cores)

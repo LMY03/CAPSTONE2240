@@ -24,6 +24,9 @@ Request Details
                                     <button type="submit" class="btn btn-danger">Shutdown</button>
                                 </a>
                                 {% endif %}
+                                {% if request_entry.status == "PENDING" or request_entry.status == "FOR REVISION" %}
+                                <a class="btn btn-success me-1" href="{% url 'ticketing:faculty_edit_request' request_entry.id %}" role="button">Edit</a>
+                                {% endif %}
                             </div>
                         </div>
 
@@ -113,6 +116,7 @@ Request Details
                                 <a href="{% url 'ticketing:reject_test_vm' request_entry.id %}"><button type="button" class="btn btn-danger w-25 ms-5" id="reject_button">Reject Test VM</button></a>
                             </div>
                         </div>
+                        {% endif %}
                     
                         {% if comments %}
                         <!-- Comment Section -->
@@ -128,8 +132,8 @@ Request Details
                                     {% endfor %}
                                 </div>
                             {% endif %}
-                                
-                            {% if request_entry.status != "COMPLETED" or request_entry.status != "REJECTED" or request_entry.status != "DELETED" %}
+                    
+                            {% if request_entry.status != "REJECTED" and request_entry.status != "COMPLETED" and request_entry.status != "DELETED" %}
                             <!-- Add Comment Form -->
                             <form action="{% url 'ticketing:add_comment' request_entry.id %}" method="post" class="mt-3">
                                 {% csrf_token %}
@@ -141,7 +145,6 @@ Request Details
                             </form>
                             {% endif %}
                         </div>
-                    {% endif %}
             </div>
         </div>
     </div>
