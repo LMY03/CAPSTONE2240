@@ -119,7 +119,7 @@ def tsg_request_details(request, request_id):
         'comments' : comments,
         'request_use_cases': request_use_cases,
         'total_request_details' : total_request_details,
-        'port_rules' : portRules
+        'port_rules' : portRules,
         'no_vm': get_total_no_of_vm(request_entry)
     }
     if request_entry.is_pending() : context['nodes'] = Nodes.objects.all().values_list('name', flat=True)
