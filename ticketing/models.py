@@ -44,7 +44,7 @@ class RequestEntry(models.Model):
 
     requester = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name='requested_entries')
     fulfilled_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='fulfilled_entries')
-    # assigned_to = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='assigned_entries')
+    ssigned_to = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='assigned_entries')
     template = models.ForeignKey(VMTemplates, on_delete=models.DO_NOTHING)
     cores = models.IntegerField(default=1)
     # security options
