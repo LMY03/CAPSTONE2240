@@ -24,6 +24,7 @@ urlpatterns = [
     path('monitoring/', include("monitoring.urls")),
     path('guacamole/', include("guacamole.urls")),
     path('opnsense/', include("opnsense.urls")),
+    path('pfsense/', include("pfsense.urls")),
     # path('containers/', include("proxmox.urls")),
     path('vm/', include("proxmox.urls")),
     path('ticketing/', include("ticketing.urls")),
