@@ -31,3 +31,17 @@ def add_firewall_rule():
         return response.json()
     except requests.RequestException as e:
         return {"error": str(e)}
+    
+def get_rules():
+    url = f"{PFSENSE_HOST}/api/v1/firewall/rule"  # Adjust API version/path as necessary
+    headers = {
+        'Content-Type': 'application/json',
+        'Authorization': f"Bearer {API_KEY}"  # Ensure the correct format
+    }
+
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()  # This will raise an error for 4XX or 5XX responses
+        return response.json()  # Returns the list of firewall rules
+    except requests.RequestException as e:
+        return {"error": str(e)}
