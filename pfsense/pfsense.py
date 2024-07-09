@@ -8,7 +8,7 @@ def add_firewall_rule():
     url = f"{PFSENSE_HOST}/api/v2/firewall/rule"
     headers = {
         'Content-Type': 'application/json',
-        'Authorization': API_KEY
+        'Authorization': f"Bearer {API_KEY}"
     }
 
     data = {
@@ -25,6 +25,9 @@ def add_firewall_rule():
         "noxmlrpc": 'false',
     }
 
-    response = requests.post(url, headers=headers, json=data)
-
-    return response.json()
+    try:
+        response = requests.post(url, headers=headers, json=data)
+        response.raise_for_status()  # Raises a HTTPError for bad responses
+        return response.json()
+    except requests.RequestException as e:
+        return {"error": str(e)}
