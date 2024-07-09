@@ -5,7 +5,7 @@ API_KEY = '3cbd65d72ccb0bba75e669d2679f54f5'
 
 def add_firewall_rule():
     # url = f"{PFSENSE_HOST}/api/v2/firewall/apply"
-    url = f"{PFSENSE_HOST}/api/v1/firewall/rule"
+    url = f"{PFSENSE_HOST}/api/v2/firewall/rule"
     headers = {
         'Content-Type': 'application/json',
         'Authorization': f"Bearer {API_KEY}"
