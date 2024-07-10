@@ -259,6 +259,8 @@ def aggregatedData (request):
 
     cores_list = [{'host': host, 'total': data.get('total', ""), 'used': data.get('used', "")} for host, data in cores.items()]
 
+    print(cores_list)
+
     return JsonResponse({
       'coresResultList' : cores_list  
     })
