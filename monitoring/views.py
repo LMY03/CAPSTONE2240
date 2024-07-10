@@ -255,15 +255,12 @@ def aggregatedData (request):
     cores = []
     for table in result:
         for record in table.records:
-            cpu = {}
-            cpu['host'] = record.values.get('host')
-            cpu['cpus'] = record.get_value()
+            cpu = {
+                'host': record['host'],
+                'cpu': record.get_value()  
+            }
             cores.append(cpu)
 
-    cores_list = [{'host': host, 'total': data.get('total', ""), 'used': data.get('used', "")} for host, data in cores.items()]
-
-    print(cores_list)
-
     return JsonResponse({
-      'coresResultList' : cores_list  
+      'coresResultList' : cores  
     })
