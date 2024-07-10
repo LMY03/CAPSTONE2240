@@ -363,18 +363,25 @@ def aggregatedData (request):
             network_result = query_api.query(query= network_flux_query)
             for table in network_result:
                 for record in table.records:
-                    host = record['host']
-                    time = record.get_time()
+                    network= {
+                        'host' : record['host'],
+                        'time' : record.get_time(),
+                        'network_in' : record['netin'],
+                        'network_out' : record['netout']
+                    }
+                    network_list.append(network)
+            #         host = record['host']
+            #         time = record.get_time()
                     
-                    if host not in network_dict:
-                        network_dict[host] = {'host': host, 'time': time, 'netin': None, 'netout': None}
+            #         if host not in network_dict:
+            #             network_dict[host] = {'host': host, 'time': time, 'netin': None, 'netout': None}
                     
-                    if record['_field'] == 'netin':
-                        network_dict[host]['netin'] = record.get_value()
-                    elif record['_field'] == 'netout':
-                        network_dict[host]['netout'] = record.get_value()
+            #         if record['_field'] == 'netin':
+            #             network_dict[host]['netin'] = record.get_value()
+            #         elif record['_field'] == 'netout':
+            #             network_dict[host]['netout'] = record.get_value()
 
-            network_list = list(network_dict.values())
+            # network_list = list(network_dict.values())
         except Exception as e :
             print (e)
         
