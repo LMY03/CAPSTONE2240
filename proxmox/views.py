@@ -162,7 +162,6 @@ def vm_provision_process(vm_id, classnames, no_of_vm, cpu_cores, ram, request_id
     # orig_vm.vm_password = User.objects.make_random_password()
     passwords.insert(0, password)
     classnames.insert(0, orig_vm.vm_name)
-    vm_passwords.insert(0, orig_vm_password)
 
     return {
         'usernames' : classnames,
