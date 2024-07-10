@@ -5,6 +5,7 @@ from django.http import JsonResponse
 # from . models import GuacamoleUser
 from . import guacamole
 from proxmox import proxmox
+from pfsense.views import update_port_forward_rule_ip_adds
 
 from guacamole.models import GuacamoleUser, GuacamoleConnection
 from proxmox.models import VirtualMachines
@@ -30,19 +31,19 @@ def access_vm(request):
         guacamole_user = get_object_or_404(GuacamoleUser, system_user=request.user)
         connection_id = get_object_or_404(GuacamoleConnection, vm=vm).connection_id
 
-        if vm.status == VirtualMachines.Status.SHUTDOWN:
+        if vm.is_shutdown():
 
-            proxmox.start_vm(vm.node.name, vm.vm_id)
-            ip_add = proxmox.wait_and_get_ip(vm.node.name, vm.vm_id)
+            # proxmox.start_vm(vm.node.name, vm.vm_id)
+            # ip_add = proxmox.wait_and_get_ip(vm.node.name, vm.vm_id)
 
-            # ip_add = vm.ip_add
+            ip_add = vm.ip_add
 
             if ip_add != vm.ip_add:
+                update_port_forward_rule_ip_adds(vm.vm_name, ip_add) #pfsense
                 guacamole.update_connection(connection_id, vm_id)
                 vm.ip_add = ip_add
 
-            vm.status = VirtualMachines.Status.ACTIVE
-            vm.save()
+            vm.set_active()
         
         url = guacamole.get_connection_url(connection_id, guacamole_user.username, guacamole_user.password)
         print(f"Generated URL: {url}")

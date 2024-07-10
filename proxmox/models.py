@@ -27,3 +27,19 @@ class VirtualMachines(models.Model):
         choices=Status.choices,
         default=Status.ACTIVE
     )
+
+    def is_active(self) : return self.status == VirtualMachines.Status.ACTIVE
+    def is_shutdown(self) : return self.status == VirtualMachines.Status.SHUTDOWN
+    def is_destroyed(self) : return self.status == VirtualMachines.Status.DESTROYED
+
+    def set_active(self):
+        self.status = VirtualMachines.Status.ACTIVE
+        self.save()
+
+    def set_shutdown(self):
+        self.status = VirtualMachines.Status.SHUTDOWN
+        self.save()
+
+    def set_destroyed(self):
+        self.status = VirtualMachines.Status.DESTROYED
+        self.save()

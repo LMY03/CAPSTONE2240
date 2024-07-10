@@ -6,7 +6,9 @@ import secrets, string
 
 from guacamole import guacamole
 from autotool import ansible
+from pfsense.views import add_port_forward_rules
 from . import proxmox
+
 from . models import VirtualMachines
 from ticketing.models import RequestEntry, UserProfile
 from guacamole.models import GuacamoleConnection, GuacamoleUser
@@ -58,9 +60,6 @@ def generate_vm_ids(no_of_vm):
 
     return new_ids
 
-def generate_vm_id_view(request, no_of_vm):
-    return render(request, 'data.html' , { 'data' : list(generate_vm_ids(no_of_vm)) })
-
 def vm_provision_process(vm_id, classnames, no_of_vm, cpu_cores, ram, request_id):
 
     orig_vm = get_object_or_404(VirtualMachines, vm_id=vm_id)
@@ -89,21 +88,20 @@ def vm_provision_process(vm_id, classnames, no_of_vm, cpu_cores, ram, request_id
 
     new_vm_ids = generate_vm_ids(no_of_vm)
 
-    if orig_vm.status == VirtualMachines.Status.ACTIVE:
+    if orig_vm.is_active():
         
-        proxmox.shutdown_vm(node, orig_vm.vm_id)
+        # proxmox.shutdown_vm(node, orig_vm.vm_id)
 
-        orig_vm.status = orig_vm.Status.SHUTDOWN
-        orig_vm.save()
+        orig_vm.set_shutdown()
 
-        proxmox.wait_for_vm_stop(node, orig_vm.vm_id)
+        # proxmox.wait_for_vm_stop(node, orig_vm.vm_id)
 
-    for i in range(no_of_vm) : upids.append(proxmox.clone_vm(node, vm_id, new_vm_ids[i], classnames[i]))
+    # for i in range(no_of_vm) : upids.append(proxmox.clone_vm(node, vm_id, new_vm_ids[i], classnames[i]))
 
-    for i in range(no_of_vm):
-        proxmox.wait_for_task(node, upids[i])
-        proxmox.config_vm(node, new_vm_ids[i], cpu_cores, ram)
-        proxmox.start_vm(node, new_vm_ids[i])
+    # for i in range(no_of_vm):
+    #     proxmox.wait_for_task(node, upids[i])
+    #     proxmox.config_vm(node, new_vm_ids[i], cpu_cores, ram)
+    #     proxmox.start_vm(node, new_vm_ids[i])
 
     request_entry = get_object_or_404(RequestEntry, id=request_id)
     tsg_guacamole_username = get_object_or_404(GuacamoleUser, system_user=request_entry.requester).username
@@ -120,10 +118,10 @@ def vm_provision_process(vm_id, classnames, no_of_vm, cpu_cores, ram, request_id
     vms.append(orig_vm)
 
     for i in range(no_of_vm):
-        proxmox.wait_for_vm_start(node, new_vm_ids[i])
-        hostnames.append(proxmox.wait_and_get_ip(node, new_vm_ids[i]))
-        proxmox.shutdown_vm(node, new_vm_ids[i])
-        proxmox.wait_for_vm_stop(node, new_vm_ids[i])
+        # proxmox.wait_for_vm_start(node, new_vm_ids[i])
+        # hostnames.append(proxmox.wait_and_get_ip(node, new_vm_ids[i]))
+        # proxmox.shutdown_vm(node, new_vm_ids[i])
+        # proxmox.wait_for_vm_stop(node, new_vm_ids[i])
 
         hostnames.append("10.10.10." + str(i))
 
@@ -152,7 +150,8 @@ def vm_provision_process(vm_id, classnames, no_of_vm, cpu_cores, ram, request_id
     passwords.insert(0, password)
     vm_passwords.insert(0, orig_vm.vm_password)
     
-    ansible.change_vm_default_userpass(request_id, vm_passwords)
+    # ansible.change_vm_default_userpass(request_id, vm_passwords)
+    add_port_forward_rules()
 
     return {
         'usernames' : classnames,
@@ -164,14 +163,13 @@ def shutdown_vm(request, vm_id):
 
     vm = get_object_or_404(VirtualMachines, id=vm_id)
 
-    if vm.status == VirtualMachines.Status.ACTIVE:
+    if vm.is_active():
         
-        proxmox.shutdown_vm(vm.node.name, vm.vm_id)
+        # proxmox.shutdown_vm(vm.node.name, vm.vm_id)
 
-        vm.status = vm.Status.SHUTDOWN
-        vm.save()
+        vm.is_shutdown()
 
-        proxmox.wait_for_vm_stop(vm.node.name, vm.vm_id)
+        # proxmox.wait_for_vm_stop(vm.node.name, vm.vm_id)
 
     return redirect(request.META.get('HTTP_REFERER'))
 
