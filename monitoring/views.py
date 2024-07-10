@@ -295,21 +295,27 @@ def aggregatedData (request):
 
         for table in memory_result:
             for record in table.records:
-                host = record['host']
-                time = record.get_time()
-                
-                if host not in memory_dict:
-                    memory_dict[host] = {'host': host, 'time': time, 'memtotal': None, 'memfree': None, 'memused': None}
-                
-                if record['_field'] == 'memtotal':
-                    memory_dict[host]['memtotal'] = record.get_value()
-                elif record['_field'] == 'memfree':
-                    memory_dict[host]['memfree'] = record.get_value()
-                elif record['_field'] == 'memused':
-                    memory_dict[host]['memused'] = record.get_value()
+                memory = {
+                    'host': record ['host'],
+                    'time': record.get_time,
+                    'memory' : record.get_value()
+                }
 
-        # Convert the dictionary to a list of memory records
-        memory_list = list(memory_dict.values())
+                memory_list.append(memory)
+                # host = record['host']
+                # time = record.get_time()
+                
+                # if host not in memory_dict:
+                #     memory_dict[host] = {'host': host, 'time': time, 'memtotal': None, 'memfree': None, 'memused': None}
+                
+                # if record['_field'] == 'memtotal':
+                #     memory_dict[host]['memtotal'] = record.get_value()
+                # elif record['_field'] == 'memfree':
+                #     memory_dict[host]['memfree'] = record.get_value()
+                # elif record['_field'] == 'memused':
+                #     memory_dict[host]['memused'] = record.get_value()
+
+        # memory_list = list(memory_dict.values())
 
         storage_flux_query = f'''
                             from(bucket: "{bucket}")
