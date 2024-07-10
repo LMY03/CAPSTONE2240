@@ -5,5 +5,6 @@ from . import views
 app_name = "monitoring"
 
 urlpatterns = [
-    path("", views.renders, name='index'),
+    path('', views.index, name="index"),
+    path('getdata/', views.getData, name="getData")
 ]
