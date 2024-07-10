@@ -1,0 +1,4 @@
+<form action="{% url 'opnsense:add_rule' %}" method="post">
+    {% csrf_token %}
+    <input type="submit" value="submit" />
+</form>

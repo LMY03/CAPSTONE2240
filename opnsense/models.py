@@ -9,9 +9,11 @@ class PortRules(models.Model):
     protocol = models.CharField(max_length=45)
     source_port = models.CharField(max_length=45)
     dest_port = models.CharField(max_length=45)
-    rule_uuid = models.UUIDField(default=uuid.uuid4, editable=False)
-    is_disabled = models.BooleanField(default=False)
+    rule_uuid = models.UUIDField(editable=False)
+    # rule_uuid = models.UUIDField(default=uuid.uuid4, editable=False)
+    # is_disabled = models.BooleanField(default=False)
+    is_deleted = models.BooleanField(default=False)
 
     def delete_firewall_rule(self):
-        self.is_disabled = True
+        self.is_deleted = True
         self.save()

@@ -35,6 +35,7 @@ services:
       - "8000:8000"
     environment:
       ANSIBLE_HOST_KEY_CHECKING: "False"
+      REDIS_HOST: redis
     env_file:
       - .env
     depends_on:
@@ -85,6 +86,11 @@ services:
     volumes:
       - influxdb_data:/var/lib/influxdb2
       - influxdb_config:/etc/influxdb2
+  
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
 
   # netdata:
   #   image: netdata/netdata:latest
