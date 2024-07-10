@@ -2,7 +2,7 @@ $(document).ready(function () {
     function init() {
         $.ajax({
             type: 'GET',
-            url: 'aggregateData',
+            url: 'monitoring/aggregateData/',
             data: {},
             datatype: 'json',
             sucess: function (response) {
