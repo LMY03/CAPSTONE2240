@@ -13,18 +13,16 @@ DEFAULT_VM_PASSWORD = config('DEFAULT_VM_PASSWORD')
 def change_vm_default_userpass(ip_adds, vm_passwords):
 
     extra_vars = {
-        'username': DEFAULT_VM_USERNAME,
-        'ansible_become_pass': 'DLSU1234!',
+        # 'username': DEFAULT_VM_USERNAME,
         'passwords': vm_passwords,
+        'ansible_become_pass': 'DLSU1234!',
     }
     # inventory = "[request]\n"
     inventory = ""
-    if type(ip_adds) is list:
-        for ip_add in ip_adds : inventory += f"{ip_add} ansible_user={DEFAULT_VM_USERNAME}\n"
-    elif type(ip_adds) is str:
-        inventory = f"{ip_adds} ansible_user={DEFAULT_VM_USERNAME}\n"
-    print("ansible ----------------")
-    print(inventory)
+    # if type(ip_adds) is list:
+    for ip_add in ip_adds : inventory += f"{ip_add} ansible_user={DEFAULT_VM_USERNAME}\n"
+    # elif type(ip_adds) is str:
+    #     inventory = f"{ip_adds} ansible_user={DEFAULT_VM_USERNAME}\n"
     return run_playbook('change_vm_pass.yml', inventory, extra_vars)
 
 def resize_vm_disk(ip_add): 

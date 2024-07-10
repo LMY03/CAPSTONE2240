@@ -5,6 +5,6 @@
   tasks:
     - name: Change user password
       user:
-        name: "{{ username }}"
+        name: "ccs_user"
         password: "{{ item | password_hash('sha512') }}"
       loop: "{{ passwords }}"
