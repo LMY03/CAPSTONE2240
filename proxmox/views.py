@@ -91,7 +91,7 @@ def vm_provision_process(vm_id, classnames, no_of_vm, cpu_cores, ram, request_id
 
     if orig_vm.is_shutdown():
         proxmox.start_vm(node, vm_id)
-        ip_add = proxmox.wait_and_get_ip(node)
+        ip_add = proxmox.wait_and_get_ip(node, vm_id)
         orig_vm.ip_add = ip_add
         orig_vm.save()
         orig_vm.set_active()
