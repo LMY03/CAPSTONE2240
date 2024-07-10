@@ -1,6 +1,10 @@
 from decouple import config
 import requests, time
 
+import urllib3
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 PROXMOX_HOST = config('PROXMOX_HOST')
 USERNAME = config('PROXMOX_USERNAME')
 PASSWORD = config('PROXMOX_PASSWORD')
