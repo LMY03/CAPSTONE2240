@@ -256,7 +256,8 @@ def aggregatedData (request):
     memory_free_list = []
     memory_used_list = []
     storage_list = []
-    network_list = []
+    network_in_list = []
+    network_out_list = []
     for node in nodes:
         coreFluxQuery= f'''
                     from(bucket: "{bucket}")
@@ -349,38 +350,47 @@ def aggregatedData (request):
                 }
                 storage_list.append(storage)
 
-        network_flux_query = f'''
+        network_in_flux_query = f'''
                             from(bucket: "{bucket}")
                             |> range(start: -30m)
                             |> filter(fn: (r) => r._measurement == "nics")
-                            |> filter(fn: (r) => r["_field"]== "netin" or r["_field"] == "netout")
+                            |> filter(fn: (r) => r["_field"]== "netin")
                             |> filter(fn: (r) => r.nodename == "{node}")
                             |> aggregateWindow(every: 10s, fn: mean, createEmpty: false)
+                            |> map(fn: (r) => ({{ r with _value: r._value / 1024.0 }})) //MB
                             |> yield(name: "mean")
                             '''
-        network_dict = {}
+        
+        network_out_flux_query = f'''
+                            from(bucket: "{bucket}")
+                            |> range(start: -30m)
+                            |> filter(fn: (r) => r._measurement == "nics")
+                            |> filter(fn: (r) => r["_field"] == "netout")
+                            |> filter(fn: (r) => r.nodename == "{node}")
+                            |> aggregateWindow(every: 10s, fn: mean, createEmpty: false)
+                            |> map(fn: (r) => ({{ r with _value: r._value / 1024.0 }})) //MB
+                            |> yield(name: "mean")
+                            '''
         try: 
-            network_result = query_api.query(query= network_flux_query)
-            for table in network_result:
+            network_out_result = query_api.query(query= network_out_flux_query)
+            network_in_result = query_api.query(query= network_in_flux_query)
+            for table in network_in_result:
                 for record in table.records:
                     network= {
                         'host' : record['host'],
                         'time' : record.get_time(),
-                        'network' : record.get_value()
+                        'network_in' : record.get_value()
                     }
-                    network_list.append(network)
-            #         host = record['host']
-            #         time = record.get_time()
-                    
-            #         if host not in network_dict:
-            #             network_dict[host] = {'host': host, 'time': time, 'netin': None, 'netout': None}
-                    
-            #         if record['_field'] == 'netin':
-            #             network_dict[host]['netin'] = record.get_value()
-            #         elif record['_field'] == 'netout':
-            #             network_dict[host]['netout'] = record.get_value()
+                    network_in_list.append(network)
 
-            # network_list = list(network_dict.values())
+            for table in network_out_result:
+                for record in table.records:
+                    network = {
+                        'host' : record['host'],
+                        'time' : record.get_time(),
+                        'network_in' : record.get_value()                        
+                    }
+                    network_out_list.append(network)
         except Exception as e :
             print (e)
         
@@ -390,5 +400,6 @@ def aggregatedData (request):
       'memoryFreeResultList' : memory_free_list,
       'memoryUsedResultList' : memory_used_list,
       'storageResultList' : storage_list,
-      'networkResultList' : network_list
+      'networkInResultList' : network_in_list,
+      'networkOutResultList' : network_out_list
     })
