@@ -20,9 +20,14 @@ def run(request):
         # proxmox.wait_for_task(node, proxmox.clone_vm(node, 3001, new_vm_id, 'Tester'))
         # proxmox.config_vm_disk(node, new_vm_id, "50G")
         # proxmox.start_vm(node, new_vm_id)
-        response = ansible.resize_vm_disk(proxmox.wait_and_get_ip(node, new_vm_id))
+        # response = ansible.resize_vm_disk(proxmox.wait_and_get_ip(node, new_vm_id))
 
-        return render(request, "data.html", { "data" : response })
+        ip_adds = ['192.168.1.128', '192.168.1.129', '192.168.1.130']
+        vm_pass = ['123456', '123456', '123456']
+
+        ansible.change_vm_default_userpass(ip_adds, vm_pass)
+
+        return render(request, "data.html")
 
 # def run_ansible_playbook():
 #     try:
