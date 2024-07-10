@@ -10,17 +10,15 @@ INVENTORY_HOSTS_PATH = '/app/ansible/inventory/hosts'
 DEFAULT_VM_USERNAME = config('DEFAULT_VM_USERNAME')
 DEFAULT_VM_PASSWORD = config('DEFAULT_VM_PASSWORD')
 
-def change_vm_default_userpass(request_id, vm_passwords):
+def change_vm_default_userpass(ip_adds, vm_passwords):
 
     extra_vars = {
         'username': DEFAULT_VM_USERNAME,
         'passwords': vm_passwords
     }
-
-    hostnames = get_vm_ip_adds(request_id)
     # inventory = "[request]\n"
     inventory = ""
-    for i in range(len(hostnames)) : inventory += f"{hostnames[i]} ansible_user={DEFAULT_VM_USERNAME}\n"
+    for ip_add in ip_adds : inventory += f"{ip_add} ansible_user={DEFAULT_VM_USERNAME}\n"
 
     return run_playbook('change_vm_pass.yml', inventory, extra_vars)
 
