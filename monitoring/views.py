@@ -357,7 +357,7 @@ def aggregatedData (request):
                             |> filter(fn: (r) => r["_field"]== "netin")
                             |> filter(fn: (r) => r.nodename == "{node}")
                             |> aggregateWindow(every: 10s, fn: mean, createEmpty: false)
-                            |> map(fn: (r) => ({{ r with _value: r._value / 1024.0 }})) //MB
+                            |> map(fn: (r) => ({{ r with _value: r._value / 1048576.0 }})) //MB
                             |> yield(name: "mean")
                             '''
         
@@ -368,7 +368,7 @@ def aggregatedData (request):
                             |> filter(fn: (r) => r["_field"] == "netout")
                             |> filter(fn: (r) => r.nodename == "{node}")
                             |> aggregateWindow(every: 10s, fn: mean, createEmpty: false)
-                            |> map(fn: (r) => ({{ r with _value: r._value / 1024.0 }})) //MB
+                            |> map(fn: (r) => ({{ r with _value: r._value / 1048576.0 }})) //MB
                             |> yield(name: "mean")
                             '''
         try: 
