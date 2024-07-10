@@ -429,7 +429,7 @@ def request_confirm(request, request_id):
     request_entry.status = RequestEntry.Status.PROCESSING
     request_entry.save()
 
-    return redirect(f'/ticketing:request_details', request_id)
+    return redirect('ticketing:request_details', request_id)
 
 def request_reject(request, id):
 

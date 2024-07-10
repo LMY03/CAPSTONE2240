@@ -102,14 +102,13 @@ def vm_provision_process(vm_id, classnames, no_of_vm, cpu_cores, ram, request_id
     orig_vm.set_shutdown()
 
     proxmox.wait_for_vm_stop(node, orig_vm.vm_id)
-
-    for new_vm_id, vm_name in new_vm_ids, classnames:
+    for new_vm_id, vm_name in zip(new_vm_ids, classnames):
         print("----------------------------")
         print(f"new_vm_id={new_vm_id}")
         print(f"vm_name={vm_name}")
         upids.append(proxmox.clone_vm(node, vm_id, new_vm_id, vm_name))
 
-    for vm_id, upid in new_vm_ids, upids:
+    for vm_id, upid in zip(new_vm_ids, upids):
         proxmox.wait_for_task(node, upid)
         proxmox.config_vm(node, vm_id, cpu_cores, ram)
         proxmox.start_vm(node, vm_id)
