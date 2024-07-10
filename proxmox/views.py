@@ -91,7 +91,7 @@ def vm_provision_process(vm_id, classnames, no_of_vm, cpu_cores, ram, request_id
 
     if orig_vm.is_shutdown():
         proxmox.start_vm(node, vm_id)
-        ip_add = proxmox.wait_and_get_ip(node)
+        ip_add = proxmox.wait_and_get_ip(node, vm_id)
         orig_vm.ip_add = ip_add
         orig_vm.save()
         orig_vm.set_active()
@@ -103,7 +103,11 @@ def vm_provision_process(vm_id, classnames, no_of_vm, cpu_cores, ram, request_id
 
     proxmox.wait_for_vm_stop(node, orig_vm.vm_id)
 
-    for new_vm_id, vm_name in new_vm_ids, classnames : upids.append(proxmox.clone_vm(node, vm_id, new_vm_id, vm_name))
+    for new_vm_id, vm_name in new_vm_ids, classnames:
+        print("----------------------------")
+        print(f"new_vm_id={new_vm_id}")
+        print(f"vm_name={vm_name}")
+        upids.append(proxmox.clone_vm(node, vm_id, new_vm_id, vm_name))
 
     for vm_id, upid in new_vm_ids, upids:
         proxmox.wait_for_task(node, upid)

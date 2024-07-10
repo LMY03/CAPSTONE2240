@@ -19,7 +19,7 @@ def change_vm_default_userpass(ip_adds, vm_passwords):
     # inventory = "[request]\n"
     inventory = ""
     for ip_add in ip_adds : inventory += f"{ip_add} ansible_user={DEFAULT_VM_USERNAME}\n"
-
+    print(inventory)
     return run_playbook('change_vm_pass.yml', inventory, extra_vars)
 
 def resize_vm_disk(ip_add): 
