@@ -366,8 +366,7 @@ def aggregatedData (request):
                     network= {
                         'host' : record['host'],
                         'time' : record.get_time(),
-                        'network_in' : record['netin'],
-                        'network_out' : record['netout']
+                        'network' : record.get_value()
                     }
                     network_list.append(network)
             #         host = record['host']
