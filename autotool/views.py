@@ -22,8 +22,10 @@ def run(request):
         # proxmox.start_vm(node, new_vm_id)
         # response = ansible.resize_vm_disk(proxmox.wait_and_get_ip(node, new_vm_id))
 
-        ip_adds = ['192.168.1.128', '192.168.1.129', '192.168.1.130']
-        vm_pass = ['123456', '123456', '123456']
+        # ip_adds = ['192.168.1.128', '192.168.1.129', '192.168.1.130']
+        # vm_pass = ['123456', '123456', '123456']
+        ip_adds = ['192.168.1.131']
+        vm_pass = ['123456']
 
         ansible.change_vm_default_userpass(ip_adds, vm_pass)
 
