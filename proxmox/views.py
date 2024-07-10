@@ -62,7 +62,7 @@ def generate_vm_ids(no_of_vm):
 
 def vm_provision_process(vm_id, classnames, no_of_vm, cpu_cores, ram, request_id):
 
-    orig_vm = get_object_or_404(VirtualMachines, vm_id=vm_id)
+    orig_vm = get_object_or_404(VirtualMachines, vm_id=vm_id, request_id=request_id)
     guacamole_connection = get_object_or_404(GuacamoleConnection, vm=orig_vm)
     password = User.objects.make_random_password()
     user = User(username=orig_vm.vm_name)
@@ -109,6 +109,8 @@ def vm_provision_process(vm_id, classnames, no_of_vm, cpu_cores, ram, request_id
         upids.append(proxmox.clone_vm(node, vm_id, new_vm_id, vm_name))
 
     for vm_id, upid in zip(new_vm_ids, upids):
+        print("----------------------------")
+        print(f"new_vm_id={new_vm_id}")
         proxmox.wait_for_task(node, upid)
         proxmox.config_vm(node, vm_id, cpu_cores, ram)
         proxmox.start_vm(node, vm_id)
@@ -131,7 +133,7 @@ def vm_provision_process(vm_id, classnames, no_of_vm, cpu_cores, ram, request_id
         proxmox.wait_for_vm_start(node, vm_id)
         hostnames.append(proxmox.wait_and_get_ip(node, vm_id))
 
-        # hostnames.append("10.10.10." + str(i))
+        # hostnames.append("10.10.10." + str(vm_id))
 
     ansible.change_vm_default_userpass(hostnames, vm_passwords)
 
@@ -155,7 +157,7 @@ def vm_provision_process(vm_id, classnames, no_of_vm, cpu_cores, ram, request_id
         user.set_password(passwords[i])
         user.save()
         UserProfile.objects.create(user=user)
-        vm = VirtualMachines(request=request_entry, vm_id=new_vm_ids[i], vm_name=classnames[i], cores=cpu_cores, ram=ram, storage=request_entry.template.storage, ip_add=hostnames[i], vm_password=vm_passwords[i], node=orig_vm.node, status=VirtualMachines.Status.SHUTDOWN)
+        vm = VirtualMachines(request=request_entry, vm_id=new_vm_ids[i], vm_name=classnames[i], cores=cpu_cores, ram=ram, storage=request_entry.template.storage, ip_add=hostnames[i], node=orig_vm.node, status=VirtualMachines.Status.SHUTDOWN)
         vm.save()
         vms.append(vm)
         GuacamoleConnection(user=get_object_or_404(GuacamoleUser, system_user=user), connection_id=guacamole_connection_id, connection_group_id=guacamole_connection.connection_group_id, vm=vm).save()

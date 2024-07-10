@@ -223,4 +223,19 @@ TSG Dashboard
 {% block script %}
 <script src="{% static 'ticketing/js/detail-script.js' %}"></script>
 <script src="{% static 'guacamole/js/launch-vm.js' %}"></script>
+<script>
+    function clear_credential() {
+        fetch("{% url 'ticketing:clear_credential' %}", {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({})
+        });
+    }
+    window.addEventListener('beforeunload', function (e) {
+        if (!document.activeElement.href.includes('generate_txt')) clear_credential()
+    });
+</script>
 {% endblock  %}

@@ -22,6 +22,7 @@ def change_vm_default_userpass(ip_adds, vm_passwords):
         for ip_add in ip_adds : inventory += f"{ip_add} ansible_user={DEFAULT_VM_USERNAME}\n"
     elif type(ip_adds) is str:
         inventory = f"{ip_adds} ansible_user={DEFAULT_VM_USERNAME}\n"
+    print("ansible ----------------")
     print(inventory)
     return run_playbook('change_vm_pass.yml', inventory, extra_vars)
 
