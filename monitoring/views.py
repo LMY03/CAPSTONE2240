@@ -235,11 +235,9 @@ def getData(request):
 
 
 def aggregatedData (request):
-    time_range_start = (datetime.datetime.now() - datetime.timedelta(hours=1)).isoformat() + "Z"
-    time_range_stop = datetime.datetime.now().isoformat() + "Z"
     coreFluxQuery= f'''
                     from(bucket: "proxmox")
-                        |> range(start: {time_range_start}, stop: {time_range_stop})
+                        |> range(start: -1h)
                         |> filter(fn: (r) => r["_measurement"] == "cpustat")
                         |> filter(fn: (r) => r["object"] == "nodes")
                         |> filter(fn: (r) => r["_field"] == "cpu")
