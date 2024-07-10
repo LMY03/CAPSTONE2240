@@ -142,7 +142,7 @@ def add_comment(request, pk):
         
         comment_text = request.POST.get('comment')
         
-        if request_entry.status != RequestEntry.Status.FOR_REVISION:
+        if request_entry.status == RequestEntry.Status.PENDING:
             new_data['status'] = RequestEntry.Status.FOR_REVISION
         
         Comment.objects.create(
