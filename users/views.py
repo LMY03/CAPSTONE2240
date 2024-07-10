@@ -79,16 +79,6 @@ def tsg_home(request):
     request_entry = RequestEntry.objects.filter(status = 'PENDING')
     count = request_entry.count()
     context = {}
-    coreFluxQuery= f'''
-                    from(bucket: "proxmox")
-                        |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
-                        |> filter(fn: (r) => r["_measurement"] == "cpustat")
-                        |> filter(fn: (r) => r["object"] == "nodes")
-                        |> filter(fn: (r) => r["_field"] == "total" or r["_field"] == "used")
-                        |> filter(fn: (r) => r["host"] == "pve" or r["host"] == "jin")
-                        |> aggregateWindow(every: 10s, fn: mean, createEmpty: false)
-                        |> yield(name: "mean")
-                    '''
     context['open_request_count'] = count
     return render(request, 'users/tsg_home.html', context)
 

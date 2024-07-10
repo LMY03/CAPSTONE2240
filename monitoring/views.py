@@ -4,13 +4,16 @@ from proxmoxer import ProxmoxAPI
 from influxdb_client import InfluxDBClient, Point, WritePrecision
 import csv
 from io import StringIO
-token = "fZTol0u-bKXxSbyn098UbdrWj7l3TS876mheo30RBIfKfPmxohWsNGCUfZ84g2OyWpPFGUENPSMPrekqCgktEA=="
-org = "DLSU_CCS"
-bucket = "proxmox"
+from decouple import config
+
+token = config('INFLUX_TOKEN')
+org = config('INFLUXDB_ORG')
+bucket = config('INFLUXDB_BUCKET')
+proxmox_password = config('PROXMOX_PASSWORD')
 
 # Create your views here.
 def index(request):
-    proxmox = ProxmoxAPI('10.1.200.11', user='root@pam', password='cap2240', verify_ssl=False)
+    proxmox = ProxmoxAPI('10.1.200.11', user='root@pam', password=proxmox_password, verify_ssl=False)
     nodes = proxmox.nodes.get()
     strNodes = []
     
@@ -227,4 +230,35 @@ def getData(request):
         'totalMemoryResultList': totalMemoryResultList,
         'totalStorageUsedResultList': totalStorageUsedResultList,
         'vmList': VMList
+    })
+
+
+def aggregatedData (request):
+    coreFluxQuery= f'''
+                    from(bucket: "proxmox")
+                        |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+                        |> filter(fn: (r) => r["_measurement"] == "cpustat")
+                        |> filter(fn: (r) => r["object"] == "nodes")
+                        |> filter(fn: (r) => r["_field"] == "cpu")
+                        |> filter(fn: (r) => r["host"] == "pve" or r["host"] == "jin")
+                        |> aggregateWindow(every: 10s, fn: mean, createEmpty: false)
+                        |> yield(name: "mean")
+                    '''
+    
+    client = InfluxDBClient(url="http://192.168.1.3:8086", token=token, org=org)
+
+    query_api = client.query_api()
+    result = query_api.query(query=coreFluxQuery)
+    cores = []
+    for table in result:
+        for record in table.records:
+            cpu = {}
+            cpu['host'] = record.values.get('host')
+            cpu['cpus'] = record.get_value()
+            cores.append(cpu)
+
+    cores_list = [{'host': host, 'total': data.get('total', ""), 'used': data.get('used', "")} for host, data in cores.items()]
+
+    return JsonResponse({
+      'coresResultList' : cores_list  
     })
