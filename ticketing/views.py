@@ -13,7 +13,7 @@ import json, datetime
 
 from guacamole import guacamole
 from proxmox import views, proxmox
-from pfsense.views import delete_port_forward_rules
+from pfsense.views import add_port_forward_rules, delete_port_forward_rules
 
 from .models import RequestEntry, Comment, RequestUseCase, PortRules, UserProfile, RequestEntryAudit, VMTemplates
 from proxmox.models import VirtualMachines, Nodes
@@ -516,6 +516,7 @@ def create_test_vm(tsg_user, request_id, node):
 def confirm_test_vm(request, request_id):
 
     request.session['credentials'] = vm_provision(request_id)
+    # add_port_forward_rules(request_id)
 
     request_entry = get_object_or_404(RequestEntry, pk=request_id)
     request_entry.status = RequestEntry.Status.ONGOING

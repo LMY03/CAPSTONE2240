@@ -3,6 +3,7 @@ from django.shortcuts import get_list_or_404
 
 from . import pfsense
 
+from proxmox.models import VirtualMachines
 from ticketing.models import RequestEntry, PortRules
 
 # redis_host = os.getenv('REDIS_HOST', 'redis')
@@ -29,7 +30,14 @@ def generate_dest_ports():
 
     return
 
-def add_port_forward_rules(protocols, ip_adds, local_ports, descrs):
+def add_port_forward_rules(request_id):
+    vms = VirtualMachines.objects.filter(request_id=request_id)
+    port_rules = PortRules.objects.filter(request_id=request_id)
+    
+    protocols = port_rules.values_list('protocol', flat=True)
+    dest_ports = port_rules.values_list('dest_ports', flat=True)
+    ip_adds = vms.values_list('ip_add', flat=True)
+    descrs = vms.values_list('vm_name', flat=True)
     dest_ports = generate_dest_ports()
     # lock = redis_client.lock('pfsense_lock', timeout=60)
     # with lock:

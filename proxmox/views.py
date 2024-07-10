@@ -87,21 +87,28 @@ def vm_provision_process(vm_id, classnames, no_of_vm, cpu_cores, ram, request_id
     vm_passwords = []
 
     new_vm_ids = generate_vm_ids(no_of_vm)
+    orig_vm_password = User.objects.make_random_password()
 
-    if orig_vm.is_active():
-        
-        proxmox.shutdown_vm(node, orig_vm.vm_id)
+    if orig_vm.is_shutdown():
+        proxmox.start_vm(node, vm_id)
+        ip_add = proxmox.wait_and_get_ip(node)
+        orig_vm.ip_add = ip_add
+        orig_vm.save()
+        orig_vm.set_active()
 
-        orig_vm.set_shutdown()
+    ansible.change_vm_default_userpass(orig_vm.ip_add, orig_vm_password)
+    proxmox.shutdown_vm(node, orig_vm.vm_id)
 
-        proxmox.wait_for_vm_stop(node, orig_vm.vm_id)
+    orig_vm.set_shutdown()
 
-    for i in range(no_of_vm) : upids.append(proxmox.clone_vm(node, vm_id, new_vm_ids[i], classnames[i]))
+    proxmox.wait_for_vm_stop(node, orig_vm.vm_id)
 
-    for i in range(no_of_vm):
-        proxmox.wait_for_task(node, upids[i])
-        proxmox.config_vm(node, new_vm_ids[i], cpu_cores, ram)
-        proxmox.start_vm(node, new_vm_ids[i])
+    for new_vm_id, vm_name in new_vm_ids, classnames : upids.append(proxmox.clone_vm(node, vm_id, new_vm_id, vm_name))
+
+    for vm_id, upid in new_vm_ids, upids:
+        proxmox.wait_for_task(node, upid)
+        proxmox.config_vm(node, vm_id, cpu_cores, ram)
+        proxmox.start_vm(node, vm_id)
 
     request_entry = get_object_or_404(RequestEntry, id=request_id)
     tsg_guacamole_username = get_object_or_404(GuacamoleUser, system_user=request_entry.requester).username
@@ -117,22 +124,27 @@ def vm_provision_process(vm_id, classnames, no_of_vm, cpu_cores, ram, request_id
     vms = []
     vms.append(orig_vm)
 
-    for i in range(no_of_vm):
-        proxmox.wait_for_vm_start(node, new_vm_ids[i])
-        hostnames.append(proxmox.wait_and_get_ip(node, new_vm_ids[i]))
-        proxmox.shutdown_vm(node, new_vm_ids[i])
-        proxmox.wait_for_vm_stop(node, new_vm_ids[i])
+    for vm_id in new_vm_ids:
+        proxmox.wait_for_vm_start(node, vm_id)
+        hostnames.append(proxmox.wait_and_get_ip(node, vm_id))
 
         # hostnames.append("10.10.10." + str(i))
+
+    ansible.change_vm_default_userpass(hostnames, vm_passwords)
+
+    for vm_id in new_vm_ids:
+        proxmox.shutdown_vm(node, vm_id)
+        proxmox.wait_for_vm_stop(node, vm_id)
 
     vm_username = config('DEFAULT_VM_USERNAME')
 
     for i in range(no_of_vm):
         passwords.append(User.objects.make_random_password())
-        vm_passwords.append(User.objects.make_random_password())
+        vm_password = User.objects.make_random_password()
+        vm_passwords.append(vm_password)
 
         # guacamole_connection_ids.append(guacamole.create_connection(classnames[i], protocol, port, hostnames[i], vm_username, passwords[i], guacamole_connection_group_id))
-        guacamole_connection_id = guacamole.create_connection(classnames[i], protocol, port, hostnames[i], vm_username, vm_passwords[i], guacamole_connection.connection_group_id)
+        guacamole_connection_id = guacamole.create_connection(classnames[i], protocol, port, hostnames[i], vm_username, vm_password, guacamole_connection.connection_group_id)
         guacamole.assign_connection(classnames[i], guacamole_connection_id)
         guacamole.assign_connection(faculty_guacamole_username, guacamole_connection_id)
         
@@ -145,20 +157,10 @@ def vm_provision_process(vm_id, classnames, no_of_vm, cpu_cores, ram, request_id
         vms.append(vm)
         GuacamoleConnection(user=get_object_or_404(GuacamoleUser, system_user=user), connection_id=guacamole_connection_id, connection_group_id=guacamole_connection.connection_group_id, vm=vm).save()
 
-    orig_vm.vm_password = User.objects.make_random_password()
+    # orig_vm.vm_password = User.objects.make_random_password()
+    passwords.append(password)
     classnames.insert(0, orig_vm.vm_name)
-    passwords.insert(0, password)
-    vm_passwords.insert(0, orig_vm.vm_password)
-    
-    ansible.change_vm_default_userpass(request_id, vm_passwords)
-    
-    port_rules = PortRules.objects.filter(request=request_entry)
-    protocols = port_rules.values_list('protocol', flat=True)
-    dest_ports = port_rules.values_list('dest_ports', flat=True)
-    vms = VirtualMachines.objects.filter(request_id=request_id)
-    ip_adds = vms.values_list('ip_add', flat=True)
-    descrs = vms.values_list('vm_name', flat=True)
-    # add_port_forward_rules(protocols, ip_adds, dest_ports, descrs) # pfsense
+    vm_passwords.insert(0, orig_vm_password)
 
     return {
         'usernames' : classnames,
