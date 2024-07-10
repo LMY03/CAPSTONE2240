@@ -1,8 +1,9 @@
-from django.shortcuts import render, redirect
-
+from django.shortcuts import get_list_or_404
 import redis, os
 
 from . import pfsense
+
+from ticketing.models import RequestEntry, PortRules
 
 redis_host = os.getenv('REDIS_HOST', 'redis')
 redis_client = redis.StrictRedis(host=redis_host, port=6379, db=0)
@@ -19,10 +20,20 @@ def get_firewall_rule(vm_name):
     for rule in rules:
         if rule['descr'] == vm_name: return rule['id']
 
-def add_port_forward_rules(protocols, destination_ports, ip_adds, local_ports, descrs):
+def generate_dest_ports():
+    port_rules = []
+    request_entries = RequestEntry.objects.filter(status=RequestEntry.Status.ONGOING) # maybe also add completed
+    for request_entry in request_entries:
+        for port_rule in PortRules.objects.filter(request_id=request_entry.id):
+            port_rules.append(port_rule)
+
+    return
+
+def add_port_forward_rules(protocols, ip_adds, local_ports, descrs):
+    dest_ports = generate_dest_ports()
     lock = redis_client.lock('pfsense_lock', timeout=60)
     with lock:
-        for protocol, destination_port, ip_add, local_port, descr in protocols, destination_ports, ip_adds, local_ports, descrs:
+        for protocol, destination_port, ip_add, local_port, descr in protocols, dest_ports, ip_adds, local_ports, descrs:
             pfsense.add_firewall_rule(protocol, destination_port, ip_add, descr)
             pfsense.add_port_forward_rule(protocol, destination_port, ip_add, local_port, descr)
     pfsense.apply_changes()

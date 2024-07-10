@@ -33,8 +33,8 @@ def access_vm(request):
 
         if vm.is_shutdown():
 
-            # proxmox.start_vm(vm.node.name, vm.vm_id)
-            # ip_add = proxmox.wait_and_get_ip(vm.node.name, vm.vm_id)
+            proxmox.start_vm(vm.node.name, vm.vm_id)
+            ip_add = proxmox.wait_and_get_ip(vm.node.name, vm.vm_id)
 
             ip_add = vm.ip_add
 

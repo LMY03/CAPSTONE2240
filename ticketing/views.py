@@ -490,12 +490,12 @@ def create_test_vm(tsg_user, request_id, node):
     
     ip_add = "10.10.10.1"
 
-    # upid = proxmox.clone_vm(node.name, vm_id, new_vm_id, vm_name)
-    # proxmox.wait_for_task(node.name, upid)
-    # proxmox.config_vm(node.name, new_vm_id, cpu_cores, ram)
-    # proxmox.start_vm(node.name, new_vm_id)
-    # ip_add = proxmox.wait_and_get_ip(node.name, new_vm_id)
-    # proxmox.shutdown_vm(node.name, new_vm_id)
+    upid = proxmox.clone_vm(node.name, vm_id, new_vm_id, vm_name)
+    proxmox.wait_for_task(node.name, upid)
+    proxmox.config_vm(node.name, new_vm_id, cpu_cores, ram)
+    proxmox.start_vm(node.name, new_vm_id)
+    ip_add = proxmox.wait_and_get_ip(node.name, new_vm_id)
+    proxmox.shutdown_vm(node.name, new_vm_id)
 
     tsg_gaucamole_user = get_object_or_404(GuacamoleUser, system_user=tsg_user)
     guacamole_connection_group_id = guacamole.create_connection_group(f"{request_id}")
@@ -577,13 +577,13 @@ def reject_test_vm(request, request_id):
 
     if vm.is_active():
 
-        # proxmox.stop_vm(vm.node.name, vm.vm_id)
+        proxmox.stop_vm(vm.node.name, vm.vm_id)
 
         vm.set_shutdown()
 
-        # proxmox.wait_for_vm_stop(vm.node.name, vm.vm_id)
+        proxmox.wait_for_vm_stop(vm.node.name, vm.vm_id)
     
-    # proxmox.delete_vm(vm.node.name, vm.vm_id)
+    proxmox.delete_vm(vm.node.name, vm.vm_id)
 
     vm.set_destroyed()
 
@@ -596,11 +596,11 @@ def vm_provision(request_id):
 
     if vm.is_active():
 
-        # proxmox.shutdown_vm(vm.node.name, vm.vm_id)
+        proxmox.shutdown_vm(vm.node.name, vm.vm_id)
 
         vm.set_shutdown()
 
-        # proxmox.wait_for_vm_stop(vm.node.name, vm.vm_id)
+        proxmox.wait_for_vm_stop(vm.node.name, vm.vm_id)
         
     request_use_cases = RequestUseCase.objects.filter(request=request_entry).values('request_use_case', 'vm_count')
     classnames = []
@@ -623,20 +623,20 @@ def delete_request(request, request_id):
     request_entry = get_object_or_404(RequestEntry, pk=request_id)
 
     vms = VirtualMachines.objects.filter(request=request_entry)
-    delete_port_forward_rules(VirtualMachines.objects.filter(request=request_entry).values_list('vm_name', flat=True))
+    # delete_port_forward_rules(vms.values_list('vm_name', flat=True)) # pfsense
 
     for vm in vms:
         if vm.is_active:
 
-            # proxmox.stop_vm(vm.node.name, vm.vm_id)
+            proxmox.stop_vm(vm.node.name, vm.vm_id)
 
             vm.set_shutdown()
 
     for vm in vms:
         vm.set_destroyed()
 
-        # proxmox.wait_for_vm_stop(vm.node.name, vm.vm_id)
-        # proxmox.delete_vm(vm.node.name, vm.vm_id)
+        proxmox.wait_for_vm_stop(vm.node.name, vm.vm_id)
+        proxmox.delete_vm(vm.node.name, vm.vm_id)
 
         guacamole_connection = get_object_or_404(GuacamoleConnection, vm=vm)
         guacamole_connection.is_active = False
