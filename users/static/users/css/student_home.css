@@ -26,12 +26,18 @@ body {
 }
 
 .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 200px;
+    height: 100vh;
+    /* Adjust height as needed */
     background-color: #004d00;
     color: white;
-    height: 100vh;
     padding: 20px;
     overflow-y: auto;
-    /* Add scrolling behavior for overflow */
+    z-index: 1000;
+    /* Ensure sidebar stays above content */
 }
 
 .sidebar .logo img {
@@ -54,7 +60,7 @@ body {
 }
 
 .content {
-    flex: 1;
+    margin-left: 250px;
     padding: 20px;
 }
 
