@@ -89,6 +89,7 @@ def vm_provision_process(vm_id, classnames, no_of_vm, cpu_cores, ram, request_id
     new_vm_ids = generate_vm_ids(no_of_vm)
     orig_vm_password = User.objects.make_random_password()
     vm_passwords.append(orig_vm_password)
+    # guacamole.update_connection() # change ip of original vm
 
     if orig_vm.is_active():
         proxmox.shutdown_vm(node, orig_vm.vm_id)
