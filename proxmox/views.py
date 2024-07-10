@@ -88,19 +88,12 @@ def vm_provision_process(vm_id, classnames, no_of_vm, cpu_cores, ram, request_id
 
     new_vm_ids = generate_vm_ids(no_of_vm)
     orig_vm_password = User.objects.make_random_password()
+    vm_passwords.append(orig_vm_password)
 
-    if orig_vm.is_shutdown():
-        proxmox.start_vm(node, vm_id)
-        ip_add = proxmox.wait_and_get_ip(node, vm_id)
-        orig_vm.ip_add = ip_add
-        orig_vm.save()
-        orig_vm.set_active()
-
-    ansible.change_vm_default_userpass(orig_vm.ip_add, orig_vm_password)
-    proxmox.shutdown_vm(node, orig_vm.vm_id)
-    proxmox.wait_for_vm_stop(node, orig_vm.vm_id)
-
-    orig_vm.set_shutdown()
+    if orig_vm.is_active():
+        proxmox.shutdown_vm(node, orig_vm.vm_id)
+        proxmox.wait_for_vm_stop(node, orig_vm.vm_id)
+        orig_vm.set_shutdown()
 
     for new_vm_id, vm_name in zip(new_vm_ids, classnames):
         print("----------------------------")
@@ -128,14 +121,20 @@ def vm_provision_process(vm_id, classnames, no_of_vm, cpu_cores, ram, request_id
     
     vms = []
     vms.append(orig_vm)
-
+    proxmox.start_vm(node, orig_vm.vm_id)
     for vm_id in new_vm_ids:
         proxmox.wait_for_vm_start(node, vm_id)
         hostnames.append(proxmox.wait_and_get_ip(node, vm_id))
+        vm_password = User.objects.make_random_password()
+        vm_passwords.append(vm_password)
 
         # hostnames.append("10.10.10." + str(vm_id))
-
+    orig_vm.ip_add =  proxmox.wait_and_get_ip(node, orig_vm.vm_id)
+    orig_vm.save()
+    hostnames.insert(0, orig_vm.ip_add)
     ansible.change_vm_default_userpass(hostnames, vm_passwords)
+
+    proxmox.shutdown_vm(node, orig_vm.vm_id)
 
     for vm_id in new_vm_ids:
         proxmox.shutdown_vm(node, vm_id)
@@ -145,11 +144,9 @@ def vm_provision_process(vm_id, classnames, no_of_vm, cpu_cores, ram, request_id
 
     for i in range(no_of_vm):
         passwords.append(User.objects.make_random_password())
-        vm_password = User.objects.make_random_password()
-        vm_passwords.append(vm_password)
 
         # guacamole_connection_ids.append(guacamole.create_connection(classnames[i], protocol, port, hostnames[i], vm_username, passwords[i], guacamole_connection_group_id))
-        guacamole_connection_id = guacamole.create_connection(classnames[i], protocol, port, hostnames[i], vm_username, vm_password, guacamole_connection.connection_group_id)
+        guacamole_connection_id = guacamole.create_connection(classnames[i], protocol, port, hostnames[i+1], vm_username, vm_passwords[i+1], guacamole_connection.connection_group_id)
         guacamole.assign_connection(classnames[i], guacamole_connection_id)
         guacamole.assign_connection(faculty_guacamole_username, guacamole_connection_id)
         
@@ -163,7 +160,7 @@ def vm_provision_process(vm_id, classnames, no_of_vm, cpu_cores, ram, request_id
         GuacamoleConnection(user=get_object_or_404(GuacamoleUser, system_user=user), connection_id=guacamole_connection_id, connection_group_id=guacamole_connection.connection_group_id, vm=vm).save()
 
     # orig_vm.vm_password = User.objects.make_random_password()
-    passwords.append(password)
+    passwords.insert(0, password)
     classnames.insert(0, orig_vm.vm_name)
     vm_passwords.insert(0, orig_vm_password)
 
