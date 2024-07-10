@@ -420,19 +420,19 @@ def edit_form_submit(request):
 
 def request_confirm(request, request_id):
 
-    if request.method == 'POST':
+    # if request.method == 'POST':
 
-        data = request.POST
-        # node = data.get('node')
+    data = request.POST
+    # node = data.get('node')
 
-        node = "pve"
+    node = "pve"
 
-        request_entry = get_object_or_404(RequestEntry, pk=request_id)
+    request_entry = get_object_or_404(RequestEntry, pk=request_id)
 
-        create_test_vm(request.user, request_id, node)
+    create_test_vm(request.user, request_id, node)
 
-        request_entry.status = RequestEntry.Status.PROCESSING
-        request_entry.save()
+    request_entry.status = RequestEntry.Status.PROCESSING
+    request_entry.save()
 
     return redirect('ticketing:request_details', request_id)
 

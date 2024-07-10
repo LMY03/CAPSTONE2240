@@ -172,7 +172,7 @@ TSG Dashboard
             </div>
         </div>
         {% if request_entry.status == "PENDING" or request_entry.status == "FOR REVISION" %}
-        <form action="{% url 'ticketing:request-confirm' request_entry.id %}" method="post">
+        <!-- <form action="{% url 'ticketing:request-confirm' request_entry.id %}" method="post"> -->
             {% csrf_token %}
         <!-- Acceptance Form Summary -->
             <div class="modal fade" id="vmformsummary" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
@@ -210,11 +210,11 @@ TSG Dashboard
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-primary">Accept request</button>
+                        <a href="{% url 'ticketing:request-confirm' request_entry.id %}"><button type="button" class="btn btn-primary">Accept request</button></a>
                     </div>
                 </div>
             </div>
-        </form>
+        <!-- </form> -->
         {% endif %}
     </div>
 </div>
