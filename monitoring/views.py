@@ -303,7 +303,7 @@ def aggregatedData (request):
 
         memory_free_result = query_api.query(query=memory_free_flux_query)
         memory_used_result = query_api.query(query=memory_used_flux_query)
-        memory_dict = {}
+    
 
         for table in memory_free_result:
             for record in table.records:
@@ -379,7 +379,8 @@ def aggregatedData (request):
         
     return JsonResponse({
       'coresResultList' : cores,
-      'memoryResultList' : memory_list,
+      'memoryFreeResultList' : memory_free_result,
+      'memoryUsedResultList' : memory_used_list,
       'storageResultList' : storage_list,
       'networkResultList' : network_list
     })
