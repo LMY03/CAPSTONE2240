@@ -286,8 +286,9 @@ def aggregatedData (request):
                         |> filter(fn: (r) => r["_field"] == "memfree"  )
                         |> filter(fn: (r) => r["host"] == "{node}")
                         |> aggregateWindow(every: 10s, fn: mean, createEmpty: false)
+                        |> map(fn: (r) => ({{ r with _value: r._value / 1073741824.0 }}))
                         |> yield(name: "mean")
-                        |> map(fn: (r) => ({{ r with _value: r._value / 1073741824.0 }}))  // To GB
+                          // To GB
                         '''
         
         memory_used_flux_query = f'''
@@ -297,8 +298,9 @@ def aggregatedData (request):
                         |> filter(fn: (r) => r["_field"] == "memused")
                         |> filter(fn: (r) => r["host"] == "{node}")
                         |> aggregateWindow(every: 10s, fn: mean, createEmpty: false)
+                        |> map(fn: (r) => ({{ r with _value: r._value / 1073741824.0 }})) 
                         |> yield(name: "mean")
-                        |> map(fn: (r) => ({{ r with _value: r._value / 1073741824.0 }}))  // To GB
+                        
                         '''
 
         memory_free_result = query_api.query(query=memory_free_flux_query)
@@ -332,8 +334,8 @@ def aggregatedData (request):
                             |> filter(fn: (r) => r._field == "total")
                             |> filter(fn: (r) => r.nodename == "{node}")
                             |> aggregateWindow(every: 10s, fn: mean, createEmpty: false)
-                            |> yield(name: "mean")
                             |> map(fn: (r) => ({{ r with _value: r._value / 1073741824.0 }}))  // To GB
+                            |> yield(name: "mean")
                         '''
         
         storage_result = query_api.query(query=storage_flux_query)
@@ -379,7 +381,7 @@ def aggregatedData (request):
         
     return JsonResponse({
       'coresResultList' : cores,
-      'memoryFreeResultList' : memory_free_result,
+      'memoryFreeResultList' : memory_free_list,
       'memoryUsedResultList' : memory_used_list,
       'storageResultList' : storage_list,
       'networkResultList' : network_list
