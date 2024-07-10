@@ -1,3 +1,4 @@
+import datetime
 from django.http.response import HttpResponse, JsonResponse
 from django.shortcuts import render
 from proxmoxer import ProxmoxAPI
@@ -234,9 +235,11 @@ def getData(request):
 
 
 def aggregatedData (request):
+    time_range_start = (datetime.utcnow() - datetime.timedelta(hours=1)).isoformat() + "Z"
+    time_range_stop = datetime.utcnow().isoformat() + "Z"
     coreFluxQuery= f'''
                     from(bucket: "proxmox")
-                        |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+                        |> range(start: {time_range_start}, stop: {time_range_stop})
                         |> filter(fn: (r) => r["_measurement"] == "cpustat")
                         |> filter(fn: (r) => r["object"] == "nodes")
                         |> filter(fn: (r) => r["_field"] == "cpu")
