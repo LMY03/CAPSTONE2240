@@ -311,7 +311,7 @@ def aggregatedData (request):
             for record in table.records:
                 memory = {
                     'host': record ['host'],
-                    'time': record.get_time,
+                    'time': record.get_time(),
                     'memory_free' : record.get_value()
                 }
 
@@ -321,7 +321,7 @@ def aggregatedData (request):
             for record in table.records:
                 memory = {
                     'host': record ['host'],
-                    'time': record.get_time,
+                    'time': record.get_time(),
                     'memory_used' : record.get_value()
                 }
                 memory_used_list.append(memory)
