@@ -14,7 +14,7 @@ def change_vm_default_userpass(ip_adds, vm_passwords):
 
     extra_vars = {
         'username': DEFAULT_VM_USERNAME,
-        'ansible_become_pass': DEFAULT_VM_PASSWORD,
+        'ansible_become_pass': 'DLSU1234!',
         'passwords': vm_passwords,
     }
     # inventory = "[request]\n"
