@@ -154,12 +154,7 @@ def add_comment(request, pk):
         if new_data:
             log_request_entry_changes(request_entry, user, new_data, user)
 
-    
-    if user_profile.user_type == 'admin':
-        return redirect('ticketing:request_details', request_id=pk)
-    else:
-        return redirect('ticketing:faculty_edit_request', request_id = pk)
-
+    return redirect('ticketing:request_details', request_id=pk)
 class RequestForm(forms.ModelForm):
     class Meta:
         model = RequestEntry
