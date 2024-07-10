@@ -652,7 +652,7 @@ def delete_request(request, request_id):
         guacamole.delete_user(guacamole_user.username)
     
     guacamole.delete_connection_group(guacamole_connection.connection_group_id)
-        
+    
     request_entry.status = RequestEntry.Status.DELETED
     request_entry.save()
 
