@@ -429,7 +429,7 @@ def request_confirm(request, request_id):
     request_entry.status = RequestEntry.Status.PROCESSING
     request_entry.save()
 
-    return redirect(f'/ticketing/{request_id}/details')
+    return redirect('ticketing:request_details', request_id)
 
 def request_reject(request, id):
 
@@ -511,7 +511,6 @@ def create_test_vm(tsg_user, request_id, node):
     )
     vm.save()
     GuacamoleConnection(user=get_object_or_404(GuacamoleUser, system_user=tsg_user), connection_id=guacamole_connection_id, connection_group_id=guacamole_connection_group_id, vm=vm).save()
-    # VMUser.objects.create(vm=vm, username="jin", password="123456")
     
 def confirm_test_vm(request, request_id):
 
