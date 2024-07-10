@@ -31,13 +31,11 @@ body {
     left: 0;
     width: 200px;
     height: 100vh;
-    /* Adjust height as needed */
     background-color: #004d00;
     color: white;
     padding: 20px;
     overflow-y: auto;
     z-index: 1000;
-    /* Ensure sidebar stays above content */
 }
 
 .sidebar .logo img {
@@ -60,7 +58,7 @@ body {
 }
 
 .content {
-    margin-left: 250px;
+    margin-left: 16.66%;
     padding: 20px;
 }
 
