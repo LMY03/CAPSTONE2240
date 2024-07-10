@@ -234,31 +234,138 @@ def getData(request):
     })
 
 
-def aggregatedData (request):
-    coreFluxQuery= f'''
-                    from(bucket: "proxmox")
-                        |> range(start: -1h)
-                        |> filter(fn: (r) => r["_measurement"] == "cpustat")
-                        |> filter(fn: (r) => r["object"] == "nodes")
-                        |> filter(fn: (r) => r["_field"] == "cpu")
-                        |> filter(fn: (r) => r["host"] == "pve" or r["host"] == "jin")
-                        |> aggregateWindow(every: 10s, fn: mean, createEmpty: false)
-                        |> yield(name: "mean")
+def aggregatedData (request): 
+    flux_query = f'''
+                    from(bucket:"{bucket}")
+                    |> range(start: -5m)
+                    |> filter(fn: (r) => r._measurement == "system")
+                    |> filter(fn: (r) => r.object == "nodes")
+                    |> group(columns: ["host"])
+                    |> distinct(column: "host")
                     '''
     
     client = InfluxDBClient(url="http://192.168.1.3:8086", token=token, org=org)
 
     query_api = client.query_api()
-    result = query_api.query(query=coreFluxQuery)
-    cores = []
+    result = query_api.query(query=flux_query)
+    nodes = []
     for table in result:
         for record in table.records:
-            cpu = {
-                'host': record['host'],
-                'cpu': record.get_value()  
-            }
-            cores.append(cpu)
+            nodes.append(record.values.get("host", ""))
+    cores = []
+    memory_list = []
+    storage_list = []
+    network_list = []
+    for node in nodes:
+        coreFluxQuery= f'''
+                    from(bucket: "{bucket}")
+                        |> range(start: -30m)
+                        |> filter(fn: (r) => r["_measurement"] == "cpustat")
+                        |> filter(fn: (r) => r["object"] == "nodes")
+                        |> filter(fn: (r) => r["_field"] == "cpu")
+                        |> filter(fn: (r) => r["host"] == "{node}")
+                        |> aggregateWindow(every: 10s, fn: mean, createEmpty: false)
+                        |> yield(name: "mean")
+                    '''
+        core_result = query_api.query(query=coreFluxQuery)
+        
+        for table in core_result:
+            for record in table.records:
+                cpu = {
+                    'host': record['host'],
+                    "time": record.get_time(),
+                    'cpu': record.get_value()  
+                }
+                cores.append(cpu)
 
+        memory_flux_query = f'''
+                        from(bucket: "{bucket}")
+                        |> range(start: -30m)  
+                        |> filter(fn: (r) => r["_measurement"] == "memory")
+                        |> filter(fn: (r) => r["_field"]== "memtotal" or r["_field"] == "memfree" or r["_field"] == "memused")
+                        |> filter(fn: (r) => r["host"] == "{node}")
+                        |> aggregateWindow(every: 10s, fn: mean, createEmpty: false)
+                        |> yield(name: "mean")
+                        |> map(fn: (r) => ({{ r with _value: r._value / 1073741824.0 }}))  // To GB
+                        '''
+        
+        memory_result = query_api.query(query=memory_flux_query)
+
+        memory_dict = {}
+
+        for table in memory_result:
+            for record in table.records:
+                host = record['host']
+                time = record.get_time()
+                
+                if host not in memory_dict:
+                    memory_dict[host] = {'host': host, 'time': time, 'memtotal': None, 'memfree': None, 'memused': None}
+                
+                if record['_field'] == 'memtotal':
+                    memory_dict[host]['memtotal'] = record.get_value()
+                elif record['_field'] == 'memfree':
+                    memory_dict[host]['memfree'] = record.get_value()
+                elif record['_field'] == 'memused':
+                    memory_dict[host]['memused'] = record.get_value()
+
+        # Convert the dictionary to a list of memory records
+        memory_list = list(memory_dict.values())
+
+        storage_flux_query = f'''
+                            from(bucket: "{bucket}")
+                            |> range(start: -30m)
+                            |> filter(fn: (r) => r._measurement == "system")
+                            |> filter(fn: (r) => r.host == "local")
+                            |> filter(fn: (r) => r._field == "total")
+                            |> filter(fn: (r) => r.nodename == "{node}")
+                            |> aggregateWindow(every: 10s, fn: mean, createEmpty: false)
+                            |> yield(name: "mean")
+                        '''
+        
+        storage_result = query_api.query(query=storage_flux_query)
+
+        for table in storage_result:
+            for record in table.records:
+                storage = {
+                    'host': record['host'],
+                    "time": record.get_time(),
+                    'storage': record.get_value()
+                }
+                storage_list.append(storage)
+
+        network_flux_query = f'''
+                            from(bucket: "{bucket}")
+                            |> range(start: -30m)
+                            |> filter(fn: (r) => r._measurement == "nics")
+                            |> filter(fn: (r) => r["_field"]== "netin" or r["_field"] == "netout")
+                            |> filter(fn: (r) => r.nodename == "{node}")
+                            |> aggregateWindow(every: 10s, fn: mean, createEmpty: false)
+                            |> yield(name: "mean")
+                            '''
+        network_dict = {}
+        try: 
+            network_result = query_api.query(query= network_flux_query)
+            for table in network_result:
+                for record in table.records:
+                    host = record['host']
+                    time = record.get_time()
+                    
+                    if host not in memory_dict:
+                        network_dict[host] = {'host': host, 'time': time, 'netin': None, 'netout': None}
+                    
+                    if record['_field'] == 'netin':
+                        network_dict[host]['netin'] = record.get_value()
+                    elif record['_field'] == 'netout':
+                        network_dict[host]['netout'] = record.get_value()
+
+            network_list = list(network_dict.values())
+        except Exception as e :
+            print (e)
+        
+        
     return JsonResponse({
-      'coresResultList' : cores  
+      'coresResultList' : cores,
+      'memoryResultList' : memory_list,
+      'storageResultList' : storage_list,
+      'networkResultList' : network_list
     })
