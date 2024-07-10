@@ -253,7 +253,8 @@ def aggregatedData (request):
         for record in table.records:
             nodes.append(record.values.get("host", ""))
     cores = []
-    memory_list = []
+    memory_free_list = []
+    memory_used_list = []
     storage_list = []
     network_list = []
     for node in nodes:
@@ -278,44 +279,50 @@ def aggregatedData (request):
                 }
                 cores.append(cpu)
 
-        memory_flux_query = f'''
+        memory_free_flux_query = f'''
                         from(bucket: "{bucket}")
                         |> range(start: -30m)  
                         |> filter(fn: (r) => r["_measurement"] == "memory")
-                        |> filter(fn: (r) => r["_field"]== "memtotal" or r["_field"] == "memfree" or r["_field"] == "memused")
+                        |> filter(fn: (r) => r["_field"] == "memfree"  )
                         |> filter(fn: (r) => r["host"] == "{node}")
                         |> aggregateWindow(every: 10s, fn: mean, createEmpty: false)
                         |> yield(name: "mean")
                         |> map(fn: (r) => ({{ r with _value: r._value / 1073741824.0 }}))  // To GB
                         '''
         
-        memory_result = query_api.query(query=memory_flux_query)
+        memory_used_flux_query = f'''
+                        from(bucket: "{bucket}")
+                        |> range(start: -30m)  
+                        |> filter(fn: (r) => r["_measurement"] == "memory")
+                        |> filter(fn: (r) => r["_field"] == "memused")
+                        |> filter(fn: (r) => r["host"] == "{node}")
+                        |> aggregateWindow(every: 10s, fn: mean, createEmpty: false)
+                        |> yield(name: "mean")
+                        |> map(fn: (r) => ({{ r with _value: r._value / 1073741824.0 }}))  // To GB
+                        '''
 
+        memory_free_result = query_api.query(query=memory_free_flux_query)
+        memory_used_result = query_api.query(query=memory_used_flux_query)
         memory_dict = {}
 
-        for table in memory_result:
+        for table in memory_free_result:
             for record in table.records:
                 memory = {
                     'host': record ['host'],
                     'time': record.get_time,
-                    'memory' : record.get_value()
+                    'memory_free' : record.get_value()
                 }
 
-                memory_list.append(memory)
-                # host = record['host']
-                # time = record.get_time()
-                
-                # if host not in memory_dict:
-                #     memory_dict[host] = {'host': host, 'time': time, 'memtotal': None, 'memfree': None, 'memused': None}
-                
-                # if record['_field'] == 'memtotal':
-                #     memory_dict[host]['memtotal'] = record.get_value()
-                # elif record['_field'] == 'memfree':
-                #     memory_dict[host]['memfree'] = record.get_value()
-                # elif record['_field'] == 'memused':
-                #     memory_dict[host]['memused'] = record.get_value()
+                memory_free_list.append(memory)
 
-        # memory_list = list(memory_dict.values())
+        for table in memory_used_result:
+            for record in table.records:
+                memory = {
+                    'host': record ['host'],
+                    'time': record.get_time,
+                    'memory_used' : record.get_value()
+                }
+                memory_used_list.append(memory)
 
         storage_flux_query = f'''
                             from(bucket: "{bucket}")
@@ -326,6 +333,7 @@ def aggregatedData (request):
                             |> filter(fn: (r) => r.nodename == "{node}")
                             |> aggregateWindow(every: 10s, fn: mean, createEmpty: false)
                             |> yield(name: "mean")
+                            |> map(fn: (r) => ({{ r with _value: r._value / 1073741824.0 }}))  // To GB
                         '''
         
         storage_result = query_api.query(query=storage_flux_query)
@@ -356,7 +364,7 @@ def aggregatedData (request):
                     host = record['host']
                     time = record.get_time()
                     
-                    if host not in memory_dict:
+                    if host not in network_dict:
                         network_dict[host] = {'host': host, 'time': time, 'netin': None, 'netout': None}
                     
                     if record['_field'] == 'netin':
