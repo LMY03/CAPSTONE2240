@@ -135,7 +135,7 @@ TSG Dashboard
                                         Confirm Requested VM 
                                     {% endif %}
                                 </button></a>
-                                {% elif request_entry.has_credentials == True %}
+                                {% elif request_entry.status == "ONGOING" and request_entry.has_credentials == True %}
                                 <a href="{% url 'ticketing:download_credentials' %}"><button type="submit" class="btn btn-primary w-25">Download</button></a>
                                 {% endif %}
                             </div>
