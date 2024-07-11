@@ -19,16 +19,21 @@ def get_firewall_rule(vm_name):
         if rule['descr'] == vm_name : return rule['id']
 
 def generate_dest_ports(no_of_ports_needed):
-    ongoing_requests = RequestEntry.objects.filter(status=RequestEntry.Status.ONGOING)
-    used_ports = PortRules.objects.filter(request__in=ongoing_requests).values_list('dest_ports', flat=True)
-    used_ports = set(map(int, used_ports))
 
-    available_ports = set(range(49152, 65536)) - used_ports
-    if len(available_ports) < no_of_ports_needed:
-        raise ValueError("Not enough available ports to satisfy the request")
+    used_ports = DestinationPorts.objects.filter(
+        port_rule__request__status=RequestEntry.Status.ONGOING
+    ).values_list('dest_port', flat=True)
+
+    used_ports_set = set(map(int, used_ports))
+
+    # Define the range of dynamic/private ports
+    all_ports = set(range(49152, 65536))
+    available_ports = all_ports - used_ports_set
+
+    # if len(available_ports) < no_of_ports_needed:
+    #     raise ValueError("Not enough available ports to satisfy the request.")
 
     selected_ports = random.sample(available_ports, no_of_ports_needed)
-    
     return selected_ports
 
 def add_port_forward_rules(request_id, protocols, local_ports, ip_adds, descrs):
