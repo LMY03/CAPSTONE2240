@@ -139,6 +139,10 @@ def vm_provision_process(vm_id, classnames, no_of_vm, cpu_cores, ram, request_id
 
     for i in range(no_of_vm):
         passwords.append(User.objects.make_random_password())
+        user = User(username=classnames[i])
+        user.set_password(passwords[i])
+        user.save()
+        UserProfile.objects.create(user=user)
 
         # guacamole_connection_ids.append(guacamole.create_connection(classnames[i], protocol, port, hostnames[i], vm_username, passwords[i], guacamole_connection_group_id))
         # guacamole_connection_id = guacamole.create_connection(classnames[i], protocol, port, hostnames[i+1], vm_username, vm_passwords[i+1], guacamole_connection.connection_group_id)
@@ -146,10 +150,6 @@ def vm_provision_process(vm_id, classnames, no_of_vm, cpu_cores, ram, request_id
         guacamole.assign_connection(classnames[i], guacamole_connection_id)
         guacamole.assign_connection(faculty_guacamole_username, guacamole_connection_id)
         
-        user = User(username=classnames[i])
-        user.set_password(passwords[i])
-        user.save()
-        UserProfile.objects.create(user=user)
         vm = VirtualMachines(request=request_entry, vm_id=new_vm_ids[i], vm_name=classnames[i], cores=cpu_cores, ram=ram, storage=request_entry.template.storage, ip_add=hostnames[i], node=orig_vm.node, status=VirtualMachines.Status.SHUTDOWN)
         vm.save()
         vms.append(vm)
