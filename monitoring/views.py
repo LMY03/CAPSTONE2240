@@ -7,6 +7,7 @@ import csv
 from io import StringIO
 from decouple import config
 
+INFLUX_ADDRESS = config('INFLUX_ADDRESS')
 token = config('INFLUX_TOKEN')
 org = config('INFLUXDB_ORG')
 bucket = config('INFLUXDB_BUCKET')
@@ -26,7 +27,7 @@ def index(request):
 def getData(request):
     #Connection between Proxmox API and application
     proxmox = ProxmoxAPI('10.1.200.11', user='root@pam', password='cap2240', verify_ssl=False)
-    client = InfluxDBClient(url="http://192.168.1.3:8086", token=token, org=org)
+    client = InfluxDBClient(url=INFLUX_ADDRESS, token=token, org=org)
 
     #Get VM Info from Proxmox API
     vmids = proxmox.cluster.resources.get(type='vm')
@@ -244,7 +245,7 @@ def aggregatedData (request):
                     |> distinct(column: "host")
                     '''
     
-    client = InfluxDBClient(url="http://192.168.1.3:8086", token=token, org=org)
+    client = InfluxDBClient(url=INFLUX_ADDRESS, token=token, org=org)
 
     query_api = client.query_api()
     result = query_api.query(query=flux_query)
