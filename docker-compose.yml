@@ -86,12 +86,6 @@ services:
     volumes:
       - influxdb_data:/var/lib/influxdb2
       - influxdb_config:/etc/influxdb2
-  
-  redis:
-    image: redis:alpine
-    container_name: redis
-    ports:
-      - "6379:6379"
 
   # netdata:
   #   image: netdata/netdata:latest

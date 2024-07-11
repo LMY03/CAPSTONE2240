@@ -107,10 +107,10 @@ class RequestUseCase (models.Model):
 #     group_number = models.IntegerField(default=1)
 
 
-class PortRules (models.Model):
+class PortRules(models.Model):
     request = models.ForeignKey(RequestEntry, on_delete= models.CASCADE)
-    protocol = models.CharField (max_length=45, blank=True, null=True)
-    dest_ports = models.CharField (max_length=45, blank=True, null=True)
+    protocol = models.CharField (max_length=45)
+    dest_ports = models.CharField (max_length=45)
     #description = models.TextField(blank= True, null = True)
 
 class UserProfile (models.Model):

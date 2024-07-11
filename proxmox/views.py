@@ -124,6 +124,7 @@ def vm_provision_process(vm_id, classnames, no_of_vm, cpu_cores, ram, request_id
         vm_passwords.append(vm_password)
 
         # hostnames.append("10.10.10." + str(vm_id))
+
     orig_vm.ip_add =  proxmox.wait_and_get_ip(node, orig_vm.vm_id)
     orig_vm.save()
     hostnames.insert(0, orig_vm.ip_add)
@@ -162,7 +163,7 @@ def vm_provision_process(vm_id, classnames, no_of_vm, cpu_cores, ram, request_id
     return {
         'usernames' : classnames,
         'passwords' : passwords,
-        'vm_passs': vm_passwords,
+        # 'vm_passs': vm_passwords,
     }
 
 def shutdown_vm(request, vm_id):

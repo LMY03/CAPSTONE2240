@@ -30,4 +30,5 @@ urllib3
 
 proxmoxer
 influxdb_client
-redis
+django-redis
+# redis

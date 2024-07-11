@@ -235,7 +235,7 @@ TSG Dashboard
         });
     }
     window.addEventListener('beforeunload', function (e) {
-        clear_credential()
+        if (!document.activeElement.href.includes('generate_txt')) clear_credential()
     });
 </script>
 {% endblock  %}

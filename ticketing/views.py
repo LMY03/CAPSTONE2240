@@ -514,10 +514,17 @@ def create_test_vm(tsg_user, request_id, node):
     
 def confirm_test_vm(request, request_id):
 
-    request.session['credentials'] = vm_provision(request_id)
-    # add_port_forward_rules(request_id)
-
     request_entry = get_object_or_404(RequestEntry, pk=request_id)
+
+    request.session['credentials'] = vm_provision(request_id)
+    vms = VirtualMachines.objects.filter(request=request_entry)
+    port_rules = PortRules.objects.filter(request=request_entry)
+    protocols = port_rules.values_list('protocol', flat=True)
+    local_ports = port_rules.values_list('dest_ports', flat=True)
+    ip_adds = vms.values_list('ip_add', flat=True)
+    descrs = vms.values_list('vm_name', flat=True)
+    add_port_forward_rules(request_id, protocols, local_ports, ip_adds, descrs) # pfsense
+    
     request_entry.status = RequestEntry.Status.ONGOING
     request_entry.save()
 
@@ -538,15 +545,15 @@ def download_credentials(request):
     usernames = details['usernames']
     passwords = details['passwords']
     # vm_users = details['vm_user']
-    vm_passs = details['vm_passs']
+    # vm_passs = details['vm_passs']
 
     # Create the content of the text file
     file_content = ["VM Credentials\n"]
-    for username, password, vm_pass in zip(usernames, passwords, vm_passs):
+    for username, password in zip(usernames, passwords):
         file_content.append(f"Username: {username}")
         file_content.append(f"Password: {password}")
         # file_content.append(f"VM_User: {vm_user}")
-        file_content.append(f"VM_Pass: {vm_pass}")
+        # file_content.append(f"VM_Pass: {vm_pass}")
         file_content.append("-------------------------------")
 
     # Join the content into a single string with newlines
@@ -618,7 +625,7 @@ def delete_request(request, request_id):
     request_entry = get_object_or_404(RequestEntry, pk=request_id)
 
     vms = VirtualMachines.objects.filter(request=request_entry)
-    # delete_port_forward_rules(vms.values_list('vm_name', flat=True)) # pfsense
+    delete_port_forward_rules(vms.values_list('vm_name', flat=True)) # pfsense
 
     for vm in vms:
         if vm.is_active:

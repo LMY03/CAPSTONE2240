@@ -5,7 +5,7 @@ from django.http import JsonResponse
 # from . models import GuacamoleUser
 from . import guacamole
 from proxmox import proxmox
-from pfsense.views import update_port_forward_rule_ip_adds
+from pfsense.views import update_port_forward_rule
 
 from guacamole.models import GuacamoleUser, GuacamoleConnection
 from proxmox.models import VirtualMachines
@@ -20,9 +20,7 @@ from proxmox.models import VirtualMachines
 #     print(guacamole.create_user(guacamole_username, guacamole_password))
 
 def access_vm(request):
-    print("access_vm -------------------------------")
     if request.method == "POST":
-        print("-------------------------------")
 
         data = request.POST
         vm_id = data.get("vm_id")
@@ -39,9 +37,10 @@ def access_vm(request):
             ip_add = vm.ip_add
 
             if ip_add != vm.ip_add:
-                update_port_forward_rule_ip_adds(vm.vm_name, ip_add) #pfsense
+                update_port_forward_rule(vm.vm_name, ip_add) # pfsense
                 guacamole.update_connection(connection_id, vm_id)
                 vm.ip_add = ip_add
+                vm.save()
 
             vm.set_active()
         
