@@ -97,7 +97,7 @@ def tsg_request_details(request, request_id):
         elif request_use_case.request_use_case == 'TEST' : request_entry.use_case = 'Test'
         else: request_entry.use_case = 'Class Course'
 
-    # if request_entry.is_processing() : request_entry.vm_id = get_object_or_404(VirtualMachines, request=request_entry).id
+    if request_entry.is_processing() : request_entry.vm_id = 1 # get_object_or_404(VirtualMachines, request=request_entry).id
 
     comments = Comment.objects.filter(request_entry=request_entry).order_by('date_time')
     vm_counts = 0
