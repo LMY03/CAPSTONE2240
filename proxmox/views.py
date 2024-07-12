@@ -174,7 +174,7 @@ def shutdown_vm(request, vm_id):
         
         proxmox.shutdown_vm(vm.node.name, vm.vm_id)
 
-        vm.is_shutdown()
+        vm.set_shutdown()
 
         proxmox.wait_for_vm_stop(vm.node.name, vm.vm_id)
 
