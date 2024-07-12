@@ -48,8 +48,8 @@ def add_port_forward_rules(request_id, protocols, local_ports, ip_adds, descrs):
     for protocol, local_port in zip(protocols, local_ports):
         for ip_add, descr in zip(ip_adds, descrs):
             dest_port = dest_ports[counter % len(dest_ports)]
-            pfsense.add_firewall_rule(protocol, dest_port, ip_add, descr)
             pfsense.add_port_forward_rule(protocol, dest_port, ip_add, local_port, descr)
+            pfsense.add_firewall_rule(protocol, dest_port, ip_add, descr)
             port_rule = get_object_or_404(PortRules, request_id=request_id, dest_ports=local_port)
             DestinationPorts.objects.create(port_rule=port_rule, dest_port=dest_port)
             counter+=1
