@@ -5,7 +5,6 @@ python-decouple
 ansible
 # ansible-core
 ansible-runner
-django_tables2
 asgiref
 certifi
 cffi
@@ -30,5 +29,3 @@ urllib3
 
 proxmoxer
 influxdb_client
-django-redis
-# redis
