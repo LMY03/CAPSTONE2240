@@ -50,6 +50,7 @@ def add_port_forward_rules(request_id, protocols, local_ports, ip_adds, descrs):
         for ip_add, descr in zip(ip_adds, descrs):
             dest_port = dest_ports[counter % len(dest_ports)]
             protocol = protocol.lower()
+            dest_port = str(dest_port)
             print("----------------------")
             print(f"protocol={protocol}")
             print(pfsense.add_port_forward_rule(protocol, dest_port, ip_add, local_port, descr, token))
