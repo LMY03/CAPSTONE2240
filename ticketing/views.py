@@ -516,7 +516,7 @@ def confirm_test_vm(request, request_id):
 
     request_entry = get_object_or_404(RequestEntry, pk=request_id)
 
-    request.session['credentials'] = vm_provision(request_id)
+    # request.session['credentials'] = vm_provision(request_id)
     vms = VirtualMachines.objects.filter(request=request_entry)
     port_rules = PortRules.objects.filter(request=request_entry)
     protocols = port_rules.values_list('protocol', flat=True)
