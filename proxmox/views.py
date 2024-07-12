@@ -6,7 +6,6 @@ import secrets, string
 
 from guacamole import guacamole
 from autotool import ansible
-from pfsense.views import add_port_forward_rules
 from . import proxmox
 
 from . models import VirtualMachines
