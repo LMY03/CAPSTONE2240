@@ -55,7 +55,7 @@ def add_port_forward_rules(request_id, protocols, local_ports, ip_adds, descrs):
             DestinationPorts.objects.create(port_rule=port_rule, dest_port=dest_port)
             counter+=1
     time.sleep(3)
-    pfsense.apply_changes()
+    pfsense.apply_changes(token)
 
     return dest_ports
 
@@ -64,7 +64,7 @@ def update_port_forward_rule(vm_name, ip_add):
     pfsense.edit_firewall_rule(get_firewall_rule(vm_name, token), ip_add, token)
     pfsense.edit_port_forward_rule(get_port_forward_rule(vm_name, token), ip_add, token)
     time.sleep(3)
-    pfsense.apply_changes()
+    pfsense.apply_changes(token)
 
 def delete_port_forward_rules(vm_names):
     token = pfsense.get_token()
