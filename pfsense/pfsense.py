@@ -10,18 +10,14 @@ def get_token():
     return response.json()['data']['token']
 
 def apply_changes():
-    token = get_token()
     url = f'{PFSENSE_HOST}/api/v2/firewall/apply'
-    headers = { 'Authorization': f'Bearer {token}' }
-    response = requests.post(url, headers=headers)
+    response = requests.post(url, auth=HTTPBasicAuth("admin", "pfsense"))
     return response.json()
 
 def add_port_forward_rule(protocol, destination_port, ip_add, local_port, descr):
-    token = get_token()
     url = f'{PFSENSE_HOST}/api/v2/firewall/nat/port_forward'
     headers = {
         'Content-Type': 'application/json',
-        'Authorization': f'Bearer {token}',
     }
     data = {
         'interface': 'wan',
@@ -38,38 +34,32 @@ def add_port_forward_rule(protocol, destination_port, ip_add, local_port, descr)
         'descr': descr,
         'associated_rule_id': '',
     }
-    response = requests.post(url, headers=headers, json=data)
+    response = requests.post(url, headers=headers, json=data, auth=HTTPBasicAuth("admin", "pfsense"))
     return response.json()
 
 def edit_port_forward_rule(rule_id, ip_add):
-    token = get_token()
     url = f'{PFSENSE_HOST}/api/v2/firewall/nat/port_forward'
     headers = {
         'Content-Type': 'application/json',
-        'Authorization': f'Bearer {token}',
     }
     data = {
         'id': rule_id,
         'target': ip_add,
     }
-    response = requests.patch(url, headers=headers, json=data)
+    response = requests.patch(url, headers=headers, json=data, auth=HTTPBasicAuth("admin", "pfsense"))
 
     return response.json()
 
 def delete_port_forward_rule(rule_id):
-    token = get_token()
     url = f'{PFSENSE_HOST}/api/v2/firewall/nat/port_forward?id={rule_id}&apply=true'
-    headers = { 'Authorization': f'Bearer {token}' }
-    response = requests.delete(url, headers=headers)
+    response = requests.delete(url, auth=HTTPBasicAuth("admin", "pfsense"))
 
     return response.json()
 
 def add_firewall_rule(protocol, destination_port, ip_add, descr):
-    token = get_token()
     url = f'{PFSENSE_HOST}/api/v2/firewall/rule'
     headers = {
         'Content-Type': 'application/json',
-        'Authorization': f'Bearer {token}',
     }
     data = {
         'type': 'pass',
@@ -82,44 +72,36 @@ def add_firewall_rule(protocol, destination_port, ip_add, descr):
         'descr': descr,
         'tcp_flags_out_of': ['fin'],
     }
-    response = requests.post(url, headers=headers, json=data)
+    response = requests.post(url, headers=headers, json=data, auth=HTTPBasicAuth("admin", "pfsense"))
     return response.json()
 
 def edit_firewall_rule(rule_id, ip_add):
-    token = get_token()
     url = f'{PFSENSE_HOST}/api/v2/firewall/rule'
     headers = {
         'Content-Type': 'application/json',
-        'Authorization': f'Bearer {token}',
     }
     data = {
         'id': rule_id,
         'destination': ip_add,
     }
-    response = requests.patch(url, headers=headers, json=data)
+    response = requests.patch(url, headers=headers, json=data, auth=HTTPBasicAuth("admin", "pfsense"))
     
     return response.json()
 
 def delete_firewall_rule(rule_id):
-    token = get_token()
     url = f'{PFSENSE_HOST}/api/v2/firewall/rule?id={rule_id}'
-    headers = { 'Authorization': f'Bearer {token}' }
-    response = requests.delete(url, headers=headers)
+    response = requests.delete(url, auth=HTTPBasicAuth("admin", "pfsense"))
 
     return response.json()
     
 def get_port_forward_rules():
-    token = get_token()
     url = f'{PFSENSE_HOST}/api/v2/firewall/nat/port_forwards?limit=0&offset=0'
-    headers = { 'Authorization': f'Bearer {token}' }
-    response = requests.get(url, headers=headers)
+    response = requests.get(url, auth=HTTPBasicAuth("admin", "pfsense"))
     return response.json()['data']
     
 def get_firewall_rules():
-    token = get_token()
     url = f'{PFSENSE_HOST}/api/v2/firewall/rules?limit=0&offset=0'
-    headers = { 'Authorization': f'Bearer {token}' }
-    response = requests.get(url, headers=headers)
+    response = requests.get(url, auth=HTTPBasicAuth("admin", "pfsense"))
     return response.json()['data']
 
 # https://github.com/jaredhendrickson13/pfsense-api/blob/dbd61d89b93bb85eb64a4ed7b9f477729d8ea9cf/pfSense-pkg-RESTAPI/files/usr/local/pkg/RESTAPI/Models/PortForward.inc
