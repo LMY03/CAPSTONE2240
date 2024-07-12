@@ -525,8 +525,8 @@ def confirm_test_vm(request, request_id):
     descrs = vms.values_list('vm_name', flat=True)
     add_port_forward_rules(request_id, protocols, local_ports, ip_adds, descrs) # pfsense
     
-    # request_entry.status = RequestEntry.Status.ONGOING
-    # request_entry.save()
+    request_entry.status = RequestEntry.Status.ONGOING
+    request_entry.save()
 
     return redirect('ticketing:request_details', request_id)
     # return redirect(f'/ticketing/{request_id}/details')
