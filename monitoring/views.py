@@ -7,6 +7,7 @@ import csv
 from io import StringIO
 from decouple import config
 
+PROXMOX_HOST = config('PROXMOX_HOST')
 INFLUX_ADDRESS = config('INFLUX_ADDRESS')
 token = config('INFLUX_TOKEN')
 org = config('INFLUXDB_ORG')
@@ -15,7 +16,7 @@ proxmox_password = config('PROXMOX_PASSWORD')
 
 # Create your views here.
 def index(request):
-    proxmox = ProxmoxAPI('10.1.200.11', user='root@pam', password=proxmox_password, verify_ssl=False)
+    proxmox = ProxmoxAPI(PROXMOX_HOST, user='root@pam', password=proxmox_password, verify_ssl=False)
     nodes = proxmox.nodes.get()
     strNodes = []
     
@@ -26,7 +27,7 @@ def index(request):
 
 def getData(request):
     #Connection between Proxmox API and application
-    proxmox = ProxmoxAPI('10.1.200.11', user='root@pam', password='cap2240', verify_ssl=False)
+    proxmox = ProxmoxAPI(PROXMOX_HOST, user='root@pam', password='cap2240', verify_ssl=False)
     client = InfluxDBClient(url=INFLUX_ADDRESS, token=token, org=org)
 
     #Get VM Info from Proxmox API
