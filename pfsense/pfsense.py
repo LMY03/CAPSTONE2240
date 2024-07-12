@@ -19,7 +19,7 @@ def apply_changes(token=get_token()):
         'Authorization': f"Bearer {token}",
     }
     response = requests.post(url, headers=headers)
-    return response.json()['data']['token']
+    return response.json()
 
 def add_port_forward_rule(protocol, destination_port, ip_add, local_port, descr, token=get_token()):
     url = f'{PFSENSE_HOST}/api/v2/firewall/nat/port_forward'
