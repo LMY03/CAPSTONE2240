@@ -1,10 +1,10 @@
 from requests.auth import HTTPBasicAuth
-import requests
+import requests, asyncio
 
 PFSENSE_HOST = 'http://192.168.1.1'
 API_KEY = '74c46c1735cc476bb78df2c189be73daf9753ba872d64f8'
 
-def get_token():
+async def get_token():
     url = f'{PFSENSE_HOST}/api/v2/auth/jwt'
     headers = {
         'Content-Type': 'application/json',
@@ -12,8 +12,8 @@ def get_token():
     response = requests.post(url, headers=headers, auth=HTTPBasicAuth("admin", "pfsense"))
     return response.json()['data']['token']
 
-def apply_changes():
-    token = get_token()
+async def apply_changes():
+    token = await get_token()
     url = f'{PFSENSE_HOST}/api/v2/firewall/apply'
     headers = {
         'Content-Type': 'application/json',
@@ -22,8 +22,8 @@ def apply_changes():
     response = requests.post(url, headers=headers)
     return response.json()
 
-def add_port_forward_rule(protocol, destination_port, ip_add, local_port, descr):
-    token = get_token()
+async def add_port_forward_rule(protocol, destination_port, ip_add, local_port, descr):
+    token = await get_token()
     url = f'{PFSENSE_HOST}/api/v2/firewall/nat/port_forward'
     headers = {
         'Content-Type': 'application/json',
@@ -47,8 +47,8 @@ def add_port_forward_rule(protocol, destination_port, ip_add, local_port, descr)
     response = requests.post(url, headers=headers, json=data)
     return response.json()
 
-def edit_port_forward_rule(rule_id, ip_add):
-    token = get_token()
+async def edit_port_forward_rule(rule_id, ip_add):
+    token = await get_token()
     url = f'{PFSENSE_HOST}/api/v2/firewall/nat/port_forward'
     headers = {
         'Content-Type': 'application/json',
@@ -62,16 +62,16 @@ def edit_port_forward_rule(rule_id, ip_add):
 
     return response.json()
 
-def delete_port_forward_rule(rule_id):
-    token = get_token()
+async def delete_port_forward_rule(rule_id):
+    token = await get_token()
     url = f'{PFSENSE_HOST}/api/v2/firewall/nat/port_forward?id={rule_id}&apply=true'
     headers = { 'Authorization': f"Bearer {token}" }
     response = requests.delete(url, headers=headers)
 
     return response.json()
 
-def add_firewall_rule(protocol, destination_port, ip_add, descr):
-    token = get_token()
+async def add_firewall_rule(protocol, destination_port, ip_add, descr):
+    token = await get_token()
     url = f'{PFSENSE_HOST}/api/v2/firewall/rule'
     headers = {
         'Content-Type': 'application/json',
@@ -90,8 +90,8 @@ def add_firewall_rule(protocol, destination_port, ip_add, descr):
     response = requests.post(url, headers=headers, json=data)
     return response.json()
 
-def edit_firewall_rule(rule_id, ip_add):
-    token = get_token()
+async def edit_firewall_rule(rule_id, ip_add):
+    token = await get_token()
     url = f'{PFSENSE_HOST}/api/v2/firewall/rule'
     headers = {
         'Content-Type': 'application/json',
@@ -105,23 +105,23 @@ def edit_firewall_rule(rule_id, ip_add):
     
     return response.json()
 
-def delete_firewall_rule(rule_id):
-    token = get_token()
+async def delete_firewall_rule(rule_id):
+    token = await get_token()
     url = f'{PFSENSE_HOST}/api/v2/firewall/rule?id={rule_id}'
     headers = { 'Authorization': f"Bearer {token}" }
     response = requests.delete(url, headers=headers)
 
     return response.json()
     
-def get_port_forward_rules():
-    token = get_token()
+async def get_port_forward_rules():
+    token = await get_token()
     url = f'{PFSENSE_HOST}/api/v2/firewall/nat/port_forwards?limit=0&offset=0'
     headers = { 'Authorization': f"Bearer {token}" }
     response = requests.get(url, headers=headers)
     return response.json()['data']
     
-def get_firewall_rules():
-    token = get_token()
+async def get_firewall_rules():
+    token = await get_token()
     url = f'{PFSENSE_HOST}/api/v2/firewall/rules?limit=0&offset=0'
     headers = { 'Authorization': f"Bearer {token}" }
     response = requests.get(url, headers=headers)
