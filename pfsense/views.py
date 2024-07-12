@@ -8,13 +8,13 @@ from ticketing.models import RequestEntry, PortRules
 
 # Create your views here.
 
-def get_port_forward_rule(vm_name):
-    rules = pfsense.get_port_forward_rules()
+def get_port_forward_rule(vm_name, token):
+    rules = pfsense.get_port_forward_rules(token)
     for rule in rules:
         if rule['descr'] == vm_name: return rule['id']
 
-def get_firewall_rule(vm_name):
-    rules = pfsense.get_firewall_rules()
+def get_firewall_rule(vm_name, token):
+    rules = pfsense.get_firewall_rules(token)
     for rule in rules:
         if rule['descr'] == vm_name : return rule['id']
 
@@ -45,27 +45,30 @@ def add_port_forward_rules(request_id, protocols, local_ports, ip_adds, descrs):
 
     dest_ports = generate_dest_ports(len(ip_adds)*len(protocols))
     counter = 0
+    token = pfsense.get_token()
     for protocol, local_port in zip(protocols, local_ports):
         for ip_add, descr in zip(ip_adds, descrs):
             dest_port = dest_ports[counter % len(dest_ports)]
-            pfsense.add_port_forward_rule(protocol, dest_port, ip_add, local_port, descr)
-            pfsense.add_firewall_rule(protocol, dest_port, ip_add, descr)
+            pfsense.add_port_forward_rule(protocol, dest_port, ip_add, local_port, descr, token)
+            pfsense.add_firewall_rule(protocol, dest_port, ip_add, descr, token)
             port_rule = get_object_or_404(PortRules, request_id=request_id, dest_ports=local_port)
             DestinationPorts.objects.create(port_rule=port_rule, dest_port=dest_port)
             counter+=1
     time.sleep(3)
-    pfsense.apply_changes()
+    pfsense.apply_changes(token)
 
     return dest_ports
 
 def update_port_forward_rule(vm_name, ip_add):
-    pfsense.edit_firewall_rule(get_firewall_rule(vm_name), ip_add)
-    pfsense.edit_port_forward_rule(get_port_forward_rule(vm_name), ip_add)
+    token = pfsense.get_token()
+    pfsense.edit_firewall_rule(get_firewall_rule(vm_name, token), ip_add, token)
+    pfsense.edit_port_forward_rule(get_port_forward_rule(vm_name, token), ip_add, token)
     time.sleep(3)
-    pfsense.apply_changes()
+    pfsense.apply_changes(token)
 
 def delete_port_forward_rules(vm_names):
+    token = pfsense.get_token()
     for vm_name in vm_names:
-        pfsense.delete_firewall_rule(get_firewall_rule(vm_name))
-        pfsense.delete_port_forward_rule(get_port_forward_rule(vm_name))
+        pfsense.delete_firewall_rule(get_firewall_rule(vm_name, token), token)
+        pfsense.delete_port_forward_rule(get_port_forward_rule(vm_name, token), token)
         time.sleep(3)
