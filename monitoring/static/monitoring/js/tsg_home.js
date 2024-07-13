@@ -46,6 +46,7 @@ $(document).ready(function () {
             .style("text-decoration", "underline")
             .text(title);
     }
+
     function drawMultiLineGraph(data1, data2, element, title, valueKey1, valueKey2) {
         var parentElement = d3.select(element).node().parentNode;
         var margin = { top: 20, right: 30, bottom: 30, left: 40 },
@@ -140,10 +141,22 @@ $(document).ready(function () {
             data: {},
             datatype: 'json',
             success: function (response) {
-                drawLineGraph(response.coresResultList, '#cpu-chart', 'CPU Usage', 'cpu');
+                response.coresResultList.forEach(function (core) {
+                    drawLineGraph(core.data, '#cpu-chart', 'CPU Usage (' + core.host + ')', 'cpu');
+                });
                 drawLineGraph(response.storageResultList, '#storage-chart', 'Storage Usage', 'storage');
-                drawMultiLineGraph(response.memoryFreeResultList, response.memoryUsedResultList, '#ram-chart', 'RAM Usage', 'memory_free', 'memory_used');
-                drawMultiLineGraph(response.networkInResultList, response.networkOutResultList, '#network-chart', 'Network Usage', 'network_in', 'network_out');
+                response.memoryFreeResultList.forEach(function (memoryFree) {
+                    var memoryUsed = response.memoryUsedResultList.find(function (memUsed) {
+                        return memUsed.host === memoryFree.host;
+                    });
+                    drawMultiLineGraph(memoryFree.data, memoryUsed.data, '#ram-chart', 'RAM Usage (' + memoryFree.host + ')', 'memory_free', 'memory_used');
+                });
+                response.networkInResultList.forEach(function (networkIn) {
+                    var networkOut = response.networkOutResultList.find(function (netOut) {
+                        return netOut.host === networkIn.host;
+                    });
+                    drawMultiLineGraph(networkIn.data, networkOut.data, '#network-chart', 'Network Usage (' + networkIn.host + ')', 'network_in', 'network_out');
+                });
             },
             error: function (response) {
                 console.log(response);

@@ -2,6 +2,8 @@
     height: 25vh;
     /* Adjust as needed */
     position: relative;
+    padding: 0;
+
 }
 
 svg {
