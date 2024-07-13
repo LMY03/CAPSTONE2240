@@ -32,9 +32,12 @@ $(document).ready(function () {
         var color = d3.scaleOrdinal(d3.schemeCategory10);
 
         var legendIndex = 0;
-
+        var globalHostData = '';
         // Draw a line for each host and metric
         dataSets.forEach((hostData, index) => {
+            if (globalHostData == '' || globalHostData != hostData.host) {
+                legendIndex = 0;
+            }
             var line = d3.line()
                 .x(function (d) { return x(new Date(d.time)); })
                 .y(function (d) { return y(d[valueKey]); });
@@ -42,15 +45,17 @@ $(document).ready(function () {
             svg.append("path")
                 .datum(hostData.data)
                 .attr("fill", "none")
-                .attr("stroke", color(legendIndex))
+                .attr("stroke", color(memory_free_color))
                 .attr("stroke-width", 1.5)
                 .attr("d", line);
 
-            svg.append("text")
-                .attr("x", width - 150)
-                .attr("y", (legendIndex * 20) + 10)
-                .attr("fill", color(legendIndex))
-                .text(`${hostData.host} (${valueKey.replace('_', ' ')})`);
+            if (legendIndex < 1) {
+                svg.append("text")
+                    .attr("x", width - 150)
+                    .attr("y", (legendIndex * 20) + 10)
+                    .attr("fill", color(0))
+                    .text(`${hostData.host} (${valueKey.replace('_', ' ')})`);
+            }
 
             legendIndex++;
 
@@ -66,14 +71,16 @@ $(document).ready(function () {
                     .attr("stroke-width", 1.5)
                     .attr("d", line2);
 
-                svg.append("text")
-                    .attr("x", width - 150)
-                    .attr("y", (legendIndex * 20) + 10)
-                    .attr("fill", color(legendIndex))
-                    .text(`${hostData.host} (${valueKey2.replace('_', ' ')})`);
-
+                if (legendIndex == 1) {
+                    svg.append("text")
+                        .attr("x", width - 150)
+                        .attr("y", (legendIndex * 20) + 10)
+                        .attr("fill", color(1))
+                        .text(`${hostData.host} (${valueKey2.replace('_', ' ')})`);
+                }
                 legendIndex++;
             }
+            globalHostData == hostData.host;
         });
 
     }
