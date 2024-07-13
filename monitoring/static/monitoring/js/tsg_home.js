@@ -56,7 +56,7 @@ $(document).ready(function () {
             .append("svg")
             .attr("width", "100%")
             .attr("height", "100%")
-            .attr("viewBox", `0 0 ${parentElement.clientWidth} ${parentElement.clientHeight}`)
+            .attr("viewBox", `0 0 ${width + margin.left + margin.right} ${height + margin.top + margin.bottom}`)
             .append("g")
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
@@ -132,6 +132,7 @@ $(document).ready(function () {
             .attr("y", 30)
             .text("Used RAM");
     }
+
     function init() {
         $.ajax({
             type: 'GET',

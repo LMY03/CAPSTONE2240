@@ -21,6 +21,7 @@ TSG Dashboard
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-duration-format/2.3.2/moment-duration-format.min.js"></script>
 <script type="text/javascript" src="https://unpkg.com/@sgratzl/chartjs-chart-boxplot@3.6.0/build/index.umd.min.js"></script>
 <link rel="stylesheet" href="{% static 'users/css/student_home.css' %}">
+<link rel="stylesheet" href="{% static "monitoring/css/tsg_home.css" %}">
 {% endblock css %} 
 
 {% block content %}
@@ -29,7 +30,7 @@ TSG Dashboard
         <div class="row">
             <!-- CPU -->
             <div class="col-md-3 mb-4">
-                <div class="card h-25">
+                <div class="card">
                     <div class="card-header">CPU</div>
                     <div class="card-body" id="cpu-chart">
                     </div>
@@ -37,7 +38,7 @@ TSG Dashboard
             </div>
             <!-- RAM -->
             <div class="col-md-6 mb-4">
-                <div class="card h-25">
+                <div class="card">
                     <div class="card-header">RAM Usage</div>
                     <div class="card-body" id="ram-chart">
                     </div>
@@ -45,7 +46,7 @@ TSG Dashboard
             </div>
             <!-- Storage -->
             <div class="col-md-3 mb-4">
-                <div class="card h-25">
+                <div class="card">
                     <div class="card-header">Storage</div>
                     <div class="card-body" id="storage-chart">
                     </div>
@@ -53,7 +54,7 @@ TSG Dashboard
             </div>
             <!-- Open Tickets -->
             <div class="col-md-3 mb-4">
-                <div class="card h-25">
+                <div class="card">
                     <div class="card-header">Open Requests</div>
                     <div class="card-body">
                         <a href = "{% url 'users:home-filter' %}?status=PENDING"> {{ open_request_count }} </a>
@@ -61,8 +62,8 @@ TSG Dashboard
                 </div>
             </div>
             <!-- Network -->
-            <div class="col-md-12 mb-4 h-25">
-                <div class="card h-25">
+            <div class="col-md-12 mb-4">
+                <div class="card">
                     <div class="card-header">Network Usage</div>
                     <div class="card-body" id="network-chart">
                     </div>
@@ -70,7 +71,7 @@ TSG Dashboard
             </div>
             <!-- Latency -->
             <div class="col-md-12 mb-4">
-                <div class="card h-25">
+                <div class="card">
                     <div class="card-header">Latency</div>
                     <div class="card-body">
                         <!-- Add latency details here -->
