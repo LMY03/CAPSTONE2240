@@ -1,13 +1,15 @@
 $(document).ready(function () {
     function drawLineGraph(data, element, title, valueKey) {
+        var parentElement = d3.select(element).node().parentNode;
         var margin = { top: 20, right: 30, bottom: 30, left: 40 },
-            width = 460 - margin.left - margin.right,
-            height = 400 - margin.top - margin.bottom;
+            width = parentElement.clientWidth - margin.left - margin.right,
+            height = parentElement.clientHeight - margin.top - margin.bottom;
 
         var svg = d3.select(element)
             .append("svg")
-            .attr("width", width + margin.left + margin.right)
-            .attr("height", height + margin.top + margin.bottom)
+            .attr("width", "100%")
+            .attr("height", "100%")
+            .attr("viewBox", `0 0 ${parentElement.clientWidth} ${parentElement.clientHeight}`)
             .append("g")
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
@@ -45,14 +47,16 @@ $(document).ready(function () {
             .text(title);
     }
     function drawMultiLineGraph(data1, data2, element, title, valueKey1, valueKey2) {
+        var parentElement = d3.select(element).node().parentNode;
         var margin = { top: 20, right: 30, bottom: 30, left: 40 },
-            width = 460 - margin.left - margin.right,
-            height = 400 - margin.top - margin.bottom;
+            width = parentElement.clientWidth - margin.left - margin.right,
+            height = parentElement.clientHeight - margin.top - margin.bottom;
 
         var svg = d3.select(element)
             .append("svg")
-            .attr("width", width + margin.left + margin.right)
-            .attr("height", height + margin.top + margin.bottom)
+            .attr("width", "100%")
+            .attr("height", "100%")
+            .attr("viewBox", `0 0 ${parentElement.clientWidth} ${parentElement.clientHeight}`)
             .append("g")
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
