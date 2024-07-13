@@ -28,8 +28,17 @@ TSG Dashboard
 <div class="col-md-10 content">
     <div class="container mt-4">
         <div class="row">
-            <!-- CPU -->
+            <!-- Open Tickets -->
             <div class="col-md-3 mb-4">
+                <div class="card">
+                    <div class="card-header">Open Requests</div>
+                    <div class="card-body">
+                        <a href = "{% url 'users:home-filter' %}?status=PENDING"> {{ open_request_count }} </a>
+                    </div>
+                </div>
+            </div>
+            <!-- CPU -->
+            <div class="col-md-9 mb-4">
                 <div class="card">
                     <div class="card-header">CPU</div>
                     <div class="card-body" id="cpu-chart">
@@ -37,7 +46,7 @@ TSG Dashboard
                 </div>
             </div>
             <!-- RAM -->
-            <div class="col-md-6 mb-4">
+            <div class="col-md-12 mb-4">
                 <div class="card">
                     <div class="card-header">RAM Usage</div>
                     <div class="card-body" id="ram-chart">
@@ -45,19 +54,10 @@ TSG Dashboard
                 </div>
             </div>
             <!-- Storage -->
-            <div class="col-md-3 mb-4">
+            <div class="col-md-12 mb-4">
                 <div class="card">
                     <div class="card-header">Storage</div>
                     <div class="card-body" id="storage-chart">
-                    </div>
-                </div>
-            </div>
-            <!-- Open Tickets -->
-            <div class="col-md-3 mb-4">
-                <div class="card">
-                    <div class="card-header">Open Requests</div>
-                    <div class="card-body">
-                        <a href = "{% url 'users:home-filter' %}?status=PENDING"> {{ open_request_count }} </a>
                     </div>
                 </div>
             </div>
