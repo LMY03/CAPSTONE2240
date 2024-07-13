@@ -88,11 +88,9 @@ Edit request {{ vm_id }}
                                                         <button type = "button" id = "addProtocolButton">Add protocol</button>
                                                     </div>
                                                     <select class="form-control" id="protocol1" name="protocol1">
-                                                        <option value="TCP" {% if port.protocol == "TCP" %} selected {% endif %}>TCP</option>
-                                                        <option value="UDP" {% if port.protocol == "UDP" %} selected {% endif %}>UDP</option>
-                                                        <option value="ICMP" {% if port.protocol == "ICMP" %} selected {% endif %}>ICMP</option>
-                                                        <option value="HTTP" {% if port.protocol == "HTTP" %} selected {% endif %}>HTTP</option>
-                                                        <option value="HTTPS" {% if port.protocol == "HTTPS" %} selected {% endif %}>HTTPS</option>
+                                                        <option value="tcp" {% if port.protocol == "tcp" %} selected {% endif %}>TCP</option>
+                                                        <option value="udp" {% if port.protocol == "udp" %} selected {% endif %}>UDP</option>
+                                                        <option value="tcp/udp" {% if port.protocol == "tcp/udp" %} selected {% endif %}>TCP/UDP</option>
                                                     </select>
                                                     <div class="mb-3">
                                                         <label for="destination_port" class="form-label">Destination Port:</label>
@@ -106,11 +104,9 @@ Edit request {{ vm_id }}
                                                     <button type="button" class="btn btn-danger" id= "remove_protocol_button{{forloop.counter}}">Remove</button>
                                                 </div>
                                                 <select class="form-control" id="protocol{{ forloop.counter }}" name="protocol{{ forloop.counter }}">
-                                                    <option value="TCP" {% if port.protocol == "TCP" %} selected {% endif %}>TCP</option>
-                                                    <option value="UDP" {% if port.protocol == "UDP" %} selected {% endif %}>UDP</option>
-                                                    <option value="ICMP" {% if port.protocol == "ICMP" %} selected {% endif %}>ICMP</option>
-                                                    <option value="HTTP" {% if port.protocol == "HTTP" %} selected {% endif %}>HTTP</option>
-                                                    <option value="HTTPS" {% if port.protocol == "HTTPS" %} selected {% endif %}>HTTPS</option>
+                                                    <option value="tcp" {% if port.protocol == "tcp" %} selected {% endif %}>TCP</option>
+                                                    <option value="udp" {% if port.protocol == "udp" %} selected {% endif %}>UDP</option>
+                                                    <option value="tcp/udp" {% if port.protocol == "tcp/udp" %} selected {% endif %}>TCP/UDP</option>
                                                 </select>
                                             </div>
                                             <div class="mb-3" id="destinationGroup{{ forloop.counter }}">
@@ -126,11 +122,9 @@ Edit request {{ vm_id }}
                                             <button type = "button" id = "addProtocolButton">Add protocol</button>
                                         </div>
                                         <select class="form-control" id="protocol1" name="protocol1">
-                                            <option value="TCP">TCP</option>
-                                            <option value="UDP">UDP</option>
-                                            <option value="ICMP">ICMP</option>
-                                            <option value="HTTP">HTTP</option>
-                                            <option value="HTTPS">HTTPS</option>
+                                            <option value="tcp">TCP</option>
+                                            <option value="udp">UDP</option>
+                                            <option value="tcp/udp">TCP/UDP</option>
                                         </select>
                                         <div class="mb-3">
                                             <label for="destination_port" class="form-label">Destination Port:</label>
