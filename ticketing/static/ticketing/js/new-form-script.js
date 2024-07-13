@@ -265,11 +265,9 @@ document.getElementById('addProtocolButton').addEventListener('click', function 
     newProtocolSelect.name = `protocol${addProtocolClicked}`;
 
     let options = [
-        { value: 'TCP', text: 'TCP' },
-        { value: 'UDP', text: 'UDP' },
-        { value: 'ICMP', text: 'ICMP' },
-        { value: 'HTTP', text: 'HTTP' },
-        { value: 'HTTPS', text: 'HTTPS' }
+        { value: 'tcp', text: 'TCP' },
+        { value: 'udp', text: 'UDP' },
+        { value: 'tcp/udp', text: 'TCP/UDP' },
     ];
 
     options.forEach(function (option) {
