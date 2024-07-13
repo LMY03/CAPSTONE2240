@@ -22,7 +22,7 @@ $(document).ready(function () {
             .call(d3.axisBottom(x));
 
         var y = d3.scaleLinear()
-            .domain([0, d3.max(dataSets.flatMap(d => d.data), function (d) { return valueKey2 ? Math.max(d[valueKey], d[valueKey2]) : d[valueKey]; })])
+            .domain([0, d3.max(dataSets.flatMap(d => d.data), function (d) { return d[valueKey]; })])
             .range([height, 0]);
 
         svg.append("g")
@@ -61,15 +61,7 @@ $(document).ready(function () {
                 .attr("x", width - 100)
                 .attr("y", (index * 20) + 10)
                 .attr("fill", color(index))
-                .text(hostData.host + (valueKey2 ? ` (${valueKey})` : ''));
-
-            if (valueKey2) {
-                svg.append("text")
-                    .attr("x", width - 100)
-                    .attr("y", (index * 20) + 30)
-                    .attr("fill", color(index + dataSets.length))
-                    .text(hostData.host + ` (${valueKey2})`);
-            }
+                .text(hostData.host);
         });
 
         svg.append("text")
@@ -104,15 +96,15 @@ $(document).ready(function () {
 
                 // Combine RAM usage data (Free and Used) from all hosts
                 var ramDataSets = [
-                    { data: response.memoryFreeResultList.flatMap(mem => mem.data), host: 'RAM Free', label: 'memory_free' },
-                    { data: response.memoryUsedResultList.flatMap(mem => mem.data), host: 'RAM Used', label: 'memory_used' }
+                    { data: response.memoryFreeResultList.flatMap(mem => mem.data), host: mem.host, label: 'memory_free' },
+                    { data: response.memoryUsedResultList.flatMap(mem => mem.data), host: mem.host, label: 'memory_used' }
                 ];
                 drawLineGraph(ramDataSets, '#ram-chart', 'RAM Usage Across Hosts', 'memory_free', 'memory_used');
 
                 // Combine Network usage data (In and Out) from all hosts
                 var networkDataSets = [
-                    { data: response.networkInResultList.flatMap(net => net.data), host: 'Network In', label: 'network_in' },
-                    { data: response.networkOutResultList.flatMap(net => net.data), host: 'Network Out', label: 'network_out' }
+                    { data: response.networkInResultList.flatMap(net => net.data), host: net.host, label: 'network_in' },
+                    { data: response.networkOutResultList.flatMap(net => net.data), host: net.host, label: 'network_out' }
                 ];
                 drawLineGraph(networkDataSets, '#network-chart', 'Network Usage Across Hosts', 'network_in', 'network_out');
             },
