@@ -29,34 +29,31 @@ TSG Dashboard
         <div class="row">
             <!-- CPU -->
             <div class="col-md-3 mb-4">
-                <div class="card">
+                <div class="card h-25">
                     <div class="card-header">CPU</div>
-                    <div class="card-body">
-                        <div id="cpu-chart"></div>
+                    <div class="card-body" id="cpu-chart">
                     </div>
                 </div>
             </div>
             <!-- RAM -->
             <div class="col-md-6 mb-4">
-                <div class="card">
+                <div class="card h-25">
                     <div class="card-header">RAM Usage</div>
-                    <div class="card-body">
-                        <div id="ram-chart"></div>
+                    <div class="card-body" id="ram-chart">
                     </div>
                 </div>
             </div>
             <!-- Storage -->
             <div class="col-md-3 mb-4">
-                <div class="card">
+                <div class="card h-25">
                     <div class="card-header">Storage</div>
-                    <div class="card-body">
-                        <div id="storage-chart"></div>
+                    <div class="card-body" id="storage-chart">
                     </div>
                 </div>
             </div>
             <!-- Open Tickets -->
             <div class="col-md-3 mb-4">
-                <div class="card">
+                <div class="card h-25">
                     <div class="card-header">Open Requests</div>
                     <div class="card-body">
                         <a href = "{% url 'users:home-filter' %}?status=PENDING"> {{ open_request_count }} </a>
@@ -64,17 +61,16 @@ TSG Dashboard
                 </div>
             </div>
             <!-- Network -->
-            <div class="col-md-12 mb-4">
-                <div class="card">
+            <div class="col-md-12 mb-4 h-25">
+                <div class="card h-25">
                     <div class="card-header">Network Usage</div>
-                    <div class="card-body">
-                        <div id="network-chart"></div>
+                    <div class="card-body" id="network-chart">
                     </div>
                 </div>
             </div>
             <!-- Latency -->
             <div class="col-md-12 mb-4">
-                <div class="card">
+                <div class="card h-25">
                     <div class="card-header">Latency</div>
                     <div class="card-body">
                         <!-- Add latency details here -->
