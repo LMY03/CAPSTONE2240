@@ -267,6 +267,7 @@ def aggregatedData (request):
                         |> filter(fn: (r) => r["object"] == "nodes")
                         |> filter(fn: (r) => r["_field"] == "cpu")
                         |> filter(fn: (r) => r["host"] == "{node}")
+                        |> map(fn: (r) => ({{ r with _value: r._value / 100.0 }}))
                         |> aggregateWindow(every: 10s, fn: mean, createEmpty: false)
                         |> yield(name: "mean")
                     '''

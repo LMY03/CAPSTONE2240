@@ -1,7 +1,7 @@
 $(document).ready(function () {
     function drawLineGraph(dataSets, element, title, valueKey, valueKey2 = null) {
         var parentElement = d3.select(element).node().parentNode;
-        var margin = { top: 20, right: 10, bottom: 30, left: 20 },
+        var margin = { top: 0, right: 0, bottom: 0, left: 0 },
             width = parentElement.clientWidth - margin.left - margin.right,
             height = parentElement.clientHeight - margin.top - margin.bottom;
 
@@ -28,7 +28,7 @@ $(document).ready(function () {
         svg.append("g")
             .call(d3.axisLeft(y));
 
-        // Define a color scale to differentiate between hosts and data types
+        // Define a color scale to differentiate between hosts
         var color = d3.scaleOrdinal(d3.schemeCategory10);
 
         // Draw a line for each host
@@ -57,12 +57,28 @@ $(document).ready(function () {
                     .attr("d", line2);
             }
 
+            // Add legend entries for each host
             svg.append("text")
-                .attr("x", width - 100)
+                .attr("x", width - 150)
                 .attr("y", (index * 20) + 10)
                 .attr("fill", color(index))
-                .text(hostData.host);
+                .text(hostData.host + " " + (valueKey2 ? `(${valueKey} and ${valueKey2})` : `(${valueKey})`));
         });
+
+        // Add legend entries for memory_free and memory_used specifically
+        if (valueKey2 == 'memory_used') {
+            svg.append("text")
+                .attr("x", width - 150)
+                .attr("y", (dataSets.length * 20) + 10)
+                .attr("fill", color(dataSets.length))
+                .text("Free RAM");
+
+            svg.append("text")
+                .attr("x", width - 150)
+                .attr("y", ((dataSets.length + 1) * 20) + 10)
+                .attr("fill", color(dataSets.length + 1))
+                .text("Used RAM");
+        }
 
         svg.append("text")
             .attr("x", (width / 2))
@@ -92,7 +108,7 @@ $(document).ready(function () {
                     host: storage.host,
                     data: storage.data
                 }));
-                drawLineGraph(storageDataSets, '#storage-chart', 'Storage Usage Across Hosts', 'storage');
+                drawLineGraph(storageDataSets, '#storage-chart', 'Used Storage Usage Across Hosts', 'storage');
 
                 // Combine RAM usage data (Free and Used) from all hosts
                 var ramDataSets = response.memoryFreeResultList.map((mem, index) => ({
