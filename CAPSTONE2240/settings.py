@@ -45,7 +45,6 @@ INSTALLED_APPS = [
     "monitoring.apps.MonitoringConfig",
     "ticketing.apps.TicketingConfig",
     "guacamole.apps.GuacamoleConfig",
-    "opnsense.apps.OpnsenseConfig",
     "pfsense.apps.PfsenseConfig",
     "proxmox.apps.ProxmoxConfig",
     'django.contrib.admin',
