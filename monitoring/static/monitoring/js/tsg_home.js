@@ -1,3 +1,4 @@
+import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 $(document).ready(function () {
     function drawLineGraph(data, element, title, valueKey) {
         var margin = { top: 20, right: 30, bottom: 30, left: 40 },
