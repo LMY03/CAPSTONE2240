@@ -627,7 +627,7 @@ def delete_request(request, request_id):
 
     vms = VirtualMachines.objects.filter(request=request_entry)
     port_rules = PortRules.objects.filter(request=request_entry)
-    if port_rules.exists() : delete_port_forward_rules(vms.values_list('vm_name', flat=True)) # pfsense
+    if port_rules.exists() : delete_port_forward_rules(len(port_rules), vms.values_list('vm_name', flat=True)) # pfsense
 
     for vm in vms:
         if vm.is_active:
