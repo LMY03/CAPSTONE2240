@@ -27,7 +27,7 @@ def faculty_vm_list(request):
     
     vm_list = []
     for request_entry in request_entries: 
-        vm_list += VirtualMachines.objects.filter(request=request_entry).exclude(is_lxc=True, status=VirtualMachines.Status.DESTROYED)
+        vm_list += VirtualMachines.objects.filter(request=request_entry).exclude(status=VirtualMachines.Status.DESTROYED).exclude(is_lxc=True)
 
     return render(request, 'proxmox/faculty_vm_list.html', { 'vm_list': vm_list })
     

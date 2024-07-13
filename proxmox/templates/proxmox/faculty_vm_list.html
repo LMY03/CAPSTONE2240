@@ -1,7 +1,7 @@
 {% extends 'users/base_faculty.html' %}
 
 {% block title %}
-Student Dashboard
+Virtual Machine List
 {% endblock title %}
 {% load static %}
 
@@ -22,9 +22,8 @@ Student Dashboard
                     <thead class="table-light">
                         <tr>
                             <th scope="col">Virtual Machine</th>
-                            <th scope="col">Type</th>
-                            <th scope="col">Group</th>
-                            <th scope="col">Assigned By</th>
+                            <th scope="col">Request Type</th>
+                            <th scope="col">Approved By</th>
                             <th scope="col">Status</th>
                         </tr>
                     </thead>
@@ -33,8 +32,7 @@ Student Dashboard
                         <tr>    
                             <td><a href = "{% url 'proxmox:vm_details' vm.id %}"><i class="bi bi-display"></i> {{ vm.vm_name }}</a></td>
                             <td>Course</td>
-                            <td>CAPSTONE</td>
-                            <td>Estefanie Bertumen</td>
+                            <td>Gregory Cu</td>
                             <td>{{ vm.status }}</td>
                         </tr>
                         {% endfor %}

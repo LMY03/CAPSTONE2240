@@ -226,10 +226,10 @@ Edit request {{ vm_id }}
         <button type="submit" class="btn btn-primary">Edit</button>
         <button type="button" class="btn btn-danger">Cancel</button>
     </form>
+        {% if comments %}
         <div class="mt-3 mb-5">
             <h2>Comments</h2>
             <!-- Display Comments -->
-            {% if comments %}
             <div class="list-group">
                 {% for comment in comments %}
                     <div class="list-group-item">
@@ -238,9 +238,8 @@ Edit request {{ vm_id }}
                     </div>
                 {% endfor %}
             </div>
-            {% endif %}
         </div>
-        
+        {% endif %}
 </div>
 {% endblock content %}
 {% block script %}
