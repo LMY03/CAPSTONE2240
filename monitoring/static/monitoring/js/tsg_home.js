@@ -45,7 +45,7 @@ $(document).ready(function () {
             svg.append("path")
                 .datum(hostData.data)
                 .attr("fill", "none")
-                .attr("stroke", color(memory_free_color))
+                .attr("stroke", color(legendIndex))
                 .attr("stroke-width", 1.5)
                 .attr("d", line);
 
