@@ -519,11 +519,12 @@ def confirm_test_vm(request, request_id):
     request.session['credentials'] = vm_provision(request_id)
     vms = VirtualMachines.objects.filter(request=request_entry)
     port_rules = PortRules.objects.filter(request=request_entry)
-    protocols = port_rules.values_list('protocol', flat=True)
-    local_ports = port_rules.values_list('dest_ports', flat=True)
-    ip_adds = vms.values_list('ip_add', flat=True)
-    descrs = vms.values_list('vm_name', flat=True)
-    add_port_forward_rules(request_id, protocols, local_ports, ip_adds, descrs) # pfsense
+    if port_rules.exists():
+        protocols = port_rules.values_list('protocol', flat=True)
+        local_ports = port_rules.values_list('dest_ports', flat=True)
+        ip_adds = vms.values_list('ip_add', flat=True)
+        descrs = vms.values_list('vm_name', flat=True)
+        add_port_forward_rules(request_id, protocols, local_ports, ip_adds, descrs) # pfsense
     
     request_entry.status = RequestEntry.Status.ONGOING
     request_entry.save()
@@ -625,7 +626,8 @@ def delete_request(request, request_id):
     request_entry = get_object_or_404(RequestEntry, pk=request_id)
 
     vms = VirtualMachines.objects.filter(request=request_entry)
-    delete_port_forward_rules(vms.values_list('vm_name', flat=True)) # pfsense
+    port_rules = PortRules.objects.filter(request=request_entry)
+    if port_rules.exists() : delete_port_forward_rules(vms.values_list('vm_name', flat=True)) # pfsense
 
     for vm in vms:
         if vm.is_active:
