@@ -35,7 +35,7 @@ $(document).ready(function () {
         var globalHostData = '';
         // Draw a line for each host and metric
         dataSets.forEach((hostData, index) => {
-            if (globalHostData == '' || globalHostData != hostData.host) {
+            if ((globalHostData == '' || globalHostData != hostData.host) && valueKey2 != null) {
                 legendIndex = 0;
             }
             var line = d3.line()
@@ -45,21 +45,20 @@ $(document).ready(function () {
             svg.append("path")
                 .datum(hostData.data)
                 .attr("fill", "none")
-                .attr("stroke", color(memory_free_color))
+                .attr("stroke", color(index + 1))
                 .attr("stroke-width", 1.5)
                 .attr("d", line);
 
             if (legendIndex < 1) {
                 svg.append("text")
                     .attr("x", width - 150)
-                    .attr("y", (legendIndex * 20) + 10)
-                    .attr("fill", color(0))
+                    .attr("y", ((index + 1) * 20) + 10)
+                    .attr("fill", index + 1)
                     .text(`${hostData.host} (${valueKey.replace('_', ' ')})`);
             }
 
-            legendIndex++;
-
             if (valueKey2) {
+                legendIndex++;
                 var line2 = d3.line()
                     .x(function (d) { return x(new Date(d.time)); })
                     .y(function (d) { return y(d[valueKey2]); });
