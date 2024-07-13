@@ -2,8 +2,6 @@ from django.http import JsonResponse
 from decouple import config
 import ansible_runner
 import json
-
-from proxmox.views import get_vm_ip_adds
 # ansible all -i /ansible/inventory/hosts -m ping -e 'ansible_ssh_common_args="-o StrictHostKeyChecking=no"'
 
 INVENTORY_HOSTS_PATH = '/app/ansible/inventory/hosts'
