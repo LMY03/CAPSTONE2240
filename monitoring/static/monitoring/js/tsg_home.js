@@ -1,7 +1,7 @@
 $(document).ready(function () {
     function drawLineGraph(dataSets, element, title, valueKey, valueKey2 = null) {
         var parentElement = d3.select(element).node().parentNode;
-        var margin = { top: 0, right: 0, bottom: 0, left: 0 },
+        var margin = { top: 20, right: 10, bottom: 30, left: 20 },
             width = parentElement.clientWidth - margin.left - margin.right,
             height = parentElement.clientHeight - margin.top - margin.bottom;
 
@@ -22,16 +22,18 @@ $(document).ready(function () {
             .call(d3.axisBottom(x));
 
         var y = d3.scaleLinear()
-            .domain([0, d3.max(dataSets.flatMap(d => d.data), function (d) { return Math.max(d[valueKey], d[valueKey2] || 0); })])
+            .domain([0, d3.max(dataSets.flatMap(d => d.data), function (d) { return d[valueKey]; })])
             .range([height, 0]);
 
         svg.append("g")
             .call(d3.axisLeft(y));
 
-        // Define a color scale to differentiate between hosts
+        // Define a color scale to differentiate between hosts and metrics
         var color = d3.scaleOrdinal(d3.schemeCategory10);
 
-        // Draw a line for each host
+        var legendIndex = 0;
+
+        // Draw a line for each host and metric
         dataSets.forEach((hostData, index) => {
             var line = d3.line()
                 .x(function (d) { return x(new Date(d.time)); })
@@ -40,9 +42,17 @@ $(document).ready(function () {
             svg.append("path")
                 .datum(hostData.data)
                 .attr("fill", "none")
-                .attr("stroke", color(index))
+                .attr("stroke", color(legendIndex))
                 .attr("stroke-width", 1.5)
                 .attr("d", line);
+
+            svg.append("text")
+                .attr("x", width - 150)
+                .attr("y", (legendIndex * 20) + 10)
+                .attr("fill", color(legendIndex))
+                .text(`${hostData.host} (${valueKey.replace('_', ' ')})`);
+
+            legendIndex++;
 
             if (valueKey2) {
                 var line2 = d3.line()
@@ -52,41 +62,20 @@ $(document).ready(function () {
                 svg.append("path")
                     .datum(hostData.data)
                     .attr("fill", "none")
-                    .attr("stroke", color(index + dataSets.length))
+                    .attr("stroke", color(legendIndex))
                     .attr("stroke-width", 1.5)
                     .attr("d", line2);
-            }
 
-            // Add legend entries for each host
-            svg.append("text")
-                .attr("x", width - 150)
-                .attr("y", (index * 20) + 10)
-                .attr("fill", color(index))
-                .text(hostData.host + " " + (valueKey2 ? `(${valueKey} and ${valueKey2})` : `(${valueKey})`));
+                svg.append("text")
+                    .attr("x", width - 150)
+                    .attr("y", (legendIndex * 20) + 10)
+                    .attr("fill", color(legendIndex))
+                    .text(`${hostData.host} (${valueKey2.replace('_', ' ')})`);
+
+                legendIndex++;
+            }
         });
 
-        // Add legend entries for memory_free and memory_used specifically
-        if (valueKey2 == 'memory_used') {
-            svg.append("text")
-                .attr("x", width - 150)
-                .attr("y", (dataSets.length * 20) + 10)
-                .attr("fill", color(dataSets.length))
-                .text("Free RAM");
-
-            svg.append("text")
-                .attr("x", width - 150)
-                .attr("y", ((dataSets.length + 1) * 20) + 10)
-                .attr("fill", color(dataSets.length + 1))
-                .text("Used RAM");
-        }
-
-        svg.append("text")
-            .attr("x", (width / 2))
-            .attr("y", 0 - (margin.top / 2))
-            .attr("text-anchor", "middle")
-            .style("font-size", "16px")
-            .style("text-decoration", "underline")
-            .text(title);
     }
 
     function init() {
@@ -108,20 +97,26 @@ $(document).ready(function () {
                     host: storage.host,
                     data: storage.data
                 }));
-                drawLineGraph(storageDataSets, '#storage-chart', 'Used Storage Usage Across Hosts', 'storage');
+                drawLineGraph(storageDataSets, '#storage-chart', 'Storage Usage Across Hosts', 'storage');
 
                 // Combine RAM usage data (Free and Used) from all hosts
                 var ramDataSets = response.memoryFreeResultList.map((mem, index) => ({
                     host: mem.host,
-                    data: mem.data.map((d, i) => ({ time: d.time, memory_free: d.memory_free, memory_used: response.memoryUsedResultList[index].data[i].memory_used }))
-                }));
+                    data: mem.data
+                })).concat(response.memoryUsedResultList.map((mem, index) => ({
+                    host: mem.host,
+                    data: mem.data
+                })));
                 drawLineGraph(ramDataSets, '#ram-chart', 'RAM Usage Across Hosts', 'memory_free', 'memory_used');
 
                 // Combine Network usage data (In and Out) from all hosts
                 var networkDataSets = response.networkInResultList.map((net, index) => ({
                     host: net.host,
-                    data: net.data.map((d, i) => ({ time: d.time, network_in: d.network_in, network_out: response.networkOutResultList[index].data[i].network_out }))
-                }));
+                    data: net.data
+                })).concat(response.networkOutResultList.map((net, index) => ({
+                    host: net.host,
+                    data: net.data
+                })));
                 drawLineGraph(networkDataSets, '#network-chart', 'Network Usage Across Hosts', 'network_in', 'network_out');
             },
             error: function (response) {
