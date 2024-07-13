@@ -130,7 +130,7 @@ TSG Dashboard
                                 {% elif request_entry.status == "ACCEPTED" and request_entry.is_vm_tested == True  %}
                                 <a href="{% url 'ticketing:confirm_test_vm' request_entry.id %}"><button type="submit" class="btn btn-primary w-25">
                                     {% if no_vm != 1 %}
-                                        Mass Provision the Requested VMs 
+                                        Mass Clone the VMs 
                                     {% else %}
                                         Confirm Requested VM 
                                     {% endif %}
