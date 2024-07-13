@@ -22,13 +22,13 @@ $(document).ready(function () {
             .call(d3.axisBottom(x));
 
         var y = d3.scaleLinear()
-            .domain([0, d3.max(dataSets.flatMap(d => d.data), function (d) { return d[valueKey]; })])
+            .domain([0, d3.max(dataSets.flatMap(d => d.data), function (d) { return Math.max(d[valueKey], d[valueKey2] || 0); })])
             .range([height, 0]);
 
         svg.append("g")
             .call(d3.axisLeft(y));
 
-        // Define a color scale to differentiate between hosts
+        // Define a color scale to differentiate between hosts and data types
         var color = d3.scaleOrdinal(d3.schemeCategory10);
 
         // Draw a line for each host
@@ -95,17 +95,17 @@ $(document).ready(function () {
                 drawLineGraph(storageDataSets, '#storage-chart', 'Storage Usage Across Hosts', 'storage');
 
                 // Combine RAM usage data (Free and Used) from all hosts
-                var ramDataSets = [
-                    { data: response.memoryFreeResultList.flatMap(mem => mem.data), host: mem.host, label: 'memory_free' },
-                    { data: response.memoryUsedResultList.flatMap(mem => mem.data), host: mem.host, label: 'memory_used' }
-                ];
+                var ramDataSets = response.memoryFreeResultList.map((mem, index) => ({
+                    host: mem.host,
+                    data: mem.data.map((d, i) => ({ time: d.time, memory_free: d.memory_free, memory_used: response.memoryUsedResultList[index].data[i].memory_used }))
+                }));
                 drawLineGraph(ramDataSets, '#ram-chart', 'RAM Usage Across Hosts', 'memory_free', 'memory_used');
 
                 // Combine Network usage data (In and Out) from all hosts
-                var networkDataSets = [
-                    { data: response.networkInResultList.flatMap(net => net.data), host: net.host, label: 'network_in' },
-                    { data: response.networkOutResultList.flatMap(net => net.data), host: net.host, label: 'network_out' }
-                ];
+                var networkDataSets = response.networkInResultList.map((net, index) => ({
+                    host: net.host,
+                    data: net.data.map((d, i) => ({ time: d.time, network_in: d.network_in, network_out: response.networkOutResultList[index].data[i].network_out }))
+                }));
                 drawLineGraph(networkDataSets, '#network-chart', 'Network Usage Across Hosts', 'network_in', 'network_out');
             },
             error: function (response) {

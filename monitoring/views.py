@@ -333,10 +333,10 @@ def aggregatedData (request):
                             |> range(start: -30m)
                             |> filter(fn: (r) => r._measurement == "system")
                             |> filter(fn: (r) => r.host == "local")
-                            |> filter(fn: (r) => r._field == "total")
+                            |> filter(fn: (r) => r._field == "used")
                             |> filter(fn: (r) => r.nodename == "{node}")
-                            |> aggregateWindow(every: 10s, fn: mean, createEmpty: false)
                             |> map(fn: (r) => ({{ r with _value: r._value / 1073741824.0 }}))  // To GB
+                            |> aggregateWindow(every: 10s, fn: last, createEmpty: false)
                             |> yield(name: "mean")
                         '''
         
