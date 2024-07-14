@@ -154,7 +154,7 @@ $(document).ready(function () {
                 drawLineGraph(storageDataSets, '#storage-chart', 'Storage Usage Across Hosts', 'storage');
 
                 // Combine RAM usage data (Free and Used) from all hosts
-                var ramDataSets = response.memoryFreeResultList.map((mem, index) => ({
+                var ramDataSets = response.memoryTotalResultList.map((mem, index) => ({
                     host: mem.host,
                     data: mem.data
                 })).concat(response.memoryUsedResultList.map((mem, index) => ({
