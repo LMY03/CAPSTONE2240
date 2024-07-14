@@ -58,8 +58,6 @@ class RequestEntry(models.Model):
 
     def get_requester(self):
         requester = self.requester
-        print(requester.first_name)
-        print(requester.last_name)
         if requester.first_name != None and requester.last_name != None : return f'{requester.first_name} {requester.last_name}'
         else : return requester.username
 
