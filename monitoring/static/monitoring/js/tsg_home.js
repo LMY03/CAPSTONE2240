@@ -86,7 +86,12 @@ $(document).ready(function () {
 
         var color = d3.scaleOrdinal(d3.schemeCategory10);
 
+        var globalHostData = '';
+        var legendIndex = 0;
         dataSets.forEach((hostData, index) => {
+            if (globalHostData == '' || globalHostData == hostData.host) {
+                legendIndex = 0;
+            }
             var line1 = d3.line()
                 .x(d => x(new Date(d.time)))
                 .y(d => y(d[valueKey1]));
@@ -108,18 +113,21 @@ $(document).ready(function () {
                 .attr("stroke", color(index * 2 + 1))
                 .attr("stroke-width", 1.5)
                 .attr("d", line2);
+            if (legendIndex == 0) {
+                svg.append("text")
+                    .attr("x", width - 150)
+                    .attr("y", ((index + 1) * 20) + 10)
+                    .attr("fill", color(index * 2))
+                    .text(`${hostData.host} (${valueKey1.replace('_', ' ')})`);
 
-            svg.append("text")
-                .attr("x", width - 150)
-                .attr("y", ((index + 1) * 20) + 10)
-                .attr("fill", color(index * 2))
-                .text(`${hostData.host} (${valueKey1.replace('_', ' ')})`);
+                svg.append("text")
+                    .attr("x", width - 150)
+                    .attr("y", ((index + 1) * 20) + 30)
+                    .attr("fill", color(index * 2 + 1))
+                    .text(`${hostData.host} (${valueKey2.replace('_', ' ')})`);
+                legendIndex++;
+            }
 
-            svg.append("text")
-                .attr("x", width - 150)
-                .attr("y", ((index + 1) * 20) + 30)
-                .attr("fill", color(index * 2 + 1))
-                .text(`${hostData.host} (${valueKey2.replace('_', ' ')})`);
         });
     }
 
@@ -153,7 +161,7 @@ $(document).ready(function () {
                     host: mem.host,
                     data: mem.data
                 })));
-                drawMultiLineGraph(ramDataSets, '#ram-chart', 'RAM Usage Across Hosts', 'memory_free', 'memory_used');
+                drawMultiLineGraph(ramDataSets, '#ram-chart', 'RAM Usage Across Hosts', 'memory_free', 'memory_total');
 
                 // Combine Network usage data (In and Out) from all hosts
                 var networkDataSets = response.networkInResultList.map((net, index) => ({

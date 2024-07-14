@@ -254,7 +254,7 @@ def aggregatedData (request):
         for record in table.records:
             nodes.append(record.values.get("host", ""))
     cores = []
-    memory_free_list = []
+    memory_total_list = []
     memory_used_list = []
     storage_list = []
     network_in_list = []
@@ -283,11 +283,11 @@ def aggregatedData (request):
 
         cores.append(cpu)
 
-        memory_free_flux_query = f'''
+        memory_total_flux_query = f'''
                         from(bucket: "{bucket}")
                         |> range(start: -30m)  
                         |> filter(fn: (r) => r["_measurement"] == "memory")
-                        |> filter(fn: (r) => r["_field"] == "memfree"  )
+                        |> filter(fn: (r) => r["_field"] == "memtotal"  )
                         |> filter(fn: (r) => r["host"] == "{node}")
                         |> aggregateWindow(every: 10s, fn: mean, createEmpty: false)
                         |> map(fn: (r) => ({{ r with _value: r._value / 1073741824.0 }}))
@@ -307,18 +307,18 @@ def aggregatedData (request):
                         
                         '''
 
-        memory_free_result = query_api.query(query=memory_free_flux_query)
+        memory_free_result = query_api.query(query=memory_total_flux_query)
         memory_used_result = query_api.query(query=memory_used_flux_query)
     
-        memfree ={'host':node, 'data':[]}
+        memtotal ={'host':node, 'data':[]}
         for table in memory_free_result:
             for record in table.records:
-                memfree['data'].append({
+                memtotal['data'].append({
                     'time': record.get_time(),
-                    'memory_free' : record.get_value()
+                    'memory_total' : record.get_value()
                 })
 
-        memory_free_list.append(memfree)
+        memory_total_list.append(memtotal)
 
         memused = {'host': node, 'data':[]}
         for table in memory_used_result:
@@ -402,7 +402,7 @@ def aggregatedData (request):
         
     return JsonResponse({
       'coresResultList' : cores,
-      'memoryFreeResultList' : memory_free_list,
+      'memoryTotalResultList' : memory_total_list,
       'memoryUsedResultList' : memory_used_list,
       'storageResultList' : storage_list,
       'networkInResultList' : network_in_list,
