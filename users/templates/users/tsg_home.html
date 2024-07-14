@@ -21,39 +21,13 @@ TSG Dashboard
 <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-duration-format/2.3.2/moment-duration-format.min.js"></script>
 <script type="text/javascript" src="https://unpkg.com/@sgratzl/chartjs-chart-boxplot@3.6.0/build/index.umd.min.js"></script>
 <link rel="stylesheet" href="{% static 'users/css/student_home.css' %}">
+<link rel="stylesheet" href="{% static "monitoring/css/tsg_home.css" %}">
 {% endblock css %} 
 
 {% block content %}
 <div class="col-md-10 content">
     <div class="container mt-4">
         <div class="row">
-            <!-- CPU -->
-            <div class="col-md-3 mb-4">
-                <div class="card">
-                    <div class="card-header">CPU</div>
-                    <div class="card-body">
-                        <div id="cpu-chart"></div>
-                    </div>
-                </div>
-            </div>
-            <!-- RAM -->
-            <div class="col-md-6 mb-4">
-                <div class="card">
-                    <div class="card-header">RAM Usage</div>
-                    <div class="card-body">
-                        <div id="ram-chart"></div>
-                    </div>
-                </div>
-            </div>
-            <!-- Storage -->
-            <div class="col-md-3 mb-4">
-                <div class="card">
-                    <div class="card-header">Storage</div>
-                    <div class="card-body">
-                        <div id="storage-chart"></div>
-                    </div>
-                </div>
-            </div>
             <!-- Open Tickets -->
             <div class="col-md-3 mb-4">
                 <div class="card">
@@ -63,12 +37,35 @@ TSG Dashboard
                     </div>
                 </div>
             </div>
+            <!-- CPU -->
+            <div class="col-md-9 mb-4">
+                <div class="card">
+                    <div class="card-header">CPU Usage for different Nodes</div>
+                    <div class="card-body" id="cpu-chart">
+                    </div>
+                </div>
+            </div>
+            <!-- RAM -->
+            <div class="col-md-12 mb-4">
+                <div class="card">
+                    <div class="card-header">RAM Usage for different Nodes</div>
+                    <div class="card-body" id="ram-chart">
+                    </div>
+                </div>
+            </div>
+            <!-- Storage -->
+            <div class="col-md-12 mb-4">
+                <div class="card">
+                    <div class="card-header">Storage usage for different nodes</div>
+                    <div class="card-body" id="storage-chart">
+                    </div>
+                </div>
+            </div>
             <!-- Network -->
             <div class="col-md-12 mb-4">
                 <div class="card">
-                    <div class="card-header">Network Usage</div>
-                    <div class="card-body">
-                        <div id="network-chart"></div>
+                    <div class="card-header">Network Usage for different nodes</div>
+                    <div class="card-body" id="network-chart">
                     </div>
                 </div>
             </div>

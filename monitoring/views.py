@@ -267,19 +267,21 @@ def aggregatedData (request):
                         |> filter(fn: (r) => r["object"] == "nodes")
                         |> filter(fn: (r) => r["_field"] == "cpu")
                         |> filter(fn: (r) => r["host"] == "{node}")
+                        |> map(fn: (r) => ({{ r with _value: r._value / 100.0 }}))
                         |> aggregateWindow(every: 10s, fn: mean, createEmpty: false)
                         |> yield(name: "mean")
                     '''
         core_result = query_api.query(query=coreFluxQuery)
-        
+        #cores = [{'host': host, 'data':['time':time, 'data':data]}]
+        cpu = {'host': node, 'data':[]}
         for table in core_result:
             for record in table.records:
-                cpu = {
-                    'host': record['host'],
+                cpu['data'].append({
                     "time": record.get_time(),
                     'cpu': record.get_value()  
-                }
-                cores.append(cpu)
+                })
+
+        cores.append(cpu)
 
         memory_free_flux_query = f'''
                         from(bucket: "{bucket}")
@@ -308,49 +310,51 @@ def aggregatedData (request):
         memory_free_result = query_api.query(query=memory_free_flux_query)
         memory_used_result = query_api.query(query=memory_used_flux_query)
     
-
+        memfree ={'host':node, 'data':[]}
         for table in memory_free_result:
             for record in table.records:
-                memory = {
-                    'host': record ['host'],
+                memfree['data'].append({
                     'time': record.get_time(),
                     'memory_free' : record.get_value()
-                }
+                })
 
-                memory_free_list.append(memory)
+        memory_free_list.append(memfree)
 
+        memused = {'host': node, 'data':[]}
         for table in memory_used_result:
             for record in table.records:
-                memory = {
-                    'host': record ['host'],
+                memused['data'].append({
                     'time': record.get_time(),
                     'memory_used' : record.get_value()
-                }
-                memory_used_list.append(memory)
+                })
+        memory_used_list.append(memused)
 
         storage_flux_query = f'''
                             from(bucket: "{bucket}")
                             |> range(start: -30m)
                             |> filter(fn: (r) => r._measurement == "system")
                             |> filter(fn: (r) => r.host == "local")
-                            |> filter(fn: (r) => r._field == "total")
+                            |> filter(fn: (r) => r._field == "used")
                             |> filter(fn: (r) => r.nodename == "{node}")
-                            |> aggregateWindow(every: 10s, fn: mean, createEmpty: false)
                             |> map(fn: (r) => ({{ r with _value: r._value / 1073741824.0 }}))  // To GB
+                            |> aggregateWindow(every: 10s, fn: last, createEmpty: false)
                             |> yield(name: "mean")
                         '''
         
         storage_result = query_api.query(query=storage_flux_query)
 
+        storage_total ={'host':node, 'data':[]}
         for table in storage_result:
             for record in table.records:
-                storage = {
-                    'host': record['host'],
+                storage_total['data'].append({
                     "time": record.get_time(),
                     'storage': record.get_value()
-                }
-                storage_list.append(storage)
+                })
 
+        storage_list.append(storage_total)
+
+        network_in = {'host': node, 'data':[]}
+        network_out = {'host':node, 'data':[]}
         network_in_flux_query = f'''
                             from(bucket: "{bucket}")
                             |> range(start: -30m)
@@ -377,21 +381,21 @@ def aggregatedData (request):
             network_in_result = query_api.query(query= network_in_flux_query)
             for table in network_in_result:
                 for record in table.records:
-                    network= {
-                        'host' : record['host'],
+                    network_in['data'].append({
                         'time' : record.get_time(),
                         'network_in' : record.get_value()
-                    }
-                    network_in_list.append(network)
+                    })
+
+            network_in_list.append(network_in)
 
             for table in network_out_result:
                 for record in table.records:
-                    network = {
-                        'host' : record['host'],
+                    network_out.append({
                         'time' : record.get_time(),
                         'network_in' : record.get_value()                        
-                    }
-                    network_out_list.append(network)
+                    })
+                    
+            network_out_list.append(network_out)
         except Exception as e :
             print (e)
         

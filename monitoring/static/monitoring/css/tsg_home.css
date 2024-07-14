@@ -1,0 +1,12 @@
+.card-body {
+    height: 35vh;
+    /* Adjust as needed */
+    position: relative;
+    padding: 0;
+
+}
+
+svg {
+    width: 100%;
+    height: 100%;
+}
