@@ -115,13 +115,13 @@ $(document).ready(function () {
                 var legendY = addedHosts.size * 40; // Adjust vertical spacing for legends
 
                 svg.append("text")
-                    .attr("x", width + 10) // Position to the right of the graph
+                    .attr("x", width) // Position to the right of the graph
                     .attr("y", legendY)
                     .attr("fill", color(index * 2))
                     .text(`${hostData.host} (${valueKey1.replace('_', ' ')})`);
 
                 svg.append("text")
-                    .attr("x", width + 10) // Position to the right of the graph
+                    .attr("x", width) // Position to the right of the graph
                     .attr("y", legendY + 20) // Adjust vertical spacing
                     .attr("fill", color(index * 2 + 1))
                     .text(`${hostData.host} (${valueKey2.replace('_', ' ')})`);
@@ -158,7 +158,8 @@ $(document).ready(function () {
                     host: mem.host,
                     data: mem.data
                 })));
-                drawMultiLineGraph(ramDataSets, '#ram-chart', 'RAM Usage Across Hosts', 'memory_free', 'memory_total');
+                console.log(ramDataSets)
+                drawMultiLineGraph(ramDataSets, '#ram-chart', 'RAM Usage Across Hosts', 'memory_used', 'memory_total');
 
                 // Combine Network usage data (In and Out) from all hosts
                 var networkDataSets = response.networkInResultList.map((net, index) => ({
