@@ -55,7 +55,7 @@ $(document).ready(function () {
 
     }
 
-    function drawMultiLineGraph(dataSets, element, title, valueKey1, valueKey2) {
+    function drawMultiLineGraph(dataSets, datasets2, element, title, valueKey1, valueKey2) {
         var parentElement = d3.select(element).node().parentNode;
         var margin = { top: 20, right: 10, bottom: 30, left: 20 },
             width = parentElement.clientWidth - margin.left - margin.right,
@@ -78,7 +78,7 @@ $(document).ready(function () {
             .call(d3.axisBottom(x));
 
         var y = d3.scaleLinear()
-            .domain([0, d3.max(dataSets.flatMap(d => d.data), d => Math.max(d[valueKey1], d[valueKey2]))])
+            .domain([0, d3.max(dataSets.flatMap(d => d.data), function (d) { return Math.max(d[valueKey2]) })])
             .range([height, 0]);
 
         svg.append("g")
@@ -86,46 +86,44 @@ $(document).ready(function () {
 
         var color = d3.scaleOrdinal(d3.schemeCategory10);
 
-        var addedHosts = new Set(); // To keep track of added legend entries
         dataSets.forEach((hostData, index) => {
-            var line1 = d3.line()
+            var line = d3.line()
                 .x(d => x(new Date(d.time)))
                 .y(d => y(d[valueKey1]));
-
-            var line2 = d3.line()
-                .x(d => x(new Date(d.time)))
-                .y(d => y(d[valueKey2]));
 
             svg.append("path")
                 .datum(hostData.data)
                 .attr("fill", "none")
                 .attr("stroke", color(index * 2))
                 .attr("stroke-width", 1.5)
-                .attr("d", line1);
+                .attr("d", line);
+
+            svg.append("text")
+                .attr("x", width - 150)
+                .attr("y", legendY)
+                .attr("fill", color(index * 2))
+                .text(`${hostData.host} (${valueKey1.replace('_', ' ')})`);
+
+        });
+
+        datasets2.forEach((hostData, index) => {
+            var line = d3.line()
+                .x(d => x(new Date(d.time)))
+                .y(d => y(d[valueKey2]));
 
             svg.append("path")
                 .datum(hostData.data)
                 .attr("fill", "none")
-                .attr("stroke", color(index * 2 + 1))
+                .attr("stroke", color(index * 3))
                 .attr("stroke-width", 1.5)
-                .attr("d", line2);
+                .attr("d", line);
 
-            if (!addedHosts.has(hostData.host)) {
-                addedHosts.add(hostData.host);
-                var legendY = addedHosts.size * 40; // Adjust vertical spacing for legends
+            svg.append("text")
+                .attr("x", width - 150)
+                .attr("y", legendY)
+                .attr("fill", color(index * 2))
+                .text(`${hostData.host} (${valueKey2.replace('_', ' ')})`);
 
-                svg.append("text")
-                    .attr("x", width) // Position to the right of the graph
-                    .attr("y", legendY)
-                    .attr("fill", color(index * 2))
-                    .text(`${hostData.host} (${valueKey1.replace('_', ' ')})`);
-
-                svg.append("text")
-                    .attr("x", width) // Position to the right of the graph
-                    .attr("y", legendY + 20) // Adjust vertical spacing
-                    .attr("fill", color(index * 2 + 1))
-                    .text(`${hostData.host} (${valueKey2.replace('_', ' ')})`);
-            }
         });
     }
 
@@ -151,15 +149,15 @@ $(document).ready(function () {
                 drawLineGraph(storageDataSets, '#storage-chart', 'Storage Usage Across Hosts', 'storage');
 
                 // Combine RAM usage data (Free and Used) from all hosts
-                var ramDataSets = response.memoryTotalResultList.map((mem, index) => ({
+                var memoryTotalDataSet = response.memoryTotalResultList.map((mem, index) => ({
                     host: mem.host,
                     data: mem.data
-                })).concat(response.memoryUsedResultList.map((mem, index) => ({
+                }))
+                var memoryUsedDataSet = response.memoryUsedResultList.map((mem, index) => ({
                     host: mem.host,
                     data: mem.data
-                })));
-                console.log(ramDataSets)
-                drawMultiLineGraph(ramDataSets, '#ram-chart', 'RAM Usage Across Hosts', 'memory_used', 'memory_total');
+                }));
+                drawMultiLineGraph(memoryTotalDataSet, memoryUsedDataSet, '#ram-chart', 'RAM Usage Across Hosts', 'memory_total', 'memory_used');
 
                 // Combine Network usage data (In and Out) from all hosts
                 var networkDataSets = response.networkInResultList.map((net, index) => ({
