@@ -121,7 +121,7 @@ $(document).ready(function () {
             svg.append("text")
                 .attr("x", width - 150)
                 .attr("y", ((index + 3) * 20) + 10)
-                .attr("fill", color(index * 2))
+                .attr("fill", color(index * 3))
                 .text(`${hostData.host} (${valueKey2.replace('_', ' ')})`);
 
         });
