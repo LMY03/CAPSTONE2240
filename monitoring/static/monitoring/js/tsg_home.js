@@ -100,7 +100,7 @@ $(document).ready(function () {
 
             svg.append("text")
                 .attr("x", width - 150)
-                .attr("y", legendY)
+                .attr("y", ((index + 1) * 20) + 10)
                 .attr("fill", color(index * 2))
                 .text(`${hostData.host} (${valueKey1.replace('_', ' ')})`);
 
@@ -120,7 +120,7 @@ $(document).ready(function () {
 
             svg.append("text")
                 .attr("x", width - 150)
-                .attr("y", legendY)
+                .attr("y", ((index + 2) * 20) + 10)
                 .attr("fill", color(index * 2))
                 .text(`${hostData.host} (${valueKey2.replace('_', ' ')})`);
 
