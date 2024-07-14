@@ -21,7 +21,7 @@ Virtual Machine List
                 <table class="table table-hover">
                     <thead class="table-light">
                         <tr>
-                            <th scope="col">Virtual Machine ID</th>
+                            <th scope="col">Virtual Machine</th>
                             <th scope="col">Request Type</th>
                             <th scope="col">Requested By</th>
                             <th scope="col">Status</th>
@@ -31,8 +31,8 @@ Virtual Machine List
                         {% for vm in vm_list %}
                         <tr>
                             <td><a href = "{% url 'proxmox:vm_details' vm.id %}"><i class="bi bi-display"></i> {{ vm.vm_name }}</a></td>
-                            <td>Class Course</td>
-                            <td>Estefanie Bertumen</td>
+                            <td>{{ vm.request.get_request_type }}</td>
+                            <td>{{ vm.request.get_requester }}</td>
                             <td>{{ vm.status }}</td>
                         </tr>
                         {% endfor %}

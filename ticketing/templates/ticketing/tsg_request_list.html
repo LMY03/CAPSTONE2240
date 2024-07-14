@@ -33,7 +33,7 @@ TSG Dashboard
               <th>Template OS</th>
               <th>Cores</th>
               <th>RAM</th>
-              <th>Internet Access</th>
+              <th>Port Forward</th>
               <th>Status</th>
               <th>Action</th>
             </tr>
@@ -42,7 +42,7 @@ TSG Dashboard
             {% for request_entry in request_entries %}
               <tr>
                 <td>{{ request_entry.id }}</td>
-                <td>{{ request_entry.requester.first_name }} {{ request.requester.last_name }}</td>
+                <td>{{ request_entry.get_requester }}</td>
                 <td>{{ request_entry.template.vm_name }}</td>
                 <td>{{ request_entry.cores }}</td>
                 <td>{{ request_entry.ram }}</td>
@@ -50,7 +50,7 @@ TSG Dashboard
                 <td>{{ request_entry.status }}</td>
                 <td>
                   <a href="{% url 'ticketing:request_details' request_entry.id %}" class="btn btn-primary">Open</a>
-                  {% if request_entry.status == "ONGOING" %}
+                  {% if request_entry.status == "ONGOING" or request_entry.status == "COMPLETED" %}
                   <a href="{% url 'ticketing:delete_request' request_entry.id %}" class="btn btn-danger">Delete</a>
                   {% endif %}
                 </td>

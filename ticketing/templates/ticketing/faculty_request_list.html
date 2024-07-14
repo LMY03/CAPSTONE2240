@@ -1,7 +1,7 @@
 {% extends 'users/base_faculty.html' %}
 
 {% block title %}
-VM Details {{ vm_id }}
+VM Details
 {% endblock title %}
 {% load static %}
 
@@ -33,8 +33,13 @@ VM Details {{ vm_id }}
             {% for request in request_entries  %}
             <tr>
                 <td>{{ request.id }}</td>
-                <td>Virtual Machine</td>
-                <td>{{ request.category }}</td>
+                <td>{% if not request.template.is_lxc %}
+                    Virtual Machine
+                    {% else %}
+                    Linux Container
+                    {% endif %}
+                </td>
+                <td>{{ request.get_request_type }}</td>
                 <td>{{ request.requestDate }}</td>
                 <td>{{ request.status }}</td>
                 <td>

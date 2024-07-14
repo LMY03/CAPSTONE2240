@@ -32,26 +32,7 @@ def faculty_request_list(request):
     user = get_object_or_404(User, username=request.user.username)
     request_entries = RequestEntry.objects.filter(requester=user).order_by('-id')
 
-    for request_entry in request_entries:
-        category = 'Unknown'  
-        request_use_case = RequestUseCase.objects.filter(request_id=request_entry).first()
-        
-        if request_use_case:
-            if request_use_case.request_use_case == 'RESEARCH':
-                category = 'Research'
-            elif request_use_case.request_use_case == 'TEST':
-                category = 'Test'
-            elif request_use_case.request_use_case == 'THESIS':
-                category = 'Thesis'
-            else:
-                category = 'Class Course'
-        
-        request_entry.category = category
-
-        vm_list = VirtualMachines.objects.filter(request=request_entry)
-        if vm_list.exists() : request_entry.vm_id = vm_list[0].id
-
-    return render(request, 'ticketing/faculty_request_list.html', { 'request_entries': request_entries })
+    return render(request, 'ticketing/faculty_request_list.html', { 'request_entries' : request_entries })
 
 def tsg_requests_list(request):
     return render(request, 'ticketing/tsg_request_list.html', { 'request_entries' : RequestEntry.objects.all().order_by('-id') })
