@@ -19,7 +19,6 @@ def get_proxmox_ticket():
     for attempt in range(5):
         try:
             response = requests.post(url, data=data, verify=CA_CRT)
-            response.raise_for_status()  # Raise an exception for HTTP errors
             return response.json()
         except requests.exceptions.RequestException as e:
             print(f"Attempt {attempt + 1} failed: {e}")
