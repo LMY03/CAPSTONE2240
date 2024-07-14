@@ -33,9 +33,6 @@ $(document).ready(function () {
 
         // Draw a line for each host and metric
         dataSets.forEach((hostData, index) => {
-            if ((globalHostData == '' || globalHostData != hostData.host) && valueKey2 != null) {
-                legendIndex = 0;
-            }
             var line = d3.line()
                 .x(function (d) { return x(new Date(d.time)); })
                 .y(function (d) { return y(d[valueKey]); });
