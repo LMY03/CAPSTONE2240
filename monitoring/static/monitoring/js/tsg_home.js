@@ -86,12 +86,8 @@ $(document).ready(function () {
 
         var color = d3.scaleOrdinal(d3.schemeCategory10);
 
-        var globalHostData = '';
-        var legendIndex = 0;
+        var addedHosts = new Set(); // To keep track of added legend entries
         dataSets.forEach((hostData, index) => {
-            if (globalHostData == '' || globalHostData == hostData.host) {
-                legendIndex = 0;
-            }
             var line1 = d3.line()
                 .x(d => x(new Date(d.time)))
                 .y(d => y(d[valueKey1]));
@@ -113,24 +109,25 @@ $(document).ready(function () {
                 .attr("stroke", color(index * 2 + 1))
                 .attr("stroke-width", 1.5)
                 .attr("d", line2);
-            if (legendIndex == 0) {
+
+            if (!addedHosts.has(hostData.host)) {
+                addedHosts.add(hostData.host);
+                var legendY = addedHosts.size * 40; // Adjust vertical spacing for legends
+
                 svg.append("text")
-                    .attr("x", width - 150)
-                    .attr("y", ((index + 1) * 20) + 10)
+                    .attr("x", width + 10) // Position to the right of the graph
+                    .attr("y", legendY)
                     .attr("fill", color(index * 2))
                     .text(`${hostData.host} (${valueKey1.replace('_', ' ')})`);
 
                 svg.append("text")
-                    .attr("x", width - 150)
-                    .attr("y", ((index + 1) * 20) + 30)
+                    .attr("x", width + 10) // Position to the right of the graph
+                    .attr("y", legendY + 20) // Adjust vertical spacing
                     .attr("fill", color(index * 2 + 1))
                     .text(`${hostData.host} (${valueKey2.replace('_', ' ')})`);
-                legendIndex++;
             }
-
         });
     }
-
 
     function init() {
         $.ajax({
