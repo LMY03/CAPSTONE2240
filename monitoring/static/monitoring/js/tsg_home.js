@@ -78,7 +78,7 @@ $(document).ready(function () {
             .call(d3.axisBottom(x));
 
         var y = d3.scaleLinear()
-            .domain([0, d3.max(dataSets.flatMap(d => d.data), function (d) { return Math.max(d[valueKey2]) })])
+            .domain([0, d3.max(dataSets.flatMap(d => d.data), function (d) { return d[valueKey1] })])
             .range([height, 0]);
 
         svg.append("g")
@@ -120,7 +120,7 @@ $(document).ready(function () {
 
             svg.append("text")
                 .attr("x", width - 150)
-                .attr("y", ((index + 2) * 20) + 10)
+                .attr("y", ((index + 3) * 20) + 10)
                 .attr("fill", color(index * 2))
                 .text(`${hostData.host} (${valueKey2.replace('_', ' ')})`);
 
