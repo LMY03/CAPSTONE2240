@@ -31,8 +31,6 @@ $(document).ready(function () {
         // Define a color scale to differentiate between hosts and metrics
         var color = d3.scaleOrdinal(d3.schemeCategory10);
 
-        var legendIndex = 0;
-        var globalHostData = '';
         // Draw a line for each host and metric
         dataSets.forEach((hostData, index) => {
             if ((globalHostData == '' || globalHostData != hostData.host) && valueKey2 != null) {
@@ -49,40 +47,85 @@ $(document).ready(function () {
                 .attr("stroke-width", 1.5)
                 .attr("d", line);
 
-            if (legendIndex < 1) {
-                svg.append("text")
-                    .attr("x", width - 150)
-                    .attr("y", ((index + 1) * 20) + 10)
-                    .attr("fill", index + 1)
-                    .text(`${hostData.host} (${valueKey.replace('_', ' ')})`);
-            }
 
-            if (valueKey2) {
-                legendIndex++;
-                var line2 = d3.line()
-                    .x(function (d) { return x(new Date(d.time)); })
-                    .y(function (d) { return y(d[valueKey2]); });
+            svg.append("text")
+                .attr("x", width - 150)
+                .attr("y", ((index + 1) * 20) + 10)
+                .attr("fill", color(index + 1))
+                .text(`${hostData.host} (${valueKey.replace('_', ' ')})`);
 
-                svg.append("path")
-                    .datum(hostData.data)
-                    .attr("fill", "none")
-                    .attr("stroke", color(legendIndex))
-                    .attr("stroke-width", 1.5)
-                    .attr("d", line2);
-
-                if (legendIndex == 1) {
-                    svg.append("text")
-                        .attr("x", width - 150)
-                        .attr("y", (legendIndex * 20) + 10)
-                        .attr("fill", color(1))
-                        .text(`${hostData.host} (${valueKey2.replace('_', ' ')})`);
-                }
-                legendIndex++;
-            }
-            globalHostData == hostData.host;
         });
 
     }
+
+    function drawMultiLineGraph(dataSets, element, title, valueKey1, valueKey2) {
+        var parentElement = d3.select(element).node().parentNode;
+        var margin = { top: 20, right: 10, bottom: 30, left: 20 },
+            width = parentElement.clientWidth - margin.left - margin.right,
+            height = parentElement.clientHeight - margin.top - margin.bottom;
+
+        var svg = d3.select(element)
+            .append("svg")
+            .attr("width", "100%")
+            .attr("height", "100%")
+            .attr("viewBox", `0 0 ${parentElement.clientWidth} ${parentElement.clientHeight}`)
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+        var x = d3.scaleTime()
+            .domain(d3.extent(dataSets.flatMap(d => d.data), d => new Date(d.time)))
+            .range([0, width]);
+
+        svg.append("g")
+            .attr("transform", "translate(0," + height + ")")
+            .call(d3.axisBottom(x));
+
+        var y = d3.scaleLinear()
+            .domain([0, d3.max(dataSets.flatMap(d => d.data), d => Math.max(d[valueKey1], d[valueKey2]))])
+            .range([height, 0]);
+
+        svg.append("g")
+            .call(d3.axisLeft(y));
+
+        var color = d3.scaleOrdinal(d3.schemeCategory10);
+
+        dataSets.forEach((hostData, index) => {
+            var line1 = d3.line()
+                .x(d => x(new Date(d.time)))
+                .y(d => y(d[valueKey1]));
+
+            var line2 = d3.line()
+                .x(d => x(new Date(d.time)))
+                .y(d => y(d[valueKey2]));
+
+            svg.append("path")
+                .datum(hostData.data)
+                .attr("fill", "none")
+                .attr("stroke", color(index * 2))
+                .attr("stroke-width", 1.5)
+                .attr("d", line1);
+
+            svg.append("path")
+                .datum(hostData.data)
+                .attr("fill", "none")
+                .attr("stroke", color(index * 2 + 1))
+                .attr("stroke-width", 1.5)
+                .attr("d", line2);
+
+            svg.append("text")
+                .attr("x", width - 150)
+                .attr("y", ((index + 1) * 20) + 10)
+                .attr("fill", color(index * 2))
+                .text(`${hostData.host} (${valueKey1.replace('_', ' ')})`);
+
+            svg.append("text")
+                .attr("x", width - 150)
+                .attr("y", ((index + 1) * 20) + 30)
+                .attr("fill", color(index * 2 + 1))
+                .text(`${hostData.host} (${valueKey2.replace('_', ' ')})`);
+        });
+    }
+
 
     function init() {
         $.ajax({
@@ -113,7 +156,7 @@ $(document).ready(function () {
                     host: mem.host,
                     data: mem.data
                 })));
-                drawLineGraph(ramDataSets, '#ram-chart', 'RAM Usage Across Hosts', 'memory_free', 'memory_used');
+                drawMultiLineGraph(ramDataSets, '#ram-chart', 'RAM Usage Across Hosts', 'memory_free', 'memory_used');
 
                 // Combine Network usage data (In and Out) from all hosts
                 var networkDataSets = response.networkInResultList.map((net, index) => ({
@@ -123,7 +166,7 @@ $(document).ready(function () {
                     host: net.host,
                     data: net.data
                 })));
-                drawLineGraph(networkDataSets, '#network-chart', 'Network Usage Across Hosts', 'network_in', 'network_out');
+                drawMultiLineGraph(networkDataSets, '#network-chart', 'Network Usage Across Hosts', 'network_in', 'network_out');
             },
             error: function (response) {
                 console.log(response);
