@@ -21,9 +21,15 @@ $(document).ready(function () {
             .attr("transform", "translate(0," + height + ")")
             .call(d3.axisBottom(x));
 
-        var y = d3.scaleLinear()
-            .domain([0, d3.max(dataSets.flatMap(d => d.data), function (d) { return d[valueKey]; })])
-            .range([height, 0]);
+        if (element == '#cpu-chart') {
+            var y = d3.scaleLinear()
+                .domain([0, 100])
+                .range([height, 0]);
+        } else {
+            var y = d3.scaleLinear()
+                .domain([0, d3.max(dataSets.flatMap(d => d.data), function (d) { return d[valueKey]; })])
+                .range([height, 0]);
+        }
 
         svg.append("g")
             .call(d3.axisLeft(y));
@@ -45,11 +51,19 @@ $(document).ready(function () {
                 .attr("d", line);
 
 
-            svg.append("text")
-                .attr("x", width - 150)
-                .attr("y", ((index + 1) * 20) + 10)
-                .attr("fill", color(index + 1))
-                .text(`${hostData.host} (${valueKey.replace('_', ' ')})`);
+            if (element == '#cpu-chart') {
+                svg.append("text")
+                    .attr("x", width - 150)
+                    .attr("y", ((index + 1) * 20) + 10)
+                    .attr("fill", color(index + 1))
+                    .text(`${hostData.host} (${valueKey.replace('_', ' ')}) in %`);
+            } else {
+                svg.append("text")
+                    .attr("x", width - 150)
+                    .attr("y", ((index + 1) * 20) + 10)
+                    .attr("fill", color(index + 1))
+                    .text(`${hostData.host} (${valueKey.replace('_', ' ')}) in GB`);
+            }
 
         });
 

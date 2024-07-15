@@ -26,14 +26,26 @@ class UserCreationForm(forms.ModelForm):
         return user
 
 class UserChangeForm(forms.ModelForm):
-    password = ReadOnlyPasswordHashField()
+    password = forms.CharField(label='Password', widget=forms.PasswordInput, required=False)
 
     class Meta:
         model = User
         fields = ('username', 'email', 'password', 'is_active', 'is_staff', 'is_superuser')
 
     def clean_password(self):
-        return self.initial["password"]
+        password = self.cleaned_data.get("password")
+        if not password:
+            return self.initial["password"]
+        return password
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        password = self.cleaned_data.get("password")
+        if password:
+            user.set_password(password)
+        if commit:
+            user.save()
+        return user
 
 class AddVMTemplates(forms.ModelForm):
 
@@ -41,12 +53,12 @@ class AddVMTemplates(forms.ModelForm):
         model = VMTemplates
         fields = ('vm_id', 'vm_name', 'node')
 
-    def save (self, commit = True):
+    def save(self, commit=True):
         vmtemplate = super().save(commit=False)
-        #This is where the API call starts
-        #Where it ends
+        # This is where the API call starts
+        # Where it ends
 
-        #Setting of the core ram and storage
+        # Setting of the core ram and storage
         vmtemplate.cores = 1
         vmtemplate.ram = 2048
         vmtemplate.storage = 8
