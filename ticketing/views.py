@@ -463,15 +463,15 @@ def create_test_vm(tsg_user, request_id, node):
     cpu_cores = int(request_entry.cores)
     ram = int(request_entry.ram)
     
-    # vm = VirtualMachines.objects.create(
-    #     vm_id=new_vm_id,
-    #     vm_name=vm_name,
-    #     cores=cpu_cores,
-    #     ram=ram,
-    #     storage=request_entry.template.storage,
-    #     request=request_entry,
-    #     node=get_object_or_404(Nodes, name=node),
-    # )
+    vm = VirtualMachines.objects.create(
+        vm_id=new_vm_id,
+        vm_name=vm_name,
+        cores=cpu_cores,
+        ram=ram,
+        storage=request_entry.template.storage,
+        request=request_entry,
+        node=get_object_or_404(Nodes, name=node),
+    )
     upid = proxmox.clone_vm(node, vm_id, new_vm_id, vm_name)
     proxmox.wait_for_task(node, upid)
     proxmox.config_vm(node, new_vm_id, cpu_cores, ram)
