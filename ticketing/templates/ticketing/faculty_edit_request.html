@@ -218,7 +218,7 @@ Edit request {{ vm_id }}
             <textarea class="form-control" id="other_configs" name="other_configs" rows="2">{{ request_entry.other_config}}</textarea>
         </div>
         <button type="submit" class="btn btn-primary">Edit</button>
-        <a href="{% url 'ticketing:request_details' request.id %}"><button type="button" class="btn btn-danger">Cancel</button></a>
+        <a href="{% url 'ticketing:request_details' request_entry.id %}"><button type="button" class="btn btn-danger">Cancel</button></a>
     </form>
         {% if comments %}
         <div class="mt-3 mb-5">

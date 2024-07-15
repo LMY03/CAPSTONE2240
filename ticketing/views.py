@@ -654,9 +654,9 @@ def delete_request(request, request_id):
     return redirect('/ticketing')
 
 def edit_request(request, request_id):
-    request_entry = get_object_or_404(RequestEntry, pk = request_id)
-    request_use_cases = RequestUseCase.objects.filter(request_id = request_id)
-    portRules = PortRules.objects.filter(request_id = request_id)
+    request_entry = get_object_or_404(RequestEntry, pk=request_id)
+    request_use_cases = RequestUseCase.objects.filter(request_id=request_id)
+    portRules = PortRules.objects.filter(request_id=request_id)
     context = {
         'Sections': [],
         'use_case': None 
