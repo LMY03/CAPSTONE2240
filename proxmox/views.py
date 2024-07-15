@@ -64,12 +64,13 @@ def vm_provision_process(vm_id, classnames, no_of_vm, cpu_cores, ram, request_id
     orig_vm = get_object_or_404(VirtualMachines, vm_id=vm_id, request_id=request_id)
     guacamole_connection = get_object_or_404(GuacamoleConnection, vm=orig_vm)
     password = User.objects.make_random_password()
-    # user = User(username=orig_vm.vm_name)
-    # user.set_password(password)
-    # user.save()
-    # UserProfile.objects.create(user=user)
-    # guacamole_connection.user = get_object_or_404(GuacamoleUser, system_user=user)
-    # guacamole_connection.save()
+    
+    user = User(username=orig_vm.vm_name)
+    user.set_password(password)
+    user.save()
+    UserProfile.objects.create(user=user)
+    guacamole_connection.user = get_object_or_404(GuacamoleUser, system_user=user)
+    guacamole_connection.save()
 
     node = orig_vm.node.name
     protocol = "rdp"
