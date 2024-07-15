@@ -71,7 +71,7 @@ def vm_provision_process(vm_id, classnames, no_of_vm, cpu_cores, ram, request_id
     guacamole_connection.user = get_object_or_404(GuacamoleUser, system_user=user)
     guacamole_connection.save()
 
-    node = orig_vm.node.id
+    node = orig_vm.node.pk
     protocol = "rdp"
     port = {
         'vnc': 5901,
