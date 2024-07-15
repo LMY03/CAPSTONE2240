@@ -450,7 +450,6 @@ def get_total_no_of_vm(request_entry):
 
 def create_test_vm(tsg_user, request_id, node): 
     new_vm_id = views.generate_vm_ids(1)[0]
-    node = get_object_or_404(Nodes, name=node)
     request_entry = get_object_or_404(RequestEntry, pk=request_id)
     vm_id = int(request_entry.template.vm_id)
 
@@ -464,21 +463,21 @@ def create_test_vm(tsg_user, request_id, node):
     cpu_cores = int(request_entry.cores)
     ram = int(request_entry.ram)
     
-    vm = VirtualMachines.objects.create(
-        vm_id=new_vm_id,
-        vm_name=vm_name,
-        cores=cpu_cores,
-        ram=ram,
-        storage=request_entry.template.storage,
-        request=request_entry,
-        node=node,
-    )
-    upid = proxmox.clone_vm(node.name, vm_id, new_vm_id, vm_name)
-    proxmox.wait_for_task(node.name, upid)
-    proxmox.config_vm(node.name, new_vm_id, cpu_cores, ram)
-    proxmox.start_vm(node.name, new_vm_id)
-    ip_add = proxmox.wait_and_get_ip(node.name, new_vm_id)
-    proxmox.shutdown_vm(node.name, new_vm_id)
+    # vm = VirtualMachines.objects.create(
+    #     vm_id=new_vm_id,
+    #     vm_name=vm_name,
+    #     cores=cpu_cores,
+    #     ram=ram,
+    #     storage=request_entry.template.storage,
+    #     request=request_entry,
+    #     node=get_object_or_404(Nodes, name=node),
+    # )
+    upid = proxmox.clone_vm(node, vm_id, new_vm_id, vm_name)
+    proxmox.wait_for_task(node, upid)
+    proxmox.config_vm(node, new_vm_id, cpu_cores, ram)
+    proxmox.start_vm(node, new_vm_id)
+    ip_add = proxmox.wait_and_get_ip(node, new_vm_id)
+    proxmox.shutdown_vm(node, new_vm_id)
 
     vm.set_ip_add(ip_add)
     vm.set_shutdown()
