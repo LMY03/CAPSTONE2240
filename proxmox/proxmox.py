@@ -14,15 +14,17 @@ CA_CRT = False
 def get_proxmox_ticket():
     url = f"{PROXMOX_HOST}/api2/json/access/ticket"
     data = { 'username': USERNAME, 'password': PASSWORD }
-    # response = requests.post(url, data=data, verify=CA_CRT)
-    # if response.status_code != 200 : return get_proxmox_ticket()
-    for attempt in range(5):
-        try:
-            response = requests.post(url, data=data, verify=CA_CRT)
-            return response.json()
-        except requests.exceptions.RequestException as e:
-            print(f"Attempt {attempt + 1} failed: {e}")
-            time.sleep(5)
+    response = requests.post(url, data=data, verify=CA_CRT)
+    if response.status_code != 200:
+        time.sleep(5)
+        return get_proxmox_ticket()
+    # for attempt in range(5):
+    #     try:
+    #         response = requests.post(url, data=data, verify=CA_CRT)
+    #         return response.json()
+    #     except requests.exceptions.RequestException as e:
+    #         print(f"Attempt {attempt + 1} failed: {e}")
+    #         time.sleep(5)
     return response.json()
 
 # Authenticate
