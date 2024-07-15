@@ -10,14 +10,14 @@ class VirtualMachines(models.Model):
     cores = models.IntegerField()
     ram = models.IntegerField()
     storage = models.DecimalField(max_digits=5, decimal_places=2)
-    ip_add = models.CharField(max_length=15)
+    ip_add = models.CharField(max_length=15, null=True, default=None)
     request = models.ForeignKey('ticketing.RequestEntry', on_delete=models.DO_NOTHING)
-    # node = models.CharField(max_length=45)
     node = models.ForeignKey(Nodes, on_delete=models.DO_NOTHING)
     is_lxc = models.BooleanField(default=False)
     # vm_password = models.CharField(max_length=45, default=config('DEFAULT_VM_PASSWORD'))
 
     class Status(models.TextChoices): 
+        CREATING = 'CREATING'
         ACTIVE = 'ACTIVE'
         SHUTDOWN = 'SHUTDOWN'
         DESTROYED = 'DESTROYED'
@@ -25,8 +25,12 @@ class VirtualMachines(models.Model):
     status = models.CharField(
         max_length=20,
         choices=Status.choices,
-        default=Status.ACTIVE
+        default=Status.CREATING
     )
+
+    def set_ip_add(self, ip_add):
+        self.ip_add = ip_add
+        self.save()
 
     def is_active(self) : return self.status == VirtualMachines.Status.ACTIVE
     def is_shutdown(self) : return self.status == VirtualMachines.Status.SHUTDOWN

@@ -464,8 +464,15 @@ def create_test_vm(tsg_user, request_id, node):
     cpu_cores = int(request_entry.cores)
     ram = int(request_entry.ram)
     
-    ip_add = "10.10.10.1"
-
+    vm = VirtualMachines.objects.create(
+        vm_id=new_vm_id,
+        vm_name=vm_name,
+        cores=cpu_cores,
+        ram=ram,
+        storage=request_entry.template.storage,
+        request=request_entry,
+        node=node,
+    )
     upid = proxmox.clone_vm(node.name, vm_id, new_vm_id, vm_name)
     proxmox.wait_for_task(node.name, upid)
     proxmox.config_vm(node.name, new_vm_id, cpu_cores, ram)
@@ -473,24 +480,27 @@ def create_test_vm(tsg_user, request_id, node):
     ip_add = proxmox.wait_and_get_ip(node.name, new_vm_id)
     proxmox.shutdown_vm(node.name, new_vm_id)
 
+    vm.set_ip_add(ip_add)
+    vm.set_shutdown()
+
     tsg_gaucamole_user = get_object_or_404(GuacamoleUser, system_user=tsg_user)
     guacamole_connection_group_id = guacamole.create_connection_group(f"{request_id}")
     guacamole.assign_connection_group(tsg_gaucamole_user.username, guacamole_connection_group_id)
     guacamole_connection_id = guacamole.create_connection(vm_name, "rdp", 3389, ip_add, config('DEFAULT_VM_USERNAME'), config('DEFAULT_VM_PASSWORD'), guacamole_connection_group_id)
     guacamole.assign_connection(tsg_gaucamole_user.username, guacamole_connection_id)
 
-    vm = VirtualMachines(
-        vm_id=new_vm_id, 
-        vm_name=vm_name, 
-        cores=cpu_cores, 
-        ram=ram, 
-        storage=request_entry.template.storage, 
-        ip_add=ip_add, 
-        request=request_entry, 
-        node=node,
-        status=VirtualMachines.Status.SHUTDOWN
-    )
-    vm.save()
+    # vm = VirtualMachines(
+    #     vm_id=new_vm_id, 
+    #     vm_name=vm_name, 
+    #     cores=cpu_cores, 
+    #     ram=ram, 
+    #     storage=request_entry.template.storage, 
+    #     ip_add=ip_add, 
+    #     request=request_entry, 
+    #     node=node,
+    #     status=VirtualMachines.Status.SHUTDOWN
+    # )
+    # vm.save()
     GuacamoleConnection(user=get_object_or_404(GuacamoleUser, system_user=tsg_user), connection_id=guacamole_connection_id, connection_group_id=guacamole_connection_group_id, vm=vm).save()
     
 def confirm_test_vm(request, request_id):

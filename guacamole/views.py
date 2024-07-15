@@ -39,8 +39,7 @@ def access_vm(request):
             if ip_add != vm.ip_add:
                 update_port_forward_rule(vm.vm_name, ip_add) # pfsense
                 guacamole.update_connection(connection_id, vm_id)
-                vm.ip_add = ip_add
-                vm.save()
+                vm.set_ip_add(ip_add)
 
             vm.set_active()
         

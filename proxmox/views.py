@@ -27,12 +27,12 @@ def faculty_vm_list(request):
     
     vm_list = []
     for request_entry in request_entries: 
-        vm_list += VirtualMachines.objects.filter(request=request_entry).exclude(status=VirtualMachines.Status.DESTROYED).exclude(is_lxc=True)
+        vm_list += VirtualMachines.objects.filter(request=request_entry).exclude(status=VirtualMachines.Status.DESTROYED).exclude(status=VirtualMachines.Status.CREATING).exclude(is_lxc=True)
 
     return render(request, 'proxmox/faculty_vm_list.html', { 'vm_list': vm_list })
     
 def tsg_vm_list(request):
-    return render(request, 'proxmox/tsg_vm_list.html', { 'vm_list': list(VirtualMachines.objects.all().exclude(status=VirtualMachines.Status.DESTROYED).exclude(is_lxc=True)) })
+    return render(request, 'proxmox/tsg_vm_list.html', { 'vm_list': list(VirtualMachines.objects.all().exclude(status=VirtualMachines.Status.DESTROYED).exclude(status=VirtualMachines.Status.CREATING).exclude(is_lxc=True)) })
 
 @login_required
 def vm_details(request, vm_id):
@@ -95,14 +95,17 @@ def vm_provision_process(vm_id, classnames, no_of_vm, cpu_cores, ram, request_id
         proxmox.wait_for_vm_stop(node, orig_vm.vm_id)
         orig_vm.set_shutdown()
 
-    for new_vm_id, vm_name in zip(new_vm_ids, classnames) : upids.append(proxmox.clone_vm(node, vm_id, new_vm_id, vm_name))
+    request_entry = get_object_or_404(RequestEntry, id=request_id)
+
+    for new_vm_id, vm_name in zip(new_vm_ids, classnames): 
+        VirtualMachines.objects.create(vm_id=new_vm_id, vm_name=vm_name, cores=cpu_cores, ram=ram, storage=request_entry.template.storage, request=request_entry, node=node)
+        upids.append(proxmox.clone_vm(node, vm_id, new_vm_id, vm_name))
 
     for vm_id, upid in zip(new_vm_ids, upids):
         proxmox.wait_for_task(node, upid)
         proxmox.config_vm(node, vm_id, cpu_cores, ram)
         proxmox.start_vm(node, vm_id)
 
-    request_entry = get_object_or_404(RequestEntry, id=request_id)
     tsg_guacamole_username = get_object_or_404(GuacamoleUser, system_user=request_entry.requester).username
     faculty_guacamole_username = get_object_or_404(GuacamoleUser, system_user=request_entry.requester).username
 
@@ -150,8 +153,10 @@ def vm_provision_process(vm_id, classnames, no_of_vm, cpu_cores, ram, request_id
         guacamole.assign_connection(classnames[i], guacamole_connection_id)
         guacamole.assign_connection(faculty_guacamole_username, guacamole_connection_id)
         
-        vm = VirtualMachines(request=request_entry, vm_id=new_vm_ids[i], vm_name=classnames[i], cores=cpu_cores, ram=ram, storage=request_entry.template.storage, ip_add=hostnames[i], node=orig_vm.node, status=VirtualMachines.Status.SHUTDOWN)
-        vm.save()
+        # vm = VirtualMachines(request=request_entry, vm_id=new_vm_ids[i], vm_name=classnames[i], cores=cpu_cores, ram=ram, storage=request_entry.template.storage, ip_add=hostnames[i], node=orig_vm.node, status=VirtualMachines.Status.SHUTDOWN)
+        vm = get_object_or_404(VirtualMachines, vm_name=classnames[i])
+        vm.set_ip_add(hostnames[i+1])
+        vm.set_shutdown()
         vms.append(vm)
         GuacamoleConnection(user=get_object_or_404(GuacamoleUser, system_user=user), connection_id=guacamole_connection_id, connection_group_id=guacamole_connection.connection_group_id, vm=vm).save()
 
