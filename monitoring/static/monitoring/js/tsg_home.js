@@ -51,7 +51,7 @@ $(document).ready(function () {
                 .attr("d", line);
 
 
-            if (element == '#cpu-chart') {
+            if (element = '#cpu-chart') {
                 svg.append("text")
                     .attr("x", width - 150)
                     .attr("y", ((index + 1) * 20) + 10)
@@ -116,7 +116,7 @@ $(document).ready(function () {
                 .attr("x", width - 150)
                 .attr("y", ((index + 1) * 20) + 10)
                 .attr("fill", color(index * 2))
-                .text(`${hostData.host} (${valueKey1.replace('_', ' ')})`);
+                .text(`${hostData.host} (${valueKey1.replace('_', ' ')}) in  GB`);
 
         });
 
@@ -174,14 +174,13 @@ $(document).ready(function () {
                 drawMultiLineGraph(memoryTotalDataSet, memoryUsedDataSet, '#ram-chart', 'RAM Usage Across Hosts', 'memory_total', 'memory_used');
 
                 // Combine Network usage data (In and Out) from all hosts
-                var networkDataSets = response.networkInResultList.map((net, index) => ({
-                    host: net.host,
-                    data: net.data
-                })).concat(response.networkOutResultList.map((net, index) => ({
-                    host: net.host,
-                    data: net.data
-                })));
-                drawMultiLineGraph(networkDataSets, '#network-chart', 'Network Usage Across Hosts', 'network_in', 'network_out');
+                var networkDataSets = response.networkInResultList
+                    .filter(net => Array.isArray(net.data) && net.data.length > 0)
+                    .map(net => ({
+                        host: net.host,
+                        data: net.data
+                    }))
+                drawLineGraph(networkDataSets, '#network-chart', 'Network Usage Across Hosts', 'network_in');
             },
             error: function (response) {
                 console.log(response);

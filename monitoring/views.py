@@ -414,18 +414,18 @@ def aggregatedData (request):
                             |> yield(name: "derivative")
                             '''
         
-        network_out_flux_query = f'''
-                            from(bucket: "{bucket}")
-                            |> range(start: -30m)
-                            |> filter(fn: (r) => r._measurement == "system")
-                            |> filter(fn: (r) => r["_field"]== "netout")
-                            |> filter(fn: (r) => r.nodename == "{node}")
-                            |> aggregateWindow (every: 1m, fn: mean)
-                            |> derivative (unit:1s, nonNegative:false)
-                            |> yield(name: "derivative")
-                            '''
+        # network_out_flux_query = f'''
+        #                     from(bucket: "{bucket}")
+        #                     |> range(start: -30m)
+        #                     |> filter(fn: (r) => r._measurement == "system")
+        #                     |> filter(fn: (r) => r["_field"]== "netout")
+        #                     |> filter(fn: (r) => r.nodename == "{node}")
+        #                     |> aggregateWindow (every: 1m, fn: mean)
+        #                     |> derivative (unit:1s, nonNegative:false)
+        #                     |> yield(name: "derivative")
+        #                     '''
         try: 
-            network_out_result = query_api.query(query= network_out_flux_query)
+            # network_out_result = query_api.query(query= network_out_flux_query)
             network_in_result = query_api.query(query= network_in_flux_query)
             for table in network_in_result:
                 for record in table.records:
@@ -436,14 +436,14 @@ def aggregatedData (request):
 
             network_in_list.append(network_in)
 
-            for table in network_out_result:
-                for record in table.records:
-                    network_out.append({
-                        'time' : record.get_time(),
-                        'network_in' : record.get_value()                        
-                    })
+            # for table in network_out_result:
+            #     for record in table.records:
+            #         network_out.append({
+            #             'time' : record.get_time(),
+            #             'network_in' : record.get_value()                        
+            #         })
                     
-            network_out_list.append(network_out)
+            # network_out_list.append(network_out)
         except Exception as e :
             print (e)
         
@@ -454,5 +454,5 @@ def aggregatedData (request):
       'memoryUsedResultList' : memory_used_list,
       'storageResultList' : storage_list,
       'networkInResultList' : network_in_list,
-      'networkOutResultList' : network_out_list
+    #   'networkOutResultList' : network_out_list
     })
