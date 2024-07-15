@@ -175,7 +175,6 @@ $(document).ready(function () {
 
                 // Combine Network usage data (In and Out) from all hosts
                 var networkDataSets = response.networkInResultList
-                    .filter(net => Array.isArray(net.data) && net.data.length > 0)
                     .map(net => ({
                         host: net.host,
                         data: net.data
