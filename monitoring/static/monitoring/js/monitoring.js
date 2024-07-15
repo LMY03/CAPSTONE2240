@@ -429,6 +429,39 @@ $(document).ready(function () {
         var cpu = (vmList.cpu * 100).toFixed(2)
         var mem = ((converted_used / converted_max) * 100).toFixed(2)
 
+        // Netin
+        var netin = 0
+        for (i = 0; i < networkInResultList.length; i++) {
+            var temp = 0
+            var count = 0;
+            nodeData = networkInResultList[i].data;
+            for (j = 0; j < nodeData.length; j++) {
+                count++;
+                temp += nodeData[j].netin;
+            }
+            if (count != 0) {
+                temp /= count;
+                netin += temp
+            }
+        }
+
+        // Netout
+        var netout = 0
+        for (i = 0; i < networkOutResultList.length; i++) {
+            var temp = 0
+            var count = 0;
+            nodeData = networkOutResultList[i].data;
+            for (j = 0; j < nodeData.length; j++) {
+                count++;
+                temp += nodeData[j].netout;
+            }
+            if (count != 0) {
+                temp /= count;
+                netout += temp
+            }
+        }
+        
+        
         // if cpu/ram values reach critical levels of usage (based on preference), it is added to an array to be used in the warning Toast
         if (cpu > cpuHigh)
             cpuWarning.push([vmList.id, vmList.name])
@@ -449,6 +482,9 @@ $(document).ready(function () {
             var uptime = moment.duration(seconds, 'seconds');
             vmInfo.push(uptime.format("hh:mm:ss"));
         }
+
+        vmInfo.push(netin + "K")
+        vmInfo.push(netout + "K")
 
         vmTable.row.add(vmInfo).draw();
 
@@ -542,9 +578,6 @@ $(document).ready(function () {
                 lxcCrit = 100
 
                 // dashboard
-
-                // TODO: CPU Usage -> how to calculate?
-                // 已經分配出去多少個？還是說使用情況 % 
 
                 setData(response.serverCoreResultList, response.serverCpuResultList, cpuLow, cpuMid, cpuHigh, cpuCrit,
                     response.usedMemResultList, response.totalMemoryResultList, memLow, memMid, memHigh, memCrit,

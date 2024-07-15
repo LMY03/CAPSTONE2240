@@ -39,7 +39,7 @@ def render_home(request):
     user_role = request.user.userprofile.user_type
     if user_role == 'student': return student_home(request)
     elif user_role == 'faculty': return faculty_home(request)
-    elif user_role == 'admin': return tsg_home(request) # return tsg_home(request)
+    elif user_role == 'admin': return tsg_home(request)
 
 def home_filter_view(request):
     status = request.GET.get('status')

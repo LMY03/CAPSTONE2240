@@ -28,7 +28,10 @@ def getData(request):
     #Connection between Proxmox API and application
     proxmox = ProxmoxAPI('10.1.200.11', user='root@pam', password='cap2240', verify_ssl=False)
     client = InfluxDBClient(url=INFLUX_ADDRESS, token=token, org=org)
-
+    
+    #Query to get all nodes being used
+    query_api = client.query_api()
+    
     #Get VM Info from Proxmox API
     vmids = proxmox.cluster.resources.get(type='vm')
     VMList= []
@@ -48,10 +51,57 @@ def getData(request):
         VMDict["node"] = vmid['node']
         VMDict["status"] = vmid['status']
         VMDict["uptime"] = vmid['uptime']
+        # Net In 
+        network_in_query = f'''
+                            from(bucket:"{bucket}")
+                            |> range(start: -5m)
+                            |> filter(fn: (r) => r._measurement == "system")
+                            |> filter(fn: (r) => r._field == "netin)
+                            |> filter(fn: (r) => r.host == {vmid['name']})
+                            |> filter(fn: (r) => r.nodename == {vmid['node']})
+                            |> derivative(unit: 1s, nonNegative: true)
+                            |> yield(name: "nonnegative derivative")
+                            '''
+        network_in_result = query_api.query(query=network_in_query)
+        networkInResult = {}
+        networkInResult["node"] = node
+        networkInResult["data"] = []
+        for table in core_result:
+            for record in table.records:
+                networkInResult["data"].append({
+                    "time": record.get_time(),
+                    "netin": record.get_value()
+                })
+        networkInResultList.append(networkInResult)
+        #Net Out
+        network_out_query = f'''
+                            from(bucket:"{bucket}")
+                            |> range(start: -5m)
+                            |> filter(fn: (r) => r._measurement == "system")
+                            |> filter(fn: (r) => r._field == "netout)
+                            |> filter(fn: (r) => r.host == {vmid['name']})
+                            |> filter(fn: (r) => r.nodename == {vmid['node']})
+                            |> derivative(unit: 1s, nonNegative: true)
+                            |> yield(name: "nonnegative derivative")
+                            '''
+        network_out_result = query_api.query(query=network_out_query)
+        networkOutResult = {}
+        networkOutResult["node"] = node
+        networkOutResult["data"] = []
+        for table in core_result:
+            for record in table.records:
+                networkOutResult["data"].append({
+                    "time": record.get_time(),
+                    "netout": record.get_value()
+                })
+        networkOutResultList.append(networkOutResult)
+
+        VMDict["networkInResultList"] = networkInResultList
+        VMDict["networkOutResult"] = networkOutResult
+
         VMList.append(VMDict)
     
-    #Query to get all nodes being used
-    query_api = client.query_api()
+    
     flux_query = f'''
                     from(bucket:"{bucket}")
                     |> range(start: -5m)
@@ -207,10 +257,8 @@ def getData(request):
                             |> aggregateWindow(every: 10s, fn: last, createEmpty: false)
                             |> yield(name: "last")
                         '''
-        # 执行查询
         storage_result = query_api.query(query=storage_flux_query)
 
-        # 封装结果
         totalStorageUsedResult = {}
         totalStorageUsedResult["node"] = node
         totalStorageUsedResult["data"] = []
