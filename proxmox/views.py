@@ -98,7 +98,7 @@ def vm_provision_process(vm_id, classnames, no_of_vm, cpu_cores, ram, request_id
     request_entry = get_object_or_404(RequestEntry, id=request_id)
 
     for new_vm_id, vm_name in zip(new_vm_ids, classnames): 
-        VirtualMachines.objects.create(vm_id=new_vm_id, vm_name=vm_name, cores=cpu_cores, ram=ram, storage=request_entry.template.storage, request=request_entry, node_name=node)
+        VirtualMachines.objects.create(vm_id=new_vm_id, vm_name=vm_name, cores=cpu_cores, ram=ram, storage=request_entry.template.storage, request=request_entry, node=orig_vm.node)
         upids.append(proxmox.clone_vm(node, vm_id, new_vm_id, vm_name))
 
     for vm_id, upid in zip(new_vm_ids, upids):
