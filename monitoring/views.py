@@ -267,7 +267,7 @@ def aggregatedData (request):
                         |> filter(fn: (r) => r["object"] == "nodes")
                         |> filter(fn: (r) => r["_field"] == "cpu")
                         |> filter(fn: (r) => r["host"] == "{node}")
-                        |> map(fn: (r) => ({{ r with _value: r._value / 100.0 }}))
+                        |> map(fn: (r) => ({{ r with _value: r._value * 100.0 }}))
                         |> aggregateWindow(every: 10s, fn: mean, createEmpty: false)
                         |> yield(name: "mean")
                     '''
@@ -358,23 +358,23 @@ def aggregatedData (request):
         network_in_flux_query = f'''
                             from(bucket: "{bucket}")
                             |> range(start: -30m)
-                            |> filter(fn: (r) => r._measurement == "nics")
+                            |> filter(fn: (r) => r._measurement == "system")
                             |> filter(fn: (r) => r["_field"]== "netin")
                             |> filter(fn: (r) => r.nodename == "{node}")
-                            |> aggregateWindow(every: 10s, fn: mean, createEmpty: false)
-                            |> map(fn: (r) => ({{ r with _value: r._value / 1048576.0 }})) //MB
-                            |> yield(name: "mean")
+                            |> aggregateWindow (every: 1m, fn: mean)
+                            |> derivative (unit:1s, nonNegative:false)
+                            |> yield(name: "derivative")
                             '''
         
         network_out_flux_query = f'''
                             from(bucket: "{bucket}")
                             |> range(start: -30m)
-                            |> filter(fn: (r) => r._measurement == "nics")
-                            |> filter(fn: (r) => r["_field"] == "netout")
+                            |> filter(fn: (r) => r._measurement == "system")
+                            |> filter(fn: (r) => r["_field"]== "netout")
                             |> filter(fn: (r) => r.nodename == "{node}")
-                            |> aggregateWindow(every: 10s, fn: mean, createEmpty: false)
-                            |> map(fn: (r) => ({{ r with _value: r._value / 1048576.0 }})) //MB
-                            |> yield(name: "mean")
+                            |> aggregateWindow (every: 1m, fn: mean)
+                            |> derivative (unit:1s, nonNegative:false)
+                            |> yield(name: "derivative")
                             '''
         try: 
             network_out_result = query_api.query(query= network_out_flux_query)
