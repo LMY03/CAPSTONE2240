@@ -23,6 +23,8 @@ TSG Dashboard
                                 <a href="{% url 'proxmox:shutdown_vm' request_entry.vm_id %}" class="d-inline">
                                     <button type="submit" class="btn btn-danger">Shutdown</button>
                                 </a>
+                                {% elif request_entry.status == "ONGOING" or request_entry.status == "COMPLETED" %}
+                                <a href="{% url 'ticketing:delete_request' request_entry.id %}" class="btn btn-danger">Delete</a>
                                 {% endif %}
                             </div>
                         </div>

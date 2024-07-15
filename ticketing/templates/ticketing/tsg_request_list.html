@@ -48,12 +48,7 @@ TSG Dashboard
                 <td>{{ request_entry.ram }}</td>
                 <td>{{ request_entry.has_internet }}</td>
                 <td>{{ request_entry.status }}</td>
-                <td>
-                  <a href="{% url 'ticketing:request_details' request_entry.id %}" class="btn btn-primary">Open</a>
-                  {% if request_entry.status == "ONGOING" or request_entry.status == "COMPLETED" %}
-                  <a href="{% url 'ticketing:delete_request' request_entry.id %}" class="btn btn-danger">Delete</a>
-                  {% endif %}
-                </td>
+                <td><a href="{% url 'ticketing:request_details' request_entry.id %}" class="btn btn-primary">Open</a></td>
               </tr>
             {% endfor %}
           </tbody>
