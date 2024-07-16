@@ -91,23 +91,19 @@ $(document).ready(function () {
         if (usedSwapNum > 0 && usedSwapNum <= cpuLow) {
             $('div#serverCpuDiv').css('background-color', 'rgb(0, 155, 0, 0.35');
             $('div#serverCpuDiv').css('border', '2.5px solid rgb(77,192,77)');
-            console.log("green")
         }
         else if (usedSwapNum > cpuLow && usedSwapNum <= cpuMid) {
             $('div#serverCpuDiv').css('background-color', 'rgb(253, 223, 46, 0.51');
             $('div#serverCpuDiv').css('border', '2.5px solid rgb(232,204,39)');
-            console.log("yellow")
         }
 
         else if (usedSwapNum > cpuMid && usedSwapNum <= cpuHigh) {
             $('div#serverCpuDiv').css('background-color', 'rgb(259, 155, 0, 0.5)');
             $('div#serverCpuDiv').css('border', '2.5px solid rgb(239,155,0)');
-            console.log("orange")
         }
         else if (usedSwapNum > cpuHigh && usedSwapNum <= cpuCrit) {
             $('div#serverCpuDiv').css('background-color', 'rgb(204, 0, 0, 0.5');
             $('div#serverCpuDiv').css('border', '2.5px solid rgb(204,0,0)');
-            console.log("red")
         }
 
     }
@@ -166,9 +162,9 @@ $(document).ready(function () {
             if (this.data()[0] == vmList.id) {
                 let vmInfo = [vmList.id, vmList.name, vmList.type, vmList.node];
 
-                var disk = ((vmList.disk / vmList.maxdisk) * 100).toFixed(2)
+                var disk = (vmList.maxdisk) / (1024 * 1024 * 1024)
 
-                vmInfo.push(disk + "%");
+                vmInfo.push(disk + "GB");
 
                 var converted = (vmList.maxmem) / (1024 * 1024 * 1024);
 
@@ -200,23 +196,23 @@ $(document).ready(function () {
 
                 vmTable.draw();
 
-                // changes border and div color of the 'Disk Usage' cell in the row
-                if (disk > 0 && disk <= stoLow) {
-                    $(vmTable.cell(rowNum, 4).node()).css('background-color', 'rgb(0, 155, 0, 0.35');
-                    $(vmTable.cell(rowNum, 4).node()).css('border', '2.5px solid rgb(77,192,77)');
-                } else if (disk > stoLow && disk <= stoMid) {
-                    $(vmTable.cell(rowNum, 4).node()).css('background-color', 'rgb(253, 223, 46, 0.51)');
-                    $(vmTable.cell(rowNum, 4).node()).css('border', '2.5px solid rgb(232,204,39)');
-                } else if (disk > stoMid && disk <= stoHigh) {
-                    $(vmTable.cell(rowNum, 4).node()).css('background-color', 'rgb(259, 155, 0, 0.5)');
-                    $(vmTable.cell(rowNum, 4).node()).css('border', '2.5px solid rgb(239,155,0)');
-                } else if (disk > stoHigh && disk <= stoCrit) {
-                    $(vmTable.cell(rowNum, 4).node()).css('background-color', 'rgb(204, 0, 0, 0.5)');
-                    $(vmTable.cell(rowNum, 4).node()).css('border', '2.5px solid rgb(204,0,0)');
-                } else if (disk == 0) {
-                    $(vmTable.cell(rowNum, 4).node()).css('background-color', '#FFFFFF');
-                    $(vmTable.cell(rowNum, 4).node()).css('border', '');
-                }
+                // // changes border and div color of the 'Disk Usage' cell in the row
+                // if (disk > 0 && disk <= stoLow) {
+                //     $(vmTable.cell(rowNum, 4).node()).css('background-color', 'rgb(0, 155, 0, 0.35');
+                //     $(vmTable.cell(rowNum, 4).node()).css('border', '2.5px solid rgb(77,192,77)');
+                // } else if (disk > stoLow && disk <= stoMid) {
+                //     $(vmTable.cell(rowNum, 4).node()).css('background-color', 'rgb(253, 223, 46, 0.51)');
+                //     $(vmTable.cell(rowNum, 4).node()).css('border', '2.5px solid rgb(232,204,39)');
+                // } else if (disk > stoMid && disk <= stoHigh) {
+                //     $(vmTable.cell(rowNum, 4).node()).css('background-color', 'rgb(259, 155, 0, 0.5)');
+                //     $(vmTable.cell(rowNum, 4).node()).css('border', '2.5px solid rgb(239,155,0)');
+                // } else if (disk > stoHigh && disk <= stoCrit) {
+                //     $(vmTable.cell(rowNum, 4).node()).css('background-color', 'rgb(204, 0, 0, 0.5)');
+                //     $(vmTable.cell(rowNum, 4).node()).css('border', '2.5px solid rgb(204,0,0)');
+                // } else if (disk == 0) {
+                //     $(vmTable.cell(rowNum, 4).node()).css('background-color', '#FFFFFF');
+                //     $(vmTable.cell(rowNum, 4).node()).css('border', '');
+                // }
 
                 // changes border and div color of the 'CPU Usage' cell in the row
                 if (cpu > 0 && cpu <= cpuLow) {
@@ -375,7 +371,7 @@ $(document).ready(function () {
         $('h1#localMem').html((usedStorage /= (1024 * 1024 * 1024)).toFixed(2) + "GiB");
         $('h4#usedMem').html("of " + (localStorage / (1024 * 1024 * 1024)).toFixed(2) + "GiB");
 
-        changeStorageDiv(usedStorage, stoLow, stoMid, stoHigh, stoCrit)
+        // changeStorageDiv(usedStorage, stoLow, stoMid, stoHigh, stoCrit)
 
     }
 
@@ -419,9 +415,9 @@ $(document).ready(function () {
     function genVmTable(vmList, rowNum, cpuLow, cpuMid, cpuHigh, cpuCrit, memLow, memMid, memHigh, memCrit, stoLow, stoMid, stoHigh, stoCrit) {
         let vmInfo = [vmList.id, vmList.name, vmList.type, vmList.node]
 
-        var disk = ((vmList.disk / vmList.maxdisk) * 100).toFixed(2)
+        var disk = (vmList.maxdisk) / (1024 * 1024 * 1024)
 
-        vmInfo.push(disk + "%");
+        vmInfo.push(disk + "GB");
 
         var converted_max = (vmList.maxmem) / (1024 * 1024 * 1024);
         var converted_used = (vmList.mem) / (1024 * 1024 * 1024);
@@ -429,39 +425,6 @@ $(document).ready(function () {
         var cpu = (vmList.cpu * 100).toFixed(2)
         var mem = ((converted_used / converted_max) * 100).toFixed(2)
 
-        // Netin
-        var netin = 0
-        for (i = 0; i < networkInResultList.length; i++) {
-            var temp = 0
-            var count = 0;
-            nodeData = networkInResultList[i].data;
-            for (j = 0; j < nodeData.length; j++) {
-                count++;
-                temp += nodeData[j].netin;
-            }
-            if (count != 0) {
-                temp /= count;
-                netin += temp
-            }
-        }
-
-        // Netout
-        var netout = 0
-        for (i = 0; i < networkOutResultList.length; i++) {
-            var temp = 0
-            var count = 0;
-            nodeData = networkOutResultList[i].data;
-            for (j = 0; j < nodeData.length; j++) {
-                count++;
-                temp += nodeData[j].netout;
-            }
-            if (count != 0) {
-                temp /= count;
-                netout += temp
-            }
-        }
-        
-        
         // if cpu/ram values reach critical levels of usage (based on preference), it is added to an array to be used in the warning Toast
         if (cpu > cpuHigh)
             cpuWarning.push([vmList.id, vmList.name])
@@ -483,28 +446,25 @@ $(document).ready(function () {
             vmInfo.push(uptime.format("hh:mm:ss"));
         }
 
-        vmInfo.push(netin + "K")
-        vmInfo.push(netout + "K")
-
         vmTable.row.add(vmInfo).draw();
 
-        // changes border and div color of the 'Disk Usage' cell in the row
-        if (disk > 0 && disk <= stoLow) {
-            $(vmTable.cell(rowNum, 4).node()).css('background-color', 'rgb(0, 155, 0, 0.35');
-            $(vmTable.cell(rowNum, 4).node()).css('border', '2.5px solid rgb(77,192,77)');
-        } else if (disk > stoLow && disk <= stoMid) {
-            $(vmTable.cell(rowNum, 4).node()).css('background-color', 'rgb(253, 223, 46, 0.51)');
-            $(vmTable.cell(rowNum, 4).node()).css('border', '2.5px solid rgb(232,204,39)');
-        } else if (disk > stoMid && disk <= stoHigh) {
-            $(vmTable.cell(rowNum, 4).node()).css('background-color', 'rgb(259, 155, 0, 0.5)');
-            $(vmTable.cell(rowNum, 4).node()).css('border', '2.5px solid rgb(239,155,0)');
-        } else if (disk > stoHigh && disk <= stoCrit) {
-            $(vmTable.cell(rowNum, 4).node()).css('background-color', 'rgb(204, 0, 0, 0.5)');
-            $(vmTable.cell(rowNum, 4).node()).css('border', '2.5px solid rgb(204,0,0)');
-        } else if (disk == 0) {
-            $(vmTable.cell(rowNum, 4).node()).css('background-color', '#FFFFFF');
-            $(vmTable.cell(rowNum, 7).node()).css('border', '');
-        }
+        // // changes border and div color of the 'Disk Usage' cell in the row
+        // if (disk > 0 && disk <= stoLow) {
+        //     $(vmTable.cell(rowNum, 4).node()).css('background-color', 'rgb(0, 155, 0, 0.35');
+        //     $(vmTable.cell(rowNum, 4).node()).css('border', '2.5px solid rgb(77,192,77)');
+        // } else if (disk > stoLow && disk <= stoMid) {
+        //     $(vmTable.cell(rowNum, 4).node()).css('background-color', 'rgb(253, 223, 46, 0.51)');
+        //     $(vmTable.cell(rowNum, 4).node()).css('border', '2.5px solid rgb(232,204,39)');
+        // } else if (disk > stoMid && disk <= stoHigh) {
+        //     $(vmTable.cell(rowNum, 4).node()).css('background-color', 'rgb(259, 155, 0, 0.5)');
+        //     $(vmTable.cell(rowNum, 4).node()).css('border', '2.5px solid rgb(239,155,0)');
+        // } else if (disk > stoHigh && disk <= stoCrit) {
+        //     $(vmTable.cell(rowNum, 4).node()).css('background-color', 'rgb(204, 0, 0, 0.5)');
+        //     $(vmTable.cell(rowNum, 4).node()).css('border', '2.5px solid rgb(204,0,0)');
+        // } else if (disk == 0) {
+        //     $(vmTable.cell(rowNum, 4).node()).css('background-color', '#FFFFFF');
+        //     $(vmTable.cell(rowNum, 7).node()).css('border', '');
+        // }
 
         // changes border and div color of the 'CPU Usage' cell in the row
         if (cpu > 0 && cpu <= cpuLow) {
@@ -554,7 +514,6 @@ $(document).ready(function () {
             },
             datatype: 'json',
             success: function (response) {
-                console.log("VMlist" + JSON.stringify(response.vmList))
                 // Default settings -> might change based on the settings (threshold, implement later)
                 cpuLow = 25
                 cpuMid = 50
