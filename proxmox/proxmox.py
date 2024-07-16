@@ -50,7 +50,7 @@ def get_task_status(node, upid):
         'CSRFPreventionToken': token['CSRFPreventionToken'],
         'Cookie': f"PVEAuthCookie={ token['ticket'] }",
     }
-    response = requests.get(url, headers=headers)
+    response = requests.get(url, headers=headers, verify=CA_CRT)
     if response.status_code != 200 : return get_task_status(node, upid)
     return response.json()
 
@@ -61,7 +61,7 @@ def get_qemu_status(node, vmid):
         'CSRFPreventionToken': token['CSRFPreventionToken'],
         'Cookie': f"PVEAuthCookie={ token['ticket'] }",
     }
-    response = requests.get(url, headers=headers)
+    response = requests.get(url, headers=headers, verify=CA_CRT)
 
     return response.status_code
 
@@ -72,7 +72,7 @@ def get_vm_ip(node, vmid):
         'CSRFPreventionToken': token['CSRFPreventionToken'],
         'Cookie': f"PVEAuthCookie={ token['ticket'] }",
     }
-    response = requests.get(url, headers=headers)
+    response = requests.get(url, headers=headers, verify=CA_CRT)
     return response.json()
 
 # get VM status
@@ -83,7 +83,7 @@ def get_vm_status(node, vmid):
         'CSRFPreventionToken': token['CSRFPreventionToken'],
         'Cookie': f"PVEAuthCookie={ token['ticket'] }",
     }
-    response = requests.get(url, headers=headers)
+    response = requests.get(url, headers=headers, verify=CA_CRT)
 
     status = response.json()['data']['qmpstatus']
 
@@ -103,7 +103,7 @@ def clone_vm(node, vmid, newid, name):
         'CSRFPreventionToken': token['CSRFPreventionToken'],
         'Cookie': f"PVEAuthCookie={ token['ticket'] }",
     }
-    response = requests.get(url, headers=headers, data=config)
+    response = requests.get(url, headers=headers, data=config, verify=CA_CRT)
     if response.status_code == 200:
         response_data = response.json()
         print("Clone VM Response:", response_data)
@@ -124,7 +124,7 @@ def delete_vm(node, vmid):
         'CSRFPreventionToken': token['CSRFPreventionToken'],
         'Cookie': f"PVEAuthCookie={ token['ticket'] }",
     }
-    response = requests.delete(url, headers=headers)
+    response = requests.delete(url, headers=headers, verify=CA_CRT)
     return response.json()
 
 # start VM POST
@@ -135,7 +135,7 @@ def start_vm(node, vmid):
         'CSRFPreventionToken': token['CSRFPreventionToken'],
         'Cookie': f"PVEAuthCookie={ token['ticket'] }",
     }
-    response = requests.post(url, headers=headers)
+    response = requests.post(url, headers=headers, verify=CA_CRT)
     return response.json()
 
 # shutdown VM POST
@@ -146,7 +146,7 @@ def shutdown_vm(node, vmid):
         'CSRFPreventionToken': token['CSRFPreventionToken'],
         'Cookie': f"PVEAuthCookie={ token['ticket'] }",
     }
-    response = requests.post(url, headers=headers)
+    response = requests.post(url, headers=headers, verify=CA_CRT)
     return response.json()
 
 # stop VM POST - only on special occasion like the vm get stuck
@@ -157,7 +157,7 @@ def stop_vm(node, vmid):
         'CSRFPreventionToken': token['CSRFPreventionToken'],
         'Cookie': f"PVEAuthCookie={ token['ticket'] }",
     }
-    response = requests.post(url, headers=headers)
+    response = requests.post(url, headers=headers, verify=CA_CRT)
     return response.json()
 
 # configure VM PUT 
@@ -172,7 +172,7 @@ def config_vm(node, vmid, cpu_cores, memory_mb):
         'CSRFPreventionToken': token['CSRFPreventionToken'],
         'Cookie': f"PVEAuthCookie={ token['ticket'] }",
     }
-    response = requests.put(url, headers=headers, data=config)
+    response = requests.put(url, headers=headers, data=config, verify=CA_CRT)
     return response.json()
 
 def config_vm_disk(node, vmid, size):
@@ -186,7 +186,7 @@ def config_vm_disk(node, vmid, size):
         'CSRFPreventionToken': token['CSRFPreventionToken'],
         'Cookie': f"PVEAuthCookie={ token['ticket'] }",
     }
-    response = requests.put(url, headers=headers, data=config)
+    response = requests.put(url, headers=headers, data=config, verify=CA_CRT)
     return response.json()
 
 def wait_for_task(node, upid):
