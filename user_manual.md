@@ -1,4 +1,4 @@
-### Pre-requisites
+# Pre-requisites
 
 - Setup VM Templates
 - Create a VM/Container in Proxmox 
@@ -35,27 +35,28 @@ sudo nano /etc/xrdp/xrdp.ini
 
 sudo systemctl restart xrdp
 ```
-## Follow the guide in the official documentation to Install Docker
+## Setup VM/Container in Proxmox 
+### Follow the guide in the official documentation to Install Docker
 
 https://docs.docker.com/engine/install/
 
-## add the user in to the docker group (replace USER_NAME)
+### add the user in to the docker group (replace USER_NAME)
 
 ```bash 
 sudo usermod -aG docker USER_NAME
 ```
 
-## Create a SSH keys
+### Create a SSH keys
 ```bash 
 ssh-keygen -t rsa -b 4096
 ```
-## Clone Github Repository
+### Clone Github Repository
 
 git clone https://github.com/LMY03/CAPSTONE2240.git
 
 docker compose -f ~/CAPSTONE2240/docker-compose.yml up --build -d
 
-## Set up MySQL DB
+### Set up MySQL DB
 
 ```bash
 mkdir -p ~/guacamole-initdb
