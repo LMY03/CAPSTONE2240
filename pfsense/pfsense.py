@@ -1,5 +1,5 @@
 from requests.auth import HTTPBasicAuth
-import requests, asyncio
+import requests, asyncio, time
 
 PFSENSE_HOST = 'http://192.168.1.1'
 API_KEY = '74c46c1735cc476bb78df2c189be73daf9753ba872d64f8'
@@ -10,6 +10,9 @@ async def get_token():
         'Content-Type': 'application/json',
     }
     response = requests.post(url, headers=headers, auth=HTTPBasicAuth("admin", "pfsense"))
+    if response.status_code != 200:
+        time.sleep(5)
+        return asyncio.run(get_token())
     return response.json()['data']['token']
 
 def apply_changes():
