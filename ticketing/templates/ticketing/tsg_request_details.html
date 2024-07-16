@@ -236,8 +236,12 @@ Request Details {{ request_entry.id }}
             body: JSON.stringify({})
         });
     }
+
     window.addEventListener('beforeunload', function (e) {
-        if (!document.activeElement.href.includes('generate_txt')) clear_credential()
+        var activeElement = document.activeElement;
+        if (!activeElement || !activeElement.href || !activeElement.href.includes('generate_txt')) {
+            clear_credential();
+        }
     });
 </script>
 {% endblock  %}

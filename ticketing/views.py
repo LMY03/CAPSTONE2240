@@ -714,9 +714,11 @@ def new_form_container(request):
     return render (request, 'ticketing/new-form-container.html', context)
 
 def clear_credential(request):
+    print('clear_credential')
     if request.method == 'POST':
+        print('clear_credential2')
         if 'credentials' in request.session:
-            print('clear_credential2')
+            print('clear_credential3')
             request.session.pop('credentials', None)
             return JsonResponse({'status': 'success'})
         return JsonResponse({'status': 'invalid method'}, status=405)
