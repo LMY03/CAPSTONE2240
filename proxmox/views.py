@@ -150,13 +150,13 @@ def vm_provision_process(vm_id, classnames, no_of_vm, cpu_cores, ram, request_id
 
         # guacamole_connection_ids.append(guacamole.create_connection(classnames[i], protocol, port, hostnames[i], vm_username, passwords[i], guacamole_connection_group_id))
         # guacamole_connection_id = guacamole.create_connection(classnames[i], protocol, port, hostnames[i+1], vm_username, vm_passwords[i+1], guacamole_connection.connection_group_id)
-        guacamole_connection_id = guacamole.create_connection(classnames[i], protocol, port, hostnames[i+1], vm_username, "DLSU1234!", guacamole_connection.connection_group_id)
+        guacamole_connection_id = guacamole.create_connection(classnames[i], protocol, port, hostnames[i], vm_username, "DLSU1234!", guacamole_connection.connection_group_id)
         guacamole.assign_connection(classnames[i], guacamole_connection_id)
         guacamole.assign_connection(faculty_guacamole_username, guacamole_connection_id)
         
         # vm = VirtualMachines(request=request_entry, vm_id=new_vm_ids[i], vm_name=classnames[i], cores=cpu_cores, ram=ram, storage=request_entry.template.storage, ip_add=hostnames[i], node=orig_vm.node, status=VirtualMachines.Status.SHUTDOWN)
         vm = get_object_or_404(VirtualMachines, vm_name=classnames[i])
-        vm.set_ip_add(hostnames[i+1])
+        vm.set_ip_add(hostnames[i])
         vm.set_shutdown()
         vms.append(vm)
         GuacamoleConnection(user=get_object_or_404(GuacamoleUser, system_user=user), connection_id=guacamole_connection_id, connection_group_id=guacamole_connection.connection_group_id, vm=vm).save()
