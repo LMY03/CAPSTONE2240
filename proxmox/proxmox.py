@@ -103,7 +103,7 @@ def clone_vm(node, vmid, newid, name):
         'CSRFPreventionToken': token['CSRFPreventionToken'],
         'Cookie': f"PVEAuthCookie={ token['ticket'] }",
     }
-    response = requests.get(url, headers=headers, data=config, verify=CA_CRT)
+    response = requests.post(url, headers=headers, data=config, verify=CA_CRT)
     if response.status_code == 200:
         response_data = response.json()
         print("Clone VM Response:", response_data)
