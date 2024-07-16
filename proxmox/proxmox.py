@@ -48,7 +48,7 @@ def get_task_status(node, upid):
     url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/tasks/{upid}/status"
     headers = {
         'CSRFPreventionToken': token['CSRFPreventionToken'],
-        'Authorization': f"PVEAuthCookie={ token['ticket'] }",
+        'Cookie': f"PVEAuthCookie={ token['ticket'] }",
     }
     response = requests.get(url, headers=headers)
     if response.status_code != 200 : return get_task_status(node, upid)
@@ -59,7 +59,7 @@ def get_qemu_status(node, vmid):
     url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/qemu/{vmid}/agent/info"
     headers = {
         'CSRFPreventionToken': token['CSRFPreventionToken'],
-        'Authorization': f"PVEAuthCookie={ token['ticket'] }",
+        'Cookie': f"PVEAuthCookie={ token['ticket'] }",
     }
     response = requests.get(url, headers=headers)
 
@@ -70,7 +70,7 @@ def get_vm_ip(node, vmid):
     url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/qemu/{vmid}/agent/network-get-interfaces"
     headers = {
         'CSRFPreventionToken': token['CSRFPreventionToken'],
-        'Authorization': f"PVEAuthCookie={ token['ticket'] }",
+        'Cookie': f"PVEAuthCookie={ token['ticket'] }",
     }
     response = requests.get(url, headers=headers)
     return response.json()
@@ -81,7 +81,7 @@ def get_vm_status(node, vmid):
     url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/qemu/{vmid}/status/current"
     headers = {
         'CSRFPreventionToken': token['CSRFPreventionToken'],
-        'Authorization': f"PVEAuthCookie={ token['ticket'] }",
+        'Cookie': f"PVEAuthCookie={ token['ticket'] }",
     }
     response = requests.get(url, headers=headers)
 
@@ -101,7 +101,7 @@ def clone_vm(node, vmid, newid, name):
     }
     headers = {
         'CSRFPreventionToken': token['CSRFPreventionToken'],
-        'Authorization': f"PVEAuthCookie={ token['ticket'] }",
+        'Cookie': f"PVEAuthCookie={ token['ticket'] }",
     }
     response = requests.get(url, headers=headers, data=config)
     if response.status_code == 200:
@@ -122,7 +122,7 @@ def delete_vm(node, vmid):
     url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/qemu/{vmid}"
     headers = {
         'CSRFPreventionToken': token['CSRFPreventionToken'],
-        'Authorization': f"PVEAuthCookie={ token['ticket'] }",
+        'Cookie': f"PVEAuthCookie={ token['ticket'] }",
     }
     response = requests.delete(url, headers=headers)
     return response.json()
@@ -133,7 +133,7 @@ def start_vm(node, vmid):
     url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/qemu/{vmid}/status/start"
     headers = {
         'CSRFPreventionToken': token['CSRFPreventionToken'],
-        'Authorization': f"PVEAuthCookie={ token['ticket'] }",
+        'Cookie': f"PVEAuthCookie={ token['ticket'] }",
     }
     response = requests.post(url, headers=headers)
     return response.json()
@@ -144,7 +144,7 @@ def shutdown_vm(node, vmid):
     url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/qemu/{vmid}/status/shutdown"
     headers = {
         'CSRFPreventionToken': token['CSRFPreventionToken'],
-        'Authorization': f"PVEAuthCookie={ token['ticket'] }",
+        'Cookie': f"PVEAuthCookie={ token['ticket'] }",
     }
     response = requests.post(url, headers=headers)
     return response.json()
@@ -155,7 +155,7 @@ def stop_vm(node, vmid):
     url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/qemu/{vmid}/status/stop"
     headers = {
         'CSRFPreventionToken': token['CSRFPreventionToken'],
-        'Authorization': f"PVEAuthCookie={ token['ticket'] }",
+        'Cookie': f"PVEAuthCookie={ token['ticket'] }",
     }
     response = requests.post(url, headers=headers)
     return response.json()
@@ -170,7 +170,7 @@ def config_vm(node, vmid, cpu_cores, memory_mb):
     }
     headers = {
         'CSRFPreventionToken': token['CSRFPreventionToken'],
-        'Authorization': f"PVEAuthCookie={ token['ticket'] }",
+        'Cookie': f"PVEAuthCookie={ token['ticket'] }",
     }
     response = requests.put(url, headers=headers, data=config)
     return response.json()
@@ -184,7 +184,7 @@ def config_vm_disk(node, vmid, size):
     }
     headers = {
         'CSRFPreventionToken': token['CSRFPreventionToken'],
-        'Authorization': f"PVEAuthCookie={ token['ticket'] }",
+        'Cookie': f"PVEAuthCookie={ token['ticket'] }",
     }
     response = requests.put(url, headers=headers, data=config)
     return response.json()
