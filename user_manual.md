@@ -109,3 +109,8 @@ exit
 
 ```
 
+### Send the SSH Public Key to the VM Templates
+
+```bash
+ssh-copy-id user@ip_add
+```
