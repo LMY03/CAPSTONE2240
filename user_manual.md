@@ -3,7 +3,6 @@
 - Setup VM Templates
 - Create a VM/Container in Proxmox 
 
-
 ## Setup VM Templates
 
 ### Download Ubuntu LTS 22 Desktop ISO 
@@ -67,11 +66,13 @@ docker cp ~/guacamole-initdb/initdb.sql mysql:/docker-entrypoint-initdb.d
 
 docker exec -it mysql bash
 ```
+
 ```bash
 cd /docker-entrypoint-initdb.d
 
 mysql -u root -p
 ```
+
 ```bash
 CREATE DATABASE IF NOT EXISTS guacamole_db;
 
@@ -89,11 +90,13 @@ exit;
 
 exit
 ```
+
 ```bash
 docker cp ~/CAPSTONE2240/init.sql mysql:init.sql
 
 docker exec -it mysql bash
 ```
+
 ```bash
 mysql -u root -p
 
