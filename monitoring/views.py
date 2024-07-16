@@ -51,56 +51,7 @@ def getData(request):
         VMDict["node"] = vmid['node']
         VMDict["status"] = vmid['status']
         VMDict["uptime"] = vmid['uptime']
-        # Net In 
-        network_in_query = f'''
-                            from(bucket:"{bucket}")
-                            |> range(start: -5m)
-                            |> filter(fn: (r) => r._measurement == "system")
-                            |> filter(fn: (r) => r._field == "netin)
-                            |> filter(fn: (r) => r.host == {vmid['name']})
-                            |> filter(fn: (r) => r.nodename == {vmid['node']})
-                            |> derivative(unit: 1s, nonNegative: true)
-                            |> yield(name: "nonnegative derivative")
-                            '''
-        network_in_result = query_api.query(query=network_in_query)
-        networkInResult = {}
-        networkInResult["node"] = node
-        networkInResult["data"] = []
-        for table in core_result:
-            for record in table.records:
-                networkInResult["data"].append({
-                    "time": record.get_time(),
-                    "netin": record.get_value()
-                })
-        networkInResultList.append(networkInResult)
-        #Net Out
-        network_out_query = f'''
-                            from(bucket:"{bucket}")
-                            |> range(start: -5m)
-                            |> filter(fn: (r) => r._measurement == "system")
-                            |> filter(fn: (r) => r._field == "netout)
-                            |> filter(fn: (r) => r.host == {vmid['name']})
-                            |> filter(fn: (r) => r.nodename == {vmid['node']})
-                            |> derivative(unit: 1s, nonNegative: true)
-                            |> yield(name: "nonnegative derivative")
-                            '''
-        network_out_result = query_api.query(query=network_out_query)
-        networkOutResult = {}
-        networkOutResult["node"] = node
-        networkOutResult["data"] = []
-        for table in core_result:
-            for record in table.records:
-                networkOutResult["data"].append({
-                    "time": record.get_time(),
-                    "netout": record.get_value()
-                })
-        networkOutResultList.append(networkOutResult)
-
-        VMDict["networkInResultList"] = networkInResultList
-        VMDict["networkOutResult"] = networkOutResult
-
         VMList.append(VMDict)
-    
     
     flux_query = f'''
                     from(bucket:"{bucket}")
