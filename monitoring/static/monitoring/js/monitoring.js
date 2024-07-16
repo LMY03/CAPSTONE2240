@@ -200,23 +200,23 @@ $(document).ready(function () {
 
                 vmTable.draw();
 
-                // changes border and div color of the 'Disk Usage' cell in the row
-                if (disk > 0 && disk <= stoLow) {
-                    $(vmTable.cell(rowNum, 4).node()).css('background-color', 'rgb(0, 155, 0, 0.35');
-                    $(vmTable.cell(rowNum, 4).node()).css('border', '2.5px solid rgb(77,192,77)');
-                } else if (disk > stoLow && disk <= stoMid) {
-                    $(vmTable.cell(rowNum, 4).node()).css('background-color', 'rgb(253, 223, 46, 0.51)');
-                    $(vmTable.cell(rowNum, 4).node()).css('border', '2.5px solid rgb(232,204,39)');
-                } else if (disk > stoMid && disk <= stoHigh) {
-                    $(vmTable.cell(rowNum, 4).node()).css('background-color', 'rgb(259, 155, 0, 0.5)');
-                    $(vmTable.cell(rowNum, 4).node()).css('border', '2.5px solid rgb(239,155,0)');
-                } else if (disk > stoHigh && disk <= stoCrit) {
-                    $(vmTable.cell(rowNum, 4).node()).css('background-color', 'rgb(204, 0, 0, 0.5)');
-                    $(vmTable.cell(rowNum, 4).node()).css('border', '2.5px solid rgb(204,0,0)');
-                } else if (disk == 0) {
-                    $(vmTable.cell(rowNum, 4).node()).css('background-color', '#FFFFFF');
-                    $(vmTable.cell(rowNum, 4).node()).css('border', '');
-                }
+                // // changes border and div color of the 'Disk Usage' cell in the row
+                // if (disk > 0 && disk <= stoLow) {
+                //     $(vmTable.cell(rowNum, 4).node()).css('background-color', 'rgb(0, 155, 0, 0.35');
+                //     $(vmTable.cell(rowNum, 4).node()).css('border', '2.5px solid rgb(77,192,77)');
+                // } else if (disk > stoLow && disk <= stoMid) {
+                //     $(vmTable.cell(rowNum, 4).node()).css('background-color', 'rgb(253, 223, 46, 0.51)');
+                //     $(vmTable.cell(rowNum, 4).node()).css('border', '2.5px solid rgb(232,204,39)');
+                // } else if (disk > stoMid && disk <= stoHigh) {
+                //     $(vmTable.cell(rowNum, 4).node()).css('background-color', 'rgb(259, 155, 0, 0.5)');
+                //     $(vmTable.cell(rowNum, 4).node()).css('border', '2.5px solid rgb(239,155,0)');
+                // } else if (disk > stoHigh && disk <= stoCrit) {
+                //     $(vmTable.cell(rowNum, 4).node()).css('background-color', 'rgb(204, 0, 0, 0.5)');
+                //     $(vmTable.cell(rowNum, 4).node()).css('border', '2.5px solid rgb(204,0,0)');
+                // } else if (disk == 0) {
+                //     $(vmTable.cell(rowNum, 4).node()).css('background-color', '#FFFFFF');
+                //     $(vmTable.cell(rowNum, 4).node()).css('border', '');
+                // }
 
                 // changes border and div color of the 'CPU Usage' cell in the row
                 if (cpu > 0 && cpu <= cpuLow) {
@@ -375,7 +375,7 @@ $(document).ready(function () {
         $('h1#localMem').html((usedStorage /= (1024 * 1024 * 1024)).toFixed(2) + "GiB");
         $('h4#usedMem').html("of " + (localStorage / (1024 * 1024 * 1024)).toFixed(2) + "GiB");
 
-        changeStorageDiv(usedStorage, stoLow, stoMid, stoHigh, stoCrit)
+        // changeStorageDiv(usedStorage, stoLow, stoMid, stoHigh, stoCrit)
 
     }
 
@@ -452,23 +452,23 @@ $(document).ready(function () {
 
         vmTable.row.add(vmInfo).draw();
 
-        // changes border and div color of the 'Disk Usage' cell in the row
-        if (disk > 0 && disk <= stoLow) {
-            $(vmTable.cell(rowNum, 4).node()).css('background-color', 'rgb(0, 155, 0, 0.35');
-            $(vmTable.cell(rowNum, 4).node()).css('border', '2.5px solid rgb(77,192,77)');
-        } else if (disk > stoLow && disk <= stoMid) {
-            $(vmTable.cell(rowNum, 4).node()).css('background-color', 'rgb(253, 223, 46, 0.51)');
-            $(vmTable.cell(rowNum, 4).node()).css('border', '2.5px solid rgb(232,204,39)');
-        } else if (disk > stoMid && disk <= stoHigh) {
-            $(vmTable.cell(rowNum, 4).node()).css('background-color', 'rgb(259, 155, 0, 0.5)');
-            $(vmTable.cell(rowNum, 4).node()).css('border', '2.5px solid rgb(239,155,0)');
-        } else if (disk > stoHigh && disk <= stoCrit) {
-            $(vmTable.cell(rowNum, 4).node()).css('background-color', 'rgb(204, 0, 0, 0.5)');
-            $(vmTable.cell(rowNum, 4).node()).css('border', '2.5px solid rgb(204,0,0)');
-        } else if (disk == 0) {
-            $(vmTable.cell(rowNum, 4).node()).css('background-color', '#FFFFFF');
-            $(vmTable.cell(rowNum, 7).node()).css('border', '');
-        }
+        // // changes border and div color of the 'Disk Usage' cell in the row
+        // if (disk > 0 && disk <= stoLow) {
+        //     $(vmTable.cell(rowNum, 4).node()).css('background-color', 'rgb(0, 155, 0, 0.35');
+        //     $(vmTable.cell(rowNum, 4).node()).css('border', '2.5px solid rgb(77,192,77)');
+        // } else if (disk > stoLow && disk <= stoMid) {
+        //     $(vmTable.cell(rowNum, 4).node()).css('background-color', 'rgb(253, 223, 46, 0.51)');
+        //     $(vmTable.cell(rowNum, 4).node()).css('border', '2.5px solid rgb(232,204,39)');
+        // } else if (disk > stoMid && disk <= stoHigh) {
+        //     $(vmTable.cell(rowNum, 4).node()).css('background-color', 'rgb(259, 155, 0, 0.5)');
+        //     $(vmTable.cell(rowNum, 4).node()).css('border', '2.5px solid rgb(239,155,0)');
+        // } else if (disk > stoHigh && disk <= stoCrit) {
+        //     $(vmTable.cell(rowNum, 4).node()).css('background-color', 'rgb(204, 0, 0, 0.5)');
+        //     $(vmTable.cell(rowNum, 4).node()).css('border', '2.5px solid rgb(204,0,0)');
+        // } else if (disk == 0) {
+        //     $(vmTable.cell(rowNum, 4).node()).css('background-color', '#FFFFFF');
+        //     $(vmTable.cell(rowNum, 7).node()).css('border', '');
+        // }
 
         // changes border and div color of the 'CPU Usage' cell in the row
         if (cpu > 0 && cpu <= cpuLow) {
