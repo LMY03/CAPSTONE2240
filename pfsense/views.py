@@ -55,7 +55,7 @@ def add_port_forward_rules(request_id, protocols, local_ports, ip_adds, descrs):
             port_rule = get_object_or_404(PortRules, request_id=request_id, dest_ports=local_port)
             DestinationPorts.objects.create(port_rule=port_rule, dest_port=dest_port)
             counter+=1
-    time.sleep(3)
+            time.sleep(3)
     pfsense.apply_changes()
 
     return dest_ports
