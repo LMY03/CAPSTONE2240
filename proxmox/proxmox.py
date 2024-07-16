@@ -36,12 +36,15 @@ CA_CRT = False
 async def get_ticket():
     url = f"{PROXMOX_HOST}/api2/json/access/ticket"
     data = { 'username': USERNAME, 'password': PASSWORD }
-    response = requests.post(url, data=data, verify=CA_CRT)
-    if response.status_code != 200:
+    
+    try:
+        response = requests.post(url, data=data, verify=CA_CRT, timeout=10)
+        response.raise_for_status()
+        return response.json()['data']
+    except requests.exceptions.RequestException as e:
+        print(f"Error getting ticket: {e}")
         time.sleep(5)
-        return asyncio.run(get_ticket())
-    return response.json()['data']
-
+        return await get_ticket()
 
 def get_task_status(node, upid):
     token = asyncio.run(get_ticket())
@@ -50,7 +53,7 @@ def get_task_status(node, upid):
         'CSRFPreventionToken': token['CSRFPreventionToken'],
         'Cookie': f"PVEAuthCookie={ token['ticket'] }",
     }
-    response = requests.get(url, headers=headers, verify=CA_CRT)
+    response = requests.get(url, headers=headers, verify=CA_CRT, timeout=10)
     if response.status_code != 200 : return get_task_status(node, upid)
     return response.json()
 
