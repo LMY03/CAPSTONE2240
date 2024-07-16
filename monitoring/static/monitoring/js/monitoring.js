@@ -519,6 +519,7 @@ $(document).ready(function () {
             datatype: 'json',
             success: function (response) {
                 console.log("VMlist" + JSON.stringify(response.vmList))
+                console.log('vmids' + JSON.stringify(response.vmids))
                 // Default settings -> might change based on the settings (threshold, implement later)
                 cpuLow = 25
                 cpuMid = 50
