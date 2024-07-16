@@ -42,12 +42,14 @@ https://docs.docker.com/engine/install/
 
 ## add the user in to the docker group (replace USER_NAME)
 
+```bash 
 sudo usermod -aG docker USER_NAME
+```
 
 ## Create a SSH keys
-
+```bash 
 ssh-keygen -t rsa -b 4096
-
+```
 ## Clone Github Repository
 
 git clone https://github.com/LMY03/CAPSTONE2240.git
