@@ -71,7 +71,7 @@ docker exec -it mysql bash
 ```bash
 cd /docker-entrypoint-initdb.d
 
-mysql -u root -p
+mysql -u root -p123456
 ```
 
 ```bash
@@ -99,7 +99,7 @@ docker exec -it mysql bash
 ```
 
 ```bash
-mysql -u root -p
+mysql -u root -p123456
 
 source init.sql
 
