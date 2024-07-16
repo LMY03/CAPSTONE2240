@@ -119,7 +119,7 @@ def vm_provision_process(vm_id, classnames, no_of_vm, cpu_cores, ram, request_id
     
     vms = []
     vms.append(orig_vm)
-    proxmox.start_vm(node, orig_vm.vm_id)
+    # proxmox.start_vm(node, orig_vm.vm_id)
     for vm_id in new_vm_ids:
         proxmox.wait_for_vm_start(node, vm_id)
         hostnames.append(proxmox.wait_and_get_ip(node, vm_id))
@@ -128,12 +128,12 @@ def vm_provision_process(vm_id, classnames, no_of_vm, cpu_cores, ram, request_id
 
         # hostnames.append("10.10.10." + str(vm_id))
 
-    orig_vm.ip_add =  proxmox.wait_and_get_ip(node, orig_vm.vm_id)
-    orig_vm.save()
-    hostnames.insert(0, orig_vm.ip_add)
+    # orig_vm.ip_add =  proxmox.wait_and_get_ip(node, orig_vm.vm_id)
+    # orig_vm.save()
+    # hostnames.insert(0, orig_vm.ip_add)
     # ansible.change_vm_default_userpass(hostnames, vm_passwords)
 
-    proxmox.shutdown_vm(node, orig_vm.vm_id)
+    # proxmox.shutdown_vm(node, orig_vm.vm_id)
 
     for vm_id in new_vm_ids:
         proxmox.shutdown_vm(node, vm_id)
