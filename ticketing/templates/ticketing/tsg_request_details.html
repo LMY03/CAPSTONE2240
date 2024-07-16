@@ -231,16 +231,13 @@ Request Details {{ request_entry.id }}
             method: 'POST',
             headers: {
                 'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({})
         });
     }
-
     window.addEventListener('beforeunload', function (e) {
-        var activeElement = document.activeElement;
-        if (!activeElement || !activeElement.href || !activeElement.href.includes('generate_txt')) {
-            clear_credential();
-        }
+        if (!document.activeElement.href.includes('generate_txt')) clear_credential()
     });
 </script>
 {% endblock  %}
