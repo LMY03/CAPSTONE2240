@@ -166,9 +166,9 @@ $(document).ready(function () {
             if (this.data()[0] == vmList.id) {
                 let vmInfo = [vmList.id, vmList.name, vmList.type, vmList.node];
 
-                var disk = ((vmList.disk / vmList.maxdisk) * 100).toFixed(2)
+                var disk = (vmList.maxdisk) / (1024 * 1024 * 1024)
 
-                vmInfo.push(disk + "%");
+                vmInfo.push(disk + "GB");
 
                 var converted = (vmList.maxmem) / (1024 * 1024 * 1024);
 
