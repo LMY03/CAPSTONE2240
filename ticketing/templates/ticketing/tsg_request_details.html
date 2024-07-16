@@ -32,7 +32,7 @@ Request Details {{ request_entry.id }}
                         <div class="row g-3">
                             <div class="col-md-4">
                                 <div class="p-3 bg-light border">
-                                    <p><strong>Requester ID:</strong> {{ request_entry.requester.first_name }} {{ request_entry.requester.last_name }}</p>
+                                    <p><strong>Requester Name:</strong> {{ request_entry.requester.first_name }} {{ request_entry.requester.last_name }}</p>
                                 </div>
                             </div>
                             <div class="col-md-4">
@@ -185,7 +185,7 @@ Request Details {{ request_entry.id }}
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                         </div>
                         <div class="modal-body">
-                            <p><strong>Requester ID:</strong> {{ request_entry.requester.first_name }} {{ request_entry.requester.last_name }} </p>
+                            <p><strong>Requester Name:</strong> {{ request_entry.requester.first_name }} {{ request_entry.requester.last_name }} </p>
                             <p><strong>Template:</strong> {{ request_entry.template.vm_name }}</p>
                             <p><strong>Cores:</strong> {{ request_entry.cores }}</p>
                             <p><strong>RAM:</strong> {{ request_entry.ram }}</p>
