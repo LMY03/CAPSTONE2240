@@ -33,13 +33,13 @@ CA_CRT = False
 #     return session
 
 
-def get_ticket():
+async def get_ticket():
     url = f"{PROXMOX_HOST}/api2/json/access/ticket"
     data = { 'username': USERNAME, 'password': PASSWORD }
     response = requests.post(url, data=data, verify=CA_CRT)
     if response.status_code != 200:
         time.sleep(5)
-        return get_ticket()
+        return asyncio.run(get_ticket())
     return response.json()['data']
 
 
