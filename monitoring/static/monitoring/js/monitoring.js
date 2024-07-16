@@ -91,23 +91,19 @@ $(document).ready(function () {
         if (usedSwapNum > 0 && usedSwapNum <= cpuLow) {
             $('div#serverCpuDiv').css('background-color', 'rgb(0, 155, 0, 0.35');
             $('div#serverCpuDiv').css('border', '2.5px solid rgb(77,192,77)');
-            console.log("green")
         }
         else if (usedSwapNum > cpuLow && usedSwapNum <= cpuMid) {
             $('div#serverCpuDiv').css('background-color', 'rgb(253, 223, 46, 0.51');
             $('div#serverCpuDiv').css('border', '2.5px solid rgb(232,204,39)');
-            console.log("yellow")
         }
 
         else if (usedSwapNum > cpuMid && usedSwapNum <= cpuHigh) {
             $('div#serverCpuDiv').css('background-color', 'rgb(259, 155, 0, 0.5)');
             $('div#serverCpuDiv').css('border', '2.5px solid rgb(239,155,0)');
-            console.log("orange")
         }
         else if (usedSwapNum > cpuHigh && usedSwapNum <= cpuCrit) {
             $('div#serverCpuDiv').css('background-color', 'rgb(204, 0, 0, 0.5');
             $('div#serverCpuDiv').css('border', '2.5px solid rgb(204,0,0)');
-            console.log("red")
         }
 
     }
@@ -518,8 +514,6 @@ $(document).ready(function () {
             },
             datatype: 'json',
             success: function (response) {
-                console.log("VMlist" + JSON.stringify(response.vmList))
-                console.log('vmids' + JSON.stringify(response.vmids))
                 // Default settings -> might change based on the settings (threshold, implement later)
                 cpuLow = 25
                 cpuMid = 50
