@@ -32,6 +32,7 @@ def getData(request):
     
     #Get VM Info from Proxmox API
     vmids = proxmox.cluster.resources.get(type='vm')    
+    allids = proxmox.cluster.resources
     VMList= []
     
     #Loop through each VM to get info
@@ -233,7 +234,7 @@ def getData(request):
         'totalMemoryResultList': totalMemoryResultList,
         'totalStorageUsedResultList': totalStorageUsedResultList,
         'vmList': VMList,
-        'vmids': vmids
+        'vmids': allids
     })
 
 
