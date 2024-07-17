@@ -71,6 +71,8 @@ def update_port_forward_rule(vm_name, ip_add):
 def delete_port_forward_rules(no_of_protocols, vm_names):
     for i in range(no_of_protocols):
         for vm_name in vm_names:
+            print('---------------------')
+            print(vm_name)
             pfsense.delete_firewall_rule(get_firewall_rule(vm_name))
             pfsense.delete_port_forward_rule(get_port_forward_rule(vm_name))
-            time.sleep(3)
+            time.sleep(5)
