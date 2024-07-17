@@ -78,6 +78,7 @@ def getData(request):
     totalMemoryResultList = []
     localUsageResultList = []
     totalStorageUsedResultList = []
+    netInResultList = []
 
     # loop through nodes
     for node in nodes:
@@ -222,6 +223,30 @@ def getData(request):
                     "total": record.get_value()
                 })
         totalStorageUsedResultList.append(totalStorageUsedResult)
+
+        # netInResultList
+        netIn_flux_query = f'''
+                            from(bucket: "{bucket}")
+                            |> range(start: -5m)
+                            |> filter(fn: (r) => r._measurement == "system")
+                            |> filter(fn: (r) => r.host == "local")
+                            |> filter(fn: (r) => r._field == "total")
+                            |> filter(fn: (r) => r.nodename == "{node}")
+                            |> aggregateWindow(every: 10s, fn: last, createEmpty: false)
+                            |> yield(name: "last")
+                        '''
+        netIn_result = query_api.query(query=netIn_flux_query)
+
+        netInResult = {}
+        netInResult["node"] = node
+        netInResult["data"] = []
+        for table in netIn_result:
+            for record in table.records:
+                netInResult["data"].append({
+                    "time": record.get_time(),
+                    "total": record.get_value()
+                })
+        netInResultList.append(netInResult)
 
 
         
