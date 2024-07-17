@@ -155,7 +155,7 @@ def vm_provision_process(vm_id, classnames, no_of_vm, cpu_cores, ram, request_id
         guacamole.assign_connection(faculty_guacamole_username, guacamole_connection_id)
         
         # vm = VirtualMachines(request=request_entry, vm_id=new_vm_ids[i], vm_name=classnames[i], cores=cpu_cores, ram=ram, storage=request_entry.template.storage, ip_add=hostnames[i], node=orig_vm.node, status=VirtualMachines.Status.SHUTDOWN)
-        vm = get_object_or_404(VirtualMachines, vm_name=classnames[i])
+        vm = get_object_or_404(VirtualMachines, vm_name=classnames[i], status=VirtualMachines.Status.CREATING)
         vm.set_ip_add(hostnames[i])
         vm.set_shutdown()
         vms.append(vm)
