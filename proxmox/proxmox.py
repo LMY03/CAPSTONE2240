@@ -107,17 +107,9 @@ def clone_vm(node, vmid, newid, name):
         'Cookie': f"PVEAuthCookie={ token['ticket'] }",
     }
     response = requests.post(url, headers=headers, data=config, verify=CA_CRT)
-    if response.status_code == 200:
-        response_data = response.json()
-        print("Clone VM Response:", response_data)
-        if 'data' in response_data : return response_data['data']  # upid
-    print("Failed to clone VM:", response.text)
-    return None
-    print("---------------------------------")
-    print(response)
-    print(response.json())
-    print(response.json()['data'])
-    return response.json()['data'] #upid
+    if response.status_code != 200 : return clone_vm(node, vmid, newid, name)
+
+    return response.json()['data']
 
 # delete VM DELETE
 def delete_vm(node, vmid):
@@ -128,6 +120,7 @@ def delete_vm(node, vmid):
         'Cookie': f"PVEAuthCookie={ token['ticket'] }",
     }
     response = requests.delete(url, headers=headers, verify=CA_CRT)
+    if response.status_code != 200 : return delete_vm(node, vmid)
     return response.json()
 
 # start VM POST
@@ -176,6 +169,7 @@ def config_vm(node, vmid, cpu_cores, memory_mb):
         'Cookie': f"PVEAuthCookie={ token['ticket'] }",
     }
     response = requests.put(url, headers=headers, data=config, verify=CA_CRT)
+    if response.status_code != 200 : return config_vm(node, vmid, cpu_cores, memory_mb)
     return response.json()
 
 def config_vm_disk(node, vmid, size):
