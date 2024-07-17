@@ -247,8 +247,6 @@ def getData(request):
                     "total": record.get_value()
                 })
         netInResultList.append(netInResult)
-
-
         
     return JsonResponse({
         'serverCoreResultList': serverCoreResultList,
