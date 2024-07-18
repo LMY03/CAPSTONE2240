@@ -9,6 +9,7 @@ from pfsense.views import update_port_forward_rule
 
 from guacamole.models import GuacamoleUser, GuacamoleConnection
 from proxmox.models import VirtualMachines
+from ticketing.models import UserProfile
 
 # Create your views here.
 
@@ -27,6 +28,9 @@ def access_vm(request):
         
         vm = get_object_or_404(VirtualMachines, id=vm_id)
         guacamole_user = get_object_or_404(GuacamoleUser, system_user=request.user)
+        if get_object_or_404(UserProfile, user=request.user).user_type == 'admin' :
+            guacamole_user.username = 'guacadmin'
+            guacamole_user.password = 'guacadmin'
         connection_id = get_object_or_404(GuacamoleConnection, vm=vm).connection_id
 
         if vm.is_shutdown():
