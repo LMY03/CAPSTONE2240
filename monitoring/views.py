@@ -25,15 +25,16 @@ def index(request):
     return render(request, 'monitoring/monitoring.html', {'nodeList' : strNodes})
 
 def getData(request):
-    # Connection between Proxmox API and application
+    #Connection between Proxmox API and application
     proxmox = ProxmoxAPI('10.1.200.11', user='root@pam', password='cap2240', verify_ssl=False)
     client = InfluxDBClient(url=INFLUX_ADDRESS, token=token, org=org)
+
     
-    # Get VM Info from Proxmox API
+    #Get VM Info from Proxmox API
     vmids = proxmox.cluster.resources.get(type='vm')    
     VMList= []
     
-    # Loop through each VM to get info
+    #Loop through each VM to get info
     for vmid in vmids:
         VMDict = {}
         VMDict["id"] = vmid['vmid']
@@ -51,7 +52,8 @@ def getData(request):
 
         VMList.append(VMDict)
     
-    # Query to get all nodes being used
+    
+    #Query to get all nodes being used
     query_api = client.query_api()
     flux_query = f'''
                     from(bucket:"{bucket}")
@@ -68,19 +70,18 @@ def getData(request):
         for record in table.records:
             nodes.append(record.values.get("host", ""))
 
-    # List declarations
+
+    # list declarations
     serverCoreResultList = []
     serverCpuResultList = []
     usedMemResultList = []
     totalMemoryResultList = []
     localUsageResultList = []
     totalStorageUsedResultList = []
-    networkInResultList = []
-    networkOutResultList = []
 
-    # Loop through nodes
+    # loop through nodes
     for node in nodes:
-        # Add node filter: if node == request.GET['nodeFilter'] or request.GET['nodeFilter'] == 'All nodes':
+        # add node filter: if node == request.GET['nodeFilter'] or request.GET['nodeFilter'] == 'All nodes':
 
         # serverCoreResultList -> Compute for total Cores
         core_flux_query = f'''
@@ -221,50 +222,6 @@ def getData(request):
                     "total": record.get_value()
                 })
         totalStorageUsedResultList.append(totalStorageUsedResult)
-
-        # Network In Result List
-        network_in_flux_query = f'''
-                                from(bucket: "{bucket}")
-                                |> range(start: -5m)
-                                |> filter(fn: (r) => r._measurement == "net")
-                                |> filter(fn: (r) => r._field == "bytes_recv")
-                                |> filter(fn: (r) => r.host == "{node}")
-                                |> aggregateWindow(every: 10s, fn: sum, createEmpty: false)
-                                '''
-        network_in_result = query_api.query(query=network_in_flux_query)
-
-        networkInResult = {}
-        networkInResult["node"] = node
-        networkInResult["data"] = []
-        for table in network_in_result:
-            for record in table.records:
-                networkInResult["data"].append({
-                    "time": record.get_time(),
-                    "bytes_recv": record.get_value()
-                })
-        networkInResultList.append(networkInResult)
-
-        # Network Out Result List
-        network_out_flux_query = f'''
-                                from(bucket: "{bucket}")
-                                |> range(start: -5m)
-                                |> filter(fn: (r) => r._measurement == "net")
-                                |> filter(fn: (r) => r._field == "bytes_sent")
-                                |> filter(fn: (r) => r.host == "{node}")
-                                |> aggregateWindow(every: 10s, fn: sum, createEmpty: false)
-                                '''
-        network_out_result = query_api.query(query=network_out_flux_query)
-
-        networkOutResult = {}
-        networkOutResult["node"] = node
-        networkOutResult["data"] = []
-        for table in network_out_result:
-            for record in table.records:
-                networkOutResult["data"].append({
-                    "time": record.get_time(),
-                    "bytes_sent": record.get_value()
-                })
-        networkOutResultList.append(networkOutResult)
         
     return JsonResponse({
         'serverCoreResultList': serverCoreResultList,
@@ -273,11 +230,10 @@ def getData(request):
         'localUsageResultList': localUsageResultList, 
         'totalMemoryResultList': totalMemoryResultList,
         'totalStorageUsedResultList': totalStorageUsedResultList,
-        'networkInResultList': networkInResultList,
-        'networkOutResultList': networkOutResultList,
         'vmList': VMList,
         'vmids': vmids
     })
+
 
 def aggregatedData (request): 
     flux_query = f'''
