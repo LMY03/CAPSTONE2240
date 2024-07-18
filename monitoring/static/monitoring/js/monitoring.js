@@ -41,7 +41,6 @@ $(document).ready(function () {
             $('div#totalLxcCountDiv').css('background-color', 'rgb(259, 155, 0, 0.5)');
             $('div#totalLxcCountDiv').css('border', '2.5px solid rgb(239,155,0)');
         }
-
         else if (activeLXC > lxcHigh && activeLXC <= lxcCrit) {
             $('div#totalLxcCountDiv').css('background-color', 'rgb(204, 0, 0, 0.5)');
             $('div#totalLxcCountDiv').css('border', '2.5px solid rgb(204,0,0)');
@@ -94,7 +93,6 @@ $(document).ready(function () {
             $('div#serverCpuDiv').css('background-color', 'rgb(253, 223, 46, 0.51)');
             $('div#serverCpuDiv').css('border', '2.5px solid rgb(232,204,39)');
         }
-
         else if (usedSwapNum > cpuMid && usedSwapNum <= cpuHigh) {
             $('div#serverCpuDiv').css('background-color', 'rgb(259, 155, 0, 0.5)');
             $('div#serverCpuDiv').css('border', '2.5px solid rgb(239,155,0)');
@@ -103,7 +101,6 @@ $(document).ready(function () {
             $('div#serverCpuDiv').css('background-color', 'rgb(204, 0, 0, 0.5)');
             $('div#serverCpuDiv').css('border', '2.5px solid rgb(204,0,0)');
         }
-
     }
 
     // This function changes the colors of the Memory Usage Div based on the current usage and thresholds.
@@ -118,12 +115,11 @@ $(document).ready(function () {
             $('div#usedMemDiv').css('background-color', 'rgb(253, 223, 46, 0.51)');
             $('div#usedMemDiv').css('border', '2.5px solid rgb(232,204,39)');
         }
-
         else if (pct > memMid && pct <= memHigh) {
             $('div#usedMemDiv').css('background-color', 'rgb(259, 155, 0, 0.5)');
             $('div#usedMemDiv').css('border', '2.5px solid rgb(239,155,0)');
         }
-        else if (pct > memHigh && pct <= memHigh) {
+        else if (pct > memHigh && pct <= memCrit) {
             $('div#usedMemDiv').css('background-color', 'rgb(204, 0, 0, 0.5)');
             $('div#usedMemDiv').css('border', '2.5px solid rgb(204,0,0)');
         }
@@ -143,7 +139,6 @@ $(document).ready(function () {
             $('div#localMemDiv').css('background-color', 'rgb(259, 155, 0, 0.5)');
             $('div#localMemDiv').css('border', '2.5px solid rgb(239,155,0)');
         }
-
         else if (usedMemNum > stoHigh && usedMemNum <= stoCrit) {
             $('div#localMemDiv').css('background-color', 'rgb(204, 0, 0, 0.5)');
             $('div#localMemDiv').css('border', '2.5px solid rgb(204,0,0)');
@@ -160,7 +155,6 @@ $(document).ready(function () {
             $('div#networkDiv').css('background-color', 'rgb(253, 223, 46, 0.51)');
             $('div#networkDiv').css('border', '2.5px solid rgb(232,204,39)');
         }
-
         else if (networkUsage > netMid && networkUsage <= netHigh) {
             $('div#networkDiv').css('background-color', 'rgb(259, 155, 0, 0.5)');
             $('div#networkDiv').css('border', '2.5px solid rgb(239,155,0)');
@@ -173,7 +167,7 @@ $(document).ready(function () {
 
     // This function updates the values per row inside the Virtual Machine table 
     // The function compares the ID of each machine in the vmList, if the ID is not found then it adds another row to the table
-    function updateVmTable(vmList, rowNum, cpuLow, cpuMid, cpuHigh, cpuCrit, memLow, memMid, memHigh, memCrit, stoLow, stoMid, stoHigh, stoCrit) {
+    function updateVmTable(vmList, rowNum, cpuLow, cpuMid, cpuHigh, cpuCrit, memLow, memMid, memHigh, memCrit, stoLow, stoMid, stoHigh, stoCrit, networkIn, networkOut) {
         var flag = 0;
 
         vmTable.rows().every(function () {
@@ -210,45 +204,24 @@ $(document).ready(function () {
                     vmInfo.push(uptime.format("hh:mm:ss"));
                 }
 
+                // Add network data to the table
+                vmInfo.push((networkIn / (1024 * 1024)).toFixed(2) + " MB")
+                vmInfo.push((networkOut / (1024 * 1024)).toFixed(2) + " MB")
+
                 this.data(vmInfo);
                 flag = 1;
 
                 vmTable.draw();
 
-                // changes border and div color of the 'CPU Usage' cell in the row
-                if (cpu > 0 && cpu <= cpuLow) {
-                    $(vmTable.cell(rowNum, 7).node()).css('background-color', 'rgb(0, 155, 0, 0.35)');
-                    $(vmTable.cell(rowNum, 7).node()).css('border', '2.5px solid rgb(77,192,77)');
-                } else if (cpu > cpuLow && cpu <= cpuMid) {
-                    $(vmTable.cell(rowNum, 7).node()).css('background-color', 'rgb(253, 223, 46, 0.51)');
-                    $(vmTable.cell(rowNum, 7).node()).css('border', '2.5px solid rgb(232,204,39)');
-                } else if (cpu > cpuMid && cpu <= cpuHigh) {
-                    $(vmTable.cell(rowNum, 7).node()).css('background-color', 'rgb(259, 155, 0, 0.5)');
-                    $(vmTable.cell(rowNum, 7).node()).css('border', '2.5px solid rgb(239,155,0)');
-                } else if (cpu > cpuHigh && cpu <= cpuCrit) {
-                    $(vmTable.cell(rowNum, 7).node()).css('background-color', 'rgb(204, 0, 0, 0.5)');
-                    $(vmTable.cell(rowNum, 7).node()).css('border', '2.5px solid rgb(204,0,0)');
-                } else if (cpu == 0) {
-                    $(vmTable.cell(rowNum, 7).node()).css('background-color', '#FFFFFF');
-                    $(vmTable.cell(rowNum, 7).node()).css('border', '');
+                // Apply styles to the new columns for network data if needed
+                // Example:
+                if (networkIn > 1000000000) { // Just an example threshold
+                    $(vmTable.cell(rowNum, 10).node()).css('background-color', 'rgb(204, 0, 0, 0.5)');
+                    $(vmTable.cell(rowNum, 10).node()).css('border', '2.5px solid rgb(204,0,0)');
                 }
-
-                // changes border and div color of the 'RAM Usage' cell in the row
-                if (mem > 0 && mem <= memLow) {
-                    $(vmTable.cell(rowNum, 5).node()).css('background-color', 'rgb(0, 155, 0, 0.35)');
-                    $(vmTable.cell(rowNum, 5).node()).css('border', '2.5px solid rgb(77,192,77)');
-                } else if (mem > memLow && mem <= memMid) {
-                    $(vmTable.cell(rowNum, 5).node()).css('background-color', 'rgb(253, 223, 46, 0.51)');
-                    $(vmTable.cell(rowNum, 5).node()).css('border', '2.5px solid rgb(232,204,39)');
-                } else if (mem > memMid && mem <= memHigh) {
-                    $(vmTable.cell(rowNum, 5).node()).css('background-color', 'rgb(259, 155, 0, 0.5)');
-                    $(vmTable.cell(rowNum, 5).node()).css('border', '2.5px solid rgb(239,155,0)');
-                } else if (mem > memHigh && mem <= memCrit) {
-                    $(vmTable.cell(rowNum, 5).node()).css('background-color', 'rgb(204, 0, 0, 0.5)');
-                    $(vmTable.cell(rowNum, 5).node()).css('border', '2.5px solid rgb(204,0,0)');
-                } else if (mem == 0) {
-                    $(vmTable.cell(rowNum, 5).node()).css('background-color', '#FFFFFF');
-                    $(vmTable.cell(rowNum, 5).node()).css('border', '');
+                if (networkOut > 1000000000) { // Just an example threshold
+                    $(vmTable.cell(rowNum, 11).node()).css('background-color', 'rgb(204, 0, 0, 0.5)');
+                    $(vmTable.cell(rowNum, 11).node()).css('border', '2.5px solid rgb(204,0,0)');
                 }
 
                 return;
@@ -257,7 +230,7 @@ $(document).ready(function () {
 
         // if the VM ID is not found among the displayed machines in the table, a new row is created using the genVmTable() function
         if (!flag) {
-            genVmTable(vmList, rowNum, cpuLow, cpuMid, cpuHigh, cpuCrit, memLow, memMid, memHigh, memCrit, stoLow, stoMid, stoHigh, stoCrit)
+            genVmTable(vmList, rowNum, cpuLow, cpuMid, cpuHigh, cpuCrit, memLow, memMid, memHigh, memCrit, stoLow, stoMid, stoHigh, stoCrit, networkIn, networkOut)
             vmTable.draw();
         }
     }
@@ -434,11 +407,12 @@ $(document).ready(function () {
 
                 runningCount(response.vmList, vmsLow, vmsMid, vmsHigh, vmsCrit, lxcLow, lxcMid, lxcHigh, lxcCrit)
 
-
                 // Updates the VM table values.
-                for (i = 0; i < response.vmList.length; i++)
-                    updateVmTable(response.vmList[i], i, cpuLow, cpuMid, cpuHigh, cpuCrit, memLow, memMid, memHigh, memCrit, stoLow, stoMid, stoHigh, stoCrit)
-
+                for (i = 0; i < response.vmList.length; i++) {
+                    const networkIn = response.networkInResultList.find(item => item.node === response.vmList[i].node).data[0].bytes_recv;
+                    const networkOut = response.networkOutResultList.find(item => item.node === response.vmList[i].node).data[0].bytes_sent;
+                    updateVmTable(response.vmList[i], i, cpuLow, cpuMid, cpuHigh, cpuCrit, memLow, memMid, memHigh, memCrit, stoLow, stoMid, stoHigh, stoCrit, networkIn, networkOut)
+                }
             },
             error: function (response) {
                 console.log(response);
@@ -447,10 +421,9 @@ $(document).ready(function () {
 
     }
 
-
     // This function is used as the row generator for the Virtual Machine Table 
     // The data is appended into the row in order to match the labels on the column headers
-    function genVmTable(vmList, rowNum, cpuLow, cpuMid, cpuHigh, cpuCrit, memLow, memMid, memHigh, memCrit, stoLow, stoMid, stoHigh, stoCrit) {
+    function genVmTable(vmList, rowNum, cpuLow, cpuMid, cpuHigh, cpuCrit, memLow, memMid, memHigh, memCrit, stoLow, stoMid, stoHigh, stoCrit, networkIn, networkOut) {
         let vmInfo = [vmList.id, vmList.name, vmList.type, vmList.node]
 
         var disk = (vmList.maxdisk) / (1024 * 1024 * 1024)
@@ -484,45 +457,23 @@ $(document).ready(function () {
             vmInfo.push(uptime.format("hh:mm:ss"));
         }
 
+        // Add network data to the table
+        vmInfo.push((networkIn / (1024 * 1024)).toFixed(2) + " MB")
+        vmInfo.push((networkOut / (1024 * 1024)).toFixed(2) + " MB")
+
         vmTable.row.add(vmInfo).draw();
 
-        // changes border and div color of the 'CPU Usage' cell in the row
-        if (cpu > 0 && cpu <= cpuLow) {
-            $(vmTable.cell(rowNum, 7).node()).css('background-color', 'rgb(0, 155, 0, 0.35)');
-            $(vmTable.cell(rowNum, 7).node()).css('border', '2.5px solid rgb(77,192,77)');
-        } else if (cpu > cpuLow && cpu <= cpuMid) {
-            $(vmTable.cell(rowNum, 7).node()).css('background-color', 'rgb(253, 223, 46, 0.51)');
-            $(vmTable.cell(rowNum, 7).node()).css('border', '2.5px solid rgb(232,204,39)');
-        } else if (cpu > cpuMid && cpu <= cpuHigh) {
-            $(vmTable.cell(rowNum, 7).node()).css('background-color', 'rgb(259, 155, 0, 0.5)');
-            $(vmTable.cell(rowNum, 7).node()).css('border', '2.5px solid rgb(239,155,0)');
-        } else if (cpu > cpuHigh && cpu <= cpuCrit) {
-            $(vmTable.cell(rowNum, 7).node()).css('background-color', 'rgb(204, 0, 0, 0.5)');
-            $(vmTable.cell(rowNum, 7).node()).css('border', '2.5px solid rgb(204,0,0)');
-        } else if (cpu == 0) {
-            $(vmTable.cell(rowNum, 7).node()).css('background-color', '#FFFFFF');
-            $(vmTable.cell(rowNum, 7).node()).css('border', '');
+        // Apply styles to the new columns for network data if needed
+        // Example:
+        if (networkIn > 1000000000) { // Just an example threshold
+            $(vmTable.cell(rowNum, 10).node()).css('background-color', 'rgb(204, 0, 0, 0.5)');
+            $(vmTable.cell(rowNum, 10).node()).css('border', '2.5px solid rgb(204,0,0)');
         }
-
-        // changes border and div color of the 'RAM Usage' cell in the row
-        if (mem > 0 && mem <= memLow) {
-            $(vmTable.cell(rowNum, 5).node()).css('background-color', 'rgb(0, 155, 0, 0.35)');
-            $(vmTable.cell(rowNum, 5).node()).css('border', '2.5px solid rgb(77,192,77)');
-        } else if (mem > memLow && mem <= memMid) {
-            $(vmTable.cell(rowNum, 5).node()).css('background-color', 'rgb(253, 223, 46, 0.51)');
-            $(vmTable.cell(rowNum, 5).node()).css('border', '2.5px solid rgb(232,204,39)');
-        } else if (mem > memMid && mem <= memHigh) {
-            $(vmTable.cell(rowNum, 5).node()).css('background-color', 'rgb(259, 155, 0, 0.5)');
-            $(vmTable.cell(rowNum, 5).node()).css('border', '2.5px solid rgb(239,155,0)');
-        } else if (mem > memHigh && mem <= memCrit) {
-            $(vmTable.cell(rowNum, 5).node()).css('background-color', 'rgb(204, 0, 0, 0.5)');
-            $(vmTable.cell(rowNum, 5).node()).css('border', '2.5px solid rgb(204,0,0)');
-        } else if (mem == 0) {
-            $(vmTable.cell(rowNum, 5).node()).css('background-color', '#FFFFFF');
-            $(vmTable.cell(rowNum, 5).node()).css('border', '');
+        if (networkOut > 1000000000) { // Just an example threshold
+            $(vmTable.cell(rowNum, 11).node()).css('background-color', 'rgb(204, 0, 0, 0.5)');
+            $(vmTable.cell(rowNum, 11).node()).css('border', '2.5px solid rgb(204,0,0)');
         }
     }
-
 
     // This function initializes the dashboard page
     function init() {
@@ -530,8 +481,7 @@ $(document).ready(function () {
         $.ajax({
             type: 'GET',
             url: 'getdata',
-            data: {
-            },
+            data: {},
             datatype: 'json',
             success: function (response) {
                 // Default settings -> might change based on the settings (threshold, implement later)
@@ -580,13 +530,17 @@ $(document).ready(function () {
                         { className: "tdDiskUsage", "targets": [4] },
                         { className: "tdMemoryUsage", "targets": [5] },
                         { className: "tdCpuUsage", "targets": [6] },
-                        { className: "tdUptime", type: "natural", "targets": [9] }
+                        { className: "tdUptime", type: "natural", "targets": [9] },
+                        { className: "tdNetworkIn", "targets": [10] },
+                        { className: "tdNetworkOut", "targets": [11] }
                     ]
                 });
 
                 // Generates the VM table for each item in the list of machines
                 for (i = 0; i < response.vmList.length; i++) {
-                    genVmTable(response.vmList[i], i, cpuLow, cpuMid, cpuHigh, cpuCrit, memLow, memMid, memHigh, memCrit, stoLow, stoMid, stoHigh, stoCrit)
+                    const networkIn = response.networkInResultList.find(item => item.node === response.vmList[i].node).data[0].bytes_recv;
+                    const networkOut = response.networkOutResultList.find(item => item.node === response.vmList[i].node).data[0].bytes_sent;
+                    genVmTable(response.vmList[i], i, cpuLow, cpuMid, cpuHigh, cpuCrit, memLow, memMid, memHigh, memCrit, stoLow, stoMid, stoHigh, stoCrit, networkIn, networkOut)
                 }
 
                 //update charts every 8 seconds
