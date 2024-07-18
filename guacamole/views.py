@@ -28,9 +28,11 @@ def access_vm(request):
         
         vm = get_object_or_404(VirtualMachines, id=vm_id)
         guacamole_user = get_object_or_404(GuacamoleUser, system_user=request.user)
+        guacamole_username = guacamole_user.username
+        guacamole_password = guacamole_user.password
         if get_object_or_404(UserProfile, user=request.user).user_type == 'admin' :
-            guacamole_user.username = 'guacadmin'
-            guacamole_user.password = 'guacadmin'
+            guacamole_username = 'guacadmin'
+            guacamole_password = 'guacadmin'
         connection_id = get_object_or_404(GuacamoleConnection, vm=vm).connection_id
 
         if vm.is_shutdown():
@@ -47,7 +49,7 @@ def access_vm(request):
 
             vm.set_active()
         
-        url = guacamole.get_connection_url(connection_id, guacamole_user.username, guacamole_user.password)
+        url = guacamole.get_connection_url(connection_id, guacamole_username, guacamole_password)
         print(f"Generated URL: {url}")
         
         return JsonResponse({"redirect_url": url})
