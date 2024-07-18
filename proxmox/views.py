@@ -104,7 +104,6 @@ def vm_provision_process(vm_id, classnames, no_of_vm, cpu_cores, ram, request_id
 
     for vm_id, upid in zip(new_vm_ids, upids):
         proxmox.wait_for_task(node, upid)
-        proxmox.config_vm(node, vm_id, cpu_cores, ram)
         proxmox.start_vm(node, vm_id)
 
     tsg_guacamole_username = get_object_or_404(GuacamoleUser, system_user=request_entry.requester).username
