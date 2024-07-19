@@ -196,6 +196,8 @@ def revoke_connection_group(username, connection_group_id):
 
 def get_connection_url(connection_id, username, password):
     token = get_connection_token(username, password)
+    connection = get_connection_details(connection_id)
+    print(connection)
     print(f"{config('WAN_ADDRESS')}:8080/guacamole/#/client/{urllib.parse.quote(connection_id)}?token={token}")
     print(urllib.parse.quote(connection_id))
     return f"{config('WAN_ADDRESS')}:8080/guacamole/#/client/{urllib.parse.quote(connection_id)}?token={token}"
