@@ -65,11 +65,12 @@ def getData(request):
 
         network_in_flux_query = f'''
                             from(bucket: "{bucket}")
-                            |> range(start: -5m)
+                            |> range(start: -8sec)
                             |> filter(fn: (r) => r._measurement == "system")
                             |> filter(fn: (r) => r["_field"]== "netin")
                             |> filter(fn: (r) => r.nodename == "{node}")
-                            |> aggregateWindow (every: 1m, fn: mean)
+                            |> aggregateWindow (every: 8s, fn: mean)
+                            |> map(fn: (r) => ({{ r with _value: r._value / 1024.0 }}))
                             |> derivative (unit:1s, nonNegative:false)
                             |> yield(name: "derivative")
                             '''
@@ -90,8 +91,7 @@ def getData(request):
         for table in network_in_result:
             for record in table.records:
                 network_in_result_list['data'] = {
-                    "host" : result.get_host(),
-                    "data" : result.get_value()
+                    f"{record.get_host()}" : result.get_value()
                 }
         core_result = query_api.query(query=core_flux_query)
         serverCoreResult = {}
@@ -240,12 +240,7 @@ def getData(request):
         VMDict["node"] = vmid['node']
         VMDict["status"] = vmid['status']
         VMDict["uptime"] = vmid['uptime']
-        network_in_result_list['data'].host
-        VMDict['network_in'] = {
-            "host": network_in_result_list['data'][vmid['name']],
-            "data": network_in_result_list['data']['data']
-        }
-
+        VMDict['network_in'] = network_in_result_list['data'][vmid['name']]
 
         VMList.append(VMDict)
 
@@ -258,7 +253,6 @@ def getData(request):
         'totalStorageUsedResultList': totalStorageUsedResultList,
         'vmList': VMList,
         'vmids': vmids,
-        'network_in_result': network_in_result
     })
 
 

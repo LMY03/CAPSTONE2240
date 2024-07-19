@@ -413,7 +413,7 @@ $(document).ready(function () {
     // This function is used as the row generator for the Virtual Machine Table 
     // The data is appended into the row in order to match the labels on the column headers
     function genVmTable(vmList, rowNum, cpuLow, cpuMid, cpuHigh, cpuCrit, memLow, memMid, memHigh, memCrit, stoLow, stoMid, stoHigh, stoCrit) {
-        let vmInfo = [vmList.id, vmList.name, vmList.type, vmList.node]
+        let vmInfo = [vmList.id, vmList.name, vmList.type, vmList.node, vmList.network_in]
 
         var disk = (vmList.maxdisk) / (1024 * 1024 * 1024)
 
@@ -536,7 +536,6 @@ $(document).ready(function () {
                 lxcHigh = 75
                 lxcCrit = 100
 
-                console.log(response.network_in_result)
                 // dashboard
 
                 setData(response.serverCoreResultList, response.serverCpuResultList, cpuLow, cpuMid, cpuHigh, cpuCrit,
