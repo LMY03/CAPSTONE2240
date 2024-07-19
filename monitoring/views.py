@@ -65,13 +65,12 @@ def getData(request):
 
         network_in_flux_query = f'''
                             from(bucket: "{bucket}")
-                            |> range(start: -8sec)
+                            |> range(start: -8s)
                             |> filter(fn: (r) => r._measurement == "system")
-                            |> filter(fn: (r) => r["_field"]== "netin")
+                            |> filter(fn: (r) => r._field== "netin")
                             |> filter(fn: (r) => r.nodename == "{node}")
-                            |> aggregateWindow (every: 8s, fn: mean)
-                            |> map(fn: (r) => ({{ r with _value: r._value / 1024.0 }}))
-                            |> derivative (unit:1s, nonNegative:false)
+                            |> aggregateWindow(every: 8s, fn: mean)
+                            |> derivative(unit: 1s, nonNegative: false)
                             |> yield(name: "derivative")
                             '''
         
@@ -91,7 +90,7 @@ def getData(request):
         for table in network_in_result:
             for record in table.records:
                 network_in_result_list['data'] = {
-                    f"{record.get_host()}" : result.get_value()
+                    f"{record.values['host']}" : result.get_value()
                 }
         core_result = query_api.query(query=core_flux_query)
         serverCoreResult = {}
