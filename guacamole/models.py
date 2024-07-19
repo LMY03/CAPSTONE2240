@@ -16,3 +16,8 @@ class GuacamoleConnection(models.Model):
     connection_id = models.IntegerField()
     connection_group_id = models.IntegerField()
     is_active = models.BooleanField(default=True)
+
+    class Protocol(models.TextChoices):
+        RDP = 'rdp'
+        VNC = 'vnc'
+        SSH = 'ssh'

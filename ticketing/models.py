@@ -5,6 +5,8 @@ from django.utils import timezone
 from datetime import date, timedelta
 import json
 
+from guacamole.models import GuacamoleConnection
+
 def expiration_date_default():
     return date.today() + timedelta(days=90)
 
@@ -17,8 +19,13 @@ class VMTemplates(models.Model):
     cores = models.IntegerField()
     ram = models.IntegerField()
     storage = models.IntegerField()
-    node = models.CharField(max_length= 45)
+    node = models.CharField(max_length=45)
     is_lxc = models.BooleanField(default=False)
+    
+    guacamole_protocol = models.CharField(
+        max_length=10,
+        choices=GuacamoleConnection.Protocol.choices
+    )
 
 class RequestEntry(models.Model):
 

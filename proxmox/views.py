@@ -9,8 +9,9 @@ from autotool import ansible
 from . import proxmox
 
 from . models import VirtualMachines
-from ticketing.models import RequestEntry, UserProfile, PortRules
+from ticketing.models import RequestEntry, UserProfile, VMTemplates
 from guacamole.models import GuacamoleConnection, GuacamoleUser
+
 from django.contrib.auth.models import User
 
 # Create your views here.
@@ -61,6 +62,7 @@ def generate_vm_ids(no_of_vm):
 
 def vm_provision_process(vm_id, classnames, no_of_vm, cpu_cores, ram, request_id):
 
+    request_entry = get_object_or_404(RequestEntry, id=request_id)
     orig_vm = get_object_or_404(VirtualMachines, vm_id=vm_id, request_id=request_id)
     guacamole_connection = get_object_or_404(GuacamoleConnection, vm=orig_vm)
     password = User.objects.make_random_password()
@@ -73,7 +75,7 @@ def vm_provision_process(vm_id, classnames, no_of_vm, cpu_cores, ram, request_id
     guacamole_connection.save()
 
     node = orig_vm.node.name
-    protocol = "rdp"
+    protocol = request_entry.template.guacamole_protocol
     port = {
         'vnc': 5901,
         'rdp': 3389,
@@ -96,9 +98,8 @@ def vm_provision_process(vm_id, classnames, no_of_vm, cpu_cores, ram, request_id
         proxmox.wait_for_vm_stop(node, orig_vm.vm_id)
         orig_vm.set_shutdown()
 
-    request_entry = get_object_or_404(RequestEntry, id=request_id)
 
-    for new_vm_id, vm_name in zip(new_vm_ids, classnames): 
+    for new_vm_id, vm_name in zip(new_vm_ids, classnames):
         VirtualMachines.objects.create(vm_id=new_vm_id, vm_name=vm_name, cores=cpu_cores, ram=ram, storage=request_entry.template.storage, request=request_entry, node=orig_vm.node)
         upids.append(proxmox.clone_vm(node, vm_id, new_vm_id, vm_name))
 
