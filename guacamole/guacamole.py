@@ -197,11 +197,11 @@ def revoke_connection_group(username, connection_group_id):
 
 def get_connection_url(connection_id, username, password):
     token = get_connection_token(username, password)
-    # original_string = f'{connection_id}\0c\0{DATASOURCE}'
-    # string_bytes = f'{connection_id}\0c\0{DATASOURCE}'.encode("utf-8")
-    # base64_bytes = base64.b64encode(f'{connection_id}\0c\0{DATASOURCE}'.encode("utf-8"))
-    # base64_string = base64.b64encode(f'{connection_id}\0c\0{DATASOURCE}'.encode("utf-8")).decode("utf-8")
-    return f"{config('WAN_ADDRESS')}:8080/guacamole/#/client/{base64.b64encode(f'{connection_id}\0c\0{DATASOURCE}'.encode("utf-8")).decode("utf-8")}?token={token}"
+    original_string = f'{connection_id}\0c\0{DATASOURCE}'
+    string_bytes = original_string.encode("utf-8")
+    base64_bytes = base64.b64encode(string_bytes)
+    base64_string = base64_bytes.decode("utf-8")
+    return f"{config('WAN_ADDRESS')}:8080/guacamole/#/client/{base64_string}?token={token}"
 
 # def get_connection_token(username, password):
 #     url = f"{GUACAMOLE_HOST}/guacamole/api/tokens"
