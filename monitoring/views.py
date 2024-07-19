@@ -90,7 +90,7 @@ def getData(request):
         for table in network_in_result:
             for record in table.records:
                 network_in_result_list['data'] = {
-                    f"{record.values['host']}" : result.get_value()
+                    f"{record.values['host']}" : record.get_value()
                 }
         core_result = query_api.query(query=core_flux_query)
         serverCoreResult = {}
