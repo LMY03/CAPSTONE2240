@@ -69,7 +69,7 @@ def getData(request):
                             |> filter(fn: (r) => r._measurement == "system")
                             |> filter(fn: (r) => r._field== "netin")
                             |> filter(fn: (r) => r.nodename == "{node}")
-                            |> aggregateWindow(every: 8s, fn: mean)
+                            |> aggregateWindow(every: 8s, fn: derivative)
                             |> derivative(unit: 1s, nonNegative: false)
                             |> yield(name: "derivative")
                             '''
@@ -236,12 +236,12 @@ def getData(request):
         VMDict["maxdisk"] = vmid['maxdisk']        
         VMDict["maxmem"] = vmid['maxmem']
         VMDict["mem"] = vmid['mem']
-        hostname = vmid['name']
         VMDict["name"] = vmid['name']
         VMDict["node"] = vmid['node']
         VMDict["status"] = vmid['status']
         VMDict["uptime"] = vmid['uptime']
-        VMDict['network_in'] = network_in_result_dict.get(hostname, 0)
+        VMDict['network_in'] = vmid['netin']
+        VMDict['netowork_out'] = vmid['netout']
         VMList.append(VMDict)
 
     return JsonResponse({

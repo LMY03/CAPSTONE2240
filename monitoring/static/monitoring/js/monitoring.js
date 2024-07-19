@@ -446,6 +446,12 @@ $(document).ready(function () {
             vmInfo.push(uptime.format("hh:mm:ss"));
         }
 
+        let network_in = (vmList.network_in / (1024 * 1024));
+        let network_out = (vmList.network_out / (1024 * 1024));
+
+        vmInfo.push(network_in + "MB");
+        vmInfo.push(network_out + "MB");
+
         vmTable.row.add(vmInfo).draw();
 
         // // changes border and div color of the 'Disk Usage' cell in the row
@@ -551,7 +557,7 @@ $(document).ready(function () {
                     "responsive": "true",
                     "select": "true",
                     'columnDefs': [
-                        { "type": "numeric", "targets": [0, 4, 6, 8] },
+                        { "type": "numeric", "targets": [0, 4, 6, 8, 10, 11] },
                         { "type": "percent", "targets": [5, 7] },
                         { className: "tdDiskUsage", "targets": [4] },
                         { className: "tdMemoryUsage", "targets": [5] },
@@ -562,7 +568,6 @@ $(document).ready(function () {
 
                 // Generates the VM table for each item in the list of machines
                 for (i = 0; i < response.vmList.length; i++) {
-                    console.log(response.vmList[i]['network_in'])
                     genVmTable(response.vmList[i], i, cpuLow, cpuMid, cpuHigh, cpuCrit, memLow, memMid, memHigh, memCrit, stoLow, stoMid, stoHigh, stoCrit)
                 }
 
