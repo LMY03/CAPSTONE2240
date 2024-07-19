@@ -408,6 +408,7 @@ def request_confirm(request, request_id):
     create_test_vm(request.user, request_id, node)
 
     request_entry.status = RequestEntry.Status.PROCESSING
+    request_entry.fulfilled_by = request.user
     request_entry.save()
 
     return redirect('ticketing:request_details', request_id)

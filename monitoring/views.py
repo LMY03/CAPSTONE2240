@@ -28,10 +28,6 @@ def getData(request):
     #Connection between Proxmox API and application
     proxmox = ProxmoxAPI('10.1.200.11', user='root@pam', password='cap2240', verify_ssl=False)
     client = InfluxDBClient(url=INFLUX_ADDRESS, token=token, org=org)
-
-    
-
-    network_in_result_list = []
     
     #Get VM Info from Proxmox API
     vmids = proxmox.cluster.resources.get(type='vm')    
@@ -56,6 +52,7 @@ def getData(request):
 
 
     # list declarations
+    network_in_result_list = []
     serverCoreResultList = []
     serverCpuResultList = []
     usedMemResultList = []
@@ -68,7 +65,7 @@ def getData(request):
 
         network_in_flux_query = f'''
                             from(bucket: "{bucket}")
-                            |> range(start: -30m)
+                            |> range(start: -5m)
                             |> filter(fn: (r) => r._measurement == "system")
                             |> filter(fn: (r) => r["_field"]== "netin")
                             |> filter(fn: (r) => r.nodename == "{node}")
@@ -89,6 +86,13 @@ def getData(request):
 
         
         network_in_result  = query_api.query(query=network_in_flux_query)
+        
+        for table in network_in_result:
+            for record in table.records:
+                network_in_result_list['data'] = {
+                    "host" : result.get_host(),
+                    "data" : result.get_value()
+                }
         core_result = query_api.query(query=core_flux_query)
         serverCoreResult = {}
         serverCoreResult["node"] = node
@@ -236,6 +240,12 @@ def getData(request):
         VMDict["node"] = vmid['node']
         VMDict["status"] = vmid['status']
         VMDict["uptime"] = vmid['uptime']
+        network_in_result_list['data'].host
+        VMDict['network_in'] = {
+            "host": network_in_result_list['data'][vmid['name']],
+            "data": network_in_result_list['data']['data']
+        }
+
 
         VMList.append(VMDict)
 
