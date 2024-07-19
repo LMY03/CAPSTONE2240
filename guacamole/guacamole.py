@@ -223,3 +223,5 @@ def get_connection_token(username, password):
     data = response.json()
 
     return data['authToken']
+
+# https://sourceforge.net/p/guacamole/discussion/1110834/thread/fb609070/#bec4
