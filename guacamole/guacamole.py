@@ -72,9 +72,6 @@ def delete_user(username):
 # create connection 200
 def create_connection(name, protocol, port, hostname, username, password, parent_identifier):
     token = get_token()
-    print('---------------------')
-    print('protocol')
-    print(protocol)
     url = f"{GUACAMOLE_HOST}/guacamole/api/session/data/{DATASOURCE}/connections?token={token}"
     config = {
       "parentIdentifier": parent_identifier,
