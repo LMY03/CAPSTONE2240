@@ -191,6 +191,11 @@ $(document).ready(function () {
                     vmInfo.push(uptime.format("hh:mm:ss"));
                 }
 
+                let network_in = (vmList.network_in / (1024 * 1024)).toFixed(2);
+                let network_out = (vmList.network_out / (1024 * 1024)).toFixed(2);
+
+                vmInfo.push(network_in + "MB");
+                vmInfo.push(network_out + "MB");
                 this.data(vmInfo);
                 flag = 1;
 
@@ -446,12 +451,11 @@ $(document).ready(function () {
             vmInfo.push(uptime.format("hh:mm:ss"));
         }
 
-        let network_in = (vmList.network_in / (1024 * 1024));
-        let network_out = (vmList.network_out / (1024 * 1024));
+        let network_in = (vmList.network_in / (1024 * 1024)).toFixed(2);
+        let network_out = (vmList.network_out / (1024 * 1024)).toFixed(2);
 
         vmInfo.push(network_in + "MB");
         vmInfo.push(network_out + "MB");
-
         vmTable.row.add(vmInfo).draw();
 
         // // changes border and div color of the 'Disk Usage' cell in the row
