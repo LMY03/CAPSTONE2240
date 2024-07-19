@@ -174,12 +174,12 @@ $(document).ready(function () {
                 drawMultiLineGraph(memoryTotalDataSet, memoryUsedDataSet, '#ram-chart', 'RAM Usage Across Hosts', 'memory_total', 'memory_used');
 
                 // Combine Network usage data (In and Out) from all hosts
-                var networkDataSets = response.networkInResultList
-                    .map(net => ({
-                        host: net.host,
-                        data: net.data
-                    }))
-                drawLineGraph(networkDataSets, '#network-chart', 'Network Usage Across Hosts', 'network_in');
+                // var networkDataSets = response.networkInResultList
+                //     .map(net => ({
+                //         host: net.host,
+                //         data: net.data
+                //     }))
+                // drawLineGraph(networkDataSets, '#network-chart', 'Network Usage Across Hosts', 'network_in');
             },
             error: function (response) {
                 console.log(response);

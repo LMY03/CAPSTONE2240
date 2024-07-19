@@ -536,6 +536,7 @@ $(document).ready(function () {
                 lxcHigh = 75
                 lxcCrit = 100
 
+                console.log(response.network_in_result)
                 // dashboard
 
                 setData(response.serverCoreResultList, response.serverCpuResultList, cpuLow, cpuMid, cpuHigh, cpuCrit,

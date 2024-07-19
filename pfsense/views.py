@@ -30,6 +30,8 @@ def generate_dest_ports(no_of_ports_needed):
     all_ports = set(range(49152, 65536))
     available_ports = all_ports - used_ports_set
 
+    # numbering scheme, tsg lagay
+
     # if len(available_ports) < no_of_ports_needed:
     #     raise ValueError("Not enough available ports to satisfy the request.")
 
