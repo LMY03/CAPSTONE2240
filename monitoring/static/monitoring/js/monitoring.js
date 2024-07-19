@@ -413,7 +413,7 @@ $(document).ready(function () {
     // This function is used as the row generator for the Virtual Machine Table 
     // The data is appended into the row in order to match the labels on the column headers
     function genVmTable(vmList, rowNum, cpuLow, cpuMid, cpuHigh, cpuCrit, memLow, memMid, memHigh, memCrit, stoLow, stoMid, stoHigh, stoCrit) {
-        let vmInfo = [vmList.id, vmList.name, vmList.type, vmList.node, vmList.network_in]
+        let vmInfo = [vmList.id, vmList.name, vmList.type, vmList.node]
 
         var disk = (vmList.maxdisk) / (1024 * 1024 * 1024)
 
@@ -543,6 +543,7 @@ $(document).ready(function () {
                     response.localUsageResultList, response.totalStorageUsedResultList, stoLow, stoMid, stoHigh, stoCrit)
 
                 runningCount(response.vmList, vmsLow, vmsMid, vmsHigh, vmsCrit, lxcLow, lxcMid, lxcHigh, lxcCrit);
+
                 // Initializes the data table for the Virtual Machines and LXCs
                 vmTable = $('table#VMtable').DataTable({
                     "pagingType": "simple_numbers",
@@ -561,6 +562,7 @@ $(document).ready(function () {
 
                 // Generates the VM table for each item in the list of machines
                 for (i = 0; i < response.vmList.length; i++) {
+                    console.log(response.vmList[i]['network_in'])
                     genVmTable(response.vmList[i], i, cpuLow, cpuMid, cpuHigh, cpuCrit, memLow, memMid, memHigh, memCrit, stoLow, stoMid, stoHigh, stoCrit)
                 }
 
