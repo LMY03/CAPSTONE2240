@@ -197,7 +197,7 @@ def revoke_connection_group(username, connection_group_id):
 
 def get_connection_url(connection_id, username, password):
     token = get_connection_token(username, password)
-    original_string = f'{connection_id}.c.mysql'
+    original_string = f'{connection_id}\0c\0mysql'
     string_bytes = original_string.encode("utf-8")
     base64_bytes = base64.b64encode(string_bytes)
     base64_string = base64_bytes.decode("utf-8")
