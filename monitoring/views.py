@@ -52,7 +52,7 @@ def getData(request):
 
 
     # list declarations
-    network_in_result_list = []
+    network_in_result_dict = {}
     serverCoreResultList = []
     serverCpuResultList = []
     usedMemResultList = []
@@ -89,9 +89,10 @@ def getData(request):
         
         for table in network_in_result:
             for record in table.records:
-                network_in_result_list['data'] = {
-                    f"{record.values['host']}" : record.get_value()
-                }
+                host = record.values['host']
+                value = record.get_value()
+                network_in_result_dict[host] = value
+    
         core_result = query_api.query(query=core_flux_query)
         serverCoreResult = {}
         serverCoreResult["node"] = node
@@ -239,8 +240,7 @@ def getData(request):
         VMDict["node"] = vmid['node']
         VMDict["status"] = vmid['status']
         VMDict["uptime"] = vmid['uptime']
-        VMDict['network_in'] = network_in_result_list['data'][vmid['name']]
-
+        VMDict['network_in'] = network_in_result_dict[f'{vmid['name']}']
         VMList.append(VMDict)
 
     return JsonResponse({
