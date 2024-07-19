@@ -224,7 +224,7 @@ def getData(request):
                     "total": record.get_value()
                 })
         totalStorageUsedResultList.append(totalStorageUsedResult)
-    
+    print (network_in_result_dict)
     #Loop through each VM to get info
     for vmid in vmids:
         VMDict = {}
@@ -241,7 +241,7 @@ def getData(request):
         VMDict["node"] = vmid['node']
         VMDict["status"] = vmid['status']
         VMDict["uptime"] = vmid['uptime']
-        VMDict['network_in'] = network_in_result_dict.get(hostname, None)
+        VMDict['network_in'] = network_in_result_dict.get(hostname, 0)
         VMList.append(VMDict)
 
     return JsonResponse({
