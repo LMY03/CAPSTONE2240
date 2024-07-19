@@ -29,42 +29,13 @@ def getData(request):
     proxmox = ProxmoxAPI('10.1.200.11', user='root@pam', password='cap2240', verify_ssl=False)
     client = InfluxDBClient(url=INFLUX_ADDRESS, token=token, org=org)
 
-    network_in_flux_query = f'''
-                            from(bucket: "{bucket}")
-                            |> range(start: -30m)
-                            |> filter(fn: (r) => r._measurement == "system")
-                            |> filter(fn: (r) => r["_field"]== "netin")
-                            |> filter(fn: (r) => r.nodename == "{node}")
-                            |> aggregateWindow (every: 1m, fn: mean)
-                            |> derivative (unit:1s, nonNegative:false)
-                            |> yield(name: "derivative")
-                            '''
-    query_api = client.query_api()
+    
 
     network_in_result_list = []
-    network_in_result = query_api(query=network_in_flux_query)
+    
     #Get VM Info from Proxmox API
     vmids = proxmox.cluster.resources.get(type='vm')    
     VMList= []
-    
-    #Loop through each VM to get info
-    for vmid in vmids:
-        VMDict = {}
-        VMDict["id"] = vmid['vmid']
-        VMDict["type"] = vmid['type']        
-        VMDict["cpu"] = vmid['cpu']
-        VMDict["disk"] = vmid['disk']
-        VMDict["maxcpu"] = vmid['maxcpu']
-        VMDict["maxdisk"] = vmid['maxdisk']        
-        VMDict["maxmem"] = vmid['maxmem']
-        VMDict["mem"] = vmid['mem']
-        VMDict["name"] = vmid['name']
-        VMDict["node"] = vmid['node']
-        VMDict["status"] = vmid['status']
-        VMDict["uptime"] = vmid['uptime']
-
-        VMList.append(VMDict)
-    
     
     #Query to get all nodes being used
     
@@ -94,6 +65,18 @@ def getData(request):
 
     # loop through nodes
     for node in nodes:
+
+        network_in_flux_query = f'''
+                            from(bucket: "{bucket}")
+                            |> range(start: -30m)
+                            |> filter(fn: (r) => r._measurement == "system")
+                            |> filter(fn: (r) => r["_field"]== "netin")
+                            |> filter(fn: (r) => r.nodename == "{node}")
+                            |> aggregateWindow (every: 1m, fn: mean)
+                            |> derivative (unit:1s, nonNegative:false)
+                            |> yield(name: "derivative")
+                            '''
+        
         # add node filter: if node == request.GET['nodeFilter'] or request.GET['nodeFilter'] == 'All nodes':
 
         # serverCoreResultList -> Compute for total Cores
@@ -104,6 +87,9 @@ def getData(request):
                                 |> filter(fn: (r) => r.host == "{node}")
                                 '''
         
+        query_api = client.query_api()
+        
+        network_in_result  = query_api.query(query=network_in_flux_query)
         core_result = query_api.query(query=core_flux_query)
         serverCoreResult = {}
         serverCoreResult["node"] = node
@@ -235,7 +221,25 @@ def getData(request):
                     "total": record.get_value()
                 })
         totalStorageUsedResultList.append(totalStorageUsedResult)
-        
+    
+    #Loop through each VM to get info
+    for vmid in vmids:
+        VMDict = {}
+        VMDict["id"] = vmid['vmid']
+        VMDict["type"] = vmid['type']        
+        VMDict["cpu"] = vmid['cpu']
+        VMDict["disk"] = vmid['disk']
+        VMDict["maxcpu"] = vmid['maxcpu']
+        VMDict["maxdisk"] = vmid['maxdisk']        
+        VMDict["maxmem"] = vmid['maxmem']
+        VMDict["mem"] = vmid['mem']
+        VMDict["name"] = vmid['name']
+        VMDict["node"] = vmid['node']
+        VMDict["status"] = vmid['status']
+        VMDict["uptime"] = vmid['uptime']
+
+        VMList.append(VMDict)
+
     return JsonResponse({
         'serverCoreResultList': serverCoreResultList,
         'serverCpuResultList': serverCpuResultList,
