@@ -36,7 +36,7 @@ def getData(request):
     #Get VM Info from Proxmox API
     vmids = proxmox.cluster.resources.get(type='vm')    
     VMList= []
-    
+    query_api = client.query_api()
     #Query to get all nodes being used
     
     flux_query = f'''
@@ -86,8 +86,7 @@ def getData(request):
                                 |> filter(fn: (r) => r._measurement == "cpustat" and r._field == "cpus")
                                 |> filter(fn: (r) => r.host == "{node}")
                                 '''
-        
-        query_api = client.query_api()
+
         
         network_in_result  = query_api.query(query=network_in_flux_query)
         core_result = query_api.query(query=core_flux_query)
