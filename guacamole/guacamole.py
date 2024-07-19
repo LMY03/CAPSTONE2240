@@ -1,5 +1,5 @@
 from decouple import config
-import json, requests
+import json, requests, urllib.parse
 
 GUACAMOLE_HOST = config('GUACAMOLE_HOST')
 USERNAME = config('GUACAMOLE_USERNAME')
@@ -196,7 +196,9 @@ def revoke_connection_group(username, connection_group_id):
 
 def get_connection_url(connection_id, username, password):
     token = get_connection_token(username, password)
-    return f"{config('WAN_ADDRESS')}:8080/guacamole/#/client/{connection_id}?token={token}"
+    print(f"{config('WAN_ADDRESS')}:8080/guacamole/#/client/{urllib.parse.quote(connection_id)}?token={token}")
+    print(urllib.parse.quote(connection_id))
+    return f"{config('WAN_ADDRESS')}:8080/guacamole/#/client/{urllib.parse.quote(connection_id)}?token={token}"
 
 # def get_connection_token(username, password):
 #     url = f"{GUACAMOLE_HOST}/guacamole/api/tokens"
