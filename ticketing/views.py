@@ -323,7 +323,7 @@ def edit_form_submit(request):
 
         if len(port_rules) > addProtocolClicked:
             for i in range(addProtocolClicked, len(port_rules)):
-                request_use_cases[i].delete()
+                port_rules[i].delete()
 
     request_use_cases = RequestUseCase.objects.filter(request_id = request_entry_id)
     request_use_case = request_use_cases.first()
