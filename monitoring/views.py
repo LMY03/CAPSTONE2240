@@ -236,11 +236,11 @@ def getData(request):
         VMDict["maxdisk"] = vmid['maxdisk']        
         VMDict["maxmem"] = vmid['maxmem']
         VMDict["mem"] = vmid['mem']
-        VMDict["name"] = vmid['name']
+        hostname, VMDict["name"] = vmid['name']
         VMDict["node"] = vmid['node']
         VMDict["status"] = vmid['status']
         VMDict["uptime"] = vmid['uptime']
-        VMDict['network_in'] = network_in_result_dict[f'{vmid['name']}']
+        VMDict['network_in'] = network_in_result_dict.get(hostname, None)
         VMList.append(VMDict)
 
     return JsonResponse({
