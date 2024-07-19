@@ -483,10 +483,17 @@ def create_test_vm(tsg_user, request_id, node):
     vm.set_ip_add(ip_add)
     vm.set_shutdown()
 
+    protocol = request_entry.template.guacamole_protocol
+    port = {
+        'vnc': 5901,
+        'rdp': 3389,
+        'ssh': 22
+    }.get(protocol)
+
     tsg_gaucamole_user = get_object_or_404(GuacamoleUser, system_user=tsg_user)
     guacamole_connection_group_id = guacamole.create_connection_group(f"{request_id}")
     guacamole.assign_connection_group(tsg_gaucamole_user.username, guacamole_connection_group_id)
-    guacamole_connection_id = guacamole.create_connection(vm_name, "rdp", 3389, ip_add, config('DEFAULT_VM_USERNAME'), config('DEFAULT_VM_PASSWORD'), guacamole_connection_group_id)
+    guacamole_connection_id = guacamole.create_connection(vm_name, protocol, port, ip_add, config('DEFAULT_VM_USERNAME'), config('DEFAULT_VM_PASSWORD'), guacamole_connection_group_id)
     guacamole.assign_connection(tsg_gaucamole_user.username, guacamole_connection_id)
 
     # vm = VirtualMachines(
