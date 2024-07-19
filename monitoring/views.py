@@ -63,16 +63,16 @@ def getData(request):
     # loop through nodes
     for node in nodes:
 
-        network_in_flux_query = f'''
-                            from(bucket: "{bucket}")
-                            |> range(start: -8s)
-                            |> filter(fn: (r) => r._measurement == "system")
-                            |> filter(fn: (r) => r._field== "netin")
-                            |> filter(fn: (r) => r.nodename == "{node}")
-                            |> aggregateWindow(every: 8s, fn: derivative)
-                            |> derivative(unit: 1s, nonNegative: false)
-                            |> yield(name: "derivative")
-                            '''
+        # network_in_flux_query = f'''
+        #                     from(bucket: "{bucket}")
+        #                     |> range(start: -8s)
+        #                     |> filter(fn: (r) => r._measurement == "system")
+        #                     |> filter(fn: (r) => r._field== "netin")
+        #                     |> filter(fn: (r) => r.nodename == "{node}")
+        #                     |> aggregateWindow(every: 8s, fn: derivative)
+        #                     |> derivative(unit: 1s, nonNegative: false)
+        #                     |> yield(name: "derivative")
+        #                     '''
         
         # add node filter: if node == request.GET['nodeFilter'] or request.GET['nodeFilter'] == 'All nodes':
 
@@ -85,13 +85,13 @@ def getData(request):
                                 '''
 
         
-        network_in_result  = query_api.query(query=network_in_flux_query)
+        # network_in_result  = query_api.query(query=network_in_flux_query)
         
-        for table in network_in_result:
-            for record in table.records:
-                host = record.values['host']
-                value = record.get_value()
-                network_in_result_dict[host] = value
+        # for table in network_in_result:
+        #     for record in table.records:
+        #         host = record.values['host']
+        #         value = record.get_value()
+        #         network_in_result_dict[host] = value
     
         core_result = query_api.query(query=core_flux_query)
         serverCoreResult = {}
@@ -224,7 +224,7 @@ def getData(request):
                     "total": record.get_value()
                 })
         totalStorageUsedResultList.append(totalStorageUsedResult)
-    print (network_in_result_dict)
+    # print (network_in_result_dict)
     #Loop through each VM to get info
     for vmid in vmids:
         VMDict = {}
@@ -241,7 +241,7 @@ def getData(request):
         VMDict["status"] = vmid['status']
         VMDict["uptime"] = vmid['uptime']
         VMDict['network_in'] = vmid['netin']
-        VMDict['netowork_out'] = vmid['netout']
+        VMDict['network_out'] = vmid['netout']
         VMList.append(VMDict)
 
     return JsonResponse({
