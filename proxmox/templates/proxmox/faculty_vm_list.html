@@ -32,7 +32,7 @@ Virtual Machine List
                         <tr>
                             <td><a href = "{% url 'proxmox:vm_details' vm.id %}"><i class="bi bi-display"></i> {{ vm.vm_name }}</a></td>
                             <td>{{ vm.request.get_request_type }}</td>
-                            <td>{{ vm.request.get_requester }}</td>
+                            <td>{{ vm.request.get_fulfilled_by }}</td>
                             <td>{{ vm.status }}</td>
                         </tr>
                         {% endfor %}

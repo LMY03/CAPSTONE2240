@@ -61,6 +61,11 @@ class RequestEntry(models.Model):
         if requester.first_name != None and requester.last_name != None : return f'{requester.first_name} {requester.last_name}'
         else : return requester.username
 
+    def get_fulfilled_by(self):
+        requester = self.fulfilled_by
+        if requester.first_name != None and requester.last_name != None : return f'{requester.first_name} {requester.last_name}'
+        else : return requester.username
+
     def is_pending(self) : return self.status == RequestEntry.Status.PENDING
     def is_for_revision(self) : return self.status == RequestEntry.Status.FOR_REVISION
     def is_processing(self) : return self.status == RequestEntry.Status.PROCESSING
