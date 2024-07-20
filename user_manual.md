@@ -51,11 +51,11 @@ sudo usermod -aG docker USER_NAME
 ssh-keygen -t rsa -b 4096
 ```
 ### Clone Github Repository
-
+```bash 
 git clone https://github.com/LMY03/CAPSTONE2240.git
 
 docker compose -f ~/CAPSTONE2240/docker-compose.yml up --build -d
-
+```
 ### Set up MySQL DB
 
 ```bash
