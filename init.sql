@@ -46,7 +46,7 @@ INSERT INTO cap2240db.proxmox_nodes (name) VALUES
 
 INSERT INTO cap2240db.auth_user (password, is_superuser, username, first_name, last_name, email, is_staff, is_active, date_joined) VALUES
 ("pbkdf2_sha256$720000$5gL9pa3JAHZYMUbNgW3qqL$udv7QLPHZ/Fv5ijQQMvklg06MOZvEkkbGY2LJ17dIyM=", "1", "admin", "admin", "chan", "", "1", "1", NOW()),
-("pbkdf2_sha256$720000$5gL9pa3JAHZYMUbNgW3qqL$udv7QLPHZ/Fv5ijQQMvklg06MOZvEkkbGY2LJ17dIyM=", "0", "john.doe", "John", "Doe", "", "1", "1", NOW()),
+("pbkdf2_sha256$720000$5gL9pa3JAHZYMUbNgW3qqL$udv7QLPHZ/Fv5ijQQMvklg06MOZvEkkbGY2LJ17dIyM=", "1", "john.doe", "John", "Doe", "", "1", "1", NOW()),
 ("pbkdf2_sha256$720000$5gL9pa3JAHZYMUbNgW3qqL$udv7QLPHZ/Fv5ijQQMvklg06MOZvEkkbGY2LJ17dIyM=", "0", "josephine.cruz", "Josephine", "Cruz", "", "0", "1", NOW());
 
 INSERT INTO cap2240db.ticketing_userprofile (user_type, user_id) VALUES
