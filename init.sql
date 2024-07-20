@@ -34,10 +34,10 @@ DELIMITER ;
 -- cap2240db
 
 INSERT INTO cap2240db.ticketing_vmtemplates (vm_id, vm_name, cores, ram, storage, node, is_lxc, guacamole_protocol) VALUES
-("3001", "Ubuntu-Desktop-22", 1, 1024, 15, "pve", 0, 'rdp'),
-("3000", "Ubuntu-Desktop-24", 1, 1024, 15, "pve", 0, 'rdp'),
-("3001", "Ubuntu-Server-22", 1, 1024, 15, "pve", 0, 'ssh'),
-("3000", "Ubuntu-Server-24", 1, 1024, 15, "pve", 0, 'ssh'),
+("3000", "Ubuntu-Desktop-24 (GUI)", 1, 1024, 15, "pve", 0, 'rdp'),
+("3001", "Ubuntu-Desktop-22 (GUI)", 1, 1024, 15, "pve", 0, 'rdp'),
+("3002", "Ubuntu-Server-24 (TUI)", 1, 1024, 15, "pve", 0, 'ssh'),
+("3003", "Ubuntu-Server-22 (TUI)", 1, 1024, 15, "pve", 0, 'ssh'),
 ("5000", "Ubuntu-LXC-23", 1, 1024, 10, "pve", 1, 'ssh');
 
 INSERT INTO cap2240db.proxmox_nodes (name) VALUES
@@ -46,7 +46,7 @@ INSERT INTO cap2240db.proxmox_nodes (name) VALUES
 
 INSERT INTO cap2240db.auth_user (password, is_superuser, username, first_name, last_name, email, is_staff, is_active, date_joined) VALUES
 ("pbkdf2_sha256$720000$5gL9pa3JAHZYMUbNgW3qqL$udv7QLPHZ/Fv5ijQQMvklg06MOZvEkkbGY2LJ17dIyM=", "1", "admin", "admin", "chan", "", "1", "1", NOW()),
-("pbkdf2_sha256$720000$5gL9pa3JAHZYMUbNgW3qqL$udv7QLPHZ/Fv5ijQQMvklg06MOZvEkkbGY2LJ17dIyM=", "0", "john.doe", "John", "Doe", "", "1", "1", NOW()),
+("pbkdf2_sha256$720000$5gL9pa3JAHZYMUbNgW3qqL$udv7QLPHZ/Fv5ijQQMvklg06MOZvEkkbGY2LJ17dIyM=", "1", "john.doe", "John", "Doe", "", "1", "1", NOW()),
 ("pbkdf2_sha256$720000$5gL9pa3JAHZYMUbNgW3qqL$udv7QLPHZ/Fv5ijQQMvklg06MOZvEkkbGY2LJ17dIyM=", "0", "josephine.cruz", "Josephine", "Cruz", "", "0", "1", NOW());
 
 INSERT INTO cap2240db.ticketing_userprofile (user_type, user_id) VALUES
