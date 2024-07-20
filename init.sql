@@ -34,10 +34,10 @@ DELIMITER ;
 -- cap2240db
 
 INSERT INTO cap2240db.ticketing_vmtemplates (vm_id, vm_name, cores, ram, storage, node, is_lxc, guacamole_protocol) VALUES
-("3000", "Ubuntu-Desktop-24", 1, 1024, 15, "pve", 0, 'rdp'),
-("3001", "Ubuntu-Desktop-22", 1, 1024, 15, "pve", 0, 'rdp'),
-("3002", "Ubuntu-Server-24", 1, 1024, 15, "pve", 0, 'ssh'),
-("3003", "Ubuntu-Server-22", 1, 1024, 15, "pve", 0, 'ssh'),
+("3000", "Ubuntu-Desktop-24 (GUI)", 1, 1024, 15, "pve", 0, 'rdp'),
+("3001", "Ubuntu-Desktop-22 (GUI)", 1, 1024, 15, "pve", 0, 'rdp'),
+("3002", "Ubuntu-Server-24 (TUI)", 1, 1024, 15, "pve", 0, 'ssh'),
+("3003", "Ubuntu-Server-22 (TUI)", 1, 1024, 15, "pve", 0, 'ssh'),
 ("5000", "Ubuntu-LXC-23", 1, 1024, 10, "pve", 1, 'ssh');
 
 INSERT INTO cap2240db.proxmox_nodes (name) VALUES
