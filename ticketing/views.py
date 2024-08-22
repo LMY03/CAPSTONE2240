@@ -18,6 +18,7 @@ from pfsense.views import add_port_forward_rules, delete_port_forward_rules
 from .models import RequestEntry, Comment, RequestUseCase, PortRules, UserProfile, RequestEntryAudit, VMTemplates
 from proxmox.models import VirtualMachines, Nodes
 from guacamole.models import GuacamoleConnection, GuacamoleUser
+from pfsense.models import DestinationPorts
 
 # Create your views here.
 
@@ -59,10 +60,13 @@ def faculty_request_details(request, request_id):
 
     comments = Comment.objects.filter(request_entry=request_entry).order_by('date_time')
 
+    port_rules = PortRules.objects.filter(request_id=request_id)
+
     context = {
         'request_entry': request_entry,
         'comments' : comments,
         'request_use_cases': request_use_cases,
+        'port_rules' : port_rules,
     }
     request_entry.storage = request_entry.template.storage
     return render (request, 'ticketing/faculty_request_details.html', context=context)

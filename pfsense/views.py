@@ -5,6 +5,7 @@ from . import pfsense
 
 from . models import DestinationPorts
 from ticketing.models import RequestEntry, PortRules
+from proxmox.models import VirtualMachines
 
 # Create your views here.
 
@@ -54,10 +55,11 @@ def add_port_forward_rules(request_id, protocols, local_ports, ip_adds, descrs):
             # node-vm_name
             print("----------------------")
             print(descr)
+            vm = get_object_or_404(VirtualMachines, vm_name=descr, request__status=RequestEntry.Status.ONGOING)
+            DestinationPorts.objects.create(port_rule=port_rule, dest_port=dest_port, vm=vm)
             pfsense.add_port_forward_rule(protocol, dest_port, ip_add, local_port, descr)
             pfsense.add_firewall_rule(protocol, dest_port, ip_add, descr)
             port_rule = get_object_or_404(PortRules, request_id=request_id, dest_ports=local_port)
-            DestinationPorts.objects.create(port_rule=port_rule, dest_port=dest_port)
             counter+=1
             time.sleep(3)
     pfsense.apply_changes()

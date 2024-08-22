@@ -115,6 +115,20 @@ Request Details {{ request_entry.id }}
                                 </div>
                                 {% endfor %}
                             {% endif %}
+                            {% if request_entry.status == "ONGOING" %}
+                                {% for destination_port in destination_ports %}
+                                    <div class="col-md-8">
+                                        <div class="p-3 bg-light border">
+                                            <p><strong>VM Name:</strong> {{ destination_port.vm.name }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="p-3 bg-light border">
+                                            <p><strong>Public Ports:</strong> {{ destination_port.dest_port }}</p>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
                             <div class="col-12">
                                 <div class="p-3 bg-light border">
                                     <p><strong>Other configs:</strong> {{ request_entry.other_config }}</p>

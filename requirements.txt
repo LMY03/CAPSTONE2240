@@ -3,6 +3,9 @@ mysqlclient
 requests
 python-decouple
 ansible
+channels
+celery
+redis
 # ansible-core
 ansible-runner
 asgiref

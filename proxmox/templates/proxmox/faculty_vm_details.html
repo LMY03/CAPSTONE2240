@@ -74,6 +74,18 @@ VM Details {{ vm_id }}
                     </div>
                 </div>
             </div>
+            {% if destination_ports %}
+                {% for destination_port in destination_ports %}
+                    <div class="col-md-12">
+                        <div class="card">
+                            <div class="card-header">Public Port</div>
+                            <div class="card-body">
+                                {{ destination_port.dest_port }}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% endif %}
         </div>
     </div>
 </div>

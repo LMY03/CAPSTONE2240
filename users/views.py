@@ -5,7 +5,9 @@ from django.contrib.auth import authenticate, login
 from ticketing.models import RequestEntry, Comment, RequestUseCase, VMTemplates
 from proxmox.models import VirtualMachines
 from decouple import config
+
 from guacamole.models import GuacamoleUser, GuacamoleConnection
+from pfsense.models import DestinationPorts
 
 from ticketing.views import tsg_requests_list
 
@@ -64,7 +66,8 @@ def get_student_vm():
 def student_home(request):
     guacamole_user = get_object_or_404(GuacamoleUser, system_user=request.user)
     guacamole_connection = get_object_or_404(GuacamoleConnection, user=guacamole_user)
-    return render(request, 'users/student_home.html', {'vm': guacamole_connection.vm })
+    destination_ports = DestinationPorts.objects.filter(vm=guacamole_connection.vm)
+    return render(request, 'users/student_home.html', {'vm': guacamole_connection.vm, 'destination_ports': destination_ports })
 
 @login_required
 def faculty_home(request):
