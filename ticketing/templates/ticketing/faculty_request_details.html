@@ -135,6 +135,13 @@ Request Details {{ request_entry.id }}
                                 </div>
                             </div>
                         </div>
+                        {% if request_entry.status == "ONGOING" %}
+                            {% for system_account in system_accounts %}
+                                <p>System Username: {{ system_account.vm_name }}</p><br />
+                                <p>System Password: {{ system_account.system_password }}</p><br />
+                                <hr />
+                            {% endfor %}
+                        {% endif %}
 
                         {% if request_entry.status == "PROCESSING" and request_entry.is_vm_tested == True %}
                         <div class="row g-3 mt-3">
