@@ -61,7 +61,6 @@ def faculty_request_details(request, request_id):
     comments = Comment.objects.filter(request_entry=request_entry).order_by('date_time')
 
     port_rules = PortRules.objects.filter(request_id=request_id)
-
     context = {
         'request_entry': request_entry,
         'comments' : comments,
@@ -69,6 +68,10 @@ def faculty_request_details(request, request_id):
         'port_rules' : port_rules,
     }
     request_entry.storage = request_entry.template.storage
+
+    if request_entry.is_ongoing:
+        context['destination_ports'] = DestinationPorts.objects.filter(port_rule__in=port_rules)
+
     return render (request, 'ticketing/faculty_request_details.html', context=context)
 
 def tsg_request_details(request, request_id):
@@ -99,18 +102,23 @@ def tsg_request_details(request, request_id):
         'total_storage' : total_request_storage
     }
 
-    portRules = PortRules.objects.filter(request_id = request_id)
+    port_rules = PortRules.objects.filter(request_id=request_id)
     context = {
         'request_entry': request_entry,
         'comments' : comments,
         'request_use_cases': request_use_cases,
         'total_request_details' : total_request_details,
-        'port_rules' : portRules,
+        'port_rules' : port_rules,
         'no_vm': get_total_no_of_vm(request_entry)
     }
+
     if request_entry.is_pending() : context['nodes'] = Nodes.objects.all().values_list('name', flat=True)
     if 'credentials' in request.session : request_entry.has_credentials = True
     request_entry.storage = request_entry.template.storage
+
+    if request_entry.is_ongoing:
+        context['destination_ports'] = DestinationPorts.objects.filter(port_rule__in=port_rules)
+        
     return render (request, 'ticketing/tsg_request_details.html', context=context)
 
 @login_required
@@ -477,13 +485,16 @@ def create_test_vm(tsg_user, request_id, node):
         request=request_entry,
         node=get_object_or_404(Nodes, name=node),
     )
-    upid = proxmox.clone_vm(node, vm_id, new_vm_id, vm_name)
-    proxmox.wait_for_task(node, upid)
-    proxmox.config_vm(node, new_vm_id, cpu_cores, ram)
-    proxmox.start_vm(node, new_vm_id)
-    ip_add = proxmox.wait_and_get_ip(node, new_vm_id)
-    proxmox.shutdown_vm(node, new_vm_id)
-    proxmox.wait_for_vm_stop(node, new_vm_id)
+
+    ip_add = "10.10.10.10"
+
+    # upid = proxmox.clone_vm(node, vm_id, new_vm_id, vm_name)
+    # proxmox.wait_for_task(node, upid)
+    # proxmox.config_vm(node, new_vm_id, cpu_cores, ram)
+    # proxmox.start_vm(node, new_vm_id)
+    # ip_add = proxmox.wait_and_get_ip(node, new_vm_id)
+    # proxmox.shutdown_vm(node, new_vm_id)
+    # proxmox.wait_for_vm_stop(node, new_vm_id)
 
     vm.set_ip_add(ip_add)
     vm.set_shutdown()
