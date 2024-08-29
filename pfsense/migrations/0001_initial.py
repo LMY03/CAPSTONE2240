@@ -20,7 +20,7 @@ class Migration(migrations.Migration):
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('dest_port', models.IntegerField()),
                 ('port_rule', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='ticketing.portrules')),
-                ('vm', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to='proxmox.virtualmachines')),
+                ('vm', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='proxmox.virtualmachines')),
             ],
         ),
     ]
