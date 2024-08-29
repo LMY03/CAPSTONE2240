@@ -93,19 +93,19 @@ def vm_provision_process(vm_id, classnames, no_of_vm, cpu_cores, ram, request_id
     vm_passwords.append(orig_vm_password)
     # guacamole.update_connection() # change ip of original vm
 
-    # if orig_vm.is_active():
-    #     proxmox.shutdown_vm(node, orig_vm.vm_id)
-    #     proxmox.wait_for_vm_stop(node, orig_vm.vm_id)
-    #     orig_vm.set_shutdown()
+    if orig_vm.is_active():
+        proxmox.shutdown_vm(node, orig_vm.vm_id)
+        proxmox.wait_for_vm_stop(node, orig_vm.vm_id)
+        orig_vm.set_shutdown()
 
 
     for new_vm_id, vm_name in zip(new_vm_ids, classnames):
         VirtualMachines.objects.create(vm_id=new_vm_id, vm_name=vm_name, cores=cpu_cores, ram=ram, storage=request_entry.template.storage, request=request_entry, node=orig_vm.node)
-    #     upids.append(proxmox.clone_vm(node, vm_id, new_vm_id, vm_name))
+        upids.append(proxmox.clone_vm(node, vm_id, new_vm_id, vm_name))
 
-    # for vm_id, upid in zip(new_vm_ids, upids):
-    #     proxmox.wait_for_task(node, upid)
-    #     proxmox.start_vm(node, vm_id)
+    for vm_id, upid in zip(new_vm_ids, upids):
+        proxmox.wait_for_task(node, upid)
+        proxmox.start_vm(node, vm_id)
 
     tsg_guacamole_username = get_object_or_404(GuacamoleUser, system_user=request_entry.requester).username
     faculty_guacamole_username = get_object_or_404(GuacamoleUser, system_user=request_entry.requester).username
@@ -119,25 +119,25 @@ def vm_provision_process(vm_id, classnames, no_of_vm, cpu_cores, ram, request_id
     
     vms = []
     vms.append(orig_vm)
-    # proxmox.start_vm(node, orig_vm.vm_id)
+    proxmox.start_vm(node, orig_vm.vm_id)
     for vm_id in new_vm_ids:
-        # proxmox.wait_for_vm_start(node, vm_id)
-        # hostnames.append(proxmox.wait_and_get_ip(node, vm_id))
+        proxmox.wait_for_vm_start(node, vm_id)
+        hostnames.append(proxmox.wait_and_get_ip(node, vm_id))
         vm_password = User.objects.make_random_password()
         vm_passwords.append(vm_password)
 
-        hostnames.append("10.10.10." + str(vm_id))
+        # hostnames.append("10.10.10." + str(vm_id))
 
-    # orig_vm.ip_add =  proxmox.wait_and_get_ip(node, orig_vm.vm_id)
-    # orig_vm.save()
-    # hostnames.insert(0, orig_vm.ip_add)
-    # ansible.change_vm_default_userpass(hostnames, vm_passwords)
+    orig_vm.ip_add =  proxmox.wait_and_get_ip(node, orig_vm.vm_id)
+    orig_vm.save()
+    hostnames.insert(0, orig_vm.ip_add)
+    ansible.change_vm_default_userpass(hostnames, vm_passwords)
 
-    # proxmox.shutdown_vm(node, orig_vm.vm_id)
+    proxmox.shutdown_vm(node, orig_vm.vm_id)
 
-    # for vm_id in new_vm_ids:
-    #     proxmox.shutdown_vm(node, vm_id)
-    #     proxmox.wait_for_vm_stop(node, vm_id)
+    for vm_id in new_vm_ids:
+        proxmox.shutdown_vm(node, vm_id)
+        proxmox.wait_for_vm_stop(node, vm_id)
 
     vm_username = config('DEFAULT_VM_USERNAME')
 

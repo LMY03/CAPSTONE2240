@@ -59,11 +59,11 @@ def add_port_forward_rules(request_id, protocols, local_ports, ip_adds, descrs):
             vm = VirtualMachines.objects.get(vm_name=descr, request__status=RequestEntry.Status.ACCEPTED)
             port_rule = get_object_or_404(PortRules, request_id=request_id, dest_ports=local_port)
             DestinationPorts.objects.create(port_rule=port_rule, dest_port=dest_port, vm=vm)
-            # pfsense.add_port_forward_rule(protocol, dest_port, ip_add, local_port, descr)
-            # pfsense.add_firewall_rule(protocol, dest_port, ip_add, descr)
+            pfsense.add_port_forward_rule(protocol, dest_port, ip_add, local_port, descr)
+            pfsense.add_firewall_rule(protocol, dest_port, ip_add, descr)
             counter+=1
-            # time.sleep(3)
-    # pfsense.apply_changes()
+            time.sleep(3)
+    pfsense.apply_changes()
 
     return dest_ports
 
