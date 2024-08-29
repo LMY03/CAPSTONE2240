@@ -486,15 +486,13 @@ def create_test_vm(tsg_user, request_id, node):
         node=get_object_or_404(Nodes, name=node),
     )
 
-    ip_add = "10.10.10.10"
-
-    # upid = proxmox.clone_vm(node, vm_id, new_vm_id, vm_name)
-    # proxmox.wait_for_task(node, upid)
-    # proxmox.config_vm(node, new_vm_id, cpu_cores, ram)
-    # proxmox.start_vm(node, new_vm_id)
-    # ip_add = proxmox.wait_and_get_ip(node, new_vm_id)
-    # proxmox.shutdown_vm(node, new_vm_id)
-    # proxmox.wait_for_vm_stop(node, new_vm_id)
+    upid = proxmox.clone_vm(node, vm_id, new_vm_id, vm_name)
+    proxmox.wait_for_task(node, upid)
+    proxmox.config_vm(node, new_vm_id, cpu_cores, ram)
+    proxmox.start_vm(node, new_vm_id)
+    ip_add = proxmox.wait_and_get_ip(node, new_vm_id)
+    proxmox.shutdown_vm(node, new_vm_id)
+    proxmox.wait_for_vm_stop(node, new_vm_id)
 
     vm.set_ip_add(ip_add)
     vm.set_shutdown()
