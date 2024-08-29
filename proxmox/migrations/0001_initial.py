@@ -34,6 +34,7 @@ class Migration(migrations.Migration):
                 ('status', models.CharField(choices=[('CREATING', 'Creating'), ('ACTIVE', 'Active'), ('SHUTDOWN', 'Shutdown'), ('DESTROYED', 'Destroyed')], default='CREATING', max_length=20)),
                 ('node', models.ForeignKey(on_delete=django.db.models.deletion.DO_NOTHING, to='proxmox.nodes')),
                 ('request', models.ForeignKey(on_delete=django.db.models.deletion.DO_NOTHING, to='ticketing.requestentry')),
+                ('system_password', models.CharField(max_length=45, null=True, default=None)),
             ],
         ),
     ]

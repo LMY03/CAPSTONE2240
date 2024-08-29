@@ -71,6 +71,7 @@ def faculty_request_details(request, request_id):
 
     if request_entry.is_ongoing:
         context['destination_ports'] = DestinationPorts.objects.filter(port_rule__in=port_rules)
+        context['system_accounts'] = VirtualMachines.objects.filter(request=request_entry).values_list('vm_name', 'system_password')
 
     return render (request, 'ticketing/faculty_request_details.html', context=context)
 
@@ -553,31 +554,31 @@ def accept_test_vm(request, request_id):
     return redirect('ticketing:request_details', request_id)
     # return redirect(f'/ticketing/{request_id}/details')
 
-def download_credentials(request):
-    details = request.session['credentials']
-    usernames = details['usernames']
-    passwords = details['passwords']
-    # vm_users = details['vm_user']
-    # vm_passs = details['vm_passs']
+# def download_credentials(request):
+#     details = request.session['credentials']
+#     usernames = details['usernames']
+#     passwords = details['passwords']
+#     # vm_users = details['vm_user']
+#     # vm_passs = details['vm_passs']
 
-    # Create the content of the text file
-    file_content = ["VM Credentials\n"]
-    for username, password in zip(usernames, passwords):
-        file_content.append(f"Username: {username}")
-        file_content.append(f"Password: {password}")
-        # file_content.append(f"VM_User: {vm_user}")
-        # file_content.append(f"VM_Pass: {vm_pass}")
-        file_content.append("-------------------------------")
+#     # Create the content of the text file
+#     file_content = ["VM Credentials\n"]
+#     for username, password in zip(usernames, passwords):
+#         file_content.append(f"Username: {username}")
+#         file_content.append(f"Password: {password}")
+#         # file_content.append(f"VM_User: {vm_user}")
+#         # file_content.append(f"VM_Pass: {vm_pass}")
+#         file_content.append("-------------------------------")
 
-    # Join the content into a single string with newlines
-    file_content_str = "\n".join(file_content)
-    print(file_content_str)
+#     # Join the content into a single string with newlines
+#     file_content_str = "\n".join(file_content)
+#     print(file_content_str)
 
-    # Create the HttpResponse object with the plain text content
-    response = HttpResponse(file_content_str, content_type='text/plain')
-    response['Content-Disposition'] = 'attachment; filename=details.txt'
+#     # Create the HttpResponse object with the plain text content
+#     response = HttpResponse(file_content_str, content_type='text/plain')
+#     response['Content-Disposition'] = 'attachment; filename=details.txt'
     
-    return response
+#     return response
 
 def reject_test_vm(request, request_id):   
     request_entry = get_object_or_404(RequestEntry, pk=request_id)
@@ -735,12 +736,12 @@ def new_form_container(request):
     print (context['container_template'])
     return render (request, 'ticketing/new-form-container.html', context)
 
-def clear_credential(request):
-    print('clear_credential')
-    if request.method == 'POST':
-        print('clear_credential2')
-        if 'credentials' in request.session:
-            print('clear_credential3')
-            request.session.pop('credentials', None)
-            return JsonResponse({'status': 'success'})
-        return JsonResponse({'status': 'invalid method'}, status=405)
+# def clear_credential(request):
+#     print('clear_credential')
+#     if request.method == 'POST':
+#         print('clear_credential2')
+#         if 'credentials' in request.session:
+#             print('clear_credential3')
+#             request.session.pop('credentials', None)
+#             return JsonResponse({'status': 'success'})
+#         return JsonResponse({'status': 'invalid method'}, status=405)

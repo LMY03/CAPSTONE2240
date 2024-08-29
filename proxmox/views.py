@@ -66,6 +66,8 @@ def vm_provision_process(vm_id, classnames, no_of_vm, cpu_cores, ram, request_id
     orig_vm = get_object_or_404(VirtualMachines, vm_id=vm_id, request_id=request_id)
     guacamole_connection = get_object_or_404(GuacamoleConnection, vm=orig_vm)
     password = User.objects.make_random_password()
+    orig_vm.system_password = password
+    orig_vm.save()
     
     user = User(username=orig_vm.vm_name)
     user.set_password(password)
@@ -100,7 +102,8 @@ def vm_provision_process(vm_id, classnames, no_of_vm, cpu_cores, ram, request_id
 
 
     for new_vm_id, vm_name in zip(new_vm_ids, classnames):
-        VirtualMachines.objects.create(vm_id=new_vm_id, vm_name=vm_name, cores=cpu_cores, ram=ram, storage=request_entry.template.storage, request=request_entry, node=orig_vm.node)
+        passwords.append(User.objects.make_random_password())
+        VirtualMachines.objects.create(vm_id=new_vm_id, vm_name=vm_name, cores=cpu_cores, ram=ram, storage=request_entry.template.storage, request=request_entry, node=orig_vm.node, system_password=passwords[i])
         upids.append(proxmox.clone_vm(node, vm_id, new_vm_id, vm_name))
 
     for vm_id, upid in zip(new_vm_ids, upids):
@@ -142,7 +145,7 @@ def vm_provision_process(vm_id, classnames, no_of_vm, cpu_cores, ram, request_id
     vm_username = config('DEFAULT_VM_USERNAME')
 
     for i in range(no_of_vm):
-        passwords.append(User.objects.make_random_password())
+        # passwords.append(User.objects.make_random_password())
         user = User(username=classnames[i])
         user.set_password(passwords[i])
         user.save()

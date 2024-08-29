@@ -14,6 +14,7 @@ class VirtualMachines(models.Model):
     request = models.ForeignKey('ticketing.RequestEntry', on_delete=models.DO_NOTHING)
     node = models.ForeignKey(Nodes, on_delete=models.DO_NOTHING)
     is_lxc = models.BooleanField(default=False)
+    system_password = models.CharField(max_length=45, null=True, default=None)
     # vm_password = models.CharField(max_length=45, default=config('DEFAULT_VM_PASSWORD'))
 
     class Status(models.TextChoices): 
