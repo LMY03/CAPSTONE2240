@@ -11,6 +11,7 @@ from . import proxmox
 from . models import VirtualMachines
 from ticketing.models import RequestEntry, UserProfile, VMTemplates
 from guacamole.models import GuacamoleConnection, GuacamoleUser
+from pfsense.models import DestinationPorts
 
 from django.contrib.auth.models import User
 
@@ -43,10 +44,20 @@ def vm_details(request, vm_id):
     else : return redirect('/')
 
 def faculty_vm_details(request, vm_id):
-    return render(request, 'proxmox/faculty_vm_details.html', { 'vm': get_object_or_404(VirtualMachines, id=vm_id) })
+    vm = get_object_or_404(VirtualMachines, id=vm_id)
+    context = {
+        'vm': get_object_or_404(VirtualMachines, id=vm_id),
+        'destination_ports': DestinationPorts.objects.get(vm=vm)
+    }
+    return render(request, 'proxmox/faculty_vm_details.html', context)
     
 def tsg_vm_details(request, vm_id):
-    return render(request, 'proxmox/tsg_vm_details.html', { 'vm': get_object_or_404(VirtualMachines, id=vm_id) })
+    vm = get_object_or_404(VirtualMachines, id=vm_id)
+    context = {
+        'vm': get_object_or_404(VirtualMachines, id=vm_id),
+        'destination_ports': DestinationPorts.objects.get(vm=vm)
+    }
+    return render(request, 'proxmox/tsg_vm_details.html', context)
 
 def generate_vm_ids(no_of_vm):
     
