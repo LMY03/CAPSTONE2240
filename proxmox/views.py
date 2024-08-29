@@ -47,7 +47,7 @@ def faculty_vm_details(request, vm_id):
     vm = get_object_or_404(VirtualMachines, id=vm_id)
     context = {
         'vm': get_object_or_404(VirtualMachines, id=vm_id),
-        'destination_ports': DestinationPorts.objects.get(vm=vm)
+        'destination_ports': DestinationPorts.objects.filter(vm=vm)
     }
     return render(request, 'proxmox/faculty_vm_details.html', context)
     
@@ -55,7 +55,7 @@ def tsg_vm_details(request, vm_id):
     vm = get_object_or_404(VirtualMachines, id=vm_id)
     context = {
         'vm': get_object_or_404(VirtualMachines, id=vm_id),
-        'destination_ports': DestinationPorts.objects.get(vm=vm)
+        'destination_ports': DestinationPorts.objects.filter(vm=vm)
     }
     return render(request, 'proxmox/tsg_vm_details.html', context)
 
