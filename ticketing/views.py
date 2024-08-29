@@ -119,6 +119,7 @@ def tsg_request_details(request, request_id):
 
     if request_entry.is_ongoing:
         context['destination_ports'] = DestinationPorts.objects.filter(port_rule__in=port_rules)
+        context['system_accounts'] = VirtualMachines.objects.filter(request=request_entry).values_list('vm_name', 'system_password')
         
     return render (request, 'ticketing/tsg_request_details.html', context=context)
 
