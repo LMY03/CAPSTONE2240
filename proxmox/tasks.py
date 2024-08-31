@@ -1,6 +1,7 @@
 from celery import shared_task
 from django.shortcuts import get_object_or_404
 from decouple import config
+import logging
 
 from guacamole import guacamole
 from proxmox import views, proxmox
@@ -12,8 +13,12 @@ from guacamole.models import GuacamoleConnection, GuacamoleUser
 from pfsense.models import DestinationPorts
 from django.contrib.auth.models import User
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 @shared_task
 def create_test_vm(tsg_user_id, request_id, node):
+    logger.info("===========================")
     tsg_user = User.objects.create(pk=tsg_user_id)
     new_vm_id = views.generate_vm_ids(1)[0]
     request_entry = get_object_or_404(RequestEntry, pk=request_id)
