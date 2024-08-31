@@ -421,6 +421,8 @@ def request_confirm(request, request_id):
 
     system_user = request.user
 
+    print(system_user.pk)
+
     create_test_vm.delay(system_user, request_id, node)
 
     request_entry = get_object_or_404(RequestEntry, pk=request_id)
