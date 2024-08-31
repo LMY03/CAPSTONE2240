@@ -419,13 +419,15 @@ def request_confirm(request, request_id):
 
     node = "pve"
 
+    print(request.user)
+
+    create_test_vm.delay(request.user, request_id, node)
+
     request_entry = get_object_or_404(RequestEntry, pk=request_id)
 
     request_entry.status = RequestEntry.Status.PROCESSING
     request_entry.fulfilled_by = request.user
     request_entry.save()
-
-    create_test_vm.delay(request.user, request_id, node)
 
     return redirect('ticketing:request_details', request_id)
 
