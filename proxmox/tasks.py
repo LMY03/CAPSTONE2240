@@ -1,5 +1,6 @@
 from celery import shared_task
 from django.shortcuts import get_object_or_404
+from decouple import config
 
 from guacamole import guacamole
 from proxmox import views, proxmox

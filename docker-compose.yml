@@ -12,6 +12,7 @@ services:
       MYSQL_PASSWORD: ${MYSQL_CAP2240_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
+      - ./cap2240.sql:/docker-entrypoint-initdb.d/guacdb.sql
       - ./guacdb.sql:/docker-entrypoint-initdb.d/guacdb.sql
     healthcheck:
       test: ["CMD", "mysql", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}", "-e", "SELECT 1"]
@@ -110,7 +111,10 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: celery
-    command: celery -A CAPSTONE2240 worker --loglevel=info --autoscale=1000,10
+    command: >
+      bash -c "celery -A CAPSTONE2240 worker --loglevel=info --concurrency=1 &
+               celery -A CAPSTONE2240 beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler"
+    # command: celery -A CAPSTONE2240 worker --loglevel=info --concurrency=1
     restart: always
     volumes:
       - .:/app
@@ -122,7 +126,7 @@ services:
     env_file:
       - .env
     healthcheck:
-      test: ["CMD-SHELL", "celery -A app status"]
+      test: ["CMD-SHELL", "celery -A CAPSTONE2240 status"]
       interval: 30s
       timeout: 10s
       retries: 5
