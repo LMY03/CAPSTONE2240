@@ -8,9 +8,8 @@ from proxmox import views, proxmox
 from pfsense.views import add_port_forward_rules, delete_port_forward_rules
 
 from .models import VirtualMachines, Nodes
-from ticketing.models import RequestEntry, Comment, RequestUseCase, PortRules, UserProfile, RequestEntryAudit, VMTemplates
+from ticketing.models import RequestEntry, RequestUseCase, PortRules
 from guacamole.models import GuacamoleConnection, GuacamoleUser
-from pfsense.models import DestinationPorts
 from django.contrib.auth.models import User
 
 logging.basicConfig(level=logging.INFO)
@@ -19,7 +18,7 @@ logger = logging.getLogger(__name__)
 @shared_task
 def create_test_vm(tsg_user_id, request_id, node):
     logger.info("===========================")
-    tsg_user = User.objects.create(pk=tsg_user_id)
+    tsg_user = User.objects.get(pk=tsg_user_id)
     new_vm_id = views.generate_vm_ids(1)[0]
     request_entry = get_object_or_404(RequestEntry, pk=request_id)
     vm_id = int(request_entry.template.vm_id)

@@ -209,6 +209,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 GOOGLE_CREDENTIALS_JSON = os.path.join(BASE_DIR, 'credentials.json')
 
 ASGI_APPLICATION = 'app.asgi.application'
+
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
@@ -218,8 +219,8 @@ CHANNEL_LAYERS = {
     },
 }
 
-CELERY_BROKER_URL = f'redis://redis:6379/0'
-CELERY_RESULT_BACKEND = f'redis://redis:6379/0'
+CELERY_BROKER_URL = 'redis://redis:6379/0'
+CELERY_RESULT_BACKEND = 'redis://redis:6379/0'
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'

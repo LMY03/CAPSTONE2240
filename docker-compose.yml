@@ -18,6 +18,8 @@ services:
       test: ["CMD", "mysql", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}", "-e", "SELECT 1"]
       timeout: 20s
       retries: 10
+    networks:
+      - app-network
 
   django:
     build:
@@ -35,9 +37,6 @@ services:
       - /home/${USERNAME}/.ssh/id_rsa.pub:/root/.ssh/id_rsa.pub:ro
     ports:
       - "8000:8000"
-    environment:
-      ANSIBLE_HOST_KEY_CHECKING: "False"
-      REDIS_HOST: redis
     env_file:
       - .env
     depends_on:
@@ -47,6 +46,8 @@ services:
         condition: service_healthy
       celery:
         condition: service_healthy
+    networks:
+      - app-network
       # ansible:
       #   condition: service_started
     # links:
@@ -69,6 +70,8 @@ services:
     depends_on:
       - guacd
       - mysql
+    networks:
+      - app-network
 
   guacd:
     image: guacamole/guacd:latest
@@ -76,6 +79,8 @@ services:
     restart: always
     ports:
       - "4822:4822"
+    networks:
+      - app-network
     
   influxdb:
     image: influxdb:latest
@@ -93,6 +98,8 @@ services:
     volumes:
       - influxdb_data:/var/lib/influxdb2
       - influxdb_config:/etc/influxdb2
+    networks:
+      - app-network
 
   redis:
     image: redis:6.0
@@ -105,16 +112,18 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - app-network
 
   celery:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: celery
-    command: >
-      bash -c "celery -A CAPSTONE2240 worker --loglevel=info --concurrency=1 &
-               celery -A CAPSTONE2240 beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler"
-    # command: celery -A CAPSTONE2240 worker --loglevel=info --concurrency=1
+    # command: >
+    #   bash -c "celery -A CAPSTONE2240 worker --loglevel=info --concurrency=1 &
+    #            celery -A CAPSTONE2240 beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler"
+    command: celery -A CAPSTONE2240 worker --loglevel=info --concurrency=1
     restart: always
     volumes:
       - .:/app
@@ -130,6 +139,8 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
+    networks:
+      - app-network
 
   # netdata:
   #   image: netdata/netdata:latest
@@ -180,6 +191,10 @@ volumes:
   # netdataconfig:
   # netdatalib:
   # netdatacache:
+
+networks:
+  app-network:
+    driver: bridge
 
 # References
 
