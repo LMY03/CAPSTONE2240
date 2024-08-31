@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 
 @shared_task
 def create_test_vm(tsg_user_id, request_id, node):
-    logger.info("===========================")
+    # logger.info("===========================")
     tsg_user = User.objects.get(pk=tsg_user_id)
     new_vm_id = views.generate_vm_ids(1)[0]
     request_entry = get_object_or_404(RequestEntry, pk=request_id)
@@ -42,8 +42,9 @@ def create_test_vm(tsg_user_id, request_id, node):
         request=request_entry,
         node=get_object_or_404(Nodes, name=node),
     )
-
+    logger.info("===========================")
     upid = proxmox.clone_vm(node, vm_id, new_vm_id, vm_name)
+    logger.info(f"upid: {upid}")
     proxmox.wait_for_task(node, upid)
     proxmox.config_vm(node, new_vm_id, cpu_cores, ram)
     proxmox.start_vm(node, new_vm_id)
