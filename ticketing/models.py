@@ -94,6 +94,12 @@ class RequestEntry(models.Model):
     def is_thesis(self) : return self.get_request_type() == 'Thesis'
     def is_test(self) : return self.get_request_type() == 'Test'
 
+    def get_total_no_of_vm(self):
+        request_use_cases = RequestUseCase.objects.filter(request=self).values('request_use_case', 'vm_count')
+        total_no_of_vm = 0
+        for request_use_case in request_use_cases : total_no_of_vm += int(request_use_case['vm_count'])
+        return total_no_of_vm
+
     def __str__(self):
         return f"{self.id} - {self.status}"
 
@@ -113,7 +119,7 @@ class RequestEntryAudit(models.Model):
     def get_changes(self):
         return json.loads(self.changes)
 
-class RequestUseCase (models.Model):
+class RequestUseCase(models.Model):
     request = models.ForeignKey(RequestEntry, on_delete= models.CASCADE)
     request_use_case = models.CharField(max_length=45, null=True, default='CLASS_COURSE')
     vm_count = models.IntegerField(default=1, null=True)
