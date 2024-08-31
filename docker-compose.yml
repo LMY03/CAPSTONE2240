@@ -12,7 +12,7 @@ services:
       MYSQL_PASSWORD: ${MYSQL_CAP2240_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./cap2240.sql:/docker-entrypoint-initdb.d/guacdb.sql
+      - ./cap2240.sql:/docker-entrypoint-initdb.d/cap2240.sql
       - ./guacdb.sql:/docker-entrypoint-initdb.d/guacdb.sql
     healthcheck:
       test: ["CMD", "mysql", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}", "-e", "SELECT 1"]
