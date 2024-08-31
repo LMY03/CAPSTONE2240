@@ -92,24 +92,31 @@ def get_vm_status(node, vmid):
 
     return status
 
-def clone_vm(node, vmid, newid, name):
-    token = asyncio.run(get_ticket())
+def get_token_sync():
+    return asyncio.run(get_ticket())
+
+def clone_vm(node, vmid, newid, name, max_retries=5, delay=5):
+    token = get_token_sync()
     url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/qemu/{vmid}/clone"
     config = {
         'newid': newid,
         'full': 1,
         'name': name,
-        # 'target': ''
-        # 'storage': 'local-lvm',
     }
     headers = {
         'CSRFPreventionToken': token['CSRFPreventionToken'],
-        'Cookie': f"PVEAuthCookie={ token['ticket'] }",
+        'Cookie': f"PVEAuthCookie={token['ticket']}",
     }
-    response = requests.post(url, headers=headers, data=config, verify=CA_CRT)
-    if response.status_code != 200 : return clone_vm(node, vmid, newid, name)
 
-    return response.json()['data']
+    for attempt in range(max_retries):
+        response = requests.post(url, headers=headers, data=config, verify=CA_CRT)
+        if response.status_code == 200:
+            return response.json()['data']
+        else:
+            # logger.warning(f"Attempt {attempt + 1} failed with status code {response.status_code}. Retrying in {delay} seconds...")
+            time.sleep(delay)
+
+    raise Exception(f"Failed to clone VM after {max_retries} attempts")
 
 # delete VM DELETE
 def delete_vm(node, vmid):
