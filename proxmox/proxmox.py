@@ -32,7 +32,6 @@ CA_CRT = False
 #     })
 #     return session
 
-
 async def get_ticket():
     url = f"{PROXMOX_HOST}/api2/json/access/ticket"
     data = { 'username': USERNAME, 'password': PASSWORD }
@@ -92,8 +91,16 @@ def get_vm_status(node, vmid):
 
     return status
 
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+def get_token_sync():
+    return asyncio.run(get_ticket())
+
 def clone_vm(node, vmid, newid, name):
-    token = asyncio.run(get_ticket())
+    token = get_ticket()
+    logger.info(token)
     url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/qemu/{vmid}/clone"
     config = {
         'newid': newid,
