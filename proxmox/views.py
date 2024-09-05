@@ -146,7 +146,7 @@ def vm_provision_process(vm_id, classnames, no_of_vm, cpu_cores, ram, request_id
     orig_vm.ip_add =  proxmox.wait_and_get_ip(node, orig_vm.vm_id)
     orig_vm.save()
     hostnames.insert(0, orig_vm.ip_add)
-    ansible.change_vm_default_userpass(hostnames, vm_passwords)
+    # ansible.change_vm_default_userpass(hostnames, vm_passwords)
 
     proxmox.shutdown_vm(node, orig_vm.vm_id)
 
