@@ -422,7 +422,7 @@ def request_confirm(request, request_id):
 
     node = "pve"
 
-    create_test_vm(request.user.pk, request_id, node)
+    create_test_vm.delay(request.user.pk, request_id, node)
 
     request_entry = get_object_or_404(RequestEntry, pk=request_id)
 
