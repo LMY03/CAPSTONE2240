@@ -152,10 +152,14 @@ New VM request form
                             </div>
                         </div>
                         <div class="mb-3">
-                            <label for="date_needed" class="form-label">Date Needed:</label>
-                            <input type="date" id="date_needed" name="date_needed">
+                            <label for="recurring" class="form-label">Recurring:</label>
+                            <input type="checkbox" id="recurring" name="recurring" checked>
                         </div>
                         <div class="mb-3">
+                            <label for="date_needed" class="form-label">Date Needed:</label>
+                            <input type="date" id="date_needed" name="date_needed">
+                        </div>                        
+                        <div class="mb-3" id="expirationDateContainer">
                             <label for="expiration_date" class="form-label">Expiration Date:</label>
                             <input type="date" id="expiration_date" name="expiration_date">
                         </div>
@@ -171,12 +175,31 @@ New VM request form
     </form>
 </div>
 <script src="{% static 'ticketing/js/new-form-script.js' %}"></script>
-{% endblock content %}
 
 <!-- Bootstrap Tooltip initialization -->
 <script>
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
+    // var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    // var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+    //     return new bootstrap.Tooltip(tooltipTriggerEl);
+    // });
+    document.addEventListener('DOMContentLoaded', function() {
+        var recurringCheckbox = document.getElementById('recurring');
+        var expirationDateContainer = document.getElementById('expirationDateContainer');
+
+        function toggleExpirationDate() {
+            if (recurringCheckbox.checked) {
+                expirationDateContainer.style.display = 'none';  // Hide expiration date
+            } else {
+                expirationDateContainer.style.display = 'block';  // Show expiration date
+            }
+        }
+
+        // Initially check the checkbox state on page load
+        toggleExpirationDate();
+
+        // Add event listener to toggle on change
+        recurringCheckbox.addEventListener('change', toggleExpirationDate);
     });
+
 </script>
+{% endblock content %}

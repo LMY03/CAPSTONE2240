@@ -59,9 +59,11 @@ class RequestEntry(models.Model):
     requestDate = models.DateTimeField (default = timezone.now)
 
     date_needed = models.DateField(default=expiration_date_default)
-    expiration_date = models.DateField(default=date_needed_default)
+    expiration_date = models.DateField(null=True)
 
     is_vm_tested = models.BooleanField(default=False)
+
+    def is_recurring(self) : return self.expiration_date == None
 
     def get_requester(self):
         requester = self.requester

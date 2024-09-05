@@ -28,7 +28,7 @@ class Migration(migrations.Migration):
                 ('isExpired', models.BooleanField(default=False)),
                 ('requestDate', models.DateTimeField(default=django.utils.timezone.now)),
                 ('date_needed', models.DateField(default=ticketing.models.expiration_date_default)),
-                ('expiration_date', models.DateField(default=ticketing.models.date_needed_default)),
+                ('expiration_date', models.DateField(null=True, default=ticketing.models.date_needed_default)),
                 ('is_vm_tested', models.BooleanField(default=False)),
                 ('assigned_to', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='assigned_entries', to=settings.AUTH_USER_MODEL)),
                 ('fulfilled_by', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='fulfilled_entries', to=settings.AUTH_USER_MODEL)),

@@ -195,9 +195,12 @@ def new_form_submit(request):
         expiration_date = data.get('expiration_date')
         other_config = data.get("other_configs")
         use_case = data.get('use_case')
+        is_recurring = data.get('recurring')
         vmTemplateID = VMTemplates.objects.get(id = template_id)
         # TODO: data verification
 
+        if is_recurring: expiration_date = None
+        
         # create request object
         new_request = RequestEntry.objects.create(
             requester = requester,

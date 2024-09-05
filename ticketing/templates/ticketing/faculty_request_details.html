@@ -128,6 +128,19 @@ Request Details {{ request_entry.id }}
                                         </div>
                                     </div>
                                 {% endfor %}
+                                
+                                {% for system_account in system_accounts %}
+                                    <div class="col-md-8">
+                                        <div class="p-3 bg-light border">
+                                            <p><strong>System Username:</strong> {{ system_account.vm_name }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="p-3 bg-light border">
+                                            <p><strong>System Password:</strong> {{ system_account.system_password }}</p>
+                                        </div>
+                                    </div>
+                                {% endfor %}
                             {% endif %}
                             <div class="col-12">
                                 <div class="p-3 bg-light border">
@@ -135,13 +148,6 @@ Request Details {{ request_entry.id }}
                                 </div>
                             </div>
                         </div>
-                        {% if request_entry.status == "ONGOING" %}
-                            {% for system_account in system_accounts %}
-                                <p>System Username: {{ system_account.vm_name }}</p><br />
-                                <p>System Password: {{ system_account.system_password }}</p><br />
-                                <hr />
-                            {% endfor %}
-                        {% endif %}
 
                         {% if request_entry.status == "PROCESSING" and request_entry.is_vm_tested == True %}
                         <div class="row g-3 mt-3">

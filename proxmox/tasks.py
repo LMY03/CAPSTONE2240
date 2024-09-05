@@ -15,6 +15,7 @@ from django.contrib.auth.models import User
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+@shared_task
 def create_test_vm(tsg_user_id, request_id, node):
     # logger.info("===========================")
     tsg_user = User.objects.get(pk=tsg_user_id)
