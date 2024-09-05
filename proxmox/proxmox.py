@@ -32,7 +32,7 @@ CA_CRT = False
 #     })
 #     return session
 
-async def get_ticket():
+def get_ticket():
     url = f"{PROXMOX_HOST}/api2/json/access/ticket"
     data = { 'username': USERNAME, 'password': PASSWORD }
     
@@ -43,7 +43,7 @@ async def get_ticket():
     except requests.exceptions.RequestException as e:
         print(f"Error getting ticket: {e}")
         time.sleep(5)
-        return await get_ticket()
+        return get_ticket()
 
 def get_task_status(node, upid):
     token = asyncio.run(get_ticket())
