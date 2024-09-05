@@ -46,7 +46,7 @@ def get_ticket():
         return get_ticket()
 
 def get_task_status(node, upid):
-    token = asyncio.run(get_ticket())
+    token = get_ticket()
     url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/tasks/{upid}/status"
     headers = {
         'CSRFPreventionToken': token['CSRFPreventionToken'],
@@ -57,7 +57,7 @@ def get_task_status(node, upid):
     return response.json()
 
 def get_qemu_status(node, vmid):
-    token = asyncio.run(get_ticket())
+    token = get_ticket()
     url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/qemu/{vmid}/agent/info"
     headers = {
         'CSRFPreventionToken': token['CSRFPreventionToken'],
@@ -68,7 +68,7 @@ def get_qemu_status(node, vmid):
     return response.status_code
 
 def get_vm_ip(node, vmid):
-    token = asyncio.run(get_ticket())
+    token = get_ticket()
     url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/qemu/{vmid}/agent/network-get-interfaces"
     headers = {
         'CSRFPreventionToken': token['CSRFPreventionToken'],
@@ -79,7 +79,7 @@ def get_vm_ip(node, vmid):
 
 # get VM status
 def get_vm_status(node, vmid):
-    token = asyncio.run(get_ticket())
+    token = get_ticket()
     url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/qemu/{vmid}/status/current"
     headers = {
         'CSRFPreventionToken': token['CSRFPreventionToken'],
@@ -96,7 +96,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def get_token_sync():
-    return asyncio.run(get_ticket())
+    return get_ticket()
 
 def clone_vm(node, vmid, newid, name):
     token = get_ticket()
@@ -120,7 +120,7 @@ def clone_vm(node, vmid, newid, name):
 
 # delete VM DELETE
 def delete_vm(node, vmid):
-    token = asyncio.run(get_ticket())
+    token = get_ticket()
     url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/qemu/{vmid}"
     headers = {
         'CSRFPreventionToken': token['CSRFPreventionToken'],
@@ -132,7 +132,7 @@ def delete_vm(node, vmid):
 
 # start VM POST
 def start_vm(node, vmid):
-    token = asyncio.run(get_ticket())
+    token = get_ticket()
     url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/qemu/{vmid}/status/start"
     headers = {
         'CSRFPreventionToken': token['CSRFPreventionToken'],
@@ -143,7 +143,7 @@ def start_vm(node, vmid):
 
 # shutdown VM POST
 def shutdown_vm(node, vmid):
-    token = asyncio.run(get_ticket())
+    token = get_ticket()
     url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/qemu/{vmid}/status/shutdown"
     headers = {
         'CSRFPreventionToken': token['CSRFPreventionToken'],
@@ -154,7 +154,7 @@ def shutdown_vm(node, vmid):
 
 # stop VM POST - only on special occasion like the vm get stuck
 def stop_vm(node, vmid):              
-    token = asyncio.run(get_ticket())
+    token = get_ticket()
     url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/qemu/{vmid}/status/stop"
     headers = {
         'CSRFPreventionToken': token['CSRFPreventionToken'],
@@ -165,7 +165,7 @@ def stop_vm(node, vmid):
 
 # configure VM PUT 
 def config_vm(node, vmid, cpu_cores, memory_mb):
-    token = asyncio.run(get_ticket())
+    token = get_ticket()
     url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/qemu/{vmid}/config"
     config = {
         'cores': cpu_cores,
@@ -180,7 +180,7 @@ def config_vm(node, vmid, cpu_cores, memory_mb):
     return response.json()
 
 def config_vm_disk(node, vmid, size):
-    token = asyncio.run(get_ticket())
+    token = get_ticket()
     url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/qemu/{vmid}/resize"
     config = {
         'disk': 'scsi0',
