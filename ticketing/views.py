@@ -424,12 +424,6 @@ def request_confirm(request, request_id):
 
     create_test_vm.delay(request.user.pk, request_id, node)
 
-    request_entry = get_object_or_404(RequestEntry, pk=request_id)
-
-    request_entry.status = RequestEntry.Status.PROCESSING
-    request_entry.fulfilled_by = request.user
-    request_entry.save()
-
     return redirect('ticketing:request_details', request_id)
 
 def request_reject(request, id):

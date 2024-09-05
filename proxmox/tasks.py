@@ -82,6 +82,12 @@ def create_test_vm(tsg_user_id, request_id, node):
     # vm.save()
     GuacamoleConnection(user=get_object_or_404(GuacamoleUser, system_user=tsg_user), connection_id=guacamole_connection_id, connection_group_id=guacamole_connection_group_id, vm=vm).save()
 
+    request_entry = get_object_or_404(RequestEntry, pk=request_id)
+
+    request_entry.status = RequestEntry.Status.PROCESSING
+    request_entry.fulfilled_by = tsg_user
+    request_entry.save()
+
 def vm_provision(request_id):
 
     request_entry = get_object_or_404(RequestEntry, pk=request_id)
