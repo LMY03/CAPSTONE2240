@@ -43,6 +43,7 @@ ALLOWED_HOSTS = config('DJANGO_ALLOWED_HOSTS')
 INSTALLED_APPS = [
     "autotool.apps.AutotoolConfig",
     "monitoring.apps.MonitoringConfig",
+    "reports.apps.ReportsConfig",
     "ticketing.apps.TicketingConfig",
     "guacamole.apps.GuacamoleConfig",
     "pfsense.apps.PfsenseConfig",
