@@ -66,3 +66,13 @@ td {
   padding:2rem 2rem 0rem 2rem;
   /* margin-top: 2rem; */
 }
+
+.filter-btn {
+  background-color: #D96A00;
+  color:#F7F8FA;
+  font-size:1.2vw;
+  /* font-weight: bold; */
+  padding: 5px 10px;
+  border-radius: 4px;
+  border: none
+}
