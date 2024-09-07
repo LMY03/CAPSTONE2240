@@ -31,8 +31,39 @@
       </div>
 
       <!-- METRICS selection -->
-      <div>
+      <div class="col-md-6" style="padding-left: 0rem;">
+        <div class="content-card" style="margin-top: 1rem; height: 80%;">
+          <h5 style="margin-bottom: 1rem;">Metrics</h5>
+          <div class="row">
 
+            <div class="col-md-6">
+              <!-- CPU Usage -->
+              <div class="form-group" style="margin-right: 2rem;display: block;">
+                <input type="checkbox" id="cpuCheck" value="cpuUsage" name="cpuUsage" style="margin-right: 0.5rem;">
+                <label for="cpuCheck" style="font-size: 1.2vw;">CPU Usage</label>
+              </div>
+              <!-- RAM Usage -->
+              <div class="form-group" style="margin-right: 2rem;display: block;">
+                <input type="checkbox" id="ramCheck" value="memoryUsage" name="memoryUsage" style="margin-right: 0.5rem;">
+                <label for="ramCheck" style="font-size: 1.2vw;">Memory Usage</label>
+              </div>              
+            </div>
+
+            <div class="col-md-6">
+              <!-- NET IN -->
+              <div class="form-group" style="margin-right: 2rem;display: block;">
+                <input type="checkbox" id="netInCheck" value="netin" name="netin" style="margin-right: 0.5rem;">
+                <label for="netInCheck" style="font-size: 1.2vw;">Network In</label>
+              </div>
+              <!-- NET OUT -->
+              <div class="form-group" style="margin-right: 2rem;display: block;">
+                <input type="checkbox" id="netOutCheck" value="netout" name="netout" style="margin-right: 0.5rem;">
+                <label for="netOutCheck" style="font-size: 1.2vw;">Network Out</label>
+              </div>              
+            </div>
+
+          </div>
+        </div>
       </div>
 
     </div>
