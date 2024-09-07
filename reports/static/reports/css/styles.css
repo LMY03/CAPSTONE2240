@@ -1,0 +1,12 @@
+
+.row-padding {
+  padding: 2px;
+}
+
+.content-card {
+  padding:1.5rem;
+  width:98%;
+  background-color: #ffffff;
+  border-radius:10px;
+  /* margin-top: 2rem; */
+}
