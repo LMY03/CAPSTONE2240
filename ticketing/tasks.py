@@ -55,3 +55,4 @@ def delete_request(request_id):
         guacamole.delete_user(guacamole_user.username)
     
     guacamole.delete_connection_group(guacamole_connection.connection_group_id)
+    
