@@ -22,6 +22,7 @@ from django.contrib.auth import views as auth_views
 urlpatterns = [
     path('ansible/', include("autotool.urls")),
     path('monitoring/', include("monitoring.urls")),
+    path('reports/', include("reports.urls")),
     path('guacamole/', include("guacamole.urls")),
     path('pfsense/', include("pfsense.urls")),
     # path('containers/', include("proxmox.urls")),
