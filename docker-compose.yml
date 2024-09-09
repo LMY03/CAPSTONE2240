@@ -120,10 +120,10 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: celery
-    # command: >
-    #   bash -c "celery -A CAPSTONE2240 worker --loglevel=info --concurrency=1 &
-    #            celery -A CAPSTONE2240 beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler"
-    command: celery -A CAPSTONE2240 worker --loglevel=info --concurrency=1
+    command: >
+      bash -c "celery -A CAPSTONE2240 worker --loglevel=info --concurrency=1 &
+               celery -A CAPSTONE2240 beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler"
+    # command: celery -A CAPSTONE2240 worker --loglevel=info --concurrency=1
     restart: always
     volumes:
       - .:/app
