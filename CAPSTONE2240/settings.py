@@ -228,12 +228,3 @@ CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
 
 INSTALLED_APPS += ['django_celery_beat']
-
-from celery.schedules import crontab
-CELERY_BEAT_SCHEDULE = {
-    'delete-expired-requests': {
-        'task': 'ticketing.tasks.delete_expired_requests',
-        # 'schedule': crontab(minute=0, hour=0),
-        'schedule': crontab(minute='*'),
-    },
-}
