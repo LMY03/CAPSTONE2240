@@ -53,8 +53,6 @@ def add_port_forward_rules(request_id, protocols, local_ports, ip_adds, descrs):
             dest_port = str(dest_ports[counter % len(dest_ports)])
             protocol = protocol.lower()
             # node-vm_name
-            print("----------------------")
-            print(descr)
             # vm = get_object_or_404(VirtualMachines, vm_name=descr, request__status=RequestEntry.Status.ONGOING)
             vm = VirtualMachines.objects.get(vm_name=descr, request__status=RequestEntry.Status.ONGOING)
             port_rule = get_object_or_404(PortRules, request_id=request_id, dest_ports=local_port)
@@ -76,8 +74,6 @@ def update_port_forward_rule(vm_name, ip_add):
 def delete_port_forward_rules(no_of_protocols, vm_names):
     for i in range(no_of_protocols):
         for vm_name in vm_names:
-            print('---------------------')
-            print(vm_name)
             pfsense.delete_firewall_rule(get_firewall_rule(vm_name))
             pfsense.delete_port_forward_rule(get_port_forward_rule(vm_name))
             time.sleep(5)

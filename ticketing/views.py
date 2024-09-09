@@ -11,7 +11,8 @@ from django.http import JsonResponse
 from decouple import config
 import json, datetime
 
-from proxmox.tasks import create_test_vm, processing_ticket, delete_request_process
+from.tasks import delete_request as delete_request_process
+from proxmox.tasks import create_test_vm, processing_ticket
 
 from guacamole import guacamole
 from proxmox import views, proxmox
@@ -528,10 +529,6 @@ def reject_test_vm(request, request_id):
     return HttpResponseRedirect(reverse("ticketing:index"))
 
 def delete_request(request, request_id):
-    request_entry = get_object_or_404(RequestEntry, pk=request_id)
-    
-    request_entry.status = RequestEntry.Status.DELETED
-    request_entry.save()
 
     delete_request_process.delay(request_id)
 
