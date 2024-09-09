@@ -14,4 +14,4 @@ RUN apt-get update && apt-get install -y \
 
 COPY . /app/
 
-CMD ["sh", "-c", "python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"]
+CMD ["sh", "-c", "python manage.py migrate django_celery_beat --noinput && python manage.py runserver 0.0.0.0:8000"]
