@@ -8,6 +8,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.forms.models import model_to_dict
 from django.http import JsonResponse
+from django.core.mail import send_mail
 from decouple import config
 import json, datetime
 
@@ -22,6 +23,8 @@ from .models import RequestEntry, Comment, RequestUseCase, PortRules, UserProfil
 from proxmox.models import VirtualMachines, Nodes
 from guacamole.models import GuacamoleConnection, GuacamoleUser
 from pfsense.models import DestinationPorts
+
+
 
 # Create your views here.
 
@@ -132,7 +135,7 @@ def add_comment(request, pk):
     if request.method == 'POST':
         user = request.user
         user_profile = get_object_or_404(UserProfile, user=user)
-    
+        requester_user = request_entry.requester
         new_data = {}
         
         if request_entry.assigned_to is None and user_profile.user_type == 'admin':
@@ -142,7 +145,45 @@ def add_comment(request, pk):
         
         if request_entry.status == RequestEntry.Status.PENDING:
             new_data['status'] = RequestEntry.Status.FOR_REVISION
-        
+
+        if user_profile.user_type == 'admin':
+            subject = "Changes made for your ticket request"
+            if request_entry.status == RequestEntry.Status.PENDING:
+                message = f"""
+                Dear {user.get_full_name() or user.username},
+                
+                We wanted to inform you that your request has been reviewed by the administrator. A new comment has been added, and the status of your request has been updated to "For Revision".
+                
+                Comment from the admin:
+                "{comment_text}"
+                
+                Please review the details at your earliest convenience.
+                
+                Best regards,
+                The Support Team
+                """
+            else:
+                message = f"""
+                Dear {user.get_full_name() or user.username},
+                
+                We wanted to inform you that your request has received a new comment from the administrator.
+                
+                Comment from the admin:
+                "{comment_text}"
+                
+                Please review the details at your earliest convenience.
+                
+                Best regards,
+                The Support Team
+                """
+            email_from = config("EMAIL_HOST_USER")
+            recipient_list = [requester_user.email]
+            print(f"Subject:{subject}, message: {message}, sender: {email_from}, receiver: {recipient_list}, user variable:{user}, requester: {requester_user}")
+
+            result = send_mail(subject, message, email_from, recipient_list, fail_silently=False)
+
+            print (result)
+            
         Comment.objects.create(
             request_entry=request_entry,
             comment=comment_text,
