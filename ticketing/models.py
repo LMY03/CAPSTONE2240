@@ -56,7 +56,7 @@ class RequestEntry(models.Model):
     cores = models.IntegerField(default=1)
     # security options
     isExpired = models.BooleanField(default=False)
-    requestDate = models.DateTimeField(default=timezone.localtime())
+    requestDate = models.DateTimeField (default=timezone.localtime())
 
     date_needed = models.DateField(default=expiration_date_default)
     expiration_date = models.DateField(null=True)
