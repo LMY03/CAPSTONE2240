@@ -176,8 +176,11 @@ def add_comment(request, pk):
                 """
             email_from = config("EMAIL_HOST_USER")
             recipient_list = [user.email]
+            print(f"Subject:{subject}, message: {message}, sender: {email_from}, receiver: {recipient_list}")
 
-            send_mail(subject, message, email_from, recipient_list)
+            result = send_mail(subject, message, email_from, recipient_list, fail_silently=False)
+
+            print (result)
             
         Comment.objects.create(
             request_entry=request_entry,
