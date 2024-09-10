@@ -15,7 +15,7 @@ from pfsense.models import PortRules
 def delete_expired_requests():
     request_entries = RequestEntry.objects.filter(status=RequestEntry.Status.ONGOING)
     for request_entry in request_entries:
-        if timezone.now().date() == request_entry.expiration_date:
+        if timezone.localdate() == request_entry.expiration_date:
             delete_request(request_entry.pk)
 
 @shared_task
