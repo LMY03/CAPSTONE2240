@@ -8,6 +8,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.forms.models import model_to_dict
 from django.http import JsonResponse
+from django.core.mail import send_mail
 from decouple import config
 import json, datetime
 
@@ -23,7 +24,7 @@ from proxmox.models import VirtualMachines, Nodes
 from guacamole.models import GuacamoleConnection, GuacamoleUser
 from pfsense.models import DestinationPorts
 
-from django.core.mail import send_mail
+
 
 # Create your views here.
 
@@ -134,6 +135,7 @@ def add_comment(request, pk):
     if request.method == 'POST':
         user = request.user
         user_profile = get_object_or_404(UserProfile, user=user)
+        userObject = get_object_or_404(User, username = user)
         new_data = {}
         
         if request_entry.assigned_to is None and user_profile.user_type == 'admin':
@@ -175,8 +177,8 @@ def add_comment(request, pk):
                 The Support Team
                 """
             email_from = config("EMAIL_HOST_USER")
-            recipient_list = [user.email]
-            print(f"Subject:{subject}, message: {message}, sender: {email_from}, receiver: {recipient_list}")
+            recipient_list = [f'{userObject.email}']
+            print(f"Subject:{subject}, message: {message}, sender: {email_from}, receiver: {recipient_list}, user variable:{user}")
 
             result = send_mail(subject, message, email_from, recipient_list, fail_silently=False)
 
