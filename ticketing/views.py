@@ -23,6 +23,8 @@ from proxmox.models import VirtualMachines, Nodes
 from guacamole.models import GuacamoleConnection, GuacamoleUser
 from pfsense.models import DestinationPorts
 
+from django.core.mail import send_mail
+
 # Create your views here.
 
 @login_required
@@ -132,7 +134,6 @@ def add_comment(request, pk):
     if request.method == 'POST':
         user = request.user
         user_profile = get_object_or_404(UserProfile, user=user)
-    
         new_data = {}
         
         if request_entry.assigned_to is None and user_profile.user_type == 'admin':
@@ -142,7 +143,42 @@ def add_comment(request, pk):
         
         if request_entry.status == RequestEntry.Status.PENDING:
             new_data['status'] = RequestEntry.Status.FOR_REVISION
-        
+
+        if user_profile.user_type == 'admin':
+            subject = "Changes made for your ticket request"
+            if request_entry.status == RequestEntry.Status.PENDING:
+                message = f"""
+                Dear {user.get_full_name() or user.username},
+                
+                We wanted to inform you that your request has been reviewed by the administrator. A new comment has been added, and the status of your request has been updated to "For Revision".
+                
+                Comment from the admin:
+                "{comment_text}"
+                
+                Please review the details at your earliest convenience.
+                
+                Best regards,
+                The Support Team
+                """
+            else:
+                message = f"""
+                Dear {user.get_full_name() or user.username},
+                
+                We wanted to inform you that your request has received a new comment from the administrator.
+                
+                Comment from the admin:
+                "{comment_text}"
+                
+                Please review the details at your earliest convenience.
+                
+                Best regards,
+                The Support Team
+                """
+            email_from = config("EMAIL_HOST_USER")
+            recipient_list = [user.email]
+
+            send_mail(subject, message, email_from, recipient_list)
+            
         Comment.objects.create(
             request_entry=request_entry,
             comment=comment_text,
