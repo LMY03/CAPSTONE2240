@@ -135,7 +135,7 @@ def add_comment(request, pk):
     if request.method == 'POST':
         user = request.user
         user_profile = get_object_or_404(UserProfile, user=user)
-        userObject = get_object_or_404(User, username = user)
+        userObject = get_object_or_404(User, user = user)
         new_data = {}
         
         if request_entry.assigned_to is None and user_profile.user_type == 'admin':
@@ -178,7 +178,7 @@ def add_comment(request, pk):
                 """
             email_from = config("EMAIL_HOST_USER")
             recipient_list = [f'{userObject.email}']
-            print(f"Subject:{subject}, message: {message}, sender: {email_from}, receiver: {recipient_list}, user variable:{user}")
+            print(f"Subject:{subject}, message: {message}, sender: {email_from}, receiver: {recipient_list}, user variable:{user}, userObject variable:{userObject.email}")
 
             result = send_mail(subject, message, email_from, recipient_list, fail_silently=False)
 
