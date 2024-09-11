@@ -23,7 +23,7 @@ from .models import RequestEntry, Comment, RequestUseCase, PortRules, UserProfil
 from proxmox.models import VirtualMachines, Nodes
 from guacamole.models import GuacamoleConnection, GuacamoleUser
 from pfsense.models import DestinationPorts
-
+from notifications.views import send_email_sendgrid
 
 
 # Create your views here.
@@ -180,9 +180,7 @@ def add_comment(request, pk):
             recipient_list = [requester_user.email]
             print(f"Subject:{subject}, message: {message}, sender: {email_from}, receiver: {recipient_list}, user variable:{user}, requester: {requester_user}")
 
-            result = send_mail(subject, message, email_from, recipient_list, fail_silently=False)
-
-            print (result)
+            send_email_sendgrid(recipient_list, subject, message)
             
         Comment.objects.create(
             request_entry=request_entry,
