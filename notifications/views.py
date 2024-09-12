@@ -12,6 +12,8 @@ def send_email_sendgrid (to_email, subject, html_content):
         to_emails= to_email,
         subject= subject,
         html_content= html_content)
+    
+    print (f"Sending the email function: secret:{config('SEND_GRID_SECRET')}")
     try:
         sg = SendGridAPIClient(config('SEND_GRID_SECRET'))
         response = sg.send(message)
