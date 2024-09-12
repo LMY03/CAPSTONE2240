@@ -12,7 +12,7 @@ def index(request):
 
 # Get VM Info
 def getVmList(request):
-    
+    #Connection between Proxmox API and application
     proxmox = ProxmoxAPI('10.1.200.11', user='root@pam', password='cap2240', verify_ssl=False)
     client = InfluxDBClient(url=INFLUX_ADDRESS, token=token, org=org)
     

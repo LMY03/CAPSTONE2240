@@ -57,6 +57,7 @@ $(document).ready(function() {
 
         // Generates the VM table for each item in the list of machines
         for (i = 0; i < response.vmList.length; i++) {
+          console.log(response.vmList)
           genVmTable(response.vmList[i])
         }
 
