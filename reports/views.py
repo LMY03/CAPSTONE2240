@@ -7,6 +7,11 @@ import json
 
 from proxmox.models import VirtualMachines
 
+INFLUX_ADDRESS = config('INFLUX_ADDRESS')
+token = config('INFLUX_TOKEN')
+org = config('INFLUXDB_ORG')
+bucket = config('INFLUXDB_BUCKET')
+proxmox_password = config('PROXMOX_PASSWORD')
 
 # Get Report Page
 def index(request):
