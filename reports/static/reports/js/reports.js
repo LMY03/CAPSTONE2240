@@ -22,7 +22,7 @@ $(document).ready(function() {
   function genVmTable(vm) {
     console.log(vm)
 
-    let vmInfo = ['', vm.id, vm.name, vm.type, vm.node]
+    let vmInfo = ['<input type="checkbox" name="'+ row[1] +'" value="'+ row[2] +'"/>', vm.id, vm.name, vm.type, vm.node]
     vmInfoTable.row.add(vmInfo).draw();
   }
   
