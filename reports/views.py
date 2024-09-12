@@ -4,10 +4,11 @@ from django.core import serializers
 from proxmoxer import ProxmoxAPI
 from influxdb_client import InfluxDBClient
 import json
+from decouple import config
 
 from proxmox.models import VirtualMachines
 
-# INFLUX_ADDRESS = config('INFLUX_ADDRESS')
+INFLUX_ADDRESS = config('INFLUX_ADDRESS')
 # token = config('INFLUX_TOKEN')
 # org = config('INFLUXDB_ORG')
 # bucket = config('INFLUXDB_BUCKET')
