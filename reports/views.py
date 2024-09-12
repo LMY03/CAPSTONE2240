@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.core import serializers
+from proxmoxer import ProxmoxAPI
 import json
 
 from proxmox.models import VirtualMachines
