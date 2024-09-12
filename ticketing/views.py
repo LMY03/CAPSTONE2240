@@ -150,7 +150,7 @@ def add_comment(request, pk):
             subject = "Changes made for your ticket request"
             if request_entry.status == RequestEntry.Status.PENDING:
                 message = f"""
-                Dear {user.get_full_name() or user.username},
+                Dear {requester_user.get_full_name() or requester_user.username},
                 
                 We wanted to inform you that your request has been reviewed by the administrator. A new comment has been added, and the status of your request has been updated to "For Revision".
                 
@@ -164,7 +164,7 @@ def add_comment(request, pk):
                 """
             else:
                 message = f"""
-                Dear {user.get_full_name() or user.username},
+                Dear {requester_user.get_full_name() or requester_user.username},
                 
                 We wanted to inform you that your request has received a new comment from the administrator.
                 

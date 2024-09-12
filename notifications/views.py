@@ -19,4 +19,4 @@ def send_email_sendgrid (to_email, subject, html_content):
         print(response.body)
         print(response.headers)
     except Exception as e:
-        print(e.message)
+        print(str(e))
