@@ -11,10 +11,10 @@ $(document).ready(function() {
 
   $('#vmInfoTable tbody').on('change', 'input[type="checkbox"]', function(){
     if(!this.checked) {
-        var sel = $('#cb-select-all').get(0);
-        if(sel && sel.checked && ('indeterminate' in sel)) {
-            sel.indeterminate = true;
-        }
+      var sel = $('#cb-select-all').get(0);
+      if(sel && sel.checked && ('indeterminate' in sel)) {
+          sel.indeterminate = true;
+      }
     }
   })
 
