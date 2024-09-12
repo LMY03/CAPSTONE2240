@@ -22,7 +22,7 @@ $(document).ready(function() {
   function genVmTable(vm) {
     console.log(vm)
 
-    let vmInfo = [vmList.id, vmList.name, vmList.type, vmList.node]
+    let vmInfo = [vm.id, vm.name, vm.type, vm.node]
     vmInfoTable.row.add(vmInfo).draw();
   }
   
