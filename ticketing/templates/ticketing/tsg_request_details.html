@@ -24,7 +24,9 @@ Request Details {{ request_entry.id }}
                                     <button type="submit" class="btn btn-danger">Shutdown</button>
                                 </a>
                                 {% elif request_entry.status == "ONGOING" or request_entry.status == "COMPLETED" %}
-                                <a href="{% url 'ticketing:delete_request' request_entry.id %}" class="btn btn-danger">Delete</a>
+                                    {% if not request_entry.expiration_date %}
+                                    <a href="{% url 'ticketing:delete_request' request_entry.id %}" class="btn btn-danger">Delete</a>
+                                    {% endif %}
                                 {% endif %}
                             </div>
                         </div>
@@ -42,7 +44,7 @@ Request Details {{ request_entry.id }}
                             </div>
                             <div class="col-md-4">
                                 <div class="p-3 bg-light border">
-                                    <p id="cores"><strong>Status:</strong> {{ request_entry.status }}</p>
+                                    <p><strong>Status:</strong> {{ request_entry.status }}</p>
                                 </div>
                             </div>
                             <div class="col-md-4">

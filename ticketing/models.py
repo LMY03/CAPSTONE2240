@@ -56,7 +56,7 @@ class RequestEntry(models.Model):
     cores = models.IntegerField(default=1)
     # security options
     isExpired = models.BooleanField(default=False)
-    requestDate = models.DateTimeField (default = timezone.now)
+    requestDate = models.DateTimeField(default=timezone.localtime())
 
     date_needed = models.DateField(default=expiration_date_default)
     expiration_date = models.DateField(null=True)
@@ -155,7 +155,7 @@ class UserProfile (models.Model):
 class Comment(models.Model):
     request_entry = models.ForeignKey(RequestEntry, on_delete=models.CASCADE)
     comment = models.TextField()
-    date_time = models.DateTimeField(default=timezone.now)
+    date_time = models.DateTimeField(default=timezone.localdate())
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     class Meta:

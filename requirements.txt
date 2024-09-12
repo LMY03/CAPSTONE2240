@@ -33,3 +33,5 @@ urllib3
 proxmoxer
 influxdb_client
 django-celery-beat
+
+sendgrid

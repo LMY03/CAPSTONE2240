@@ -26,7 +26,7 @@ class Migration(migrations.Migration):
                 ('status', models.CharField(choices=[('PENDING', 'Pending'), ('FOR REVISION', 'For Revision'), ('PROCESSING', 'Processing'), ('ACCEPTED', 'Accepted'), ('ONGOING', 'Ongoing'), ('COMPLETED', 'Completed'), ('DELETED', 'Deleted'), ('REJECTED', 'Rejected')], default='PENDING', max_length=20)),
                 ('cores', models.IntegerField(default=1)),
                 ('isExpired', models.BooleanField(default=False)),
-                ('requestDate', models.DateTimeField(default=django.utils.timezone.now)),
+                ('requestDate', models.DateTimeField(default=django.utils.timezone.localtime())),
                 ('date_needed', models.DateField(default=ticketing.models.expiration_date_default)),
                 ('expiration_date', models.DateField(null=True, default=ticketing.models.date_needed_default)),
                 ('is_vm_tested', models.BooleanField(default=False)),
@@ -95,7 +95,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('comment', models.TextField()),
-                ('date_time', models.DateTimeField(default=django.utils.timezone.now)),
+                ('date_time', models.DateTimeField(default=django.utils.timezone.localtime())),
                 ('request_entry', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='ticketing.requestentry')),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
