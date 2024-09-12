@@ -22,7 +22,7 @@ $(document).ready(function() {
   function genVmTable(vm) {
     console.log(vm)
 
-    let vmInfo = [vm.id, vm.id, vm.name, vm.type, vm.node]
+    let vmInfo = ['', vm.id, vm.name, vm.type, vm.node]
     vmInfoTable.row.add(vmInfo).draw();
   }
   
@@ -40,13 +40,20 @@ $(document).ready(function() {
           autoWidth: false,
           fixedColumns: true,
           searching: true,
-          columnDefs :[
-              {   orderable: false, "targets": 0 },
-              {   targets: 0,
-                  render: function(data, type, row, meta){
-                      return '<input type="checkbox" name="'+ row[1] +'" value="'+ row[2] +'"/>'
-                  }
-              }
+          // columnDefs :[
+          //     {   orderable: false, "targets": 0 },
+          //     {   targets: 0,
+          //         render: function(data, type, row, meta){
+          //             return '<input type="checkbox" name="'+ row[1] +'" value="'+ row[2] +'"/>'
+          //         }
+          //     }
+          // ],
+          columns: [
+            { title: "Select" },
+            { title: "ID" },
+            { title: "name" },
+            { title: "type" },
+            { title: "node" }
           ],
           select : {
               style: 'multi',
