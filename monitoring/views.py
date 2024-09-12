@@ -2,7 +2,7 @@ import datetime
 from django.http.response import HttpResponse, JsonResponse
 from django.shortcuts import render
 from proxmoxer import ProxmoxAPI
-from influxdb_client import InfluxDBClient, Point, WritePrecision
+from influxdb_client import InfluxDBClient
 import csv
 from io import StringIO
 from decouple import config

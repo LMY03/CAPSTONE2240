@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from django.core import serializers
 from proxmoxer import ProxmoxAPI
+from influxdb_client import InfluxDBClient
 import json
 
 from proxmox.models import VirtualMachines
