@@ -23,7 +23,7 @@ $(document).ready(function() {
     console.log(vm)
 
     // let vmInfo = [vm.id, vm.id, vm.name, vm.type, vm.node]
-    let vmInfo = [vm.id, vm.id, vm.name, vm.node, vm.type, vm.type]
+    let vmInfo = [vm.id, vm.id, vm.name, vm.node, vm.type]
     vmInfoTable.row.add(vmInfo).draw();
   }
   
