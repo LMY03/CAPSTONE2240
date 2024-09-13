@@ -68,11 +68,57 @@ def getVmList(request):
         'vmList': VMList,
         'vmids': vmids,
     })
-    # # Get All VMs - not able to get it
-    # try:
-    #     vminfos = VirtualMachines.objects.all()
-    #     serialized_data = serializers.serialize('json', vminfos)
-    #     data = json.loads(serialized_data)
-    #     return JsonResponse({'vmList' : data}, safe=False)
-    # except Exception as e:
-    #     return JsonResponse({'error': str(e)}, status=500)
+
+
+# extract data to csv
+def index_csv(request):
+    #Connection between Proxmox API and application
+    proxmox = ProxmoxAPI('10.1.200.11', user='root@pam', password='cap2240', verify_ssl=False)
+    client = InfluxDBClient(url=INFLUX_ADDRESS, token=token, org=org)
+    nodes = proxmox.nodes.get()
+
+    # TESTING: to get tag values
+    flux_query = f'''
+                    from(bucket:"{bucket}")
+                    |> range(start: -1h)
+                    |> filter(fn: (r) => r._measurement == "system")
+                    |> filter(fn: (r) => r.object == "nodes")
+                    |> group()
+                    |> distinct(column: "host")
+                    '''
+    query_api = client.query_api()
+    result = query_api.query(query=flux_query)
+    # Process the results
+    hosts = []
+    for table in result:
+        for record in table.records:
+            hosts.append(record.values.get('_value'))
+
+    print(f"Hosts: {hosts}")
+
+    #Creating the Response
+    response = HttpResponse(content_type='text/csv',
+    headers={'Content-Disposition': 'attachment; filename="'+request.POST.get('startdate')+' to '+request.POST.get('enddate')+'.csv"'},
+    )
+
+    #Creating the csv writer
+    writer = csv.writer(response)
+
+    keyList = []
+    vmNameList = []
+    hostNameList = []
+
+    # Fixed headers
+    keyList.append('time')
+    keyList.append('name')
+    keyList.append('nodename')
+
+    # # Chosen headers
+    # for key in dict(request.POST).keys():
+
+    client.close()
+
+
+
+
+    
