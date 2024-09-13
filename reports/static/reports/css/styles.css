@@ -67,6 +67,15 @@ td {
   /* margin-top: 2rem; */
 }
 
+.button-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
 .filter-btn {
   background-color: #D96A00;
   color:#F7F8FA;
