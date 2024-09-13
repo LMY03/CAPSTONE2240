@@ -34,11 +34,6 @@
   <h1 style="font-size:2vw;font-weight:600;display:block;margin:0.5rem 1rem;">
     Report Generation</h1>
 
-    <div style="margin:1.3rem 0.5rem; float:right;" class="button-container">
-      <button id="extract-btn" class="filter-btn" type="button">Extract Data</button>
-      <button id="report-btn" class="filter-btn" type="button">Generate Report</button>
-    </div>
-
     <form method="POST" id="filterForm">
       {% csrf_token %}
       <!-- Conditions -->
@@ -93,10 +88,12 @@
           </div>
         </div>
       </div>
+
       <!-- Machines List -->
       <div class="card w-100">
         <div class="card-body">
           <h5 class="card-title mb-3">Select Machines</h5>
+      
           <!-- Filter -->
           <div class="mb-3">
             <select name="categoryFilter" id="categoryFilter" class="form-select w-auto">
@@ -128,6 +125,11 @@
             </table>
           </div>
         </div>
+      </div>
+
+      <div style="margin:1.3rem 0.5rem; float:right;">
+        <button id="extract-btn" class="filter-btn" type="button">Extract Data</button>
+        <button id="report-btn" class="filter-btn" type="button">Generate Report</button>
       </div>
 
     </form>
