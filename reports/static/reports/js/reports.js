@@ -19,7 +19,6 @@ $(document).ready(function() {
 
   // Generate rows 
   function genVmTable(vm) {
-    console.log(vm)
 
     // let vmInfo = [vm.id, vm.id, vm.name, vm.type, vm.node]
     let vmInfo = [vm.id, vm.id, vm.name, vm.node, vm.type]
@@ -137,7 +136,6 @@ $(document).ready(function() {
 
         // Generates the VM table for each item in the list of machines
         for (i = 0; i < response.vmList.length; i++) {
-          console.log(response.vmList)
           genVmTable(response.vmList[i])
         }
 
