@@ -1,682 +1,3 @@
---
--- Licensed to the Apache Software Foundation (ASF) under one
--- or more contributor license agreements.  See the NOTICE file
--- distributed with this work for additional information
--- regarding copyright ownership.  The ASF licenses this file
--- to you under the Apache License, Version 2.0 (the
--- "License"); you may not use this file except in compliance
--- with the License.  You may obtain a copy of the License at
---
---   http://www.apache.org/licenses/LICENSE-2.0
---
--- Unless required by applicable law or agreed to in writing,
--- software distributed under the License is distributed on an
--- "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
--- KIND, either express or implied.  See the License for the
--- specific language governing permissions and limitations
--- under the License.
---
-
---
--- Table of connection groups. Each connection group has a name.
---
-CREATE DATABASE IF NOT EXISTS guacamole_db;
-
-CREATE USER IF NOT EXISTS 'guacadmin'@'%' IDENTIFIED BY 'guacpassword';
-
-GRANT SELECT, UPDATE, INSERT, DELETE ON guacamole_db.* TO 'guacadmin'@'%';
-
-flush privileges;
-
-use guacamole_db;
-
-CREATE TABLE `guacamole_connection_group` (
-
-  `connection_group_id`   int(11)      NOT NULL AUTO_INCREMENT,
-  `parent_id`             int(11),
-  `connection_group_name` varchar(128) NOT NULL,
-  `type`                  enum('ORGANIZATIONAL',
-                               'BALANCING') NOT NULL DEFAULT 'ORGANIZATIONAL',
-
-  -- Concurrency limits
-  `max_connections`          int(11),
-  `max_connections_per_user` int(11),
-  `enable_session_affinity`  boolean NOT NULL DEFAULT 0,
-
-  PRIMARY KEY (`connection_group_id`),
-  UNIQUE KEY `connection_group_name_parent` (`connection_group_name`, `parent_id`),
-
-  CONSTRAINT `guacamole_connection_group_ibfk_1`
-    FOREIGN KEY (`parent_id`)
-    REFERENCES `guacamole_connection_group` (`connection_group_id`) ON DELETE CASCADE
-
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Table of connections. Each connection has a name, protocol, and
--- associated set of parameters.
--- A connection may belong to a connection group.
---
-
-CREATE TABLE `guacamole_connection` (
-
-  `connection_id`       int(11)      NOT NULL AUTO_INCREMENT,
-  `connection_name`     varchar(128) NOT NULL,
-  `parent_id`           int(11),
-  `protocol`            varchar(32)  NOT NULL,
-  
-  -- Guacamole proxy (guacd) overrides
-  `proxy_port`              integer,
-  `proxy_hostname`          varchar(512),
-  `proxy_encryption_method` enum('NONE', 'SSL'),
-
-  -- Concurrency limits
-  `max_connections`          int(11),
-  `max_connections_per_user` int(11),
-  
-  -- Load-balancing behavior
-  `connection_weight`        int(11),
-  `failover_only`            boolean NOT NULL DEFAULT 0,
-
-  PRIMARY KEY (`connection_id`),
-  UNIQUE KEY `connection_name_parent` (`connection_name`, `parent_id`),
-
-  CONSTRAINT `guacamole_connection_ibfk_1`
-    FOREIGN KEY (`parent_id`)
-    REFERENCES `guacamole_connection_group` (`connection_group_id`) ON DELETE CASCADE
-
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Table of base entities which may each be either a user or user group. Other
--- tables which represent qualities shared by both users and groups will point
--- to guacamole_entity, while tables which represent qualities specific to
--- users or groups will point to guacamole_user or guacamole_user_group.
---
-
-CREATE TABLE `guacamole_entity` (
-
-  `entity_id`     int(11)            NOT NULL AUTO_INCREMENT,
-  `name`          varchar(128)       NOT NULL,
-  `type`          enum('USER',
-                       'USER_GROUP') NOT NULL,
-
-  PRIMARY KEY (`entity_id`),
-  UNIQUE KEY `guacamole_entity_name_scope` (`type`, `name`)
-
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Table of users. Each user has a unique username and a hashed password
--- with corresponding salt. Although the authentication system will always set
--- salted passwords, other systems may set unsalted passwords by simply not
--- providing the salt.
---
-
-CREATE TABLE `guacamole_user` (
-
-  `user_id`       int(11)      NOT NULL AUTO_INCREMENT,
-  `entity_id`     int(11)      NOT NULL,
-
-  -- Optionally-salted password
-  `password_hash` binary(32)   NOT NULL,
-  `password_salt` binary(32),
-  `password_date` datetime     NOT NULL,
-
-  -- Account disabled/expired status
-  `disabled`      boolean      NOT NULL DEFAULT 0,
-  `expired`       boolean      NOT NULL DEFAULT 0,
-
-  -- Time-based access restriction
-  `access_window_start`    TIME,
-  `access_window_end`      TIME,
-
-  -- Date-based access restriction
-  `valid_from`  DATE,
-  `valid_until` DATE,
-
-  -- Timezone used for all date/time comparisons and interpretation
-  `timezone` VARCHAR(64),
-
-  -- Profile information
-  `full_name`           VARCHAR(256),
-  `email_address`       VARCHAR(256),
-  `organization`        VARCHAR(256),
-  `organizational_role` VARCHAR(256),
-
-  PRIMARY KEY (`user_id`),
-
-  UNIQUE KEY `guacamole_user_single_entity` (`entity_id`),
-
-  CONSTRAINT `guacamole_user_entity`
-    FOREIGN KEY (`entity_id`)
-    REFERENCES `guacamole_entity` (`entity_id`)
-    ON DELETE CASCADE
-
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Table of user groups. Each user group may have an arbitrary set of member
--- users and member groups, with those members inheriting the permissions
--- granted to that group.
---
-
-CREATE TABLE `guacamole_user_group` (
-
-  `user_group_id` int(11)      NOT NULL AUTO_INCREMENT,
-  `entity_id`     int(11)      NOT NULL,
-
-  -- Group disabled status
-  `disabled`      boolean      NOT NULL DEFAULT 0,
-
-  PRIMARY KEY (`user_group_id`),
-
-  UNIQUE KEY `guacamole_user_group_single_entity` (`entity_id`),
-
-  CONSTRAINT `guacamole_user_group_entity`
-    FOREIGN KEY (`entity_id`)
-    REFERENCES `guacamole_entity` (`entity_id`)
-    ON DELETE CASCADE
-
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Table of users which are members of given user groups.
---
-
-CREATE TABLE `guacamole_user_group_member` (
-
-  `user_group_id`    int(11)     NOT NULL,
-  `member_entity_id` int(11)     NOT NULL,
-
-  PRIMARY KEY (`user_group_id`, `member_entity_id`),
-
-  -- Parent must be a user group
-  CONSTRAINT `guacamole_user_group_member_parent_id`
-    FOREIGN KEY (`user_group_id`)
-    REFERENCES `guacamole_user_group` (`user_group_id`) ON DELETE CASCADE,
-
-  -- Member may be either a user or a user group (any entity)
-  CONSTRAINT `guacamole_user_group_member_entity_id`
-    FOREIGN KEY (`member_entity_id`)
-    REFERENCES `guacamole_entity` (`entity_id`) ON DELETE CASCADE
-
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Table of sharing profiles. Each sharing profile has a name, associated set
--- of parameters, and a primary connection. The primary connection is the
--- connection that the sharing profile shares, and the parameters dictate the
--- restrictions/features which apply to the user joining the connection via the
--- sharing profile.
---
-
-CREATE TABLE guacamole_sharing_profile (
-
-  `sharing_profile_id`    int(11)      NOT NULL AUTO_INCREMENT,
-  `sharing_profile_name`  varchar(128) NOT NULL,
-  `primary_connection_id` int(11)      NOT NULL,
-
-  PRIMARY KEY (`sharing_profile_id`),
-  UNIQUE KEY `sharing_profile_name_primary` (sharing_profile_name, primary_connection_id),
-
-  CONSTRAINT `guacamole_sharing_profile_ibfk_1`
-    FOREIGN KEY (`primary_connection_id`)
-    REFERENCES `guacamole_connection` (`connection_id`)
-    ON DELETE CASCADE
-
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Table of connection parameters. Each parameter is simply a name/value pair
--- associated with a connection.
---
-
-CREATE TABLE `guacamole_connection_parameter` (
-
-  `connection_id`   int(11)       NOT NULL,
-  `parameter_name`  varchar(128)  NOT NULL,
-  `parameter_value` varchar(4096) NOT NULL,
-
-  PRIMARY KEY (`connection_id`,`parameter_name`),
-
-  CONSTRAINT `guacamole_connection_parameter_ibfk_1`
-    FOREIGN KEY (`connection_id`)
-    REFERENCES `guacamole_connection` (`connection_id`) ON DELETE CASCADE
-
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Table of sharing profile parameters. Each parameter is simply
--- name/value pair associated with a sharing profile. These parameters dictate
--- the restrictions/features which apply to the user joining the associated
--- connection via the sharing profile.
---
-
-CREATE TABLE guacamole_sharing_profile_parameter (
-
-  `sharing_profile_id` integer       NOT NULL,
-  `parameter_name`     varchar(128)  NOT NULL,
-  `parameter_value`    varchar(4096) NOT NULL,
-
-  PRIMARY KEY (`sharing_profile_id`, `parameter_name`),
-
-  CONSTRAINT `guacamole_sharing_profile_parameter_ibfk_1`
-    FOREIGN KEY (`sharing_profile_id`)
-    REFERENCES `guacamole_sharing_profile` (`sharing_profile_id`) ON DELETE CASCADE
-
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Table of arbitrary user attributes. Each attribute is simply a name/value
--- pair associated with a user. Arbitrary attributes are defined by other
--- extensions. Attributes defined by this extension will be mapped to
--- properly-typed columns of a specific table.
---
-
-CREATE TABLE guacamole_user_attribute (
-
-  `user_id`         int(11)       NOT NULL,
-  `attribute_name`  varchar(128)  NOT NULL,
-  `attribute_value` varchar(4096) NOT NULL,
-
-  PRIMARY KEY (user_id, attribute_name),
-  KEY `user_id` (`user_id`),
-
-  CONSTRAINT guacamole_user_attribute_ibfk_1
-    FOREIGN KEY (user_id)
-    REFERENCES guacamole_user (user_id) ON DELETE CASCADE
-
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Table of arbitrary user group attributes. Each attribute is simply a
--- name/value pair associated with a user group. Arbitrary attributes are
--- defined by other extensions. Attributes defined by this extension will be
--- mapped to properly-typed columns of a specific table.
---
-
-CREATE TABLE guacamole_user_group_attribute (
-
-  `user_group_id`   int(11)       NOT NULL,
-  `attribute_name`  varchar(128)  NOT NULL,
-  `attribute_value` varchar(4096) NOT NULL,
-
-  PRIMARY KEY (`user_group_id`, `attribute_name`),
-  KEY `user_group_id` (`user_group_id`),
-
-  CONSTRAINT `guacamole_user_group_attribute_ibfk_1`
-    FOREIGN KEY (`user_group_id`)
-    REFERENCES `guacamole_user_group` (`user_group_id`) ON DELETE CASCADE
-
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Table of arbitrary connection attributes. Each attribute is simply a
--- name/value pair associated with a connection. Arbitrary attributes are
--- defined by other extensions. Attributes defined by this extension will be
--- mapped to properly-typed columns of a specific table.
---
-
-CREATE TABLE guacamole_connection_attribute (
-
-  `connection_id`   int(11)       NOT NULL,
-  `attribute_name`  varchar(128)  NOT NULL,
-  `attribute_value` varchar(4096) NOT NULL,
-
-  PRIMARY KEY (connection_id, attribute_name),
-  KEY `connection_id` (`connection_id`),
-
-  CONSTRAINT guacamole_connection_attribute_ibfk_1
-    FOREIGN KEY (connection_id)
-    REFERENCES guacamole_connection (connection_id) ON DELETE CASCADE
-
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Table of arbitrary connection group attributes. Each attribute is simply a
--- name/value pair associated with a connection group. Arbitrary attributes are
--- defined by other extensions. Attributes defined by this extension will be
--- mapped to properly-typed columns of a specific table.
---
-
-CREATE TABLE guacamole_connection_group_attribute (
-
-  `connection_group_id` int(11)       NOT NULL,
-  `attribute_name`      varchar(128)  NOT NULL,
-  `attribute_value`     varchar(4096) NOT NULL,
-
-  PRIMARY KEY (connection_group_id, attribute_name),
-  KEY `connection_group_id` (`connection_group_id`),
-
-  CONSTRAINT guacamole_connection_group_attribute_ibfk_1
-    FOREIGN KEY (connection_group_id)
-    REFERENCES guacamole_connection_group (connection_group_id) ON DELETE CASCADE
-
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Table of arbitrary sharing profile attributes. Each attribute is simply a
--- name/value pair associated with a sharing profile. Arbitrary attributes are
--- defined by other extensions. Attributes defined by this extension will be
--- mapped to properly-typed columns of a specific table.
---
-
-CREATE TABLE guacamole_sharing_profile_attribute (
-
-  `sharing_profile_id` int(11)       NOT NULL,
-  `attribute_name`     varchar(128)  NOT NULL,
-  `attribute_value`    varchar(4096) NOT NULL,
-
-  PRIMARY KEY (sharing_profile_id, attribute_name),
-  KEY `sharing_profile_id` (`sharing_profile_id`),
-
-  CONSTRAINT guacamole_sharing_profile_attribute_ibfk_1
-    FOREIGN KEY (sharing_profile_id)
-    REFERENCES guacamole_sharing_profile (sharing_profile_id) ON DELETE CASCADE
-
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Table of connection permissions. Each connection permission grants a user or
--- user group specific access to a connection.
---
-
-CREATE TABLE `guacamole_connection_permission` (
-
-  `entity_id`     int(11) NOT NULL,
-  `connection_id` int(11) NOT NULL,
-  `permission`    enum('READ',
-                       'UPDATE',
-                       'DELETE',
-                       'ADMINISTER') NOT NULL,
-
-  PRIMARY KEY (`entity_id`,`connection_id`,`permission`),
-
-  CONSTRAINT `guacamole_connection_permission_ibfk_1`
-    FOREIGN KEY (`connection_id`)
-    REFERENCES `guacamole_connection` (`connection_id`) ON DELETE CASCADE,
-
-  CONSTRAINT `guacamole_connection_permission_entity`
-    FOREIGN KEY (`entity_id`)
-    REFERENCES `guacamole_entity` (`entity_id`) ON DELETE CASCADE
-
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Table of connection group permissions. Each group permission grants a user
--- or user group specific access to a connection group.
---
-
-CREATE TABLE `guacamole_connection_group_permission` (
-
-  `entity_id`           int(11) NOT NULL,
-  `connection_group_id` int(11) NOT NULL,
-  `permission`          enum('READ',
-                             'UPDATE',
-                             'DELETE',
-                             'ADMINISTER') NOT NULL,
-
-  PRIMARY KEY (`entity_id`,`connection_group_id`,`permission`),
-
-  CONSTRAINT `guacamole_connection_group_permission_ibfk_1`
-    FOREIGN KEY (`connection_group_id`)
-    REFERENCES `guacamole_connection_group` (`connection_group_id`) ON DELETE CASCADE,
-
-  CONSTRAINT `guacamole_connection_group_permission_entity`
-    FOREIGN KEY (`entity_id`)
-    REFERENCES `guacamole_entity` (`entity_id`) ON DELETE CASCADE
-
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Table of sharing profile permissions. Each sharing profile permission grants
--- a user or user group specific access to a sharing profile.
---
-
-CREATE TABLE guacamole_sharing_profile_permission (
-
-  `entity_id`          integer NOT NULL,
-  `sharing_profile_id` integer NOT NULL,
-  `permission`         enum('READ',
-                            'UPDATE',
-                            'DELETE',
-                            'ADMINISTER') NOT NULL,
-
-  PRIMARY KEY (`entity_id`, `sharing_profile_id`, `permission`),
-
-  CONSTRAINT `guacamole_sharing_profile_permission_ibfk_1`
-    FOREIGN KEY (`sharing_profile_id`)
-    REFERENCES `guacamole_sharing_profile` (`sharing_profile_id`) ON DELETE CASCADE,
-
-  CONSTRAINT `guacamole_sharing_profile_permission_entity`
-    FOREIGN KEY (`entity_id`)
-    REFERENCES `guacamole_entity` (`entity_id`) ON DELETE CASCADE
-
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Table of system permissions. Each system permission grants a user or user
--- group a system-level privilege of some kind.
---
-
-CREATE TABLE `guacamole_system_permission` (
-
-  `entity_id`  int(11) NOT NULL,
-  `permission` enum('CREATE_CONNECTION',
-                    'CREATE_CONNECTION_GROUP',
-                    'CREATE_SHARING_PROFILE',
-                    'CREATE_USER',
-                    'CREATE_USER_GROUP',
-                    'ADMINISTER') NOT NULL,
-
-  PRIMARY KEY (`entity_id`,`permission`),
-
-  CONSTRAINT `guacamole_system_permission_entity`
-    FOREIGN KEY (`entity_id`)
-    REFERENCES `guacamole_entity` (`entity_id`) ON DELETE CASCADE
-
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Table of user permissions. Each user permission grants a user or user group
--- access to another user (the "affected" user) for a specific type of
--- operation.
---
-
-CREATE TABLE `guacamole_user_permission` (
-
-  `entity_id`        int(11) NOT NULL,
-  `affected_user_id` int(11) NOT NULL,
-  `permission`       enum('READ',
-                          'UPDATE',
-                          'DELETE',
-                          'ADMINISTER') NOT NULL,
-
-  PRIMARY KEY (`entity_id`,`affected_user_id`,`permission`),
-
-  CONSTRAINT `guacamole_user_permission_ibfk_1`
-    FOREIGN KEY (`affected_user_id`)
-    REFERENCES `guacamole_user` (`user_id`) ON DELETE CASCADE,
-
-  CONSTRAINT `guacamole_user_permission_entity`
-    FOREIGN KEY (`entity_id`)
-    REFERENCES `guacamole_entity` (`entity_id`) ON DELETE CASCADE
-
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Table of user group permissions. Each user group permission grants a user
--- or user group access to a another user group (the "affected" user group) for
--- a specific type of operation.
---
-
-CREATE TABLE `guacamole_user_group_permission` (
-
-  `entity_id`              int(11) NOT NULL,
-  `affected_user_group_id` int(11) NOT NULL,
-  `permission`             enum('READ',
-                                'UPDATE',
-                                'DELETE',
-                                'ADMINISTER') NOT NULL,
-
-  PRIMARY KEY (`entity_id`, `affected_user_group_id`, `permission`),
-
-  CONSTRAINT `guacamole_user_group_permission_affected_user_group`
-    FOREIGN KEY (`affected_user_group_id`)
-    REFERENCES `guacamole_user_group` (`user_group_id`) ON DELETE CASCADE,
-
-  CONSTRAINT `guacamole_user_group_permission_entity`
-    FOREIGN KEY (`entity_id`)
-    REFERENCES `guacamole_entity` (`entity_id`) ON DELETE CASCADE
-
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- Table of connection history records. Each record defines a specific user's
--- session, including the connection used, the start time, and the end time
--- (if any).
---
-
-CREATE TABLE `guacamole_connection_history` (
-
-  `history_id`           int(11)      NOT NULL AUTO_INCREMENT,
-  `user_id`              int(11)      DEFAULT NULL,
-  `username`             varchar(128) NOT NULL,
-  `remote_host`          varchar(256) DEFAULT NULL,
-  `connection_id`        int(11)      DEFAULT NULL,
-  `connection_name`      varchar(128) NOT NULL,
-  `sharing_profile_id`   int(11)      DEFAULT NULL,
-  `sharing_profile_name` varchar(128) DEFAULT NULL,
-  `start_date`           datetime     NOT NULL,
-  `end_date`             datetime     DEFAULT NULL,
-
-  PRIMARY KEY (`history_id`),
-  KEY `user_id` (`user_id`),
-  KEY `connection_id` (`connection_id`),
-  KEY `sharing_profile_id` (`sharing_profile_id`),
-  KEY `start_date` (`start_date`),
-  KEY `end_date` (`end_date`),
-  KEY `connection_start_date` (`connection_id`, `start_date`),
-
-  CONSTRAINT `guacamole_connection_history_ibfk_1`
-    FOREIGN KEY (`user_id`)
-    REFERENCES `guacamole_user` (`user_id`) ON DELETE SET NULL,
-
-  CONSTRAINT `guacamole_connection_history_ibfk_2`
-    FOREIGN KEY (`connection_id`)
-    REFERENCES `guacamole_connection` (`connection_id`) ON DELETE SET NULL,
-
-  CONSTRAINT `guacamole_connection_history_ibfk_3`
-    FOREIGN KEY (`sharing_profile_id`)
-    REFERENCES `guacamole_sharing_profile` (`sharing_profile_id`) ON DELETE SET NULL
-
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- User login/logout history
---
-
-CREATE TABLE guacamole_user_history (
-
-  `history_id`           int(11)      NOT NULL AUTO_INCREMENT,
-  `user_id`              int(11)      DEFAULT NULL,
-  `username`             varchar(128) NOT NULL,
-  `remote_host`          varchar(256) DEFAULT NULL,
-  `start_date`           datetime     NOT NULL,
-  `end_date`             datetime     DEFAULT NULL,
-
-  PRIMARY KEY (history_id),
-  KEY `user_id` (`user_id`),
-  KEY `start_date` (`start_date`),
-  KEY `end_date` (`end_date`),
-  KEY `user_start_date` (`user_id`, `start_date`),
-
-  CONSTRAINT guacamole_user_history_ibfk_1
-    FOREIGN KEY (user_id)
-    REFERENCES guacamole_user (user_id) ON DELETE SET NULL
-
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-
---
--- User password history
---
-
-CREATE TABLE guacamole_user_password_history (
-
-  `password_history_id` int(11) NOT NULL AUTO_INCREMENT,
-  `user_id`             int(11) NOT NULL,
-
-  -- Salted password
-  `password_hash` binary(32) NOT NULL,
-  `password_salt` binary(32),
-  `password_date` datetime   NOT NULL,
-
-  PRIMARY KEY (`password_history_id`),
-  KEY `user_id` (`user_id`),
-
-  CONSTRAINT `guacamole_user_password_history_ibfk_1`
-    FOREIGN KEY (`user_id`)
-    REFERENCES `guacamole_user` (`user_id`) ON DELETE CASCADE
-
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
---
--- Licensed to the Apache Software Foundation (ASF) under one
--- or more contributor license agreements.  See the NOTICE file
--- distributed with this work for additional information
--- regarding copyright ownership.  The ASF licenses this file
--- to you under the Apache License, Version 2.0 (the
--- "License"); you may not use this file except in compliance
--- with the License.  You may obtain a copy of the License at
---
---   http://www.apache.org/licenses/LICENSE-2.0
---
--- Unless required by applicable law or agreed to in writing,
--- software distributed under the License is distributed on an
--- "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
--- KIND, either express or implied.  See the License for the
--- specific language governing permissions and limitations
--- under the License.
---
-
--- Create default user "guacadmin" with password "guacadmin"
-INSERT INTO guacamole_entity (name, type) VALUES ('guacadmin', 'USER');
-INSERT INTO guacamole_user (entity_id, password_hash, password_salt, password_date)
-SELECT
-    entity_id,
-    x'CA458A7D494E3BE824F5E1E175A1556C0F8EEF2C2D7DF3633BEC4A29C4411960',  -- 'guacadmin'
-    x'FE24ADC5E11E2B25288D1704ABE67A79E342ECC26064CE69C5B3177795A82264',
-    NOW()
-FROM guacamole_entity WHERE name = 'guacadmin';
-
--- Grant this user all system permissions
-INSERT INTO guacamole_system_permission (entity_id, permission)
-SELECT entity_id, permission
-FROM (
-          SELECT 'guacadmin'  AS username, 'CREATE_CONNECTION'       AS permission
-    UNION SELECT 'guacadmin'  AS username, 'CREATE_CONNECTION_GROUP' AS permission
-    UNION SELECT 'guacadmin'  AS username, 'CREATE_SHARING_PROFILE'  AS permission
-    UNION SELECT 'guacadmin'  AS username, 'CREATE_USER'             AS permission
-    UNION SELECT 'guacadmin'  AS username, 'CREATE_USER_GROUP'       AS permission
-    UNION SELECT 'guacadmin'  AS username, 'ADMINISTER'              AS permission
-) permissions
-JOIN guacamole_entity ON permissions.username = guacamole_entity.name AND guacamole_entity.type = 'USER';
-
--- Grant admin permission to read/update/administer self
-INSERT INTO guacamole_user_permission (entity_id, affected_user_id, permission)
-SELECT guacamole_entity.entity_id, guacamole_user.user_id, permission
-FROM (
-          SELECT 'guacadmin' AS username, 'guacadmin' AS affected_username, 'READ'       AS permission
-    UNION SELECT 'guacadmin' AS username, 'guacadmin' AS affected_username, 'UPDATE'     AS permission
-    UNION SELECT 'guacadmin' AS username, 'guacadmin' AS affected_username, 'ADMINISTER' AS permission
-) permissions
-JOIN guacamole_entity          ON permissions.username = guacamole_entity.name AND guacamole_entity.type = 'USER'
-JOIN guacamole_entity affected ON permissions.affected_username = affected.name AND guacamole_entity.type = 'USER'
-JOIN guacamole_user            ON guacamole_user.entity_id = affected.entity_id;
-
-
-CREATE DATABASE  IF NOT EXISTS `cap2240db` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
-USE `cap2240db`;
 -- MySQL dump 10.13  Distrib 8.0.31, for Win64 (x86_64)
 --
 -- Host: 192.168.1.9    Database: cap2240db
@@ -693,6 +14,14 @@ USE `cap2240db`;
 /*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+--
+-- Current Database: `cap2240db`
+--
+
+CREATE DATABASE /*!32312 IF NOT EXISTS*/ `cap2240db` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
+
+USE `cap2240db`;
 
 --
 -- Table structure for table `auth_group`
@@ -761,7 +90,7 @@ CREATE TABLE `auth_permission` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `auth_permission_content_type_id_codename_01ab375a_uniq` (`content_type_id`,`codename`),
   CONSTRAINT `auth_permission_content_type_id_2f476e4b_fk_django_co` FOREIGN KEY (`content_type_id`) REFERENCES `django_content_type` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=117 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=125 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -770,7 +99,7 @@ CREATE TABLE `auth_permission` (
 
 LOCK TABLES `auth_permission` WRITE;
 /*!40000 ALTER TABLE `auth_permission` DISABLE KEYS */;
-INSERT INTO `auth_permission` VALUES (1,'Can add request entry',1,'add_requestentry'),(2,'Can change request entry',1,'change_requestentry'),(3,'Can delete request entry',1,'delete_requestentry'),(4,'Can view request entry',1,'view_requestentry'),(5,'Can add vm templates',2,'add_vmtemplates'),(6,'Can change vm templates',2,'change_vmtemplates'),(7,'Can delete vm templates',2,'delete_vmtemplates'),(8,'Can view vm templates',2,'view_vmtemplates'),(9,'Can add user profile',3,'add_userprofile'),(10,'Can change user profile',3,'change_userprofile'),(11,'Can delete user profile',3,'delete_userprofile'),(12,'Can view user profile',3,'view_userprofile'),(13,'Can add request use case',4,'add_requestusecase'),(14,'Can change request use case',4,'change_requestusecase'),(15,'Can delete request use case',4,'delete_requestusecase'),(16,'Can view request use case',4,'view_requestusecase'),(17,'Can add request entry audit',5,'add_requestentryaudit'),(18,'Can change request entry audit',5,'change_requestentryaudit'),(19,'Can delete request entry audit',5,'delete_requestentryaudit'),(20,'Can view request entry audit',5,'view_requestentryaudit'),(21,'Can add port rules',6,'add_portrules'),(22,'Can change port rules',6,'change_portrules'),(23,'Can delete port rules',6,'delete_portrules'),(24,'Can view port rules',6,'view_portrules'),(25,'Can add comment',7,'add_comment'),(26,'Can change comment',7,'change_comment'),(27,'Can delete comment',7,'delete_comment'),(28,'Can view comment',7,'view_comment'),(29,'Can add guacamole user',8,'add_guacamoleuser'),(30,'Can change guacamole user',8,'change_guacamoleuser'),(31,'Can delete guacamole user',8,'delete_guacamoleuser'),(32,'Can view guacamole user',8,'view_guacamoleuser'),(33,'Can add guacamole connection',9,'add_guacamoleconnection'),(34,'Can change guacamole connection',9,'change_guacamoleconnection'),(35,'Can delete guacamole connection',9,'delete_guacamoleconnection'),(36,'Can view guacamole connection',9,'view_guacamoleconnection'),(37,'Can add destination ports',10,'add_destinationports'),(38,'Can change destination ports',10,'change_destinationports'),(39,'Can delete destination ports',10,'delete_destinationports'),(40,'Can view destination ports',10,'view_destinationports'),(41,'Can add nodes',11,'add_nodes'),(42,'Can change nodes',11,'change_nodes'),(43,'Can delete nodes',11,'delete_nodes'),(44,'Can view nodes',11,'view_nodes'),(45,'Can add virtual machines',12,'add_virtualmachines'),(46,'Can change virtual machines',12,'change_virtualmachines'),(47,'Can delete virtual machines',12,'delete_virtualmachines'),(48,'Can view virtual machines',12,'view_virtualmachines'),(49,'Can add log entry',13,'add_logentry'),(50,'Can change log entry',13,'change_logentry'),(51,'Can delete log entry',13,'delete_logentry'),(52,'Can view log entry',13,'view_logentry'),(53,'Can add permission',14,'add_permission'),(54,'Can change permission',14,'change_permission'),(55,'Can delete permission',14,'delete_permission'),(56,'Can view permission',14,'view_permission'),(57,'Can add group',15,'add_group'),(58,'Can change group',15,'change_group'),(59,'Can delete group',15,'delete_group'),(60,'Can view group',15,'view_group'),(61,'Can add user',16,'add_user'),(62,'Can change user',16,'change_user'),(63,'Can delete user',16,'delete_user'),(64,'Can view user',16,'view_user'),(65,'Can add content type',17,'add_contenttype'),(66,'Can change content type',17,'change_contenttype'),(67,'Can delete content type',17,'delete_contenttype'),(68,'Can view content type',17,'view_contenttype'),(69,'Can add session',18,'add_session'),(70,'Can change session',18,'change_session'),(71,'Can delete session',18,'delete_session'),(72,'Can view session',18,'view_session'),(73,'Can add association',19,'add_association'),(74,'Can change association',19,'change_association'),(75,'Can delete association',19,'delete_association'),(76,'Can view association',19,'view_association'),(77,'Can add code',20,'add_code'),(78,'Can change code',20,'change_code'),(79,'Can delete code',20,'delete_code'),(80,'Can view code',20,'view_code'),(81,'Can add nonce',21,'add_nonce'),(82,'Can change nonce',21,'change_nonce'),(83,'Can delete nonce',21,'delete_nonce'),(84,'Can view nonce',21,'view_nonce'),(85,'Can add user social auth',22,'add_usersocialauth'),(86,'Can change user social auth',22,'change_usersocialauth'),(87,'Can delete user social auth',22,'delete_usersocialauth'),(88,'Can view user social auth',22,'view_usersocialauth'),(89,'Can add partial',23,'add_partial'),(90,'Can change partial',23,'change_partial'),(91,'Can delete partial',23,'delete_partial'),(92,'Can view partial',23,'view_partial'),(93,'Can add crontab',24,'add_crontabschedule'),(94,'Can change crontab',24,'change_crontabschedule'),(95,'Can delete crontab',24,'delete_crontabschedule'),(96,'Can view crontab',24,'view_crontabschedule'),(97,'Can add interval',25,'add_intervalschedule'),(98,'Can change interval',25,'change_intervalschedule'),(99,'Can delete interval',25,'delete_intervalschedule'),(100,'Can view interval',25,'view_intervalschedule'),(101,'Can add periodic task',26,'add_periodictask'),(102,'Can change periodic task',26,'change_periodictask'),(103,'Can delete periodic task',26,'delete_periodictask'),(104,'Can view periodic task',26,'view_periodictask'),(105,'Can add periodic task track',27,'add_periodictasks'),(106,'Can change periodic task track',27,'change_periodictasks'),(107,'Can delete periodic task track',27,'delete_periodictasks'),(108,'Can view periodic task track',27,'view_periodictasks'),(109,'Can add solar event',28,'add_solarschedule'),(110,'Can change solar event',28,'change_solarschedule'),(111,'Can delete solar event',28,'delete_solarschedule'),(112,'Can view solar event',28,'view_solarschedule'),(113,'Can add clocked',29,'add_clockedschedule'),(114,'Can change clocked',29,'change_clockedschedule'),(115,'Can delete clocked',29,'delete_clockedschedule'),(116,'Can view clocked',29,'view_clockedschedule');
+INSERT INTO `auth_permission` VALUES (1,'Can add request entry',1,'add_requestentry'),(2,'Can change request entry',1,'change_requestentry'),(3,'Can delete request entry',1,'delete_requestentry'),(4,'Can view request entry',1,'view_requestentry'),(5,'Can add vm templates',2,'add_vmtemplates'),(6,'Can change vm templates',2,'change_vmtemplates'),(7,'Can delete vm templates',2,'delete_vmtemplates'),(8,'Can view vm templates',2,'view_vmtemplates'),(9,'Can add user profile',3,'add_userprofile'),(10,'Can change user profile',3,'change_userprofile'),(11,'Can delete user profile',3,'delete_userprofile'),(12,'Can view user profile',3,'view_userprofile'),(13,'Can add request use case',4,'add_requestusecase'),(14,'Can change request use case',4,'change_requestusecase'),(15,'Can delete request use case',4,'delete_requestusecase'),(16,'Can view request use case',4,'view_requestusecase'),(17,'Can add request entry audit',5,'add_requestentryaudit'),(18,'Can change request entry audit',5,'change_requestentryaudit'),(19,'Can delete request entry audit',5,'delete_requestentryaudit'),(20,'Can view request entry audit',5,'view_requestentryaudit'),(21,'Can add port rules',6,'add_portrules'),(22,'Can change port rules',6,'change_portrules'),(23,'Can delete port rules',6,'delete_portrules'),(24,'Can view port rules',6,'view_portrules'),(25,'Can add issue ticket',7,'add_issueticket'),(26,'Can change issue ticket',7,'change_issueticket'),(27,'Can delete issue ticket',7,'delete_issueticket'),(28,'Can view issue ticket',7,'view_issueticket'),(29,'Can add issue file',8,'add_issuefile'),(30,'Can change issue file',8,'change_issuefile'),(31,'Can delete issue file',8,'delete_issuefile'),(32,'Can view issue file',8,'view_issuefile'),(33,'Can add comment',9,'add_comment'),(34,'Can change comment',9,'change_comment'),(35,'Can delete comment',9,'delete_comment'),(36,'Can view comment',9,'view_comment'),(37,'Can add guacamole user',10,'add_guacamoleuser'),(38,'Can change guacamole user',10,'change_guacamoleuser'),(39,'Can delete guacamole user',10,'delete_guacamoleuser'),(40,'Can view guacamole user',10,'view_guacamoleuser'),(41,'Can add guacamole connection',11,'add_guacamoleconnection'),(42,'Can change guacamole connection',11,'change_guacamoleconnection'),(43,'Can delete guacamole connection',11,'delete_guacamoleconnection'),(44,'Can view guacamole connection',11,'view_guacamoleconnection'),(45,'Can add destination ports',12,'add_destinationports'),(46,'Can change destination ports',12,'change_destinationports'),(47,'Can delete destination ports',12,'delete_destinationports'),(48,'Can view destination ports',12,'view_destinationports'),(49,'Can add nodes',13,'add_nodes'),(50,'Can change nodes',13,'change_nodes'),(51,'Can delete nodes',13,'delete_nodes'),(52,'Can view nodes',13,'view_nodes'),(53,'Can add virtual machines',14,'add_virtualmachines'),(54,'Can change virtual machines',14,'change_virtualmachines'),(55,'Can delete virtual machines',14,'delete_virtualmachines'),(56,'Can view virtual machines',14,'view_virtualmachines'),(57,'Can add log entry',15,'add_logentry'),(58,'Can change log entry',15,'change_logentry'),(59,'Can delete log entry',15,'delete_logentry'),(60,'Can view log entry',15,'view_logentry'),(61,'Can add permission',16,'add_permission'),(62,'Can change permission',16,'change_permission'),(63,'Can delete permission',16,'delete_permission'),(64,'Can view permission',16,'view_permission'),(65,'Can add group',17,'add_group'),(66,'Can change group',17,'change_group'),(67,'Can delete group',17,'delete_group'),(68,'Can view group',17,'view_group'),(69,'Can add user',18,'add_user'),(70,'Can change user',18,'change_user'),(71,'Can delete user',18,'delete_user'),(72,'Can view user',18,'view_user'),(73,'Can add content type',19,'add_contenttype'),(74,'Can change content type',19,'change_contenttype'),(75,'Can delete content type',19,'delete_contenttype'),(76,'Can view content type',19,'view_contenttype'),(77,'Can add session',20,'add_session'),(78,'Can change session',20,'change_session'),(79,'Can delete session',20,'delete_session'),(80,'Can view session',20,'view_session'),(81,'Can add association',21,'add_association'),(82,'Can change association',21,'change_association'),(83,'Can delete association',21,'delete_association'),(84,'Can view association',21,'view_association'),(85,'Can add code',22,'add_code'),(86,'Can change code',22,'change_code'),(87,'Can delete code',22,'delete_code'),(88,'Can view code',22,'view_code'),(89,'Can add nonce',23,'add_nonce'),(90,'Can change nonce',23,'change_nonce'),(91,'Can delete nonce',23,'delete_nonce'),(92,'Can view nonce',23,'view_nonce'),(93,'Can add user social auth',24,'add_usersocialauth'),(94,'Can change user social auth',24,'change_usersocialauth'),(95,'Can delete user social auth',24,'delete_usersocialauth'),(96,'Can view user social auth',24,'view_usersocialauth'),(97,'Can add partial',25,'add_partial'),(98,'Can change partial',25,'change_partial'),(99,'Can delete partial',25,'delete_partial'),(100,'Can view partial',25,'view_partial'),(101,'Can add crontab',26,'add_crontabschedule'),(102,'Can change crontab',26,'change_crontabschedule'),(103,'Can delete crontab',26,'delete_crontabschedule'),(104,'Can view crontab',26,'view_crontabschedule'),(105,'Can add interval',27,'add_intervalschedule'),(106,'Can change interval',27,'change_intervalschedule'),(107,'Can delete interval',27,'delete_intervalschedule'),(108,'Can view interval',27,'view_intervalschedule'),(109,'Can add periodic task',28,'add_periodictask'),(110,'Can change periodic task',28,'change_periodictask'),(111,'Can delete periodic task',28,'delete_periodictask'),(112,'Can view periodic task',28,'view_periodictask'),(113,'Can add periodic task track',29,'add_periodictasks'),(114,'Can change periodic task track',29,'change_periodictasks'),(115,'Can delete periodic task track',29,'delete_periodictasks'),(116,'Can view periodic task track',29,'view_periodictasks'),(117,'Can add solar event',30,'add_solarschedule'),(118,'Can change solar event',30,'change_solarschedule'),(119,'Can delete solar event',30,'delete_solarschedule'),(120,'Can view solar event',30,'view_solarschedule'),(121,'Can add clocked',31,'add_clockedschedule'),(122,'Can change clocked',31,'change_clockedschedule'),(123,'Can delete clocked',31,'delete_clockedschedule'),(124,'Can view clocked',31,'view_clockedschedule');
 /*!40000 ALTER TABLE `auth_permission` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -804,6 +133,7 @@ CREATE TABLE `auth_user` (
 
 LOCK TABLES `auth_user` WRITE;
 /*!40000 ALTER TABLE `auth_user` DISABLE KEYS */;
+INSERT INTO `auth_user` VALUES (1,'pbkdf2_sha256$720000$5gL9pa3JAHZYMUbNgW3qqL$udv7QLPHZ/Fv5ijQQMvklg06MOZvEkkbGY2LJ17dIyM=',NULL,1,'admin','admin','chan','',1,1,'2024-09-14 13:54:58.000000'),(2,'pbkdf2_sha256$720000$5gL9pa3JAHZYMUbNgW3qqL$udv7QLPHZ/Fv5ijQQMvklg06MOZvEkkbGY2LJ17dIyM=',NULL,1,'john.doe','John','Doe','',1,1,'2024-09-14 13:54:58.000000'),(3,'pbkdf2_sha256$720000$5gL9pa3JAHZYMUbNgW3qqL$udv7QLPHZ/Fv5ijQQMvklg06MOZvEkkbGY2LJ17dIyM=',NULL,0,'josephine.cruz','Josephine','Cruz','',0,1,'2024-09-14 13:54:58.000000');
 /*!40000 ALTER TABLE `auth_user` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
@@ -971,7 +301,7 @@ CREATE TABLE `django_celery_beat_crontabschedule` (
   `month_of_year` varchar(64) NOT NULL,
   `timezone` varchar(63) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -980,6 +310,7 @@ CREATE TABLE `django_celery_beat_crontabschedule` (
 
 LOCK TABLES `django_celery_beat_crontabschedule` WRITE;
 /*!40000 ALTER TABLE `django_celery_beat_crontabschedule` DISABLE KEYS */;
+INSERT INTO `django_celery_beat_crontabschedule` VALUES (1,'0','4','*','*','*','Asia/Manila'),(2,'*','*','*','*','*','Asia/Manila');
 /*!40000 ALTER TABLE `django_celery_beat_crontabschedule` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1051,7 +382,7 @@ CREATE TABLE `django_celery_beat_periodictask` (
   CONSTRAINT `django_celery_beat_periodictask_chk_1` CHECK ((`total_run_count` >= 0)),
   CONSTRAINT `django_celery_beat_periodictask_chk_2` CHECK ((`priority` >= 0)),
   CONSTRAINT `django_celery_beat_periodictask_chk_3` CHECK ((`expire_seconds` >= 0))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1060,6 +391,7 @@ CREATE TABLE `django_celery_beat_periodictask` (
 
 LOCK TABLES `django_celery_beat_periodictask` WRITE;
 /*!40000 ALTER TABLE `django_celery_beat_periodictask` DISABLE KEYS */;
+INSERT INTO `django_celery_beat_periodictask` VALUES (1,'celery.backend_cleanup','celery.backend_cleanup','[]','{}',NULL,NULL,NULL,NULL,1,NULL,0,'2024-09-14 13:52:54.611598','',1,NULL,NULL,0,NULL,NULL,'{}',NULL,43200),(2,'delete-expired-requests','ticketing.tasks.delete_expired_requests','[]','{}',NULL,NULL,NULL,NULL,1,'2024-09-14 13:55:00.002856',3,'2024-09-14 13:55:59.999284','',2,NULL,NULL,0,NULL,NULL,'{}',NULL,NULL);
 /*!40000 ALTER TABLE `django_celery_beat_periodictask` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1083,6 +415,7 @@ CREATE TABLE `django_celery_beat_periodictasks` (
 
 LOCK TABLES `django_celery_beat_periodictasks` WRITE;
 /*!40000 ALTER TABLE `django_celery_beat_periodictasks` DISABLE KEYS */;
+INSERT INTO `django_celery_beat_periodictasks` VALUES (1,'2024-09-14 13:52:54.659132');
 /*!40000 ALTER TABLE `django_celery_beat_periodictasks` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1125,7 +458,7 @@ CREATE TABLE `django_content_type` (
   `model` varchar(100) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `django_content_type_app_label_model_76bd3d3b_uniq` (`app_label`,`model`)
-) ENGINE=InnoDB AUTO_INCREMENT=30 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=32 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1134,7 +467,7 @@ CREATE TABLE `django_content_type` (
 
 LOCK TABLES `django_content_type` WRITE;
 /*!40000 ALTER TABLE `django_content_type` DISABLE KEYS */;
-INSERT INTO `django_content_type` VALUES (13,'admin','logentry'),(15,'auth','group'),(14,'auth','permission'),(16,'auth','user'),(17,'contenttypes','contenttype'),(29,'django_celery_beat','clockedschedule'),(24,'django_celery_beat','crontabschedule'),(25,'django_celery_beat','intervalschedule'),(26,'django_celery_beat','periodictask'),(27,'django_celery_beat','periodictasks'),(28,'django_celery_beat','solarschedule'),(9,'guacamole','guacamoleconnection'),(8,'guacamole','guacamoleuser'),(10,'pfsense','destinationports'),(11,'proxmox','nodes'),(12,'proxmox','virtualmachines'),(18,'sessions','session'),(19,'social_django','association'),(20,'social_django','code'),(21,'social_django','nonce'),(23,'social_django','partial'),(22,'social_django','usersocialauth'),(7,'ticketing','comment'),(6,'ticketing','portrules'),(1,'ticketing','requestentry'),(5,'ticketing','requestentryaudit'),(4,'ticketing','requestusecase'),(3,'ticketing','userprofile'),(2,'ticketing','vmtemplates');
+INSERT INTO `django_content_type` VALUES (15,'admin','logentry'),(17,'auth','group'),(16,'auth','permission'),(18,'auth','user'),(19,'contenttypes','contenttype'),(31,'django_celery_beat','clockedschedule'),(26,'django_celery_beat','crontabschedule'),(27,'django_celery_beat','intervalschedule'),(28,'django_celery_beat','periodictask'),(29,'django_celery_beat','periodictasks'),(30,'django_celery_beat','solarschedule'),(11,'guacamole','guacamoleconnection'),(10,'guacamole','guacamoleuser'),(12,'pfsense','destinationports'),(13,'proxmox','nodes'),(14,'proxmox','virtualmachines'),(20,'sessions','session'),(21,'social_django','association'),(22,'social_django','code'),(23,'social_django','nonce'),(25,'social_django','partial'),(24,'social_django','usersocialauth'),(9,'ticketing','comment'),(8,'ticketing','issuefile'),(7,'ticketing','issueticket'),(6,'ticketing','portrules'),(1,'ticketing','requestentry'),(5,'ticketing','requestentryaudit'),(4,'ticketing','requestusecase'),(3,'ticketing','userprofile'),(2,'ticketing','vmtemplates');
 /*!40000 ALTER TABLE `django_content_type` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1160,7 +493,7 @@ CREATE TABLE `django_migrations` (
 
 LOCK TABLES `django_migrations` WRITE;
 /*!40000 ALTER TABLE `django_migrations` DISABLE KEYS */;
-INSERT INTO `django_migrations` VALUES (1,'contenttypes','0001_initial','2024-09-04 13:25:51.683552'),(2,'auth','0001_initial','2024-09-04 13:25:53.128323'),(3,'admin','0001_initial','2024-09-04 13:25:53.446222'),(4,'admin','0002_logentry_remove_auto_add','2024-09-04 13:25:53.463831'),(5,'admin','0003_logentry_add_action_flag_choices','2024-09-04 13:25:53.483562'),(6,'contenttypes','0002_remove_content_type_name','2024-09-04 13:25:53.645961'),(7,'auth','0002_alter_permission_name_max_length','2024-09-04 13:25:53.784008'),(8,'auth','0003_alter_user_email_max_length','2024-09-04 13:25:53.823863'),(9,'auth','0004_alter_user_username_opts','2024-09-04 13:25:53.844928'),(10,'auth','0005_alter_user_last_login_null','2024-09-04 13:25:53.967426'),(11,'auth','0006_require_contenttypes_0002','2024-09-04 13:25:53.975956'),(12,'auth','0007_alter_validators_add_error_messages','2024-09-04 13:25:53.995487'),(13,'auth','0008_alter_user_username_max_length','2024-09-04 13:25:54.135110'),(14,'auth','0009_alter_user_last_name_max_length','2024-09-04 13:25:54.273468'),(15,'auth','0010_alter_group_name_max_length','2024-09-04 13:25:54.310329'),(16,'auth','0011_update_proxy_permissions','2024-09-04 13:25:54.327254'),(17,'auth','0012_alter_user_first_name_max_length','2024-09-04 13:25:54.465690'),(18,'django_celery_beat','0001_initial','2024-09-04 13:25:54.961296'),(19,'django_celery_beat','0002_auto_20161118_0346','2024-09-04 13:25:55.184694'),(20,'django_celery_beat','0003_auto_20161209_0049','2024-09-04 13:25:55.234661'),(21,'django_celery_beat','0004_auto_20170221_0000','2024-09-04 13:25:55.250412'),(22,'django_celery_beat','0005_add_solarschedule_events_choices','2024-09-04 13:25:55.262289'),(23,'django_celery_beat','0006_auto_20180322_0932','2024-09-04 13:25:55.440341'),(24,'django_celery_beat','0007_auto_20180521_0826','2024-09-04 13:25:55.563769'),(25,'django_celery_beat','0008_auto_20180914_1922','2024-09-04 13:25:55.608612'),(26,'django_celery_beat','0006_auto_20180210_1226','2024-09-04 13:25:55.637656'),(27,'django_celery_beat','0006_periodictask_priority','2024-09-04 13:25:55.834962'),(28,'django_celery_beat','0009_periodictask_headers','2024-09-04 13:25:56.033474'),(29,'django_celery_beat','0010_auto_20190429_0326','2024-09-04 13:25:56.278153'),(30,'django_celery_beat','0011_auto_20190508_0153','2024-09-04 13:25:56.537016'),(31,'django_celery_beat','0012_periodictask_expire_seconds','2024-09-04 13:25:56.764351'),(32,'django_celery_beat','0013_auto_20200609_0727','2024-09-04 13:25:56.781814'),(33,'django_celery_beat','0014_remove_clockedschedule_enabled','2024-09-04 13:25:56.823550'),(34,'django_celery_beat','0015_edit_solarschedule_events_choices','2024-09-04 13:25:56.836378'),(35,'django_celery_beat','0016_alter_crontabschedule_timezone','2024-09-04 13:25:56.854594'),(36,'django_celery_beat','0017_alter_crontabschedule_month_of_year','2024-09-04 13:25:56.871257'),(37,'django_celery_beat','0018_improve_crontab_helptext','2024-09-04 13:25:56.888361'),(38,'django_celery_beat','0019_alter_periodictasks_options','2024-09-04 13:25:56.900949'),(39,'ticketing','0001_initial','2024-09-04 13:25:58.813415'),(40,'proxmox','0001_initial','2024-09-04 13:25:59.174983'),(41,'guacamole','0001_initial','2024-09-04 13:25:59.701570'),(42,'pfsense','0001_initial','2024-09-04 13:26:00.129327'),(43,'sessions','0001_initial','2024-09-04 13:26:00.211953'),(44,'default','0001_initial','2024-09-04 13:26:00.761726'),(45,'social_auth','0001_initial','2024-09-04 13:26:00.769813'),(46,'default','0002_add_related_name','2024-09-04 13:26:00.795669'),(47,'social_auth','0002_add_related_name','2024-09-04 13:26:00.804759'),(48,'default','0003_alter_email_max_length','2024-09-04 13:26:00.832209'),(49,'social_auth','0003_alter_email_max_length','2024-09-04 13:26:00.839953'),(50,'default','0004_auto_20160423_0400','2024-09-04 13:26:00.860416'),(51,'social_auth','0004_auto_20160423_0400','2024-09-04 13:26:00.868424'),(52,'social_auth','0005_auto_20160727_2333','2024-09-04 13:26:00.912441'),(53,'social_django','0006_partial','2024-09-04 13:26:01.012152'),(54,'social_django','0007_code_timestamp','2024-09-04 13:26:01.103233'),(55,'social_django','0008_partial_timestamp','2024-09-04 13:26:01.188500'),(56,'social_django','0009_auto_20191118_0520','2024-09-04 13:26:01.317972'),(57,'social_django','0010_uid_db_index','2024-09-04 13:26:01.374815'),(58,'social_django','0011_alter_id_fields','2024-09-04 13:26:02.063106'),(59,'social_django','0012_usersocialauth_extra_data_new','2024-09-04 13:26:02.363130'),(60,'social_django','0013_migrate_extra_data','2024-09-04 13:26:02.403796'),(61,'social_django','0014_remove_usersocialauth_extra_data','2024-09-04 13:26:02.493209'),(62,'social_django','0015_rename_extra_data_new_usersocialauth_extra_data','2024-09-04 13:26:02.581108'),(63,'social_django','0016_alter_usersocialauth_extra_data','2024-09-04 13:26:02.605206'),(64,'social_django','0001_initial','2024-09-04 13:26:02.617670'),(65,'social_django','0002_add_related_name','2024-09-04 13:26:02.628126'),(66,'social_django','0004_auto_20160423_0400','2024-09-04 13:26:02.634794'),(67,'social_django','0005_auto_20160727_2333','2024-09-04 13:26:02.642776'),(68,'social_django','0003_alter_email_max_length','2024-09-04 13:26:02.651360');
+INSERT INTO `django_migrations` VALUES (1,'django_celery_beat','0001_initial','2024-09-14 13:52:51.614524'),(2,'django_celery_beat','0002_auto_20161118_0346','2024-09-14 13:52:51.844984'),(3,'django_celery_beat','0003_auto_20161209_0049','2024-09-14 13:52:51.904655'),(4,'django_celery_beat','0004_auto_20170221_0000','2024-09-14 13:52:51.920663'),(5,'django_celery_beat','0005_add_solarschedule_events_choices','2024-09-14 13:52:51.929902'),(6,'django_celery_beat','0006_auto_20180322_0932','2024-09-14 13:52:52.132737'),(7,'django_celery_beat','0007_auto_20180521_0826','2024-09-14 13:52:52.276142'),(8,'django_celery_beat','0008_auto_20180914_1922','2024-09-14 13:52:52.321430'),(9,'django_celery_beat','0006_auto_20180210_1226','2024-09-14 13:52:52.351446'),(10,'django_celery_beat','0006_periodictask_priority','2024-09-14 13:52:52.556366'),(11,'django_celery_beat','0009_periodictask_headers','2024-09-14 13:52:52.747148'),(12,'django_celery_beat','0010_auto_20190429_0326','2024-09-14 13:52:53.038120'),(13,'django_celery_beat','0011_auto_20190508_0153','2024-09-14 13:52:53.327650'),(14,'django_celery_beat','0012_periodictask_expire_seconds','2024-09-14 13:52:53.517971'),(15,'django_celery_beat','0013_auto_20200609_0727','2024-09-14 13:52:53.541901'),(16,'django_celery_beat','0014_remove_clockedschedule_enabled','2024-09-14 13:52:53.586723'),(17,'django_celery_beat','0015_edit_solarschedule_events_choices','2024-09-14 13:52:53.599573'),(18,'django_celery_beat','0016_alter_crontabschedule_timezone','2024-09-14 13:52:53.619294'),(19,'django_celery_beat','0017_alter_crontabschedule_month_of_year','2024-09-14 13:52:53.634791'),(20,'django_celery_beat','0018_improve_crontab_helptext','2024-09-14 13:52:53.652533'),(21,'django_celery_beat','0019_alter_periodictasks_options','2024-09-14 13:52:53.663081'),(22,'contenttypes','0001_initial','2024-09-14 13:53:57.236655'),(23,'auth','0001_initial','2024-09-14 13:53:58.732014'),(24,'admin','0001_initial','2024-09-14 13:53:59.106422'),(25,'admin','0002_logentry_remove_auto_add','2024-09-14 13:53:59.143279'),(26,'admin','0003_logentry_add_action_flag_choices','2024-09-14 13:53:59.174231'),(27,'contenttypes','0002_remove_content_type_name','2024-09-14 13:53:59.354890'),(28,'auth','0002_alter_permission_name_max_length','2024-09-14 13:53:59.498429'),(29,'auth','0003_alter_user_email_max_length','2024-09-14 13:53:59.541295'),(30,'auth','0004_alter_user_username_opts','2024-09-14 13:53:59.560392'),(31,'auth','0005_alter_user_last_login_null','2024-09-14 13:53:59.678580'),(32,'auth','0006_require_contenttypes_0002','2024-09-14 13:53:59.686329'),(33,'auth','0007_alter_validators_add_error_messages','2024-09-14 13:53:59.718777'),(34,'auth','0008_alter_user_username_max_length','2024-09-14 13:53:59.867422'),(35,'auth','0009_alter_user_last_name_max_length','2024-09-14 13:54:00.012159'),(36,'auth','0010_alter_group_name_max_length','2024-09-14 13:54:00.058426'),(37,'auth','0011_update_proxy_permissions','2024-09-14 13:54:00.086893'),(38,'auth','0012_alter_user_first_name_max_length','2024-09-14 13:54:00.267360'),(39,'ticketing','0001_initial','2024-09-14 13:54:02.847906'),(40,'proxmox','0001_initial','2024-09-14 13:54:03.288432'),(41,'guacamole','0001_initial','2024-09-14 13:54:03.856500'),(42,'pfsense','0001_initial','2024-09-14 13:54:04.249214'),(43,'sessions','0001_initial','2024-09-14 13:54:04.394162'),(44,'default','0001_initial','2024-09-14 13:54:04.921789'),(45,'social_auth','0001_initial','2024-09-14 13:54:04.931938'),(46,'default','0002_add_related_name','2024-09-14 13:54:04.978977'),(47,'social_auth','0002_add_related_name','2024-09-14 13:54:04.987915'),(48,'default','0003_alter_email_max_length','2024-09-14 13:54:05.018395'),(49,'social_auth','0003_alter_email_max_length','2024-09-14 13:54:05.025449'),(50,'default','0004_auto_20160423_0400','2024-09-14 13:54:05.055391'),(51,'social_auth','0004_auto_20160423_0400','2024-09-14 13:54:05.064578'),(52,'social_auth','0005_auto_20160727_2333','2024-09-14 13:54:05.116029'),(53,'social_django','0006_partial','2024-09-14 13:54:05.231557'),(54,'social_django','0007_code_timestamp','2024-09-14 13:54:05.322844'),(55,'social_django','0008_partial_timestamp','2024-09-14 13:54:05.411003'),(56,'social_django','0009_auto_20191118_0520','2024-09-14 13:54:05.550926'),(57,'social_django','0010_uid_db_index','2024-09-14 13:54:05.616806'),(58,'social_django','0011_alter_id_fields','2024-09-14 13:54:06.348657'),(59,'social_django','0012_usersocialauth_extra_data_new','2024-09-14 13:54:06.633950'),(60,'social_django','0013_migrate_extra_data','2024-09-14 13:54:06.808370'),(61,'social_django','0014_remove_usersocialauth_extra_data','2024-09-14 13:54:06.897121'),(62,'social_django','0015_rename_extra_data_new_usersocialauth_extra_data','2024-09-14 13:54:06.998995'),(63,'social_django','0016_alter_usersocialauth_extra_data','2024-09-14 13:54:07.023001'),(64,'social_django','0001_initial','2024-09-14 13:54:07.037756'),(65,'social_django','0004_auto_20160423_0400','2024-09-14 13:54:07.045671'),(66,'social_django','0005_auto_20160727_2333','2024-09-14 13:54:07.053829'),(67,'social_django','0002_add_related_name','2024-09-14 13:54:07.061132'),(68,'social_django','0003_alter_email_max_length','2024-09-14 13:54:07.069219');
 /*!40000 ALTER TABLE `django_migrations` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1245,6 +578,7 @@ CREATE TABLE `guacamole_guacamoleuser` (
 
 LOCK TABLES `guacamole_guacamoleuser` WRITE;
 /*!40000 ALTER TABLE `guacamole_guacamoleuser` DISABLE KEYS */;
+INSERT INTO `guacamole_guacamoleuser` VALUES (1,'admin','pbkdf2_sha256$720000$5gL9pa3JAHZYMUbNgW3qqL$udv7QLPHZ/Fv5ijQQMvklg06MOZvEkkbGY2LJ17dIyM=',1,1),(2,'john.doe','pbkdf2_sha256$720000$5gL9pa3JAHZYMUbNgW3qqL$udv7QLPHZ/Fv5ijQQMvklg06MOZvEkkbGY2LJ17dIyM=',1,2),(3,'josephine.cruz','pbkdf2_sha256$720000$5gL9pa3JAHZYMUbNgW3qqL$udv7QLPHZ/Fv5ijQQMvklg06MOZvEkkbGY2LJ17dIyM=',1,3);
 /*!40000 ALTER TABLE `guacamole_guacamoleuser` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1317,10 +651,10 @@ CREATE TABLE `proxmox_virtualmachines` (
   `storage` decimal(5,2) NOT NULL,
   `ip_add` varchar(15) DEFAULT NULL,
   `is_lxc` tinyint(1) NOT NULL,
+  `system_password` varchar(45) DEFAULT NULL,
   `status` varchar(20) NOT NULL,
   `node_id` bigint NOT NULL,
   `request_id` bigint NOT NULL,
-  `system_password` varchar(45) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `proxmox_virtualmachines_node_id_f4438889_fk_proxmox_nodes_id` (`node_id`),
   KEY `proxmox_virtualmachi_request_id_b2e8251c_fk_ticketing` (`request_id`),
@@ -1516,6 +850,68 @@ LOCK TABLES `ticketing_comment` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `ticketing_issuefile`
+--
+
+DROP TABLE IF EXISTS `ticketing_issuefile`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `ticketing_issuefile` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `file_address` varchar(1000) NOT NULL,
+  `uploaded_date` datetime(6) NOT NULL,
+  `ticket_id` bigint NOT NULL,
+  `uploaded_by_id` int NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `ticketing_issuefile_ticket_id_5293a3b6_fk_ticketing` (`ticket_id`),
+  KEY `ticketing_issuefile_uploaded_by_id_39f13ffc_fk_auth_user_id` (`uploaded_by_id`),
+  CONSTRAINT `ticketing_issuefile_ticket_id_5293a3b6_fk_ticketing` FOREIGN KEY (`ticket_id`) REFERENCES `ticketing_issueticket` (`id`),
+  CONSTRAINT `ticketing_issuefile_uploaded_by_id_39f13ffc_fk_auth_user_id` FOREIGN KEY (`uploaded_by_id`) REFERENCES `auth_user` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `ticketing_issuefile`
+--
+
+LOCK TABLES `ticketing_issuefile` WRITE;
+/*!40000 ALTER TABLE `ticketing_issuefile` DISABLE KEYS */;
+/*!40000 ALTER TABLE `ticketing_issuefile` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `ticketing_issueticket`
+--
+
+DROP TABLE IF EXISTS `ticketing_issueticket`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `ticketing_issueticket` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `subject` varchar(100) NOT NULL,
+  `description` varchar(10000) NOT NULL,
+  `date_created` datetime(6) NOT NULL,
+  `resolve_date` datetime(6) DEFAULT NULL,
+  `created_by_id` int NOT NULL,
+  `request_id` bigint NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `ticketing_issueticket_created_by_id_8b65b615_fk_auth_user_id` (`created_by_id`),
+  KEY `ticketing_issueticke_request_id_2f6b56ee_fk_ticketing` (`request_id`),
+  CONSTRAINT `ticketing_issueticke_request_id_2f6b56ee_fk_ticketing` FOREIGN KEY (`request_id`) REFERENCES `ticketing_requestentry` (`id`),
+  CONSTRAINT `ticketing_issueticket_created_by_id_8b65b615_fk_auth_user_id` FOREIGN KEY (`created_by_id`) REFERENCES `auth_user` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `ticketing_issueticket`
+--
+
+LOCK TABLES `ticketing_issueticket` WRITE;
+/*!40000 ALTER TABLE `ticketing_issueticket` DISABLE KEYS */;
+/*!40000 ALTER TABLE `ticketing_issueticket` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `ticketing_portrules`
 --
 
@@ -1559,7 +955,7 @@ CREATE TABLE `ticketing_requestentry` (
   `isExpired` tinyint(1) NOT NULL,
   `requestDate` datetime(6) NOT NULL,
   `date_needed` date NOT NULL,
-  `expiration_date` date,
+  `expiration_date` date DEFAULT NULL,
   `is_vm_tested` tinyint(1) NOT NULL,
   `assigned_to_id` int DEFAULT NULL,
   `fulfilled_by_id` int DEFAULT NULL,
@@ -1666,6 +1062,7 @@ CREATE TABLE `ticketing_userprofile` (
 
 LOCK TABLES `ticketing_userprofile` WRITE;
 /*!40000 ALTER TABLE `ticketing_userprofile` DISABLE KEYS */;
+INSERT INTO `ticketing_userprofile` VALUES (1,'admin',1),(2,'admin',2),(3,'faculty',3);
 /*!40000 ALTER TABLE `ticketing_userprofile` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1701,12 +1098,664 @@ INSERT INTO `ticketing_vmtemplates` VALUES (1,'3000','Ubuntu-Desktop-24 (GUI)',1
 UNLOCK TABLES;
 
 --
--- Dumping events for database 'cap2240db'
+-- Current Database: `guacamole_db`
 --
 
+CREATE DATABASE /*!32312 IF NOT EXISTS*/ `guacamole_db` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
+
+USE `guacamole_db`;
+
 --
--- Dumping routines for database 'cap2240db'
+-- Table structure for table `guacamole_connection`
 --
+
+DROP TABLE IF EXISTS `guacamole_connection`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `guacamole_connection` (
+  `connection_id` int NOT NULL AUTO_INCREMENT,
+  `connection_name` varchar(128) NOT NULL,
+  `parent_id` int DEFAULT NULL,
+  `protocol` varchar(32) NOT NULL,
+  `proxy_port` int DEFAULT NULL,
+  `proxy_hostname` varchar(512) DEFAULT NULL,
+  `proxy_encryption_method` enum('NONE','SSL') DEFAULT NULL,
+  `max_connections` int DEFAULT NULL,
+  `max_connections_per_user` int DEFAULT NULL,
+  `connection_weight` int DEFAULT NULL,
+  `failover_only` tinyint(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`connection_id`),
+  UNIQUE KEY `connection_name_parent` (`connection_name`,`parent_id`),
+  KEY `guacamole_connection_ibfk_1` (`parent_id`),
+  CONSTRAINT `guacamole_connection_ibfk_1` FOREIGN KEY (`parent_id`) REFERENCES `guacamole_connection_group` (`connection_group_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `guacamole_connection`
+--
+
+LOCK TABLES `guacamole_connection` WRITE;
+/*!40000 ALTER TABLE `guacamole_connection` DISABLE KEYS */;
+/*!40000 ALTER TABLE `guacamole_connection` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `guacamole_connection_attribute`
+--
+
+DROP TABLE IF EXISTS `guacamole_connection_attribute`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `guacamole_connection_attribute` (
+  `connection_id` int NOT NULL,
+  `attribute_name` varchar(128) NOT NULL,
+  `attribute_value` varchar(4096) NOT NULL,
+  PRIMARY KEY (`connection_id`,`attribute_name`),
+  KEY `connection_id` (`connection_id`),
+  CONSTRAINT `guacamole_connection_attribute_ibfk_1` FOREIGN KEY (`connection_id`) REFERENCES `guacamole_connection` (`connection_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `guacamole_connection_attribute`
+--
+
+LOCK TABLES `guacamole_connection_attribute` WRITE;
+/*!40000 ALTER TABLE `guacamole_connection_attribute` DISABLE KEYS */;
+/*!40000 ALTER TABLE `guacamole_connection_attribute` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `guacamole_connection_group`
+--
+
+DROP TABLE IF EXISTS `guacamole_connection_group`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `guacamole_connection_group` (
+  `connection_group_id` int NOT NULL AUTO_INCREMENT,
+  `parent_id` int DEFAULT NULL,
+  `connection_group_name` varchar(128) NOT NULL,
+  `type` enum('ORGANIZATIONAL','BALANCING') NOT NULL DEFAULT 'ORGANIZATIONAL',
+  `max_connections` int DEFAULT NULL,
+  `max_connections_per_user` int DEFAULT NULL,
+  `enable_session_affinity` tinyint(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`connection_group_id`),
+  UNIQUE KEY `connection_group_name_parent` (`connection_group_name`,`parent_id`),
+  KEY `guacamole_connection_group_ibfk_1` (`parent_id`),
+  CONSTRAINT `guacamole_connection_group_ibfk_1` FOREIGN KEY (`parent_id`) REFERENCES `guacamole_connection_group` (`connection_group_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `guacamole_connection_group`
+--
+
+LOCK TABLES `guacamole_connection_group` WRITE;
+/*!40000 ALTER TABLE `guacamole_connection_group` DISABLE KEYS */;
+/*!40000 ALTER TABLE `guacamole_connection_group` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `guacamole_connection_group_attribute`
+--
+
+DROP TABLE IF EXISTS `guacamole_connection_group_attribute`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `guacamole_connection_group_attribute` (
+  `connection_group_id` int NOT NULL,
+  `attribute_name` varchar(128) NOT NULL,
+  `attribute_value` varchar(4096) NOT NULL,
+  PRIMARY KEY (`connection_group_id`,`attribute_name`),
+  KEY `connection_group_id` (`connection_group_id`),
+  CONSTRAINT `guacamole_connection_group_attribute_ibfk_1` FOREIGN KEY (`connection_group_id`) REFERENCES `guacamole_connection_group` (`connection_group_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `guacamole_connection_group_attribute`
+--
+
+LOCK TABLES `guacamole_connection_group_attribute` WRITE;
+/*!40000 ALTER TABLE `guacamole_connection_group_attribute` DISABLE KEYS */;
+/*!40000 ALTER TABLE `guacamole_connection_group_attribute` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `guacamole_connection_group_permission`
+--
+
+DROP TABLE IF EXISTS `guacamole_connection_group_permission`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `guacamole_connection_group_permission` (
+  `entity_id` int NOT NULL,
+  `connection_group_id` int NOT NULL,
+  `permission` enum('READ','UPDATE','DELETE','ADMINISTER') NOT NULL,
+  PRIMARY KEY (`entity_id`,`connection_group_id`,`permission`),
+  KEY `guacamole_connection_group_permission_ibfk_1` (`connection_group_id`),
+  CONSTRAINT `guacamole_connection_group_permission_entity` FOREIGN KEY (`entity_id`) REFERENCES `guacamole_entity` (`entity_id`) ON DELETE CASCADE,
+  CONSTRAINT `guacamole_connection_group_permission_ibfk_1` FOREIGN KEY (`connection_group_id`) REFERENCES `guacamole_connection_group` (`connection_group_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `guacamole_connection_group_permission`
+--
+
+LOCK TABLES `guacamole_connection_group_permission` WRITE;
+/*!40000 ALTER TABLE `guacamole_connection_group_permission` DISABLE KEYS */;
+/*!40000 ALTER TABLE `guacamole_connection_group_permission` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `guacamole_connection_history`
+--
+
+DROP TABLE IF EXISTS `guacamole_connection_history`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `guacamole_connection_history` (
+  `history_id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int DEFAULT NULL,
+  `username` varchar(128) NOT NULL,
+  `remote_host` varchar(256) DEFAULT NULL,
+  `connection_id` int DEFAULT NULL,
+  `connection_name` varchar(128) NOT NULL,
+  `sharing_profile_id` int DEFAULT NULL,
+  `sharing_profile_name` varchar(128) DEFAULT NULL,
+  `start_date` datetime NOT NULL,
+  `end_date` datetime DEFAULT NULL,
+  PRIMARY KEY (`history_id`),
+  KEY `user_id` (`user_id`),
+  KEY `connection_id` (`connection_id`),
+  KEY `sharing_profile_id` (`sharing_profile_id`),
+  KEY `start_date` (`start_date`),
+  KEY `end_date` (`end_date`),
+  KEY `connection_start_date` (`connection_id`,`start_date`),
+  CONSTRAINT `guacamole_connection_history_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `guacamole_user` (`user_id`) ON DELETE SET NULL,
+  CONSTRAINT `guacamole_connection_history_ibfk_2` FOREIGN KEY (`connection_id`) REFERENCES `guacamole_connection` (`connection_id`) ON DELETE SET NULL,
+  CONSTRAINT `guacamole_connection_history_ibfk_3` FOREIGN KEY (`sharing_profile_id`) REFERENCES `guacamole_sharing_profile` (`sharing_profile_id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `guacamole_connection_history`
+--
+
+LOCK TABLES `guacamole_connection_history` WRITE;
+/*!40000 ALTER TABLE `guacamole_connection_history` DISABLE KEYS */;
+/*!40000 ALTER TABLE `guacamole_connection_history` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `guacamole_connection_parameter`
+--
+
+DROP TABLE IF EXISTS `guacamole_connection_parameter`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `guacamole_connection_parameter` (
+  `connection_id` int NOT NULL,
+  `parameter_name` varchar(128) NOT NULL,
+  `parameter_value` varchar(4096) NOT NULL,
+  PRIMARY KEY (`connection_id`,`parameter_name`),
+  CONSTRAINT `guacamole_connection_parameter_ibfk_1` FOREIGN KEY (`connection_id`) REFERENCES `guacamole_connection` (`connection_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `guacamole_connection_parameter`
+--
+
+LOCK TABLES `guacamole_connection_parameter` WRITE;
+/*!40000 ALTER TABLE `guacamole_connection_parameter` DISABLE KEYS */;
+/*!40000 ALTER TABLE `guacamole_connection_parameter` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `guacamole_connection_permission`
+--
+
+DROP TABLE IF EXISTS `guacamole_connection_permission`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `guacamole_connection_permission` (
+  `entity_id` int NOT NULL,
+  `connection_id` int NOT NULL,
+  `permission` enum('READ','UPDATE','DELETE','ADMINISTER') NOT NULL,
+  PRIMARY KEY (`entity_id`,`connection_id`,`permission`),
+  KEY `guacamole_connection_permission_ibfk_1` (`connection_id`),
+  CONSTRAINT `guacamole_connection_permission_entity` FOREIGN KEY (`entity_id`) REFERENCES `guacamole_entity` (`entity_id`) ON DELETE CASCADE,
+  CONSTRAINT `guacamole_connection_permission_ibfk_1` FOREIGN KEY (`connection_id`) REFERENCES `guacamole_connection` (`connection_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `guacamole_connection_permission`
+--
+
+LOCK TABLES `guacamole_connection_permission` WRITE;
+/*!40000 ALTER TABLE `guacamole_connection_permission` DISABLE KEYS */;
+/*!40000 ALTER TABLE `guacamole_connection_permission` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `guacamole_entity`
+--
+
+DROP TABLE IF EXISTS `guacamole_entity`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `guacamole_entity` (
+  `entity_id` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(128) NOT NULL,
+  `type` enum('USER','USER_GROUP') NOT NULL,
+  PRIMARY KEY (`entity_id`),
+  UNIQUE KEY `guacamole_entity_name_scope` (`type`,`name`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb3;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `guacamole_entity`
+--
+
+LOCK TABLES `guacamole_entity` WRITE;
+/*!40000 ALTER TABLE `guacamole_entity` DISABLE KEYS */;
+INSERT INTO `guacamole_entity` VALUES (2,'admin','USER'),(1,'guacadmin','USER'),(3,'john.doe','USER'),(4,'josephine.cruz','USER');
+/*!40000 ALTER TABLE `guacamole_entity` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `guacamole_sharing_profile`
+--
+
+DROP TABLE IF EXISTS `guacamole_sharing_profile`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `guacamole_sharing_profile` (
+  `sharing_profile_id` int NOT NULL AUTO_INCREMENT,
+  `sharing_profile_name` varchar(128) NOT NULL,
+  `primary_connection_id` int NOT NULL,
+  PRIMARY KEY (`sharing_profile_id`),
+  UNIQUE KEY `sharing_profile_name_primary` (`sharing_profile_name`,`primary_connection_id`),
+  KEY `guacamole_sharing_profile_ibfk_1` (`primary_connection_id`),
+  CONSTRAINT `guacamole_sharing_profile_ibfk_1` FOREIGN KEY (`primary_connection_id`) REFERENCES `guacamole_connection` (`connection_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `guacamole_sharing_profile`
+--
+
+LOCK TABLES `guacamole_sharing_profile` WRITE;
+/*!40000 ALTER TABLE `guacamole_sharing_profile` DISABLE KEYS */;
+/*!40000 ALTER TABLE `guacamole_sharing_profile` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `guacamole_sharing_profile_attribute`
+--
+
+DROP TABLE IF EXISTS `guacamole_sharing_profile_attribute`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `guacamole_sharing_profile_attribute` (
+  `sharing_profile_id` int NOT NULL,
+  `attribute_name` varchar(128) NOT NULL,
+  `attribute_value` varchar(4096) NOT NULL,
+  PRIMARY KEY (`sharing_profile_id`,`attribute_name`),
+  KEY `sharing_profile_id` (`sharing_profile_id`),
+  CONSTRAINT `guacamole_sharing_profile_attribute_ibfk_1` FOREIGN KEY (`sharing_profile_id`) REFERENCES `guacamole_sharing_profile` (`sharing_profile_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `guacamole_sharing_profile_attribute`
+--
+
+LOCK TABLES `guacamole_sharing_profile_attribute` WRITE;
+/*!40000 ALTER TABLE `guacamole_sharing_profile_attribute` DISABLE KEYS */;
+/*!40000 ALTER TABLE `guacamole_sharing_profile_attribute` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `guacamole_sharing_profile_parameter`
+--
+
+DROP TABLE IF EXISTS `guacamole_sharing_profile_parameter`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `guacamole_sharing_profile_parameter` (
+  `sharing_profile_id` int NOT NULL,
+  `parameter_name` varchar(128) NOT NULL,
+  `parameter_value` varchar(4096) NOT NULL,
+  PRIMARY KEY (`sharing_profile_id`,`parameter_name`),
+  CONSTRAINT `guacamole_sharing_profile_parameter_ibfk_1` FOREIGN KEY (`sharing_profile_id`) REFERENCES `guacamole_sharing_profile` (`sharing_profile_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `guacamole_sharing_profile_parameter`
+--
+
+LOCK TABLES `guacamole_sharing_profile_parameter` WRITE;
+/*!40000 ALTER TABLE `guacamole_sharing_profile_parameter` DISABLE KEYS */;
+/*!40000 ALTER TABLE `guacamole_sharing_profile_parameter` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `guacamole_sharing_profile_permission`
+--
+
+DROP TABLE IF EXISTS `guacamole_sharing_profile_permission`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `guacamole_sharing_profile_permission` (
+  `entity_id` int NOT NULL,
+  `sharing_profile_id` int NOT NULL,
+  `permission` enum('READ','UPDATE','DELETE','ADMINISTER') NOT NULL,
+  PRIMARY KEY (`entity_id`,`sharing_profile_id`,`permission`),
+  KEY `guacamole_sharing_profile_permission_ibfk_1` (`sharing_profile_id`),
+  CONSTRAINT `guacamole_sharing_profile_permission_entity` FOREIGN KEY (`entity_id`) REFERENCES `guacamole_entity` (`entity_id`) ON DELETE CASCADE,
+  CONSTRAINT `guacamole_sharing_profile_permission_ibfk_1` FOREIGN KEY (`sharing_profile_id`) REFERENCES `guacamole_sharing_profile` (`sharing_profile_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `guacamole_sharing_profile_permission`
+--
+
+LOCK TABLES `guacamole_sharing_profile_permission` WRITE;
+/*!40000 ALTER TABLE `guacamole_sharing_profile_permission` DISABLE KEYS */;
+/*!40000 ALTER TABLE `guacamole_sharing_profile_permission` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `guacamole_system_permission`
+--
+
+DROP TABLE IF EXISTS `guacamole_system_permission`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `guacamole_system_permission` (
+  `entity_id` int NOT NULL,
+  `permission` enum('CREATE_CONNECTION','CREATE_CONNECTION_GROUP','CREATE_SHARING_PROFILE','CREATE_USER','CREATE_USER_GROUP','ADMINISTER') NOT NULL,
+  PRIMARY KEY (`entity_id`,`permission`),
+  CONSTRAINT `guacamole_system_permission_entity` FOREIGN KEY (`entity_id`) REFERENCES `guacamole_entity` (`entity_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `guacamole_system_permission`
+--
+
+LOCK TABLES `guacamole_system_permission` WRITE;
+/*!40000 ALTER TABLE `guacamole_system_permission` DISABLE KEYS */;
+INSERT INTO `guacamole_system_permission` VALUES (1,'CREATE_CONNECTION'),(1,'CREATE_CONNECTION_GROUP'),(1,'CREATE_SHARING_PROFILE'),(1,'CREATE_USER'),(1,'CREATE_USER_GROUP'),(1,'ADMINISTER');
+/*!40000 ALTER TABLE `guacamole_system_permission` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `guacamole_user`
+--
+
+DROP TABLE IF EXISTS `guacamole_user`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `guacamole_user` (
+  `user_id` int NOT NULL AUTO_INCREMENT,
+  `entity_id` int NOT NULL,
+  `password_hash` binary(32) NOT NULL,
+  `password_salt` binary(32) DEFAULT NULL,
+  `password_date` datetime NOT NULL,
+  `disabled` tinyint(1) NOT NULL DEFAULT '0',
+  `expired` tinyint(1) NOT NULL DEFAULT '0',
+  `access_window_start` time DEFAULT NULL,
+  `access_window_end` time DEFAULT NULL,
+  `valid_from` date DEFAULT NULL,
+  `valid_until` date DEFAULT NULL,
+  `timezone` varchar(64) DEFAULT NULL,
+  `full_name` varchar(256) DEFAULT NULL,
+  `email_address` varchar(256) DEFAULT NULL,
+  `organization` varchar(256) DEFAULT NULL,
+  `organizational_role` varchar(256) DEFAULT NULL,
+  PRIMARY KEY (`user_id`),
+  UNIQUE KEY `guacamole_user_single_entity` (`entity_id`),
+  CONSTRAINT `guacamole_user_entity` FOREIGN KEY (`entity_id`) REFERENCES `guacamole_entity` (`entity_id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb3;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `guacamole_user`
+--
+
+LOCK TABLES `guacamole_user` WRITE;
+/*!40000 ALTER TABLE `guacamole_user` DISABLE KEYS */;
+INSERT INTO `guacamole_user` VALUES (1,1,_binary '\ÊEŠ}IN;\è$õ\á\áu¡Ul\ï,-}óc;\ìJ)\ÄA`',_binary 'ş$­\Å\á+%(«\æzy\ãB\ì\Â`d\ÎiÅ³w•¨\"d','2024-09-14 13:53:26',0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(2,2,_binary '‚»ldh>\ß!€•e\Ú=*-Ğœ0\\¨ö]\ê',_binary '#±\è<÷w\Ü\Ë#\åBÿ–\ËF[æ»–¾öÿO<\Ä\Û','2024-09-14 13:54:58',0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(3,3,_binary 'É•©Á GÊª\âs7\"»,Ê™3‡pµô\ë \×÷',_binary '¡ƒ¸\Ìl\Ø;\nµ‚Îµk€Tó’‰;6Í˜À‚\r¾Í‹ş','2024-09-14 13:54:58',0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL),(4,4,_binary '`‹N¤9X\Ù\Ö^Š_\n%£«¤¹N5§$\â\Ñ Î‹ı\×\×',_binary '\Ë\ÊÀy®´Ã›O\ÅM›ú€‡VCq&ó\Ô¬2{‘E','2024-09-14 13:54:58',0,0,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+/*!40000 ALTER TABLE `guacamole_user` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `guacamole_user_attribute`
+--
+
+DROP TABLE IF EXISTS `guacamole_user_attribute`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `guacamole_user_attribute` (
+  `user_id` int NOT NULL,
+  `attribute_name` varchar(128) NOT NULL,
+  `attribute_value` varchar(4096) NOT NULL,
+  PRIMARY KEY (`user_id`,`attribute_name`),
+  KEY `user_id` (`user_id`),
+  CONSTRAINT `guacamole_user_attribute_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `guacamole_user` (`user_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `guacamole_user_attribute`
+--
+
+LOCK TABLES `guacamole_user_attribute` WRITE;
+/*!40000 ALTER TABLE `guacamole_user_attribute` DISABLE KEYS */;
+/*!40000 ALTER TABLE `guacamole_user_attribute` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `guacamole_user_group`
+--
+
+DROP TABLE IF EXISTS `guacamole_user_group`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `guacamole_user_group` (
+  `user_group_id` int NOT NULL AUTO_INCREMENT,
+  `entity_id` int NOT NULL,
+  `disabled` tinyint(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`user_group_id`),
+  UNIQUE KEY `guacamole_user_group_single_entity` (`entity_id`),
+  CONSTRAINT `guacamole_user_group_entity` FOREIGN KEY (`entity_id`) REFERENCES `guacamole_entity` (`entity_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `guacamole_user_group`
+--
+
+LOCK TABLES `guacamole_user_group` WRITE;
+/*!40000 ALTER TABLE `guacamole_user_group` DISABLE KEYS */;
+/*!40000 ALTER TABLE `guacamole_user_group` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `guacamole_user_group_attribute`
+--
+
+DROP TABLE IF EXISTS `guacamole_user_group_attribute`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `guacamole_user_group_attribute` (
+  `user_group_id` int NOT NULL,
+  `attribute_name` varchar(128) NOT NULL,
+  `attribute_value` varchar(4096) NOT NULL,
+  PRIMARY KEY (`user_group_id`,`attribute_name`),
+  KEY `user_group_id` (`user_group_id`),
+  CONSTRAINT `guacamole_user_group_attribute_ibfk_1` FOREIGN KEY (`user_group_id`) REFERENCES `guacamole_user_group` (`user_group_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `guacamole_user_group_attribute`
+--
+
+LOCK TABLES `guacamole_user_group_attribute` WRITE;
+/*!40000 ALTER TABLE `guacamole_user_group_attribute` DISABLE KEYS */;
+/*!40000 ALTER TABLE `guacamole_user_group_attribute` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `guacamole_user_group_member`
+--
+
+DROP TABLE IF EXISTS `guacamole_user_group_member`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `guacamole_user_group_member` (
+  `user_group_id` int NOT NULL,
+  `member_entity_id` int NOT NULL,
+  PRIMARY KEY (`user_group_id`,`member_entity_id`),
+  KEY `guacamole_user_group_member_entity_id` (`member_entity_id`),
+  CONSTRAINT `guacamole_user_group_member_entity_id` FOREIGN KEY (`member_entity_id`) REFERENCES `guacamole_entity` (`entity_id`) ON DELETE CASCADE,
+  CONSTRAINT `guacamole_user_group_member_parent_id` FOREIGN KEY (`user_group_id`) REFERENCES `guacamole_user_group` (`user_group_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `guacamole_user_group_member`
+--
+
+LOCK TABLES `guacamole_user_group_member` WRITE;
+/*!40000 ALTER TABLE `guacamole_user_group_member` DISABLE KEYS */;
+/*!40000 ALTER TABLE `guacamole_user_group_member` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `guacamole_user_group_permission`
+--
+
+DROP TABLE IF EXISTS `guacamole_user_group_permission`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `guacamole_user_group_permission` (
+  `entity_id` int NOT NULL,
+  `affected_user_group_id` int NOT NULL,
+  `permission` enum('READ','UPDATE','DELETE','ADMINISTER') NOT NULL,
+  PRIMARY KEY (`entity_id`,`affected_user_group_id`,`permission`),
+  KEY `guacamole_user_group_permission_affected_user_group` (`affected_user_group_id`),
+  CONSTRAINT `guacamole_user_group_permission_affected_user_group` FOREIGN KEY (`affected_user_group_id`) REFERENCES `guacamole_user_group` (`user_group_id`) ON DELETE CASCADE,
+  CONSTRAINT `guacamole_user_group_permission_entity` FOREIGN KEY (`entity_id`) REFERENCES `guacamole_entity` (`entity_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `guacamole_user_group_permission`
+--
+
+LOCK TABLES `guacamole_user_group_permission` WRITE;
+/*!40000 ALTER TABLE `guacamole_user_group_permission` DISABLE KEYS */;
+/*!40000 ALTER TABLE `guacamole_user_group_permission` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `guacamole_user_history`
+--
+
+DROP TABLE IF EXISTS `guacamole_user_history`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `guacamole_user_history` (
+  `history_id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int DEFAULT NULL,
+  `username` varchar(128) NOT NULL,
+  `remote_host` varchar(256) DEFAULT NULL,
+  `start_date` datetime NOT NULL,
+  `end_date` datetime DEFAULT NULL,
+  PRIMARY KEY (`history_id`),
+  KEY `user_id` (`user_id`),
+  KEY `start_date` (`start_date`),
+  KEY `end_date` (`end_date`),
+  KEY `user_start_date` (`user_id`,`start_date`),
+  CONSTRAINT `guacamole_user_history_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `guacamole_user` (`user_id`) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `guacamole_user_history`
+--
+
+LOCK TABLES `guacamole_user_history` WRITE;
+/*!40000 ALTER TABLE `guacamole_user_history` DISABLE KEYS */;
+/*!40000 ALTER TABLE `guacamole_user_history` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `guacamole_user_password_history`
+--
+
+DROP TABLE IF EXISTS `guacamole_user_password_history`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `guacamole_user_password_history` (
+  `password_history_id` int NOT NULL AUTO_INCREMENT,
+  `user_id` int NOT NULL,
+  `password_hash` binary(32) NOT NULL,
+  `password_salt` binary(32) DEFAULT NULL,
+  `password_date` datetime NOT NULL,
+  PRIMARY KEY (`password_history_id`),
+  KEY `user_id` (`user_id`),
+  CONSTRAINT `guacamole_user_password_history_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `guacamole_user` (`user_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `guacamole_user_password_history`
+--
+
+LOCK TABLES `guacamole_user_password_history` WRITE;
+/*!40000 ALTER TABLE `guacamole_user_password_history` DISABLE KEYS */;
+/*!40000 ALTER TABLE `guacamole_user_password_history` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `guacamole_user_permission`
+--
+
+DROP TABLE IF EXISTS `guacamole_user_permission`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `guacamole_user_permission` (
+  `entity_id` int NOT NULL,
+  `affected_user_id` int NOT NULL,
+  `permission` enum('READ','UPDATE','DELETE','ADMINISTER') NOT NULL,
+  PRIMARY KEY (`entity_id`,`affected_user_id`,`permission`),
+  KEY `guacamole_user_permission_ibfk_1` (`affected_user_id`),
+  CONSTRAINT `guacamole_user_permission_entity` FOREIGN KEY (`entity_id`) REFERENCES `guacamole_entity` (`entity_id`) ON DELETE CASCADE,
+  CONSTRAINT `guacamole_user_permission_ibfk_1` FOREIGN KEY (`affected_user_id`) REFERENCES `guacamole_user` (`user_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb3;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `guacamole_user_permission`
+--
+
+LOCK TABLES `guacamole_user_permission` WRITE;
+/*!40000 ALTER TABLE `guacamole_user_permission` DISABLE KEYS */;
+INSERT INTO `guacamole_user_permission` VALUES (1,1,'READ'),(1,1,'UPDATE'),(1,1,'ADMINISTER');
+/*!40000 ALTER TABLE `guacamole_user_permission` ENABLE KEYS */;
+UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -1717,14 +1766,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-09-04 21:27:08
-
-LOCK TABLES `auth_user` WRITE;
-INSERT INTO `auth_user` (id, password, is_superuser, username, first_name, last_name, email, is_staff, is_active, date_joined) VALUES
-(1, "pbkdf2_sha256$720000$5gL9pa3JAHZYMUbNgW3qqL$udv7QLPHZ/Fv5ijQQMvklg06MOZvEkkbGY2LJ17dIyM=", "1", "admin", "admin", "chan", "", "1", "1", NOW()),
-(2, "pbkdf2_sha256$720000$5gL9pa3JAHZYMUbNgW3qqL$udv7QLPHZ/Fv5ijQQMvklg06MOZvEkkbGY2LJ17dIyM=", "1", "john.doe", "John", "Doe", "", "1", "1", NOW()),
-(3, "pbkdf2_sha256$720000$5gL9pa3JAHZYMUbNgW3qqL$udv7QLPHZ/Fv5ijQQMvklg06MOZvEkkbGY2LJ17dIyM=", "0", "josephine.cruz", "Josephine", "Cruz", "", "0", "1", NOW());
-UNLOCK TABLES;
-LOCK TABLES `ticketing_userprofile` WRITE;
-INSERT INTO `ticketing_userprofile` VALUES (1,'admin',1),(2,'admin',2),(3,'faculty',3);
-UNLOCK TABLES;
+-- Dump completed on 2024-09-14 21:56:29

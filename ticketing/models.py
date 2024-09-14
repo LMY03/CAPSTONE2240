@@ -56,7 +56,7 @@ class RequestEntry(models.Model):
     cores = models.IntegerField(default=1)
     # security options
     isExpired = models.BooleanField(default=False)
-    requestDate = models.DateTimeField(default=timezone.localtime())
+    requestDate = models.DateTimeField(default=timezone.localtime)
 
     date_needed = models.DateField(default=expiration_date_default)
     expiration_date = models.DateField(null=True)
@@ -185,3 +185,22 @@ class Comment(models.Model):
 #     if created:
 #         print("created system user")
 #     # else:
+
+
+class IssueTicket(models.Model):
+    subject = models.CharField(max_length=100)
+    description = models.CharField(max_length=10000)
+    date_created = models.DateTimeField(default=timezone.localtime)
+    resolve_date = models.DateTimeField(null=True)
+    request = models.ForeignKey(RequestEntry, on_delete=models.CASCADE)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    def is_resolved(self) : return self.resolve_date != None
+
+class IssueFile(models.Model):
+    file_address = models.CharField(max_length=1000)
+    uploaded_date = models.DateTimeField(default=timezone.localtime)
+
+    ticket = models.ForeignKey(IssueTicket, on_delete=models.CASCADE)
+    uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    
