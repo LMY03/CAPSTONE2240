@@ -219,8 +219,8 @@ def open_report_page(request):
             'vmNameList': vm_name_list,
             'nodeNameList': node_name_list or ['All nodes'],
             'vmIdList': vm_id_list,
-            'startdate': date.get('startdate'),
-            'enddate': date.get('enddate'),
+            # 'startdate': date.get('startdate'),
+            # 'enddate': date.get('enddate'),
             'statList': stat_list
         }
 
