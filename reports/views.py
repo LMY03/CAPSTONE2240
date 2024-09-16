@@ -272,5 +272,5 @@ def report_gen(request):
         })
 
     except Exception as e:
-    # TODO: logger error - error generating report page
-    return JsonResponse({'error': 'An error occurred while preparing the report generation page.'}, status=500)
+        # TODO: logger error - error generating report page
+        return JsonResponse({'error': 'An error occurred while preparing the report generation page.'}, status=500)
