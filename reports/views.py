@@ -80,7 +80,7 @@ def get_influxdb_client():
     return InfluxDBClient(url=INFLUX_ADDRESS, token=token, org=org)
 
 # Construct Flux Query
-def construct_flux_query(measurement, fields, hosts, start_date, end_date):
+def construct_flux_query(measurement, fields, hosts, start_date, end_date, window):
     host_filter = ' or '.join(f'r.host == "{host}"' for host in hosts)
     field_filter = ' or '.join(f'r._field == "{field}"' for field in fields)
 
@@ -90,7 +90,7 @@ def construct_flux_query(measurement, fields, hosts, start_date, end_date):
             |> filter(fn: (r) => r._measurement == "{measurement}")
             |> filter(fn: (r) => {host_filter})
             |> filter(fn: (r) => {field_filter})
-            |> aggregateWindow(every: 1h, fn: mean, createEmpty: false)
+            |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
             |> yield(name: "mean")
             '''
     
@@ -151,13 +151,13 @@ def index_csv(request):
         # Prepare and execute queries
         query_api = influxdb_client.query_api()
 
-        vm_query = construct_flux_query('system', selected_metrics, vm_hosts, start_date, end_date)
+        vm_query = construct_flux_query('system', selected_metrics, vm_hosts, start_date, end_date, '1h')
         vm_result = query_api.query(vm_query)
         vm_date = process_query_result(vm_result, selected_metrics)
 
-        node_cpu_query = construct_flux_query('cpustat', ['cpu'], node_hosts, start_date, end_date)
-        node_mem_query = construct_flux_query('memory', ['memused', 'memtotal'], node_hosts, start_date, end_date)
-        node_net_query = construct_flux_query('system', ['netin', 'netout'], node_hosts, start_date, end_date)
+        node_cpu_query = construct_flux_query('cpustat', ['cpu'], node_hosts, start_date, end_date, '1h')
+        node_mem_query = construct_flux_query('memory', ['memused', 'memtotal'], node_hosts, start_date, end_date, '1h')
+        node_net_query = construct_flux_query('system', ['netin', 'netout'], node_hosts, start_date, end_date, '1h')
 
         node_cpu_result = query_api.query(node_cpu_query)
         node_mem_result = query_api.query(node_mem_query)
@@ -196,4 +196,77 @@ def index_csv(request):
 
 
 
-    
+def open_report_page(request):
+    try:
+        proxmox = get_proxmox_client()
+
+        data = request.POST
+        vm_name_list = []
+        vm_id_list = []
+        stat_list = []
+        node_name_list = []
+
+        for name, value in data.items():
+            if name not in ['categoryFilter', 'select_all', 'cpuUsage', 'csrfmiddlewaretoken', 'enddate', 'memoryUsage', 'netin', 'netout', 'startdate', 'vmInfoTable_length']:
+                vm_name_list.append(value)
+                vm_id_list.append(name)
+            elif name in ['cpuUsage', 'memoryUsage', 'netin', 'netout']:
+                stat_list.append(value)
+            elif name == 'categoryFilter' and value != "All nodes":
+                node_name_list = [node['node'] for node in proxmox.nodes.get()]
+
+        form_data = {
+            'vmNameList': vm_name_list,
+            'nodeNameList': node_name_list or ['All nodes'],
+            'vmIdList': vm_id_list,
+            'startdate': date.get('startdate'),
+            'enddate': date.get('enddate'),
+            'statList': stat_list
+        }
+
+        request.session['formData'] = form_data
+        return render(request, 'gen-reports.html')
+
+    except Exception as e:
+        # TODO: logger error - error opening report page
+        return JsonResponse({'error': 'An error occurred while preparing the report page.'}, status=500)
+
+def report_gen(request):
+    try:
+        client = get_influxdb_client()
+        query_api = client.query_api()
+
+
+        form_data = request.session.get('formData', {})
+        start_date = form_data.get('startdate')
+        end_date = form_data.get('enddate')
+
+        sd = datetime.strptime(start_date, "%Y-%m-%d")
+        ed = datetime.strptime(end_date, "%Y-%m-%d")
+        date_diff = (ed - sd).days
+
+        window = "id" if date_diff >= 30 else "1h"
+
+        node_metrics = ['cpu', 'memused', 'netin', 'netout', 'memtotal', 'swaptotal']
+        vm_metrics = ['cpu', 'mem', 'netin', 'netout']
+
+        node_data = {}
+        for node in form_data.get('nodeNameList', []):
+            node_query = construct_flux_query('system', node_metrics, [node], start_date, end_date, window)
+            node_result = query_api.query(node_query)
+            node_data[node] = process_query_result(node_result, node_metrics)
+
+        vm_data = {}
+        for vm in form_data.get('vmNameList', []):
+            vm_query = construct_flux_query('system', vm_metrics, [vm], start_date, end_date, window)
+            vm_result = query_api.query(vm_query)
+            vm_data[vm] = process_query_result(vm_result, vm_metrics)
+
+        client.close()
+
+        return JsonResponse({
+            'nodeData': node_data,
+            'vmData': vm_data,
+            'dateDiff': date_diff,
+            'formData': form_data
+        })
