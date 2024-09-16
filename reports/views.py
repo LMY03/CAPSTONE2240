@@ -270,3 +270,7 @@ def report_gen(request):
             'dateDiff': date_diff,
             'formData': form_data
         })
+
+        except Exception as e:
+        # TODO: logger error - error generating report page
+        return JsonResponse({'error': 'An error occurred while preparing the report generation page.'}, status=500)
