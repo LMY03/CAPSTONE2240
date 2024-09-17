@@ -23,7 +23,7 @@ from .models import RequestEntry, Comment, RequestUseCase, PortRules, UserProfil
 from proxmox.models import VirtualMachines, Nodes
 from guacamole.models import GuacamoleConnection, GuacamoleUser
 from pfsense.models import DestinationPorts
-from notifications.views import comment_notif_faculty, comment_notif_tsg
+from notifications.views import send_email_sendgrid
 
 
 # Create your views here.
@@ -147,12 +147,40 @@ def add_comment(request, pk):
             new_data['status'] = RequestEntry.Status.FOR_REVISION
 
         if user_profile.user_type == 'admin':
-            data = {
-                'comment' : comment_text, 
-                'request_entry_id' : request_entry.id
-            }
-            print(requester_user.email, data)
-            comment_notif_faculty(requester_user.email, data)
+            subject = "Changes made for your ticket request"
+            if request_entry.status == RequestEntry.Status.PENDING:
+                message = f"""
+                Dear {requester_user.get_full_name() or requester_user.username},
+                
+                We wanted to inform you that your request has been reviewed by the administrator. A new comment has been added, and the status of your request has been updated to "For Revision".
+                
+                Comment from the admin:
+                "{comment_text}"
+                
+                Please review the details at your earliest convenience.
+                
+                Best regards,
+                The Support Team
+                """
+            else:
+                message = f"""
+                Dear {requester_user.get_full_name() or requester_user.username},
+                
+                We wanted to inform you that your request has received a new comment from the administrator.
+                
+                Comment from the admin:
+                "{comment_text}"
+                
+                Please review the details at your earliest convenience.
+                
+                Best regards,
+                The Support Team
+                """
+            email_from = config("EMAIL_HOST_USER")
+            recipient_list = [requester_user.email]
+            print(f"Subject:{subject}, message: {message}, sender: {email_from}, receiver: {recipient_list}, user variable:{user}, requester: {requester_user}")
+
+            send_email_sendgrid(recipient_list, subject, message)
             
         Comment.objects.create(
             request_entry=request_entry,
@@ -238,14 +266,12 @@ def new_form_submit(request):
                         request_use_case = course_code,
                         vm_count = vm_count
                     )
-                gVM_count += vm_count
         else:
             RequestUseCase.objects.create(
                     request = new_request,
                     request_use_case = use_case,
                     vm_count = data.get(f"vm_count1")
                 )
-            gVM_count = data.get(f"vm_count1")
 
         if has_internet:
             for i in range(1, int(data['addProtocolClicked']) + 1):
@@ -260,24 +286,6 @@ def new_form_submit(request):
                         dest_ports = dest_ports,
                         #description = description
                     )
-
-        admin_user_profiles = UserProfile.objects.filter(user_type='admin')
-        admin_user_ids = admin_user_profiles.values_list('user_id', flat=True)
-
-        tsgUsers = User.objects.filter(id__in = admin_user_ids)
-        tsgEmails = []
-        for tsg in tsgUsers:
-            tsgEmails.append(tsg.email)
-        
-        print (tsgEmails)
-        data = {
-            'vm_template_name' : vmTemplateID.vm_name,
-            'use_case' : use_case,
-            'vm_count' : gVM_count,
-            'faculty_name' : requester.get_full_name()
-        }
-        comment_notif_tsg(tsgEmails, data)
-
     return JsonResponse({'status': 'ok'}, status=200)
 
 def log_request_entry_changes(request_entry, changed_by, new_data, user):
@@ -447,14 +455,14 @@ def edit_form_submit(request):
 
 def request_confirm(request, request_id):
 
-    if request.method == 'POST':
+    # if request.method == 'POST':
 
-        data = request.POST
-        # node = data.get('node')
+    # data = request.POST
+    # node = data.get('node')
 
-        node = "pve"
+    node = "pve"
 
-        create_test_vm.delay(request.user.pk, request_id, node)
+    create_test_vm.delay(request.user.pk, request_id, node)
 
     return redirect('ticketing:request_details', request_id)
 
