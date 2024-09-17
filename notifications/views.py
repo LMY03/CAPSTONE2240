@@ -32,7 +32,7 @@ def send_email_sendgrid (paramData):
         
 
 
-def comment_notif_faculty (to_email, data):
+def comment_notif_tsg (to_email, data):
     data = {
         "from": {
             "email": "patrick_bennett_ong@dlsu.edu.ph"
@@ -51,12 +51,12 @@ def comment_notif_faculty (to_email, data):
                 }
             }
         ],
-        "template_id": "d-0aabc8df6cf444c09777b1a3e485bf9d"  # Replace with your SendGrid dynamic template ID
+        "template_id": "d-4ce501347a4647d6a09acf7f6baa2b8c"  # Replace with your SendGrid dynamic template ID
     }
 
     return  send_email_sendgrid(data)
 
-def comment_notif_tsg (to_email, data):
+def comment_notif_faculty (to_email, data):
     recipients = [{"email": email} for email in to_email]
     data = {
         "from": {
@@ -72,7 +72,7 @@ def comment_notif_tsg (to_email, data):
                 }
             }
         ],
-        "template_id": "d-4ce501347a4647d6a09acf7f6baa2b8c"  # Replace with your SendGrid dynamic template ID
+        "template_id": "d-0aabc8df6cf444c09777b1a3e485bf9d"  # Replace with your SendGrid dynamic template ID
     }
 
     return  send_email_sendgrid(data)
