@@ -447,14 +447,14 @@ def edit_form_submit(request):
 
 def request_confirm(request, request_id):
 
-    # if request.method == 'POST':
+    if request.method == 'POST':
 
-    data = request.POST
-    # node = data.get('node')
+        data = request.POST
+        # node = data.get('node')
 
-    node = "pve"
+        node = "pve"
 
-    create_test_vm.delay(request.user.pk, request_id, node)
+        create_test_vm.delay(request.user.pk, request_id, node)
 
     return redirect('ticketing:request_details', request_id)
 
