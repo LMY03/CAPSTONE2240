@@ -56,6 +56,7 @@ def comment_notif_tsg (to_email, data):
     return  send_email_sendgrid(data)
 
 def comment_notif_faculty (to_email, data):
+    print ('inside comment_notif_faculty')
     data = {
         "from": {
             "email": "patrick_bennett_ong@dlsu.edu.ph"
