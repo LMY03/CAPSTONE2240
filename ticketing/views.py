@@ -238,12 +238,14 @@ def new_form_submit(request):
                         request_use_case = course_code,
                         vm_count = vm_count
                     )
+                gVM_count += vm_count
         else:
             RequestUseCase.objects.create(
                     request = new_request,
                     request_use_case = use_case,
                     vm_count = data.get(f"vm_count1")
                 )
+            gVM_count = data.get(f"vm_count1")
 
         if has_internet:
             for i in range(1, int(data['addProtocolClicked']) + 1):
@@ -271,7 +273,7 @@ def new_form_submit(request):
         data = {
             'vm_template_name' : vmTemplateID.vm_name,
             'use_case' : use_case,
-            'vm_count' : vm_count
+            'vm_count' : gVM_count
         }
         #comment_notif_tsg(tsgEmails, data)
 
