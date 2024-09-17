@@ -457,7 +457,7 @@ def request_confirm(request, request_id):
 
     # if request.method == 'POST':
 
-    # data = request.POST
+    data = request.POST
     # node = data.get('node')
 
     node = "pve"
