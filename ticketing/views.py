@@ -151,9 +151,8 @@ def add_comment(request, pk):
                 'comment' : comment_text, 
                 'request_entry_id' : request_entry.id
             }
-            recipient_list = [requester_user.email]
-            print(recipient_list, data)
-            comment_notif_faculty(recipient_list, data)
+            print(requester_user.email, data)
+            comment_notif_faculty(requester_user.email, data)
             
         Comment.objects.create(
             request_entry=request_entry,
