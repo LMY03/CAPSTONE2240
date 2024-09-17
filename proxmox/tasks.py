@@ -54,6 +54,8 @@ def create_test_vm(tsg_user_id, request_id, node):
     proxmox.wait_for_vm_stop(node, new_vm_id)
     logger.info("===========================3 ")
 
+    # ip_add = "10.10.10.10"
+
     vm.set_ip_add(ip_add)
     vm.set_shutdown()
 
