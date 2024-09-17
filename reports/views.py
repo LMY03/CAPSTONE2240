@@ -81,8 +81,10 @@ def get_influxdb_client():
 
 # Construct Flux Query
 def construct_flux_query(measurement, fields, hosts, start_date, end_date, window):
-    host_filter = ' or '.join(f'r.host == "{host}"' for host in hosts)
-    field_filter = ' or '.join(f'r._field == "{field}"' for field in fields)
+    start_date = f'"{start_date}"'
+    end_date = f'"{end_date}"'
+    host_filter = ' or '.join(f'r.host == "{host}"' for host in hosts) if hosts else 'true'
+    field_filter = ' or '.join(f'r._field == "{field}"' for field in fields) if fields else 'true'
 
     query = f'''
             from(bucket:"{bucket}")
