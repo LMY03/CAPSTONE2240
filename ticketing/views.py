@@ -273,7 +273,8 @@ def new_form_submit(request):
         data = {
             'vm_template_name' : vmTemplateID.vm_name,
             'use_case' : use_case,
-            'vm_count' : gVM_count
+            'vm_count' : gVM_count,
+            'faculty_name' : requester.get_full_name()
         }
         comment_notif_tsg(tsgEmails, data)
 

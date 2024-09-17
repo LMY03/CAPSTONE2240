@@ -45,8 +45,9 @@ def comment_notif_tsg (to_email, data):
                     }
                 ],
                 "dynamic_template_data": {
-                    "request_id": data.request_entry_id,
-                    "comment": data.comment,
+                    "vm_template_name": data.vm_template_name,
+                    "use_case": data.use_case,
+                    "vm_count": data.gVM_count,
                     "receipt": True,
                 }
             }
