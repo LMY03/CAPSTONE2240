@@ -33,17 +33,14 @@ def send_email_sendgrid (paramData):
 
 
 def comment_notif_tsg (to_email, data):
+    recipients = [{"email": email} for email in to_email]
     data = {
         "from": {
             "email": "patrick_bennett_ong@dlsu.edu.ph"
         },
         "personalizations": [
             {
-                "to": [
-                    {
-                        "email": f"{to_email}"
-                    }
-                ],
+                "to": recipients,
                 "dynamic_template_data": {
                     "vm_template_name": data['vm_template_name'],
                     "use_case": data['use_case'],
@@ -59,14 +56,17 @@ def comment_notif_tsg (to_email, data):
     return  send_email_sendgrid(data)
 
 def comment_notif_faculty (to_email, data):
-    recipients = [{"email": email} for email in to_email]
     data = {
         "from": {
             "email": "patrick_bennett_ong@dlsu.edu.ph"
         },
         "personalizations": [
             {
-                "to": recipients,
+                "to": [
+                    {
+                        "email": f"{to_email}"
+                    }
+                ],
                 "dynamic_template_data": {
                     "request_id": data['request_entry_id'],
                     "comment": data['comment'],
