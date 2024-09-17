@@ -275,7 +275,7 @@ def new_form_submit(request):
             'use_case' : use_case,
             'vm_count' : gVM_count
         }
-        #comment_notif_tsg(tsgEmails, data)
+        comment_notif_tsg(tsgEmails, data)
 
     return JsonResponse({'status': 'ok'}, status=200)
 
