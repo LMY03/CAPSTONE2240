@@ -266,12 +266,14 @@ def new_form_submit(request):
         tsgEmails = []
         for tsg in tsgUsers:
             tsgEmails.append(tsg.email)
+        
+        print (tsgEmails)
         data = {
             'vm_template_name' : vmTemplateID.vm_name,
             'use_case' : use_case,
             'vm_count' : vm_count
         }
-        comment_notif_tsg(tsgEmails, data)
+        #comment_notif_tsg(tsgEmails, data)
 
     return JsonResponse({'status': 'ok'}, status=200)
 
