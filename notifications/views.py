@@ -45,9 +45,10 @@ def comment_notif_tsg (to_email, data):
                     }
                 ],
                 "dynamic_template_data": {
-                    "vm_template_name": data.vm_template_name,
-                    "use_case": data.use_case,
-                    "vm_count": data.gVM_count,
+                    "vm_template_name": data['vm_template_name'],
+                    "use_case": data['use_case'],
+                    "vm_count": data['vm_count'],
+                    "faculty_name" : data['faculty_name'],
                     "receipt": True,
                 }
             }
@@ -67,8 +68,8 @@ def comment_notif_faculty (to_email, data):
             {
                 "to": recipients,
                 "dynamic_template_data": {
-                    "request_id": data.request_entry_id,
-                    "comment": data.comment,
+                    "request_id": data['request_entry_id'],
+                    "comment": data['comment'],
                     "receipt": True,
                 }
             }
