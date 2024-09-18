@@ -55,9 +55,11 @@ def comment_notif_tsg (to_email, data):
 
     return  send_email_sendgrid(data)
 
-def comment_notif_faculty (to_email, data):
-    print ('inside comment_notif_faculty')
-    data = {
+def comment_notif_faculty(to_email, data, *faculty):
+    print('inside comment_notif_faculty')
+    
+    # Define the base data
+    email_data = {
         "from": {
             "email": "patrick_bennett_ong@dlsu.edu.ph"
         },
@@ -74,8 +76,19 @@ def comment_notif_faculty (to_email, data):
                     "receipt": True,
                 }
             }
-        ],
-        "template_id": "d-0aabc8df6cf444c09777b1a3e485bf9d"  # Replace with your SendGrid dynamic template ID
+        ]
     }
 
-    return  send_email_sendgrid(data)
+    if 'faculty' in faculty:
+        email_data['personalizations']['to'] = [f"{to_email}"]
+        email_data["template_id"] = "d-f532416d64ea429a81671879794c0958"  
+    elif 'admin' in faculty:
+        recipients = [{"email": email} for email in to_email]
+        email_data['personalizations']['to'] = recipients
+        email_data["template_id"] = "d-e3593d8aabbc435ba143717a33ce1485" # Create a new template
+    else:
+        email_data['personalizations']['to'] = [f"{to_email}"]
+        email_data["template_id"] = "d-0aabc8df6cf444c09777b1a3e485bf9d"
+    
+    
+    return send_email_sendgrid(email_data)

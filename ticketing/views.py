@@ -152,8 +152,23 @@ def add_comment(request, pk):
                 'request_entry_id' : request_entry.id
             }
             print(requester_user.email, data)
-            comment_notif_faculty(requester_user.email, data)
-            
+            comment_notif_faculty(requester_user.email, data) # Admin comments to the request ticket
+        elif user_profile.user_type == 'faculty':
+            data = {
+                'comment' : comment_text, 
+                'request_entry_id' : request_entry.id
+            }
+            if request_entry.assigned_to and request_entry.assigned_to.email: #Checks if there is an assigned TSG
+                comment_notif_faculty(request_entry.assigned_to.email, data, user_profile.user_type) # Faculty replies back to the comment
+            else:
+                admin_user_profiles = UserProfile.objects.filter(user_type='admin')
+                admin_user_ids = admin_user_profiles.values_list('user_id', flat=True)
+
+                tsgUsers = User.objects.filter(id__in = admin_user_ids)
+                tsgEmails = []
+                for tsg in tsgUsers:
+                    tsgEmails.append(tsg.email)
+                comment_notif_faculty(tsgEmails, data, 'admin') # This is for the situation where there is no assigned to yet, and the faculty replies
         Comment.objects.create(
             request_entry=request_entry,
             comment=comment_text,
