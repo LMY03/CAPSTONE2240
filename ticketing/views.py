@@ -156,7 +156,8 @@ def add_comment(request, pk):
         elif user_profile.user_type == 'faculty':
             data = {
                 'comment' : comment_text, 
-                'request_entry_id' : request_entry.id
+                'request_entry_id' : request_entry.id, 
+                'faculty_name': requester_user.get_full_name()
             }
             if request_entry.assigned_to and request_entry.assigned_to.email: #Checks if there is an assigned TSG
                 comment_notif_faculty(request_entry.assigned_to.email, data, user_profile.user_type) # Faculty replies back to the comment
@@ -168,6 +169,10 @@ def add_comment(request, pk):
                 tsgEmails = []
                 for tsg in tsgUsers:
                     tsgEmails.append(tsg.email)
+                data = {
+                'comment' : comment_text, 
+                'request_entry_id' : request_entry.id
+                }
                 comment_notif_faculty(tsgEmails, data, 'admin') # This is for the situation where there is no assigned to yet, and the faculty replies
         Comment.objects.create(
             request_entry=request_entry,

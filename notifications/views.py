@@ -58,6 +58,7 @@ def comment_notif_tsg (to_email, data):
 def comment_notif_faculty(to_email, data, *faculty):
     print('inside comment_notif_faculty')
     faculty = faculty if faculty else ('default_value',)
+    faculty_name = data.get('faculty_name', '')
     email_data = {
         "from": {
             "email": "patrick_bennett_ong@dlsu.edu.ph"
@@ -68,6 +69,7 @@ def comment_notif_faculty(to_email, data, *faculty):
                 "dynamic_template_data": {
                     "request_id": data['request_entry_id'],
                     "comment": data['comment'],
+                    "faculty_name": faculty_name,
                     "receipt": True,
                 }
             }
