@@ -58,18 +58,13 @@ def comment_notif_tsg (to_email, data):
 def comment_notif_faculty(to_email, data, *faculty):
     print('inside comment_notif_faculty')
     faculty = faculty if faculty else ('default_value',)
-    # Define the base data
     email_data = {
         "from": {
             "email": "patrick_bennett_ong@dlsu.edu.ph"
         },
         "personalizations": [
             {
-                "to": [
-                    {
-                        "email": f"{to_email}"
-                    }
-                ],
+                "to": [],  # Placeholder to be populated
                 "dynamic_template_data": {
                     "request_id": data['request_entry_id'],
                     "comment": data['comment'],
@@ -80,15 +75,16 @@ def comment_notif_faculty(to_email, data, *faculty):
     }
 
     if 'faculty' in faculty:
-        email_data['personalizations']['to'] = [f"{to_email}"]
+        email_data['personalizations'][0]['to'] = [{"email": f"{to_email}"}]  
         email_data["template_id"] = "d-f532416d64ea429a81671879794c0958"  
     elif 'admin' in faculty:
+        # Assuming `to_email` is a list of emails for admins
         recipients = [{"email": email} for email in to_email]
-        email_data['personalizations']['to'] = recipients
-        email_data["template_id"] = "d-e3593d8aabbc435ba143717a33ce1485" # Create a new template
+        email_data['personalizations'][0]['to'] = recipients
+        email_data["template_id"] = "d-e3593d8aabbc435ba143717a33ce1485"  
     else:
-        email_data['personalizations']['to'] = [f"{to_email}"]
-        email_data["template_id"] = "d-0aabc8df6cf444c09777b1a3e485bf9d"
-    
+        # Default case
+        email_data['personalizations'][0]['to'] = [{"email": f"{to_email}"}]
+        email_data["template_id"] = "d-0aabc8df6cf444c09777b1a3e485bf9d"  
     
     return send_email_sendgrid(email_data)
