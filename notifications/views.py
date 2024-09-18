@@ -57,7 +57,7 @@ def comment_notif_tsg (to_email, data):
 
 def comment_notif_faculty(to_email, data, *faculty):
     print('inside comment_notif_faculty')
-    
+    faculty = faculty if faculty else ('default_value',)
     # Define the base data
     email_data = {
         "from": {
