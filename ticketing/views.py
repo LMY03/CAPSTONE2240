@@ -253,7 +253,7 @@ def new_form_submit(request):
                         request_use_case = course_code,
                         vm_count = vm_count
                     )
-                gVM_count += vm_count
+            gVM_count += vm_count
         else:
             RequestUseCase.objects.create(
                     request = new_request,
@@ -261,7 +261,6 @@ def new_form_submit(request):
                     vm_count = data.get(f"vm_count1")
                 )
             gVM_count = data.get(f"vm_count1")
-
         if has_internet:
             for i in range(1, int(data['addProtocolClicked']) + 1):
                 protocol = data.get(f'protocol{i}')
@@ -292,7 +291,6 @@ def new_form_submit(request):
             'faculty_name' : requester.get_full_name()
         }
         comment_notif_tsg(tsgEmails, data)
-
     return JsonResponse({'status': 'ok'}, status=200)
 
 def log_request_entry_changes(request_entry, changed_by, new_data, user):
