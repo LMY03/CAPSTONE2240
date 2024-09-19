@@ -249,12 +249,15 @@ def new_form_submit(request):
                 course_code = data.get(f"course_code{i}")
                 vm_count = data.get(f"vm_count{i}")
                 if course_code is not None:
+                    # If vm_count is not None, convert to int; otherwise, default to 0
+                    vm_count_int = int(vm_count) if vm_count is not None else 0
+                if course_code is not None:
                     RequestUseCase.objects.create(
                         request = new_request,
                         request_use_case = course_code,
-                        vm_count = vm_count
+                        vm_count = vm_count_int
                     )
-            gVM_count += vm_count
+            gVM_count += vm_count_int
         else:
             RequestUseCase.objects.create(
                     request = new_request,
