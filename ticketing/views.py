@@ -169,11 +169,7 @@ def add_comment(request, pk):
                 tsgEmails = []
                 for tsg in tsgUsers:
                     tsgEmails.append(tsg.email)
-                data = {
-                'comment' : comment_text, 
-                'request_entry_id' : request_entry.id
-                }
-                comment_notif_faculty(tsgEmails, data, 'admin') # This is for the situation where there is no assigned to yet, and the faculty replies
+                comment_notif_faculty(tsgEmails, data, 'admin') # This is for the situation where there is no assigned to yet, and the faculty comments
         Comment.objects.create(
             request_entry=request_entry,
             comment=comment_text,
@@ -247,7 +243,7 @@ def new_form_submit(request):
             # status = RequestEntry.Status.PENDING,
         )
         
-        
+        gVM_count = 0
         if use_case == 'CLASS_COURSE':
             for i in range(1, int(data['addCourseButtonClick']) + 1):
                 course_code = data.get(f"course_code{i}")
