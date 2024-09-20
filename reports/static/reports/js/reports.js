@@ -99,6 +99,7 @@ $(document).ready(function() {
     // change URL -> csv
     form.attr('action', 'index_csv');
     var data = form.serializeArray();
+    console.log("Form data:", data);
 
     // submit form
     if(checkData(data))
