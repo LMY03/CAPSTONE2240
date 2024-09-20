@@ -107,6 +107,7 @@ def process_query_result(result, fields):
     for table in result:
         for record in table.records:
             print(record)
+            break
             row = {
                 'time': record.get_time().strftime('%Y-%m-%d %H:%M:%S'),
                 'host': record.values.get('host', ''),
