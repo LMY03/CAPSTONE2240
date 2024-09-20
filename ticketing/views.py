@@ -142,7 +142,7 @@ def submit_issue_ticket(request):
             issue_ticket.created_by = request.user
             issue_ticket.save()
 
-            return redirect(reverse('request_details', args=[request_entry_id]))
+            return redirect(reverse('ticketing:request_details', args=[request_entry_id]))
         
     return redirect('ticketing:index')
 
