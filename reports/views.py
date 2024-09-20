@@ -97,28 +97,29 @@ def construct_flux_query(measurement, fields, hosts, start_date, end_date, windo
             |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
             |> yield(name: "mean")
             '''
-    print(f"Constructed Flux query: {query}")
     return query
 
 # Process Query Result
 def process_query_result(result, fields):
     processed_data = []
-    print("Raw query result (first few points):")
     for table in result:
         for record in table.records:
-            print(record)
-            break
-            row = {
-                'time': record.get_time().strftime('%Y-%m-%d %H:%M:%S'),
-                'host': record.values.get('host', ''),
-                'nodename': record.values.get('nodename', ''),
-            }
-            field = record.get_field()
-            if field in fields:
-                row[field] = round(record.get_value(), 2) if record.get_value() is not None else None
-            processed_data.append(row)
-    
-    return processed_data
+            time = record.get_time().strftime('%Y-%m-%d %H:%M:%S')
+            host = record.values.get('host', '')
+            nodename = record.values.get('nodename', '')
+            field = record.get_feild()
+            value = round(record.get_value(), 2) if record.get_value() is not None else None
+
+            key = (time, host, nodename)
+            if key not in processed_data:
+                processed_data[key] = {'time': time, 'host': host, 'nodename': nodename}
+
+            if field in feilds:
+                processed_data[key][feilds] = value
+            else:
+                print(f"Warning: Unexpected field '{field}' encountered")
+
+    return list(processed_data.values())
 
 def write_csv(writer, data, selected_metrics):
     for row in data:
