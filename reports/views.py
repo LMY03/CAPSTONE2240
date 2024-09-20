@@ -19,7 +19,7 @@ proxmox_password = config('PROXMOX_PASSWORD')
 # Parse date to InfluxDB compatible
 def parse_form_date(date_string):
     try:
-        dt = datetime.strptime(data_string, "%Y-%m-%d")
+        dt = datetime.strptime(date_string, "%Y-%m-%d")
         return dt.strftime("%Y-%m-%dT00:00:00")
     except ValueError:
         raise ValueError(f"Invalid date format: {data_string}. Expected YYYY-MM-DD")
