@@ -123,7 +123,7 @@ $(document).ready(function() {
               {   orderable: false, "targets": 0 },
               {   targets: 0,
                   render: function(data, type, row, meta){
-                      return '<input type="checkbox" name="'+ row[1] +'" value="'+ row[2] +'"/>'
+                      return '<input type="checkbox" name="selectedVMs" value="'+ row[2] +'"/>'
                   }
               }
           ],

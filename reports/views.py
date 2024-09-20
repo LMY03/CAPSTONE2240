@@ -16,6 +16,15 @@ org = config('INFLUXDB_ORG')
 bucket = config('INFLUXDB_BUCKET')
 proxmox_password = config('PROXMOX_PASSWORD')
 
+# Parse date to InfluxDB compatible
+def parse_form_date(date_string):
+    try:
+        dt = datetime.strptime(data_string, "%Y-%m-%d")
+        return dt.strftime("%Y-%m-%dT00:00:00")
+    except ValueError:
+        raise ValueError(f"Invalid date format: {data_string}. Expected YYYY-MM-DD")
+        
+
 # Get Report Page
 def index(request):
     return render(request, 'reports/reports.html')
@@ -104,22 +113,17 @@ def process_query_result(result, fields):
     processed_data = []
     for table in result:
         for record in table.records:
-            time = record.get_time().strftime('%Y-%m-%d %H:%M:%S')
-            host = record.values.get('host', '')
-            nodename = record.values.get('nodename', '')
-            field = record.get_feild()
-            value = round(record.get_value(), 2) if record.get_value() is not None else None
+            row = {
+                'time': record.get_time().strftime('%Y-%m-%d %H:%M:%S'),
+                'host': record.values.get('host', ''),
+                'nodename': record.values.get('nodename', ''),
+            }
+            field = record.get_field()
+            if field in fields:
+                row[field] = round(record.get_value(), 2) if record.get_value() is not None else None
+            processed_data.append(row)
 
-            key = (time, host, nodename)
-            if key not in processed_data:
-                processed_data[key] = {'time': time, 'host': host, 'nodename': nodename}
-
-            if field in feilds:
-                processed_data[key][feilds] = value
-            else:
-                print(f"Warning: Unexpected field '{field}' encountered")
-
-    return list(processed_data.values())
+    return processed_data
 
 def write_csv(writer, data, selected_metrics):
     for row in data:
@@ -139,11 +143,27 @@ def index_csv(request):
         proxmox_client = get_proxmox_client()
 
         # Process request data
-        start_date = request.POST.get('startdate')
-        end_date = request.POST.get('enddate')
+        start_date_str = request.POST.get('startdate')
+        end_date_str = request.POST.get('enddate')
+
+        if not start_date_str or not end_date_str:
+            return HttpResponse("Start date and end date are required", status=400)
+
+        start_date = parse_form_date(start_date_str)
+        end_date = parse_form_date(end_date_str)
+
+        # TODO: REMOVE!
+        print(f"Parsed start date: {start_date}")
+        print(f"Parsed end date: {end_date}")
+
         selected_metrics = [key for key in ['cpuUsage', 'memoryUsage', 'netin', 'netout'] if key in request.POST]
-        vm_hosts = request.POST.getlist('vmHosts')
+        selected_vms = request.POST.getlist('selectedVMs')
         node_hosts = [node['node'] for node in proxmox_client.nodes.get()]
+        
+        # TODO: REMOVE!
+        print("Selected metrics:", selected_metrics)
+        print("Selected VMs:", selected_vms)
+        print(f"all hosts: {node_hosts}")
 
         # Prepare response
         response = HttpResponse(
@@ -159,7 +179,7 @@ def index_csv(request):
         # Prepare and execute queries
         query_api = influxdb_client.query_api()
 
-        vm_query = construct_flux_query('system', selected_metrics, vm_hosts, start_date, end_date, '1h')
+        vm_query = construct_flux_query('system', selected_metrics, selected_vms, start_date, end_date, '1h')
         vm_result = query_api.query(vm_query)
         vm_date = process_query_result(vm_result, selected_metrics)
 
