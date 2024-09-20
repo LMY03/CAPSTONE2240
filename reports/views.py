@@ -103,8 +103,10 @@ def construct_flux_query(measurement, fields, hosts, start_date, end_date, windo
 # Process Query Result
 def process_query_result(result, fields):
     processed_data = []
+    print("Raw query result (first few points):")
     for table in result:
         for record in table.records:
+            print(record)
             row = {
                 'time': record.get_time().strftime('%Y-%m-%d %H:%M:%S'),
                 'host': record.values.get('host', ''),
