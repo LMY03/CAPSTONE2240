@@ -97,7 +97,7 @@ def construct_flux_query(measurement, fields, hosts, start_date, end_date, windo
             |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
             |> yield(name: "mean")
             '''
-    
+    print(f"Constructed Flux query: {query}")
     return query
 
 # Process Query Result
