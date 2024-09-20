@@ -20,7 +20,7 @@ proxmox_password = config('PROXMOX_PASSWORD')
 def parse_form_date(date_string):
     try:
         dt = datetime.strptime(date_string, "%Y-%m-%d")
-        return dt.strftime("%Y-%m-%dT00:00:00")
+        return dt.strftime("%Y-%m-%dT00:00:00Z")
     except ValueError:
         raise ValueError(f"Invalid date format: {data_string}. Expected YYYY-MM-DD")
         
@@ -90,10 +90,8 @@ def get_influxdb_client():
 
 # Construct Flux Query
 def construct_flux_query(measurement, fields, hosts, start_date, end_date, window):
-    start_date = (datetime.fromisoformat(start_date.replace('Z', '+00:00'))
-                  .strftime('%Y-%m-%dT%H:%M:%SZ'))
-    end_date = (datetime.fromisoformat(end_date.replace('Z', '+00:00'))
-                .strftime('%Y-%m-%dT%H:%M:%SZ'))
+    start_date = start_date
+    end_date = end_date
     host_filter = ' or '.join(f'r.host == "{host}"' for host in hosts) if hosts else 'true'
     field_filter = ' or '.join(f'r._field == "{field}"' for field in fields) if fields else 'true'
 
@@ -106,6 +104,8 @@ def construct_flux_query(measurement, fields, hosts, start_date, end_date, windo
             |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
             |> yield(name: "mean")
             '''
+    # TODO: REMOVE!
+    print(f"query statement: {query}")
     return query
 
 # Process Query Result
@@ -152,29 +152,31 @@ def index_csv(request):
         start_date = parse_form_date(start_date_str)
         end_date = parse_form_date(end_date_str)
 
-        # TODO: REMOVE!
-        print(f"Parsed start date: {start_date}")
-        print(f"Parsed end date: {end_date}")
+        # # TODO: REMOVE!
+        # print(f"Parsed start date: {start_date}")
+        # print(f"Parsed end date: {end_date}")
 
         selected_metrics = [key for key in ['cpuUsage', 'memoryUsage', 'netin', 'netout'] if key in request.POST]
         selected_vms = request.POST.getlist('selectedVMs')
         node_hosts = [node['node'] for node in proxmox_client.nodes.get()]
         
-        # TODO: REMOVE!
-        print("Selected metrics:", selected_metrics)
-        print("Selected VMs:", selected_vms)
-        print(f"all hosts: {node_hosts}")
+        # # TODO: REMOVE!
+        # print("Selected metrics:", selected_metrics)
+        # print("Selected VMs:", selected_vms)
+        # print(f"all hosts: {node_hosts}")
 
-        # Prepare response
+        # Prepare csv response
         response = HttpResponse(
             content_type='text/csv',
-            headers={'Content-Disposition': f'attachment; filename="{start_date}_to_{end_date}.csv"'},
+            headers={'Content-Disposition': f'attachment; filename="{start_date_str}_to_{end_date_str}.csv"'},
         )
         writer = csv.writer(response)
 
         # Write CSV header
         header = ['time', 'name', 'nodename'] + selected_metrics
         writer.writerow(header)
+        # TODO: REMOVE!
+        print(f"header: {header}")
 
         # Prepare and execute queries
         query_api = influxdb_client.query_api()
@@ -182,6 +184,8 @@ def index_csv(request):
         vm_query = construct_flux_query('system', selected_metrics, selected_vms, start_date, end_date, '1h')
         vm_result = query_api.query(vm_query)
         vm_date = process_query_result(vm_result, selected_metrics)
+        # TODO: REMOVE!
+        print(f"vm_date: {vm_date}")
 
         node_cpu_query = construct_flux_query('cpustat', ['cpu'], node_hosts, start_date, end_date, '1h')
         node_mem_query = construct_flux_query('memory', ['memused', 'memtotal'], node_hosts, start_date, end_date, '1h')
