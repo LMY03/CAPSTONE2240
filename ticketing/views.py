@@ -140,8 +140,9 @@ def submit_issue_ticket(request):
             request_entry = get_object_or_404(RequestEntry, pk=request_entry_id)
             issue_ticket.request = request_entry
             issue_ticket.created_by = request.user
-            issue_ticket.save()  
-            return redirect('ticketing:index')
+            issue_ticket.save()
+
+            return redirect(reverse('request_details', args=[request_entry_id]))
         
     return redirect('ticketing:index')
 

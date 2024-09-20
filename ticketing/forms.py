@@ -71,6 +71,6 @@ class IssueTicketForm(forms.ModelForm):
         fields = ['subject', 'description']
         widgets = {
             'subject': forms.TextInput(attrs={'class': 'form-control'}),
-            'description': forms.TextInput(attrs={'class': 'form-control'}),
+            'description': forms.Textarea(attrs={'class': 'form-control'}),
         }
     request_entry = forms.CharField(widget=forms.HiddenInput())
