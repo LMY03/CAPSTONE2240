@@ -209,6 +209,10 @@ def index_csv(request):
         print(f"vm_result: {vm_result}")
 
 
+        # Write the grouped data to CSV - header
+        writer = csv.writer(response, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+        writer.writerow(['time', 'host', 'nodename'] + selected_metrics)
+
         # Dictionary to store grouped data
         grouped_data = {}
 
@@ -228,11 +232,9 @@ def index_csv(request):
 
                 # Add value to the corresponding metric
                 if field in selected_metrics:
-                    grouped_data[key][field] = value
+                    grouped_data[key][field] = str(value).strip().replace('\n', '').replace('\r', '')
 
-        # Write the grouped data to CSV - header
-        writer = csv.writer(response, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-        writer.writerow(['time', 'host', 'nodename'] + selected_metrics)
+
         # Write the grouped data to CSV - data
         for (timestamp, host, nodename), metrics in grouped_data.items():
             row = [timestamp, host, nodename]
