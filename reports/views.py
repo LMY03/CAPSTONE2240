@@ -88,10 +88,24 @@ def get_proxmox_client():
 def get_influxdb_client():
     return InfluxDBClient(url=INFLUX_ADDRESS, token=token, org=org)
 
+def construct_vm_flux_query(hosts, metrics, start_date, end_date, window):
+
+    host_filter = ' or '.join(f'r.host == "{host}"' for host in hosts) if hosts else 'true'
+    field_filter = ' or '.join(f'r._field == "{field}"' for field in fields) if fields else 'true'
+
+    query = f'''
+            from(bucket:"{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r._measurement == "system")
+            |> filter(fn: (r) => {host_filter})
+            |> filter(fn: (r) => {field_filter})
+            |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
+            |> yield(name: "mean")
+            '''
+    return query
+
 # Construct Flux Query
 def construct_flux_query(measurement, fields, hosts, start_date, end_date, window):
-    start_date = start_date
-    end_date = end_date
     host_filter = ' or '.join(f'r.host == "{host}"' for host in hosts) if hosts else 'true'
     field_filter = ' or '.join(f'r._field == "{field}"' for field in fields) if fields else 'true'
 
@@ -141,6 +155,8 @@ def index_csv(request):
         # Get clients
         influxdb_client = get_influxdb_client()
         proxmox_client = get_proxmox_client()
+        # Prepare and execute queries
+        query_api = influxdb_client.query_api()
 
         # Process request data
         start_date_str = request.POST.get('startdate')
@@ -156,14 +172,26 @@ def index_csv(request):
         # print(f"Parsed start date: {start_date}")
         # print(f"Parsed end date: {end_date}")
 
-        selected_metrics = [key for key in ['cpuUsage', 'memoryUsage', 'netin', 'netout'] if key in request.POST]
+        metrics = [key for key in ['cpuUsage', 'memoryUsage', 'netin', 'netout'] if key in request.POST]
+        selected_metrics = []
+        for metric in metrics:
+            if(metric === 'cpuUsage') {
+                selected_metrics.append('cpu')
+            }elif(metric === 'memoryUsage') {
+                selected_metrics.append('maxmem')
+                selected_metrics.append('mem')
+            }elif(metric === 'netin') {
+                selected_metrics.append('netin')
+            }elif(metric === 'netout') {
+                selected_metrics.append('netout')
+            }
         selected_vms = request.POST.getlist('selectedVMs')
         node_hosts = [node['node'] for node in proxmox_client.nodes.get()]
         
-        # # TODO: REMOVE!
-        # print("Selected metrics:", selected_metrics)
-        # print("Selected VMs:", selected_vms)
-        # print(f"all hosts: {node_hosts}")
+        # TODO: REMOVE!
+        print("Selected metrics:", selected_metrics)
+        print("Selected VMs:", selected_vms)
+        print(f"all hosts: {node_hosts}")
 
         # Prepare csv response
         response = HttpResponse(
@@ -178,37 +206,21 @@ def index_csv(request):
         # TODO: REMOVE!
         print(f"header: {header}")
 
-        # Prepare and execute queries
-        query_api = influxdb_client.query_api()
-
-        vm_query = construct_flux_query('system', selected_metrics, selected_vms, start_date, end_date, '1h')
-        vm_result = query_api.query(vm_query)
-        vm_date = process_query_result(vm_result, selected_metrics)
+        # TODO: add window in response
+        vm_query = construct_vm_flux_query(selected_vms, selected_metrics, start_date, end_date, '1h')
         # TODO: REMOVE!
-        print(f"vm_date: {vm_date}")
+        print(f"vm_query: {vm_query}")
+        vm_result = query_api.query(vm_query)
 
-        node_cpu_query = construct_flux_query('cpustat', ['cpu'], node_hosts, start_date, end_date, '1h')
-        node_mem_query = construct_flux_query('memory', ['memused', 'memtotal'], node_hosts, start_date, end_date, '1h')
-        node_net_query = construct_flux_query('system', ['netin', 'netout'], node_hosts, start_date, end_date, '1h')
-
-        node_cpu_result = query_api.query(node_cpu_query)
-        node_mem_result = query_api.query(node_mem_query)
-        node_net_result = query_api.query(node_net_query)
-
-        # Process node data
-        node_data = {}
-        for result, fields in [(node_cpu_result, ['cpu']), (node_mem_result, ['memused', 'memtotal']), (node_net_result, ['netin', 'netout'])]:
-            for row in process_query_result(result, fields):
-                key = (row['time'], row['host'])
-                if key not in node_data:
-                    node_data[key] = row
-                else:
-                    node_data[key].update(row)
-
-        # Calculate memory percentage for nodes
-        for row in node_data.values():
-            if 'memused' in row and 'memtotal' in row and row['memtotal'] != 0:
-                row['memoryUsage'] = round((row['memused'] / row['memtotal']) * 100, 2)
+        # for table in vm_result:
+        #     for record in table.records:
+        #         row = [
+        #             record.get_time().strftime('%Y-%m-%d %H:%M:%S'),
+        #             record.values.get('host', ''),
+        #             record.values.get('nodename', '')
+        #         ]
+        #         row.extend([record.values.get(metric, '') for metric in selected_metrics])
+        #         writer.writerow(row)        
 
         # Wrtie data to CSV
         write_csv(writer, node_data.values(), selected_metrics)
