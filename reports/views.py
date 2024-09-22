@@ -208,19 +208,19 @@ def index_csv(request):
 
         # TODO: add window in response
         vm_query = construct_vm_flux_query(selected_vms, selected_metrics, start_date, end_date, '1h')
-        # TODO: REMOVE!
-        print(f"vm_query: {vm_query}")
         vm_result = query_api.query(vm_query)
+        # TODO: REMOVE!
+        print(f"vm_result: {vm_result}")
 
-        # for table in vm_result:
-        #     for record in table.records:
-        #         row = [
-        #             record.get_time().strftime('%Y-%m-%d %H:%M:%S'),
-        #             record.values.get('host', ''),
-        #             record.values.get('nodename', '')
-        #         ]
-        #         row.extend([record.values.get(metric, '') for metric in selected_metrics])
-        #         writer.writerow(row)        
+        for table in vm_result:
+            for record in table.records:
+                row = [
+                    record.get_time().strftime('%Y-%m-%d %H:%M:%S'),
+                    record.values.get('host', ''),
+                    record.values.get('nodename', '')
+                ]
+                row.extend([record.values.get(metric, '') for metric in selected_metrics])
+                writer.writerow(row)        
 
         # Wrtie data to CSV
         # write_csv(writer, vm_date, selected_metrics)
