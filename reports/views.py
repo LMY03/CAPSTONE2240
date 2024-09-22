@@ -242,7 +242,7 @@ def index_csv(request):
         for (timestamp, host, nodename), metrics in grouped_data.items():
             row = [timestamp, host, nodename]
             row.extend([metrics[metric] for metric in selected_metrics])
-            write.writerow(row)
+            writer.writerow(row)
 
         influxdb_client.close()
 
