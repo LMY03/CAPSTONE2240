@@ -175,16 +175,16 @@ def index_csv(request):
         metrics = [key for key in ['cpuUsage', 'memoryUsage', 'netin', 'netout'] if key in request.POST]
         selected_metrics = []
         for metric in metrics:
-            if(metric == 'cpuUsage') {
+            if metric == 'cpuUsage':
                 selected_metrics.append('cpu')
-            }elif(metric == 'memoryUsage') {
+            elif metric == 'memoryUsage':
                 selected_metrics.append('maxmem')
                 selected_metrics.append('mem')
-            }elif(metric == 'netin') {
+            elif metric == 'netin':
                 selected_metrics.append('netin')
-            }elif(metric == 'netout') {
+            elif metric == 'netout':
                 selected_metrics.append('netout')
-            }
+                
         selected_vms = request.POST.getlist('selectedVMs')
         node_hosts = [node['node'] for node in proxmox_client.nodes.get()]
         
