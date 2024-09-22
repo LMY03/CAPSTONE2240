@@ -90,13 +90,13 @@ def get_influxdb_client():
 
 def construct_vm_flux_query(hosts, metrics, start_date, end_date, window):
 
-    host_filter = ' or '.join(f'r.host == "{host}"' for host in hosts) if hosts else 'true'
-    field_filter = ' or '.join(f'r._field == "{metric}"' for metric in metrics) if metrics else 'true'
+    host_filter = ' or '.join(f'r["host"] == "{host}"' for host in hosts) if hosts else 'true'
+    field_filter = ' or '.join(f'r["_field"] == "{metric}"' for metric in metrics) if metrics else 'true'
 
     query = f'''
             from(bucket:"{bucket}")
             |> range(start: {start_date}, stop: {end_date})
-            |> filter(fn: (r) => r._measurement == "system")
+            |> filter(fn: (r) => r["_measurement"] == "system")
             |> filter(fn: (r) => {host_filter})
             |> filter(fn: (r) => {field_filter})
             |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
@@ -208,6 +208,8 @@ def index_csv(request):
 
         # TODO: add window in response
         vm_query = construct_vm_flux_query(selected_vms, selected_metrics, start_date, end_date, '1h')
+        # TODO: REMOVE!
+        print(f"vm_query: {vm_query}")
         vm_result = query_api.query(vm_query)
         # TODO: REMOVE!
         print(f"vm_result: {vm_result}")
