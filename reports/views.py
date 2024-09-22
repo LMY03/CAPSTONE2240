@@ -91,7 +91,7 @@ def get_influxdb_client():
 def construct_vm_flux_query(hosts, metrics, start_date, end_date, window):
 
     host_filter = ' or '.join(f'r.host == "{host}"' for host in hosts) if hosts else 'true'
-    field_filter = ' or '.join(f'r._field == "{field}"' for field in fields) if fields else 'true'
+    field_filter = ' or '.join(f'r._field == "{metric}"' for metric in metrics) if metrics else 'true'
 
     query = f'''
             from(bucket:"{bucket}")
@@ -184,7 +184,7 @@ def index_csv(request):
                 selected_metrics.append('netin')
             elif metric == 'netout':
                 selected_metrics.append('netout')
-                
+
         selected_vms = request.POST.getlist('selectedVMs')
         node_hosts = [node['node'] for node in proxmox_client.nodes.get()]
         
