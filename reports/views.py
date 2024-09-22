@@ -223,8 +223,7 @@ def index_csv(request):
         #         writer.writerow(row)        
 
         # Wrtie data to CSV
-        write_csv(writer, node_data.values(), selected_metrics)
-        write_csv(writer, vm_date, selected_metrics)
+        # write_csv(writer, vm_date, selected_metrics)
 
         influxdb_client.close()
 
