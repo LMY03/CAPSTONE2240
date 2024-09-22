@@ -214,28 +214,35 @@ def index_csv(request):
         # TODO: REMOVE!
         print(f"vm_result: {vm_result}")
 
+
+        # Dictionary to store grouped data
+        grouped_data = {}
+
         for table in vm_result:
             for record in table.records:
-                row = [
-                    record.get_time().strftime('%Y-%m-%d %H:%M:%S'),
-                    record.values.get('host', ''),
-                    record.values.get('nodename', '')
-                ]
+                timestamp = record.get_time().strftime('%Y-%m-%d %H:%M:%S')
+                host = record.values.get('host', '')
+                nodename = record.values.get('nodename', '')
+                field = record.values.get('_field', '')
+                value = record.values.get('_value', '')
 
-                # Create a dictionary to store _field: _value pairs
-                field_values = {}
-                for metric in selected_metrics:
-                    if record.values.get('_field') == metric:
-                        field_values[metric] = record.values.get('_value')
+                # Unique key for each timestamp-host combination
+                key = (timestamp, host, nodename)
 
-                # Add values to the row in the order of selected_metrics
-                for metric in selected_metrics:
-                    row.append(field_values.get(metric, ''))
-                    
-                writer.writerow(row)        
+                if key not in grouped_data:
+                    grouped_data[key] = {metric: '' for metric in selected_metrics}
 
-        # Wrtie data to CSV
-        # write_csv(writer, vm_date, selected_metrics)
+                # Add value to the corresponding metric
+                if field in selected_metrics:
+                    grouped_data[key][field] = value
+
+        # Write the grouped data to CSV - header
+        writer.writerow(['time', 'host', 'nodename'] + selected_metrics)
+        # Write the grouped data to CSV - data
+        for (timestamp, host, nodename), metrics in grouped_data.items():
+            row = [timestamp, host, nodename]
+            row.extend([metrics[metric] for metric in selected_metrics])
+            write.writerow(row)
 
         influxdb_client.close()
 
