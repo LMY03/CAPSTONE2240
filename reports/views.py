@@ -221,7 +221,17 @@ def index_csv(request):
                     record.values.get('host', ''),
                     record.values.get('nodename', '')
                 ]
-                row.extend([record.values.get(metric, '') for metric in selected_metrics])
+
+                # Create a dictionary to store _field: _value pairs
+                field_values = {}
+                for metric in selected_metrics:
+                    if record.values.get('_field') == metric:
+                        field_values[metric] = record.values.get('_value')
+
+                # Add values to the row in the order of selected_metrics
+                for metric in selected_metrics:
+                    row.append(field_values.get(metric, ''))
+                    
                 writer.writerow(row)        
 
         # Wrtie data to CSV
