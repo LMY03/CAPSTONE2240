@@ -233,7 +233,9 @@ def index_csv(request):
                 # Add value to the corresponding metric
                 if field in selected_metrics:
                     if field == 'cpu':
-                        value = str(value * 100) + "%"
+                        value = str(round(value * 100, 2)) + "%"
+                    elif field == 'mem' or field == 'maxmem':
+                        value = str(round(value / (1024*1024*1024), 2)) + "GiB"
                     grouped_data[key][field] = str(value).strip().replace('\n', '').replace('\r', '')
 
 
