@@ -200,12 +200,6 @@ def index_csv(request):
         )
         writer = csv.writer(response)
 
-        # Write CSV header
-        header = ['time', 'name', 'nodename'] + selected_metrics
-        writer.writerow(header)
-        # TODO: REMOVE!
-        print(f"header: {header}")
-
         # TODO: add window in response
         vm_query = construct_vm_flux_query(selected_vms, selected_metrics, start_date, end_date, '1h')
         # TODO: REMOVE!
@@ -237,11 +231,12 @@ def index_csv(request):
                     grouped_data[key][field] = value
 
         # Write the grouped data to CSV - header
+        writer = csv.writer(response, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         writer.writerow(['time', 'host', 'nodename'] + selected_metrics)
         # Write the grouped data to CSV - data
         for (timestamp, host, nodename), metrics in grouped_data.items():
             row = [timestamp, host, nodename]
-            row.extend([metrics[metric] for metric in selected_metrics])
+            row.extend([metrics.get(metric, '') for metric in selected_metrics])
             writer.writerow(row)
 
         influxdb_client.close()
