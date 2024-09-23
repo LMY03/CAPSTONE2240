@@ -23,7 +23,7 @@ from .models import RequestEntry, Comment, RequestUseCase, PortRules, UserProfil
 from proxmox.models import VirtualMachines, Nodes
 from guacamole.models import GuacamoleConnection, GuacamoleUser
 from pfsense.models import DestinationPorts
-from notifications.views import send_email_sendgrid
+from notifications.views import comment_notif_faculty, comment_notif_tsg, testVM_notif_faculty, reject_notif_faculty
 
 from .forms import IssueTicketForm
 
@@ -164,41 +164,29 @@ def add_comment(request, pk):
             new_data['status'] = RequestEntry.Status.FOR_REVISION
 
         if user_profile.user_type == 'admin':
-            subject = "Changes made for your ticket request"
-            if request_entry.status == RequestEntry.Status.PENDING:
-                message = f"""
-                Dear {requester_user.get_full_name() or requester_user.username},
-                
-                We wanted to inform you that your request has been reviewed by the administrator. A new comment has been added, and the status of your request has been updated to "For Revision".
-                
-                Comment from the admin:
-                "{comment_text}"
-                
-                Please review the details at your earliest convenience.
-                
-                Best regards,
-                The Support Team
-                """
-            else:
-                message = f"""
-                Dear {requester_user.get_full_name() or requester_user.username},
-                
-                We wanted to inform you that your request has received a new comment from the administrator.
-                
-                Comment from the admin:
-                "{comment_text}"
-                
-                Please review the details at your earliest convenience.
-                
-                Best regards,
-                The Support Team
-                """
-            email_from = config("EMAIL_HOST_USER")
-            recipient_list = [requester_user.email]
-            print(f"Subject:{subject}, message: {message}, sender: {email_from}, receiver: {recipient_list}, user variable:{user}, requester: {requester_user}")
+            data = {
+                'comment' : comment_text, 
+                'request_entry_id' : request_entry.id
+            }
+            print(requester_user.email, data)
+            comment_notif_faculty(requester_user.email, data) # Admin comments to the request ticket
+        elif user_profile.user_type == 'faculty':
+            data = {
+                'comment' : comment_text, 
+                'request_entry_id' : request_entry.id, 
+                'faculty_name': requester_user.get_full_name()
+            }
+            if request_entry.assigned_to and request_entry.assigned_to.email: #Checks if there is an assigned TSG
+                comment_notif_faculty(request_entry.assigned_to.email, data, user_profile.user_type) # Faculty replies back to the comment
+            else: # This is for the situation where there is no assigned to yet, and the faculty comments
+                admin_user_profiles = UserProfile.objects.filter(user_type='admin')
+                admin_user_ids = admin_user_profiles.values_list('user_id', flat=True)
 
-            send_email_sendgrid(recipient_list, subject, message)
-            
+                tsgUsers = User.objects.filter(id__in = admin_user_ids)
+                tsgEmails = []
+                for tsg in tsgUsers:
+                    tsgEmails.append(tsg.email)
+                comment_notif_faculty(tsgEmails, data, 'admin') 
         Comment.objects.create(
             request_entry=request_entry,
             comment=comment_text,
@@ -272,24 +260,28 @@ def new_form_submit(request):
             # status = RequestEntry.Status.PENDING,
         )
         
-        
+        gVM_count = 0
         if use_case == 'CLASS_COURSE':
             for i in range(1, int(data['addCourseButtonClick']) + 1):
                 course_code = data.get(f"course_code{i}")
                 vm_count = data.get(f"vm_count{i}")
                 if course_code is not None:
+                    # If vm_count is not None, convert to int; otherwise, default to 0
+                    vm_count_int = int(vm_count) if vm_count is not None else 0
+                if course_code is not None:
                     RequestUseCase.objects.create(
                         request = new_request,
                         request_use_case = course_code,
-                        vm_count = vm_count
+                        vm_count = vm_count_int
                     )
+            gVM_count += vm_count_int
         else:
             RequestUseCase.objects.create(
                     request = new_request,
                     request_use_case = use_case,
                     vm_count = data.get(f"vm_count1")
                 )
-
+            gVM_count = data.get(f"vm_count1")
         if has_internet:
             for i in range(1, int(data['addProtocolClicked']) + 1):
                 protocol = data.get(f'protocol{i}')
@@ -303,6 +295,23 @@ def new_form_submit(request):
                         dest_ports = dest_ports,
                         #description = description
                     )
+
+        admin_user_profiles = UserProfile.objects.filter(user_type='admin')
+        admin_user_ids = admin_user_profiles.values_list('user_id', flat=True)
+
+        tsgUsers = User.objects.filter(id__in = admin_user_ids)
+        tsgEmails = []
+        for tsg in tsgUsers:
+            tsgEmails.append(tsg.email)
+        
+        print (tsgEmails)
+        data = {
+            'vm_template_name' : vmTemplateID.vm_name,
+            'use_case' : use_case,
+            'vm_count' : gVM_count,
+            'faculty_name' : requester.get_full_name()
+        }
+        comment_notif_tsg(tsgEmails, data)
     return JsonResponse({'status': 'ok'}, status=200)
 
 def log_request_entry_changes(request_entry, changed_by, new_data, user):
@@ -478,9 +487,14 @@ def request_confirm(request, request_id):
     # node = data.get('node')
 
     node = "pve"
-
+    request_entry = get_object_or_404(RequestEntry, id = request_id)
+    to = request_entry.requester.email
+    data = {
+        "faculty_name" : request_entry.requester.get_full_name(),
+        "id" : request_id
+    }
     create_test_vm.delay(request.user.pk, request_id, node)
-
+    testVM_notif_faculty (to, data)
     return redirect('ticketing:request_details', request_id)
 
 def request_reject(request, id):
@@ -488,6 +502,12 @@ def request_reject(request, id):
     request_entry = get_object_or_404(RequestEntry, pk=id)
     request_entry.status = RequestEntry.Status.REJECTED
     request_entry.save()
+    to = request_entry.requester.email
+    data = {
+        "faculty_name" : request_entry.requester.get_full_name(),
+        "id" : id
+    }
+    reject_notif_faculty(to, data)
 
     return HttpResponseRedirect(reverse("ticketing:index"))
 

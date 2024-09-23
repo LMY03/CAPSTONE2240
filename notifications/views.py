@@ -50,7 +50,7 @@ def comment_notif_tsg (to_email, data):
                 }
             }
         ],
-        "template_id": "d-4ce501347a4647d6a09acf7f6baa2b8c"  # Replace with your SendGrid dynamic template ID
+        "template_id": "d-4ce501347a4647d6a09acf7f6baa2b8c"  
     }
 
     return  send_email_sendgrid(data)
@@ -85,8 +85,51 @@ def comment_notif_faculty(to_email, data, *faculty):
         email_data['personalizations'][0]['to'] = recipients
         email_data["template_id"] = "d-e3593d8aabbc435ba143717a33ce1485"  
     else:
-        # Default case
         email_data['personalizations'][0]['to'] = [{"email": f"{to_email}"}]
         email_data["template_id"] = "d-0aabc8df6cf444c09777b1a3e485bf9d"  
     
+    return send_email_sendgrid(email_data)
+
+def testVM_notif_faculty(to_email, data):
+    email_data = {
+        "from": {
+            "email": "patrick_bennett_ong@dlsu.edu.ph"
+        },
+        "personalizations": [
+            {
+                "to": [{
+                    "email" : f"{to_email}"
+                }],
+                "dynamic_template_data": {
+                    "faculty_name": data['faculty_name'],
+                    "request_entry_id": data['id'],
+                    "receipt": True,
+                }
+            }
+        ],
+        "template_id": "d-a81d10b1b37741808e5ffada2ec1998e"  
+    }
+
+    return send_email_sendgrid(email_data)
+
+def reject_notif_faculty (to_email, data):
+    email_data = {
+        "from": {
+            "email": "patrick_bennett_ong@dlsu.edu.ph"
+        },
+        "personalizations": [
+            {
+                "to": [{
+                    "email" : f"{to_email}"
+                }],
+                "dynamic_template_data": {
+                    "faculty_name": data['faculty_name'],
+                    "request_entry_id": data['id'],
+                    "receipt": True,
+                }
+            }
+        ],
+        "template_id": "d-e68d6433360241df9b5760dc6b0915ea"  
+    }
+
     return send_email_sendgrid(email_data)
