@@ -11,6 +11,11 @@ from pfsense.models import DestinationPorts
 
 from ticketing.views import tsg_requests_list
 
+import csv
+from django.shortcuts import render
+from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
+from django.contrib import messages
 # Create your views here.
 def login_view(request):
     data = request.POST
@@ -219,3 +224,53 @@ def faculty_test_vm (request, request_id):
         'id' : request_id
     }
     return render(request, 'users/faculty_test_vm.html', context)
+
+def add_users (request):
+    if request.method == 'POST':
+        # Check if CSV upload method is chosen
+        if 'csv_file' in request.FILES:
+            csv_file = request.FILES['csv_file']
+            
+            if not csv_file.name.endswith('.csv'):
+                messages.error(request, 'Please upload a valid CSV file.')
+                return render(request, 'users/add_users.html')
+            
+            try:
+                file_data = csv_file.read().decode('utf-8').splitlines()
+                reader = csv.DictReader(file_data)
+
+                for row in reader:
+                    email = row.get('Email')
+                    password = row.get('Password')
+
+                    if not User.objects.filter(email=email).exists():
+                        try:
+                            user = User.objects.create_user(username=email, email=email, password=password)
+                            user.save()
+                            messages.success(request, f"User {email} created successfully.")
+                        except ValidationError as e:
+                            messages.error(request, f"Error creating user {email}: {e}")
+                    else:
+                        messages.info(request, f"User with email {email} already exists.")
+            except Exception as e:
+                messages.error(request, f"Error processing file: {e}")
+
+        # Handle manual input if no CSV file is provided
+        else:
+            email = request.POST.get('email')
+            password = request.POST.get('password')
+            
+            if email and password:
+                if not User.objects.filter(email=email).exists():
+                    try:
+                        user = User.objects.create_user(username=email, email=email, password=password)
+                        user.save()
+                        messages.success(request, f"User {email} created successfully.")
+                    except ValidationError as e:
+                        messages.error(request, f"Error creating user {email}: {e}")
+                else:
+                    messages.info(request, f"User with email {email} already exists.")
+            else:
+                messages.error(request, 'Please provide both email and password for manual entry.')
+
+    return render(request, 'users/add_users.html')
