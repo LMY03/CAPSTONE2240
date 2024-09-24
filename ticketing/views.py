@@ -735,5 +735,5 @@ def add_users (request):
                     messages.info(request, f"User with email {email} already exists.")
             else:
                 messages.error(request, 'Please provide both email and password for manual entry.')
-
+    print("Inside the add_users functions")
     return render(request, 'ticketing/add_users.html')
