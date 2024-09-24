@@ -17,7 +17,7 @@ urlpatterns = [
     # path('faculty/edit_request/<str:request_id>', views.edit_request, name = 'faculty_edit_request'),
     path('faculty/test_vm/<int:request_id>', views.faculty_test_vm, name = 'faculty_test_vm'),
     path('login/', views.login_view, name = "login"),
-    path ('add_users/', views.add_users, name = "add_users"),
+    
     
     path('home-filter/', views.home_filter_view, name='home-filter'),
 ]

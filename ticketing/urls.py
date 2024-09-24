@@ -20,7 +20,8 @@ urlpatterns = [
     path('delete_request/<int:request_id>', views.delete_request, name='delete_request'),
     path('faculty_edit_request/<int:request_id>', views.edit_request, name = 'faculty_edit_request'),
     path('submit_issue_ticket', views.submit_issue_ticket, name='submit_issue_ticket'),
-    
+    path ('add_users/', views.add_users, name = "add_users"),
+
     # path('clear_credential', views.clear_credential, name = 'clear_credential'),
     # path('download_credentials', views.download_credentials, name='download_credentials'),
 ]
