@@ -255,7 +255,7 @@ def add_users (request):
                             user = User.objects.create_user(username=email, email=email, password=password)
                             user.first_name = fullname
                             user.save()
-                            user_profile = UserProfile.objects.create(user = user, user_profile = user_profile)
+                            user_profile = UserProfile.objects.create(user = user, user_type = user_profile)
                             messages.success(request, f"User {fullname} ({email}) created successfully.")
                         except ValidationError as e:
                             messages.error(request, f"Error creating user {email}: {e}")
