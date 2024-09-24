@@ -277,7 +277,7 @@ def add_users (request):
                         name_parts = email.split('@')[0].split('_')
                         fullname = ' '.join(name_parts).title()
                         user.first_name = fullname.title()
-                        user_profile = UserProfile.objects.create(user = user, user_profile = user_profile)
+                        user_profile = UserProfile.objects.create(user = user, user_type = user_profile)
                         user.save()
                         messages.success(request, f"User {email} created successfully.")
                     except ValidationError as e:
