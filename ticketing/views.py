@@ -736,4 +736,4 @@ def add_users (request):
             else:
                 messages.error(request, 'Please provide both email and password for manual entry.')
 
-    return render(request, 'users/add_users.html')
+    return render(request, 'ticketing/add_users.html')
