@@ -722,11 +722,11 @@ def add_users (request):
         else:
             email = request.POST.get('email')
             password = request.POST.get('password')
-            
+            print (email, password)
             if email and password:
                 if not User.objects.filter(email=email).exists():
                     try:
-                        user = User.objects.create_user(username=email, email=email, password=password)
+                        user = User.objects.create_user(email, email, password)
                         name_parts = email.split('@')[0].split('_')
                         fullname = ' '.join(name_parts).title()
                         user.first_name = fullname.title()
