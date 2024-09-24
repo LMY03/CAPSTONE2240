@@ -16,7 +16,7 @@ Add users
               <div class="card">
                 <div class="card-body">
                   <h4 class="card-title text-center">Add users</h4>
-                  <form method="POST" enctype="multipart/form-data" action="{% url 'add_users' %}">
+                  <form method="POST" enctype="multipart/form-data" action="{% url 'ticketing:add_users' %}">
                     {% csrf_token %}
                     <div class="mb-3">
                       <label for="email" class="form-label">Email address</label>
