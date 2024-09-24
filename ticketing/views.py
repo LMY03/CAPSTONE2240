@@ -720,8 +720,9 @@ def add_users (request):
 
         # Handle manual input if no CSV file is provided
         else:
-            email = request.POST.get('email')
-            password = request.POST.get('password')
+            data = request.POST
+            email = data.get("email")
+            password = data.get("password")
             print (email, password)
             if email and password:
                 if not User.objects.filter(email=email).exists():
