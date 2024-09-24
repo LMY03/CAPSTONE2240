@@ -242,12 +242,16 @@ def add_users (request):
                 for row in reader:
                     email = row.get('Email')
                     password = row.get('Password')
+                    name_parts = email.split('@')[0].split('_')
+                    fullname = ' '.join(name_parts).title()
 
+                    # Create user if email doesn't exist
                     if not User.objects.filter(email=email).exists():
                         try:
                             user = User.objects.create_user(username=email, email=email, password=password)
+                            user.first_name = fullname
                             user.save()
-                            messages.success(request, f"User {email} created successfully.")
+                            messages.success(request, f"User {fullname} ({email}) created successfully.")
                         except ValidationError as e:
                             messages.error(request, f"Error creating user {email}: {e}")
                     else:
