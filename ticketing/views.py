@@ -723,7 +723,7 @@ def add_users (request):
             data = request.POST
             email = data.get("email")
             password = data.get("password")
-            print (email, password)
+            print (email, password, request.POST)
             if email and password:
                 if not User.objects.filter(email=email).exists():
                     try:
