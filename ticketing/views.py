@@ -23,13 +23,10 @@ from .models import RequestEntry, Comment, RequestUseCase, PortRules, UserProfil
 from proxmox.models import VirtualMachines, Nodes
 from guacamole.models import GuacamoleConnection, GuacamoleUser
 from pfsense.models import DestinationPorts
-from notifications.views import comment_notif_faculty, comment_notif_tsg, testVM_notif_faculty, reject_notif_faculty
-
+from notifications.views import comment_notif_faculty, comment_notif_tsg, testVM_notif_faculty, reject_notif_faculty, accept_notif_tsg
 from .forms import IssueTicketForm
 
-from django.core.exceptions import ValidationError
-from django.contrib import messages
-import csv
+
 
 # Create your views here.
 
@@ -548,12 +545,29 @@ def confirm_test_vm(request, request_id):
     return redirect('ticketing:request_details', request_id)
     # return redirect(f'/ticketing/{request_id}/details')
 
-def accept_test_vm(request, request_id):
+def accept_test_vm(request, request_id): #Where the faculty Accepts the test vm created by the TSG 
 
     request_entry = get_object_or_404(RequestEntry, pk=request_id)
     request_entry.status = RequestEntry.Status.ACCEPTED
     request_entry.save()
     
+    request_use_case = RequestUseCase.objects.get(request = request_entry)
+    to  = request_entry.assigned_to.email
+    use_case = "Class Course" if request_use_case.request not in ['Thesis', 'Research', 'Test'] else request_use_case.request
+    vmCount = 0
+    if use_case == "Class Course":
+        for case in request_use_case:
+            vmCount += case.vm_count
+    else:
+        vmCount = request_use_case.vm_count
+    data = {
+        "id" : request_id,
+        "faculty_name" : request_entry.requester.get_full_name(),
+        "use_case" : use_case,
+        "vm_count" : vmCount,
+    }
+
+    accept_notif_tsg(to, data)
     return redirect('ticketing:request_details', request_id)
     # return redirect(f'/ticketing/{request_id}/details')
 
@@ -684,60 +698,3 @@ def new_form_container(request):
 #             request.session.pop('credentials', None)
 #             return JsonResponse({'status': 'success'})
 #         return JsonResponse({'status': 'invalid method'}, status=405)
-def add_users (request):
-    if request.method == 'POST':
-        # Check if CSV upload method is chosen
-        if 'csv_file' in request.FILES:
-            csv_file = request.FILES['csv_file']
-            
-            if not csv_file.name.endswith('.csv'):
-                messages.error(request, 'Please upload a valid CSV file.')
-                return render(request, 'users/add_users.html')
-            
-            try:
-                file_data = csv_file.read().decode('utf-8').splitlines()
-                reader = csv.DictReader(file_data)
-
-                for row in reader:
-                    email = row.get('Email')
-                    password = row.get('Password')
-                    name_parts = email.split('@')[0].split('_')
-                    fullname = ' '.join(name_parts).title()
-
-                    # Create user if email doesn't exist
-                    if not User.objects.filter(email=email).exists():
-                        try:
-                            user = User.objects.create_user(username=email, email=email, password=password)
-                            user.first_name = fullname
-                            user.save()
-                            messages.success(request, f"User {fullname} ({email}) created successfully.")
-                        except ValidationError as e:
-                            messages.error(request, f"Error creating user {email}: {e}")
-                    else:
-                        messages.info(request, f"User with email {email} already exists.")
-            except Exception as e:
-                messages.error(request, f"Error processing file: {e}")
-
-        # Handle manual input if no CSV file is provided
-        else:
-            data = request.POST
-            email = data.get("email")
-            password = data.get("password")
-            print (email, password, request.POST)
-            if email and password:
-                if not User.objects.filter(email=email).exists():
-                    try:
-                        user = User.objects.create_user(email, email, password)
-                        name_parts = email.split('@')[0].split('_')
-                        fullname = ' '.join(name_parts).title()
-                        user.first_name = fullname.title()
-                        user.save()
-                        messages.success(request, f"User {email} created successfully.")
-                    except ValidationError as e:
-                        messages.error(request, f"Error creating user {email}: {e}")
-                else:
-                    messages.info(request, f"User with email {email} already exists.")
-            else:
-                messages.error(request, 'Please provide both email and password for manual entry.')
-    print("Inside the add_users functions")
-    return render(request, 'ticketing/add_users.html')

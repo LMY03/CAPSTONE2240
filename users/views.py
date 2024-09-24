@@ -2,7 +2,7 @@ from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
-from ticketing.models import RequestEntry, Comment, RequestUseCase, VMTemplates
+from ticketing.models import RequestEntry, Comment, RequestUseCase, VMTemplates, UserProfile
 from proxmox.models import VirtualMachines
 from decouple import config
 
@@ -14,6 +14,10 @@ from ticketing.views import tsg_requests_list
 
 from django.shortcuts import render
 from django.contrib.auth.models import User
+
+from django.core.exceptions import ValidationError
+from django.contrib import messages
+import csv
 
 # Create your views here.
 def login_view(request):
@@ -224,3 +228,63 @@ def faculty_test_vm (request, request_id):
     }
     return render(request, 'users/faculty_test_vm.html', context)
 
+def add_users (request):
+    if request.method == 'POST':
+        user_profile = request.POST.get("user_profile")
+        # Check if CSV upload method is chosen
+        if 'csv_file' in request.FILES:
+            csv_file = request.FILES['csv_file']
+            
+            if not csv_file.name.endswith('.csv'):
+                messages.error(request, 'Please upload a valid CSV file.')
+                return render(request, 'users/add_users.html')
+            
+            try:
+                file_data = csv_file.read().decode('utf-8').splitlines()
+                reader = csv.DictReader(file_data)
+
+                for row in reader:
+                    email = row.get('Email')
+                    password = row.get('Password')
+                    name_parts = email.split('@')[0].split('_')
+                    fullname = ' '.join(name_parts).title()
+
+                    # Create user if email doesn't exist
+                    if not User.objects.filter(email=email).exists():
+                        try:
+                            user = User.objects.create_user(username=email, email=email, password=password)
+                            user.first_name = fullname
+                            user.save()
+                            user_profile = UserProfile.objects.create(user = user, user_profile = user_profile)
+                            messages.success(request, f"User {fullname} ({email}) created successfully.")
+                        except ValidationError as e:
+                            messages.error(request, f"Error creating user {email}: {e}")
+                    else:
+                        messages.info(request, f"User with email {email} already exists.")
+            except Exception as e:
+                messages.error(request, f"Error processing file: {e}")
+
+        # Handle manual input if no CSV file is provided
+        else:
+            data = request.POST
+            email = data.get("email")
+            password = data.get("password")
+            print (email, password, request.POST)
+            if email and password:
+                if not User.objects.filter(email=email).exists():
+                    try:
+                        user = User.objects.create_user(email, email, password)
+                        name_parts = email.split('@')[0].split('_')
+                        fullname = ' '.join(name_parts).title()
+                        user.first_name = fullname.title()
+                        user_profile = UserProfile.objects.create(user = user, user_profile = user_profile)
+                        user.save()
+                        messages.success(request, f"User {email} created successfully.")
+                    except ValidationError as e:
+                        messages.error(request, f"Error creating user {email}: {e}")
+                else:
+                    messages.info(request, f"User with email {email} already exists.")
+            else:
+                messages.error(request, 'Please provide both email and password for manual entry.')
+    print("Inside the add_users functions")
+    return render(request, 'users/add_users.html')

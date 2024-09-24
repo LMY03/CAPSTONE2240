@@ -36,7 +36,7 @@ def comment_notif_tsg (to_email, data):
     recipients = [{"email": email} for email in to_email]
     data = {
         "from": {
-            "email": "patrick_bennett_ong@dlsu.edu.ph"
+            "email": config('EMAIL_HOST_USER')
         },
         "personalizations": [
             {
@@ -61,7 +61,7 @@ def comment_notif_faculty(to_email, data, *faculty):
     faculty_name = data.get('faculty_name', '')
     email_data = {
         "from": {
-            "email": "patrick_bennett_ong@dlsu.edu.ph"
+            "email": config('EMAIL_HOST_USER')
         },
         "personalizations": [
             {
@@ -93,7 +93,7 @@ def comment_notif_faculty(to_email, data, *faculty):
 def testVM_notif_faculty(to_email, data):
     email_data = {
         "from": {
-            "email": "patrick_bennett_ong@dlsu.edu.ph"
+            "email": config('EMAIL_HOST_USER')
         },
         "personalizations": [
             {
@@ -115,7 +115,7 @@ def testVM_notif_faculty(to_email, data):
 def reject_notif_faculty (to_email, data):
     email_data = {
         "from": {
-            "email": "patrick_bennett_ong@dlsu.edu.ph"
+            "email": config('EMAIL_HOST_USER')
         },
         "personalizations": [
             {
@@ -130,6 +130,31 @@ def reject_notif_faculty (to_email, data):
             }
         ],
         "template_id": "d-e68d6433360241df9b5760dc6b0915ea"  
+    }
+
+    return send_email_sendgrid(email_data)
+
+
+def accept_notif_tsg (to_email, data):
+    email_data = {
+        "from": {
+            "email": config('EMAIL_HOST_USER')
+        },
+        "personalizations": [
+            {
+                "to": [{
+                    "email" : f"{to_email}"
+                }],
+                "dynamic_template_data": {
+                    "faculty_name": data['faculty_name'],
+                    "request_entry_id": data['id'],
+                    "use_case" : data['use_case'],
+                    "vm_count" : data['vm_count'],
+                    "receipt": True,
+                }
+            }
+        ],
+        "template_id": "d-049d70ccac974157828e6bfbbe2c8a1a"  
     }
 
     return send_email_sendgrid(email_data)
