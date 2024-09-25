@@ -350,7 +350,7 @@ def report_gen(request):
         #     node_data[node] = process_query_result(node_result, node_metrics)
 
         vm_data = {}
-        vm_list = form_data.get('vmNameList', []):
+        vm_list = form_data.get('vmNameList', [])
         vm_query = construct_vm_flux_query(vm_list, vm_metrics, start_date, end_date, '1h')
         vm_result = query_api.query(vm_query)
         # vm_data = process_query_result(vm_result, vm_metrics)
