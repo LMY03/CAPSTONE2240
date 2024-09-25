@@ -227,10 +227,10 @@ def resolve_issue_ticket(request):
     return redirect('ticketing:ticket_list')
 
 def download_issue_files(request, ticket_id):
-    issue_files = IssueFile.objects.filter(ticket__pk=ticket_id)
-
+    file_paths = IssueFile.objects.filter(ticket__pk=ticket_id).values_list('file', flat=True)
     zip_filename = f"ticket_{ticket_id}_files.zip"
-    return download_files(zip_filename, issue_files)
+    
+    return download_files(zip_filename, file_paths)
 
 @login_required
 def add_comment(request, pk):
