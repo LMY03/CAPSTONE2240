@@ -282,7 +282,7 @@ def open_report_page(request):
     data = request.POST
 
     for name in data.keys():
-        if str(name) not in ['categoryFilter', 'select_all', 'csrfmiddleware', 'vmInfoTable_length',
+        if str(name) not in ['categoryFilter', 'select_all', 'csrfmiddlewaretoken', 'vmInfoTable_length',
             'cpuUsage', 'memoryUsage', 'netin', 'netout',
             'enddate', 'startdate']:
             vmNameList.append(data.get(str(name)))
