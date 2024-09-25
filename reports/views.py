@@ -341,10 +341,9 @@ def report_gen(request):
 
         # node_metrics = ['cpu', 'memused', 'netin', 'netout', 'memtotal', 'swaptotal']
         
-        # TODO: REMOVE!
-        print(f"request: {request.session['formData']}")
+        session_data = request.session['formData']
         
-        metrics = [key for key in ['cpuUsage', 'memoryUsage', 'netin', 'netout'] if key in request.POST.get('statList')]
+        metrics = [key for key in ['cpuUsage', 'memoryUsage', 'netin', 'netout'] if key in session_data.get('statList')]
         selected_metrics = []
         for metric in metrics:
             if metric == 'cpuUsage':
