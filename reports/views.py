@@ -188,10 +188,10 @@ def index_csv(request):
         selected_vms = request.POST.getlist('selectedVMs')
         node_hosts = [node['node'] for node in proxmox_client.nodes.get()]
         
-        # TODO: REMOVE!
-        print("Selected metrics:", selected_metrics)
-        print("Selected VMs:", selected_vms)
-        print(f"all hosts: {node_hosts}")
+        # # TODO: REMOVE!
+        # print("Selected metrics:", selected_metrics)
+        # print("Selected VMs:", selected_vms)
+        # print(f"all hosts: {node_hosts}")
 
         # Prepare csv response
         response = HttpResponse(
@@ -258,6 +258,55 @@ def index_csv(request):
         return HttpResponse(f"Error generating report: {str(e)}", status=500)
 
 
+def open_report_page(request):
+    # Get clients
+    influxdb_client = get_influxdb_client()
+    proxmox_client = get_proxmox_client()
+    # Prepare and execute queries
+    query_api = influxdb_client.query_api()
+
+    node_names = [node['node'] for node in proxmox_client.nodes.get()]
+
+    # Metrics
+    cpuUsageList = []
+    memUsageList = []
+    netInUsageList = []
+    netOutUsageList = []
+    vmNameList = []
+    vmIdList = []
+    neededStatList = []
+    selectedNodeNameList = []
+
+    formData = {}
+
+    data = request.POST
+
+    for name in data.keys():
+        if str(name) not in ['categoryFilter', 'select_all', 'csrfmiddleware', 'vmInfoTable_length',
+            'cpuUsage', 'memoryUsage', 'netin', 'netout',
+            'enddate', 'startdate']:
+            vmNameList.append(data.get(str(name)))
+            vmIdList.append(str(name))
+        elif str(name) == 'startdate':
+            startdate = data.get(str(name))
+        elif str(name) == 'enddate':
+            enddate = data.get(str(name))
+        elif str(name) in ['cpuUsage', 'memoryUsage', 'netin', 'netout']:
+            neededStatList.append(data.get(str(name)))
+
+    # insert data into formData
+    formData['vmNameList'] = vmNameList
+    formData['nodeNameList'] = selectedNodeNameList
+    formData['vmIdList'] = vmIdList
+    formData['startdate'] = startdate
+    formData['enddate'] = enddate
+    formData['statList'] = neededStatList
+
+    request.session['formData'] = formData
+
+    return render(request, 'gen-reports.html')
+
+
 def report_gen(request):
     try:
         # Get clients
@@ -265,21 +314,6 @@ def report_gen(request):
         proxmox_client = get_proxmox_client()
         # Prepare and execute queries
         query_api = influxdb_client.query_api()
-
-        # Query to get node information using Flux
-        flux_query = '''
-                        from(bucket:"{bucket}")
-                        |> range(start: -1h)
-                        |> filter(fn: (r) => r._measurement == "system" and r.object == "nodes")
-                        |> group(columns: ["host"])
-                        |> distinct(column: "host")
-                    '''
-        result = query_api.query(flux_query)
-        
-        # Process the result to get the server list
-        server = [table.records[0].values["host"] for table in result]
-
-        nodes = proxmox.nodes.get()
 
         form_data = request.session.get('formData', {})
         start_date = form_data.get('startdate')
@@ -289,7 +323,7 @@ def report_gen(request):
         ed = datetime.strptime(end_date, "%Y-%m-%d")
         date_diff = (ed - sd).days
 
-        window = "id" if date_diff >= 30 else "1h"
+        window = "1d" if date_diff >= 30 else "1h"
 
         node_metrics = ['cpu', 'memused', 'netin', 'netout', 'memtotal', 'swaptotal']
         vm_metrics = ['cpu', 'mem', 'netin', 'netout']

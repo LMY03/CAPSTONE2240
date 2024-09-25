@@ -96,7 +96,7 @@ $(document).ready(function() {
   $('#extract-btn').click(function() {
     var form = $('#filterForm');
 
-    // change URL -> csv
+    // set form action: go generate csv
     form.attr('action', 'index_csv');
     var data = form.serializeArray();
     // submit form
@@ -107,7 +107,12 @@ $(document).ready(function() {
 
   $('#report-btn').click(function() {
     var form = $('#filterForm');
-    
+    // set form action: go to report page
+    form.attr('action', 'open_report_page');
+    var data = form.serializeArray();
+
+    if(checkData(data))
+      form.submit();
   })
   
   function init() {
