@@ -406,17 +406,34 @@ def report_gen(request):
                         value = str(round(value / (1024*1024*1024), 2)) + "GiB"
                     grouped_data[key][field] = str(value).strip().replace('\n', '').replace('\r', '')
 
-         # TODO: REMOVE!
-        print(f"grouped_data: {grouped_data}")
+        
+        # formatted grouped_data 
+        formatted_data = {}
+        for (timestamp, host, nodename), values in grouped_data.items():
+            key = f"{timestamp}_{host}_{nodename}"
+            formatted_data[key] = values
+
+        response_data = {
+            'vmData': formatted_data,
+            'dateDiff': date_diff,
+            'formData': form_data
+        }
 
         influxdb_client.close()
 
-        return JsonResponse({
-            # 'nodeData': node_data,
-            'vmData': grouped_data,
-            'dateDiff': date_diff,
-            'formData': form_data
-        })
+        # 使用 DjangoJSONEncoder 进行序列化
+        json_data = json.dumps(response_data, cls=DjangoJSONEncoder)
+        return HttpResponse(json_data, content_type='application/json')
+
+
+        
+
+        # return JsonResponse({
+        #     # 'nodeData': node_data,
+        #     'vmData': grouped_data,
+        #     'dateDiff': date_diff,
+        #     'formData': form_data
+        # })
 
     except Exception as e:
         # TODO: logger error - error generating report page
