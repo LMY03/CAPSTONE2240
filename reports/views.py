@@ -75,6 +75,8 @@ def getVmList(request):
         VMDict['network_out'] = vmid['netout']
         VMList.append(VMDict)
 
+    client.close()
+
     return JsonResponse({
         'vmList': VMList,
         'vmids': vmids,
@@ -315,16 +317,18 @@ def open_report_page(request):
     print(f"enddate: {formData['enddate']}")
     print(f"statList: {formData['statList']}")
 
+    influxdb_client.close()
+
     return render(request, 'reports/gen-reports.html')
 
 
 def report_gen(request):
     try:
-        # # Get clients
-        # influxdb_client = get_influxdb_client()
-        # proxmox_client = get_proxmox_client()
-        # # Prepare and execute queries
-        # query_api = influxdb_client.query_api()
+        # Get clients
+        influxdb_client = get_influxdb_client()
+        proxmox_client = get_proxmox_client()
+        # Prepare and execute queries
+        query_api = influxdb_client.query_api()
 
         # form_data = request.session.get('formData', {})
         # start_date = form_data.get('startdate')
@@ -351,7 +355,7 @@ def report_gen(request):
         #     vm_result = query_api.query(vm_query)
         #     vm_data[vm] = process_query_result(vm_result, vm_metrics)
 
-        # client.close()
+        influxdb_client.close()
 
         return JsonResponse({
             'nodeData': node_data,
