@@ -330,38 +330,64 @@ def report_gen(request):
         # Prepare and execute queries
         query_api = influxdb_client.query_api()
 
-        # form_data = request.session.get('formData', {})
-        # start_date = form_data.get('startdate')
-        # end_date = form_data.get('enddate')
+        form_data = request.session.get('formData', {})
+        start_date = form_data.get('startdate')
+        end_date = form_data.get('enddate')
 
-        # sd = datetime.strptime(start_date, "%Y-%m-%d")
-        # ed = datetime.strptime(end_date, "%Y-%m-%d")
-        # date_diff = (ed - sd).days
+        sd = datetime.strptime(start_date, "%Y-%m-%d")
+        ed = datetime.strptime(end_date, "%Y-%m-%d")
+        date_diff = (ed - sd).days
 
-        # window = "1d" if date_diff >= 30 else "1h"
+        window = "1d" if date_diff >= 30 else "1h"
 
-        # node_metrics = ['cpu', 'memused', 'netin', 'netout', 'memtotal', 'swaptotal']
-        # vm_metrics = ['cpu', 'mem', 'netin', 'netout']
+        node_metrics = ['cpu', 'memused', 'netin', 'netout', 'memtotal', 'swaptotal']
+        vm_metrics = ['cpu', 'mem', 'netin', 'netout']
 
-        node_data = {}
+        # node_data = {}
         # for node in form_data.get('nodeNameList', []):
         #     node_query = construct_flux_query('system', node_metrics, [node], start_date, end_date, window)
         #     node_result = query_api.query(node_query)
         #     node_data[node] = process_query_result(node_result, node_metrics)
 
         vm_data = {}
-        # for vm in form_data.get('vmNameList', []):
-        #     vm_query = construct_flux_query('system', vm_metrics, [vm], start_date, end_date, window)
-        #     vm_result = query_api.query(vm_query)
-        #     vm_data[vm] = process_query_result(vm_result, vm_metrics)
+        vm_list = form_data.get('vmNameList', []):
+        vm_query = construct_vm_flux_query(vm_list, vm_metrics, start_date, end_date, '1h')
+        vm_result = query_api.query(vm_query)
+        # vm_data = process_query_result(vm_result, vm_metrics)
+
+
+        # Dictionary to store grouped data
+        grouped_data = {}
+
+        for table in vm_result:
+            for record in table.records:
+                timestamp = record.get_time().strftime('%Y-%m-%d %H:%M:%S')
+                host = record.values.get('host', '')
+                nodename = record.values.get('nodename', '')
+                field = record.values.get('_field', '')
+                value = record.values.get('_value', '')
+
+                # Unique key for each timestamp-host combination
+                key = (timestamp, host, nodename)
+
+                if key not in grouped_data:
+                    grouped_data[key] = {metric: '' for metric in selected_metrics}
+
+                # Add value to the corresponding metric
+                if field in selected_metrics:
+                    if field == 'cpu':
+                        value = str(round(value * 100, 2)) + "%"
+                    elif field == 'mem' or field == 'maxmem':
+                        value = str(round(value / (1024*1024*1024), 2)) + "GiB"
+                    grouped_data[key][field] = str(value).strip().replace('\n', '').replace('\r', '')
 
         influxdb_client.close()
 
         return JsonResponse({
-            'nodeData': node_data,
-            'vmData': vm_data,
-            # 'dateDiff': date_diff,
-            # 'formData': form_data
+            # 'nodeData': node_data,
+            'vmData': grouped_data,
+            'dateDiff': date_diff,
+            'formData': form_data
         })
 
     except Exception as e:
