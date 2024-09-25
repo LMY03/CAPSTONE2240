@@ -27,7 +27,7 @@ from pfsense.models import DestinationPorts
 from notifications.views import comment_notif_faculty, comment_notif_tsg, testVM_notif_faculty, reject_notif_faculty, accept_notif_tsg
 from .forms import IssueTicketForm
 
-
+from CAPSTONE2240.utils import download_files
 
 # Create your views here.
 
@@ -170,9 +170,11 @@ def ticket_details(request, ticket_id):
 def faculty_ticket_details(request, ticket_id):
 
     issue_ticket = get_object_or_404(IssueTicket, pk=ticket_id)
+    issue_files = IssueFile.objects.filter(ticket=issue_ticket)
 
     context = {
         'issue_ticket': issue_ticket,
+        'issue_files': issue_files,
     }
 
     return render(request, 'ticketing/faculty_ticket_details.html', context)
@@ -180,9 +182,11 @@ def faculty_ticket_details(request, ticket_id):
 def tsg_ticket_details(request, ticket_id):
 
     issue_ticket = get_object_or_404(IssueTicket, pk=ticket_id)
+    issue_files = IssueFile.objects.filter(ticket=issue_ticket)
 
     context = {
         'issue_ticket': issue_ticket,
+        'issue_files': issue_files,
     }
 
     return render(request, 'ticketing/tsg_ticket_details.html', context)
@@ -198,12 +202,20 @@ def submit_issue_ticket(request):
             issue_ticket.created_by = request.user
             issue_ticket.save()
 
+            files = request.FILES.getlist('files')
+            for file in files:
+                IssueFile.objects.create(
+                    file=file,  # This will save the actual file
+                    uploaded_date=timezone.now(),
+                    ticket=issue_ticket,
+                    uploaded_by=request.user
+                )
+
             return redirect(reverse('ticketing:request_details', args=[request_entry_id]))
         
     return redirect('ticketing:index')
 
 def resolve_issue_ticket(request):
-    print("==============")
     if request.method == 'POST':
         issue_ticket_id = request.POST.get('issue_ticket_id')
         issue_ticket = get_object_or_404(IssueTicket, pk=issue_ticket_id)
@@ -213,6 +225,12 @@ def resolve_issue_ticket(request):
         return redirect(reverse('ticketing:ticket_details', args=[issue_ticket_id]))
     
     return redirect('ticketing:ticket_list')
+
+def download_issue_files(request, ticket_id):
+    issue_files = IssueFile.objects.filter(ticket__pk=ticket_id)
+
+    zip_filename = f"ticket_{ticket_id}_files.zip"
+    return download_files(zip_filename, issue_files)
 
 @login_required
 def add_comment(request, pk):

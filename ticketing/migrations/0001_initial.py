@@ -107,7 +107,7 @@ class Migration(migrations.Migration):
             name='IssueFile',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('file_address', models.CharField(max_length=1000)),
+                ('file', models.FileField(upload_to='issue_files/')),  # Replaced file_address
                 ('uploaded_date', models.DateTimeField(default=django.utils.timezone.localtime)),
                 ('ticket', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='ticketing.issueticket')),
                 ('uploaded_by', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),

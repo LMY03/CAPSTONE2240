@@ -211,7 +211,7 @@ class IssueTicket(models.Model):
         self.save()
 
 class IssueFile(models.Model):
-    file_address = models.CharField(max_length=1000)
+    file = models.FileField(upload_to='issue_files/')
     uploaded_date = models.DateTimeField(default=timezone.localtime)
 
     ticket = models.ForeignKey(IssueTicket, on_delete=models.CASCADE)
