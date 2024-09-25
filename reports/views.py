@@ -304,7 +304,7 @@ def open_report_page(request):
 
     request.session['formData'] = formData
 
-    return render(request, 'gen-reports.html')
+    return render(request, 'reports/gen-reports.html')
 
 
 def report_gen(request):
