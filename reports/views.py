@@ -333,19 +333,26 @@ def report_gen(request):
         start_date = form_data.get('startdate')
         end_date = form_data.get('enddate')
 
-        # TODO: REMOVE!
-        print(f"form_data: {form_data}")
-        print(f"start_date: {start_date}")
-        print(f"end_date: {end_date}")
-
         sd = datetime.strptime(start_date, "%Y-%m-%d")
         ed = datetime.strptime(end_date, "%Y-%m-%d")
         date_diff = (ed - sd).days
 
         window = "1d" if date_diff >= 30 else "1h"
 
-        node_metrics = ['cpu', 'memused', 'netin', 'netout', 'memtotal', 'swaptotal']
-        vm_metrics = ['cpu', 'mem', 'netin', 'netout']
+        # node_metrics = ['cpu', 'memused', 'netin', 'netout', 'memtotal', 'swaptotal']
+        
+        metrics = [key for key in ['cpuUsage', 'memoryUsage', 'netin', 'netout'] if key in request.POST]
+        selected_metrics = []
+        for metric in metrics:
+            if metric == 'cpuUsage':
+                selected_metrics.append('cpu')
+            elif metric == 'memoryUsage':
+                selected_metrics.append('maxmem')
+                selected_metrics.append('mem')
+            elif metric == 'netin':
+                selected_metrics.append('netin')
+            elif metric == 'netout':
+                selected_metrics.append('netout')
 
         # node_data = {}
         # for node in form_data.get('nodeNameList', []):
@@ -361,8 +368,6 @@ def report_gen(request):
         # TODO: REMOVE!
         print(f"vm_result: {vm_result}")
 
-        # vm_data = process_query_result(vm_result, vm_metrics)
-
 
         # Dictionary to store grouped data
         grouped_data = {}
@@ -377,6 +382,14 @@ def report_gen(request):
 
                 # Unique key for each timestamp-host combination
                 key = (timestamp, host, nodename)
+
+                # TODO: REMOVE!
+                print(f"timestamp: {timestamp}")
+                print(f"host: {host}")
+                print(f"nodename: {nodename}")
+                print(f"field: {field}")
+                print(f"value: {value}")
+                print(f"key: {key}")
 
                 if key not in grouped_data:
                     grouped_data[key] = {metric: '' for metric in selected_metrics}
