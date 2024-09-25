@@ -302,7 +302,7 @@ def open_report_page(request):
     # insert data into formData
     formData['vmNameList'] = vmNameList
     formData['nodeNameList'] = selectedNodeNameList
-    formData['vmIdList'] = vmIdList
+    # formData['vmIdList'] = vmIdList
     formData['startdate'] = startdate
     formData['enddate'] = enddate
     formData['statList'] = neededStatList
@@ -310,12 +310,11 @@ def open_report_page(request):
     request.session['formData'] = formData
 
     # TODO: REMOVE!
-    print(f"vmNameList: {formData['vmNameList']}")
-    print(f"nodeNameList: {formData['nodeNameList']}")
-    print(f"vmIdList: {formData['vmIdList']}")
-    print(f"startdate: {formData['startdate']}")
-    print(f"enddate: {formData['enddate']}")
-    print(f"statList: {formData['statList']}")
+    # print(f"vmNameList: {formData['vmNameList']}")
+    # print(f"nodeNameList: {formData['nodeNameList']}")
+    # print(f"startdate: {formData['startdate']}")
+    # print(f"enddate: {formData['enddate']}")
+    # print(f"statList: {formData['statList']}")
 
     influxdb_client.close()
 
@@ -333,6 +332,11 @@ def report_gen(request):
         form_data = request.session.get('formData', {})
         start_date = form_data.get('startdate')
         end_date = form_data.get('enddate')
+
+        # TODO: REMOVE!
+        print(f"form_data: {form_data}")
+        print(f"start_date: {start_date}")
+        print(f"end_date: {end_date}")
 
         sd = datetime.strptime(start_date, "%Y-%m-%d")
         ed = datetime.strptime(end_date, "%Y-%m-%d")
@@ -353,6 +357,10 @@ def report_gen(request):
         vm_list = form_data.get('vmNameList', [])
         vm_query = construct_vm_flux_query(vm_list, vm_metrics, start_date, end_date, '1h')
         vm_result = query_api.query(vm_query)
+        
+        # TODO: REMOVE!
+        print(f"vm_result: {vm_result}")
+
         # vm_data = process_query_result(vm_result, vm_metrics)
 
 
@@ -380,6 +388,9 @@ def report_gen(request):
                     elif field == 'mem' or field == 'maxmem':
                         value = str(round(value / (1024*1024*1024), 2)) + "GiB"
                     grouped_data[key][field] = str(value).strip().replace('\n', '').replace('\r', '')
+
+         # TODO: REMOVE!
+        print(f"grouped_data: {grouped_data}")
 
         influxdb_client.close()
 
