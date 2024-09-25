@@ -344,7 +344,6 @@ def report_gen(request):
         session_data = request.session['formData']
         stat_list = session_data['statList']
         metrics = [key for key in ['cpuUsage', 'memoryUsage', 'netin', 'netout'] if key in stat_list]
-        print(f"metrics: {metrics}")
         selected_metrics = []
         for metric in metrics:
             if metric == 'cpuUsage':
@@ -356,6 +355,8 @@ def report_gen(request):
                 selected_metrics.append('netin')
             elif metric == 'netout':
                 selected_metrics.append('netout')
+        
+        print(f"selected_metrics: {selected_metrics}")
 
         # node_data = {}
         # for node in form_data.get('nodeNameList', []):
@@ -365,7 +366,8 @@ def report_gen(request):
 
         vm_data = {}
         vm_list = form_data.get('vmNameList', [])
-        vm_query = construct_vm_flux_query(vm_list, vm_metrics, start_date, end_date, '1h')
+        print(f"vm_list: {vm_list}")
+        vm_query = construct_vm_flux_query(vm_list, selected_metrics, start_date, end_date, '1h')
         vm_result = query_api.query(vm_query)
         
         # TODO: REMOVE!
