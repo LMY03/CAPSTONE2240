@@ -135,6 +135,48 @@
 
     </form>
     
+    <div id="main">
+      <div id="comparison-div">
+        <h1>{{vmArr}}</h1>
+        
+        <div class="linechart-container" style="margin: 0rem 0rem 0.5rem 1rem">
+          <h4>Average Usage</h4>
+          <div class="row">
+            <div class="col-md-1"></div>
+            <div class="col-md-3">
+              <canvas id="pieCpuUsage" height="100px" width="200px" style="display: inline-block"></canvas>
+            </div>
+            <div class="col-md-3">
+              <canvas id="pieMemUsage" height="100px" width="200px" style="display: inline-block"></canvas>
+            </div>
+            <div class="col-md-3">
+              <canvas id="pieStorageUsage" height="100px" width="200px" style="display: inline-block"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div id="cpuUsageDiv" class="linechart-container" style="margin: 0rem 0rem 0.5rem 1rem;">
+          <canvas id="cpuUsage" height="30" width="100"></canvas>
+        </div>
+        <div id="memUsageDiv" class="linechart-container" style="margin: 0rem 0rem 0.5rem 1rem;">
+          <canvas id="memUsage" height="30" width="100"></canvas>
+        </div>
+        <div id="netinDiv" class="linechart-container" style="margin: 0rem 0rem 0.5rem 1rem;">
+          <canvas id="netInUsage" height="30" width="100"></canvas>
+        </div>
+        <div id="netoutDiv" class="linechart-container" style="margin: 0rem 0rem 0.5rem 1rem;">
+          <canvas id="netOutUsage" height="30" width="100"></canvas>
+        </div>
+        <div id="vmCpuDiv" class="linechart-container" style="margin: 0rem 0rem 0.5rem 1rem;">
+          <canvas id="vmCpuUsage" height="30" width="100"></canvas>
+        </div>
+        <div id="vmMemDiv" class="linechart-container" style="margin: 0rem 0rem 0.5rem 1rem;">
+          <canvas id="vmMemUsage" height="30" width="100"></canvas>
+        </div>
+      </div>
+
+    </div>
+
 </div>
 {% endblock content %}
 

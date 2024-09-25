@@ -104,6 +104,11 @@ $(document).ready(function() {
       console.log("Form data:", data);
       form.submit();
   })
+
+  $('#report-btn').click(function() {
+    var form = $('#filterForm');
+    
+  })
   
   function init() {
     $.ajax({

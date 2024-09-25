@@ -258,47 +258,28 @@ def index_csv(request):
         return HttpResponse(f"Error generating report: {str(e)}", status=500)
 
 
-
-def open_report_page(request):
-    try:
-        proxmox = get_proxmox_client()
-
-        data = request.POST
-        vm_name_list = []
-        vm_id_list = []
-        stat_list = []
-        node_name_list = []
-
-        for name, value in data.items():
-            if name not in ['categoryFilter', 'select_all', 'cpuUsage', 'csrfmiddlewaretoken', 'enddate', 'memoryUsage', 'netin', 'netout', 'startdate', 'vmInfoTable_length']:
-                vm_name_list.append(value)
-                vm_id_list.append(name)
-            elif name in ['cpuUsage', 'memoryUsage', 'netin', 'netout']:
-                stat_list.append(value)
-            elif name == 'categoryFilter' and value != "All nodes":
-                node_name_list = [node['node'] for node in proxmox.nodes.get()]
-
-        form_data = {
-            'vmNameList': vm_name_list,
-            'nodeNameList': node_name_list or ['All nodes'],
-            'vmIdList': vm_id_list,
-            # 'startdate': date.get('startdate'),
-            # 'enddate': date.get('enddate'),
-            'statList': stat_list
-        }
-
-        request.session['formData'] = form_data
-        return render(request, 'gen-reports.html')
-
-    except Exception as e:
-        # TODO: logger error - error opening report page
-        return JsonResponse({'error': 'An error occurred while preparing the report page.'}, status=500)
-
 def report_gen(request):
     try:
-        client = get_influxdb_client()
-        query_api = client.query_api()
+        # Get clients
+        influxdb_client = get_influxdb_client()
+        proxmox_client = get_proxmox_client()
+        # Prepare and execute queries
+        query_api = influxdb_client.query_api()
 
+        # Query to get node information using Flux
+        flux_query = '''
+                        from(bucket:"{bucket}")
+                        |> range(start: -1h)
+                        |> filter(fn: (r) => r._measurement == "system" and r.object == "nodes")
+                        |> group(columns: ["host"])
+                        |> distinct(column: "host")
+                    '''
+        result = query_api.query(flux_query)
+        
+        # Process the result to get the server list
+        server = [table.records[0].values["host"] for table in result]
+
+        nodes = proxmox.nodes.get()
 
         form_data = request.session.get('formData', {})
         start_date = form_data.get('startdate')
