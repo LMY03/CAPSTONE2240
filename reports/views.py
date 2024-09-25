@@ -341,8 +341,7 @@ def report_gen(request):
 
         # node_metrics = ['cpu', 'memused', 'netin', 'netout', 'memtotal', 'swaptotal']
         
-        session_data = request.session['formData']
-        stat_list = session_data['statList']
+        stat_list = form_data['statList']
         metrics = [key for key in ['cpuUsage', 'memoryUsage', 'netin', 'netout'] if key in stat_list]
         selected_metrics = []
         for metric in metrics:
@@ -388,13 +387,13 @@ def report_gen(request):
                 # Unique key for each timestamp-host combination
                 key = (timestamp, host, nodename)
 
-                # TODO: REMOVE!
-                print(f"timestamp: {timestamp}")
-                print(f"host: {host}")
-                print(f"nodename: {nodename}")
-                print(f"field: {field}")
-                print(f"value: {value}")
-                print(f"key: {key}")
+                # # TODO: REMOVE!
+                # print(f"timestamp: {timestamp}")
+                # print(f"host: {host}")
+                # print(f"nodename: {nodename}")
+                # print(f"field: {field}")
+                # print(f"value: {value}")
+                # print(f"key: {key}")
 
                 if key not in grouped_data:
                     grouped_data[key] = {metric: '' for metric in selected_metrics}
