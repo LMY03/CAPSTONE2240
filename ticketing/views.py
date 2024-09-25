@@ -3,6 +3,7 @@ from django import forms
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from django.views import generic
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
@@ -19,7 +20,7 @@ from guacamole import guacamole
 from proxmox import views, proxmox
 from pfsense.views import add_port_forward_rules, delete_port_forward_rules
 
-from .models import RequestEntry, Comment, RequestUseCase, PortRules, UserProfile, RequestEntryAudit, VMTemplates
+from .models import RequestEntry, Comment, RequestUseCase, PortRules, UserProfile, RequestEntryAudit, VMTemplates, IssueTicket, IssueFile
 from proxmox.models import VirtualMachines, Nodes
 from guacamole.models import GuacamoleConnection, GuacamoleUser
 from pfsense.models import DestinationPorts
@@ -132,6 +133,60 @@ def tsg_request_details(request, request_id):
         
     return render (request, 'ticketing/tsg_request_details.html', context=context)
 
+@login_required
+def ticket_list(request):
+    user_role = get_object_or_404(UserProfile, user=request.user).user_type
+    if user_role == 'faculty' : return faculty_ticket_list(request)
+    elif user_role == 'admin' : return tsg_ticket_list(request)
+    else : return redirect('/')
+
+def tsg_ticket_list(request):
+
+    issue_tickets = IssueTicket.objects.all().order_by('-id')
+
+    context = {
+        'issue_tickets': issue_tickets
+    }
+
+    return render(request, 'ticketing/tsg_ticket_list.html', context)
+
+def faculty_ticket_list(request):
+
+    issue_tickets = IssueTicket.objects.filter().order_by('-id')
+
+    context = {
+        'issue_tickets': issue_tickets
+    }
+
+    return render(request, 'ticketing/faculty_ticket_list.html', context)
+
+@login_required
+def ticket_details(request, ticket_id):
+    user_role = get_object_or_404(UserProfile, user=request.user).user_type
+    if user_role == 'faculty' : return faculty_ticket_details(request, ticket_id)
+    elif user_role == 'admin' : return tsg_ticket_details(request, ticket_id)
+    else : return redirect('/')
+
+def faculty_ticket_details(request, ticket_id):
+
+    issue_ticket = get_object_or_404(IssueTicket, pk=ticket_id)
+
+    context = {
+        'issue_ticket': issue_ticket,
+    }
+
+    return render(request, 'ticketing/faculty_ticket_details.html', context)
+
+def tsg_ticket_details(request, ticket_id):
+
+    issue_ticket = get_object_or_404(IssueTicket, pk=ticket_id)
+
+    context = {
+        'issue_ticket': issue_ticket,
+    }
+
+    return render(request, 'ticketing/tsg_ticket_details.html', context)
+
 def submit_issue_ticket(request):
     if request.method == 'POST':
         form = IssueTicketForm(request.POST)
@@ -146,6 +201,18 @@ def submit_issue_ticket(request):
             return redirect(reverse('ticketing:request_details', args=[request_entry_id]))
         
     return redirect('ticketing:index')
+
+def resolve_issue_ticket(request):
+    print("==============")
+    if request.method == 'POST':
+        issue_ticket_id = request.POST.get('issue_ticket_id')
+        issue_ticket = get_object_or_404(IssueTicket, pk=issue_ticket_id)
+        
+        issue_ticket.resolve_ticket()
+
+        return redirect(reverse('ticketing:ticket_details', args=[issue_ticket_id]))
+    
+    return redirect('ticketing:ticket_list')
 
 @login_required
 def add_comment(request, pk):
@@ -489,6 +556,7 @@ def request_confirm(request, request_id):
 
     node = "pve"
     request_entry = get_object_or_404(RequestEntry, id = request_id)
+    request_entry.assigned_to = request.user
     to = request_entry.requester.email
     data = {
         "faculty_name" : request_entry.requester.get_full_name(),
@@ -552,22 +620,22 @@ def accept_test_vm(request, request_id): #Where the faculty Accepts the test vm 
     request_entry.save()
     
     request_use_case = RequestUseCase.objects.get(request = request_entry)
-    to  = request_entry.assigned_to.email
-    use_case = "Class Course" if request_use_case.request not in ['Thesis', 'Research', 'Test'] else request_use_case.request
-    vmCount = 0
-    if use_case == "Class Course":
-        for case in request_use_case:
-            vmCount += case.vm_count
-    else:
-        vmCount = request_use_case.vm_count
-    data = {
-        "id" : request_id,
-        "faculty_name" : request_entry.requester.get_full_name(),
-        "use_case" : use_case,
-        "vm_count" : vmCount,
-    }
+    # to  = request_entry.assigned_to.email
+    # use_case = "Class Course" if request_use_case.request not in ['Thesis', 'Research', 'Test'] else request_use_case.request
+    # vmCount = 0
+    # if use_case == "Class Course":
+    #     for case in request_use_case:
+    #         vmCount += case.vm_count
+    # else:
+    #     vmCount = request_use_case.vm_count
+    # data = {
+    #     "id" : request_id,
+    #     "faculty_name" : request_entry.requester.get_full_name(),
+    #     "use_case" : use_case,
+    #     "vm_count" : vmCount,
+    # }
 
-    accept_notif_tsg(to, data)
+    # accept_notif_tsg(to, data)
     return redirect('ticketing:request_details', request_id)
     # return redirect(f'/ticketing/{request_id}/details')
 

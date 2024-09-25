@@ -197,6 +197,19 @@ class IssueTicket(models.Model):
 
     def is_resolved(self) : return self.resolve_date != None
 
+    def get_status(self):
+        if self.is_resolved() : return "Resolved"
+        else : return "Unresolved"
+
+    def get_requester(self):
+        requester = self.created_by
+        if requester.first_name != None and requester.last_name != None : return f'{requester.first_name} {requester.last_name}'
+        else : return requester.username
+
+    def resolve_ticket(self):
+        self.resolve_date = timezone.localtime()
+        self.save()
+
 class IssueFile(models.Model):
     file_address = models.CharField(max_length=1000)
     uploaded_date = models.DateTimeField(default=timezone.localtime)

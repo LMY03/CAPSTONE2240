@@ -5,6 +5,8 @@ from . import views
 app_name = "ticketing"
 urlpatterns = [
     path("", views.request_list, name="index"),
+    path("ticket_list", views.ticket_list, name="ticket_list"),
+    path("<int:ticket_id>/ticket_details", views.ticket_details, name="ticket_details"),
     path("<int:request_id>/details/", views.request_details, name="request_details"),
     path("new-form/", views.RequestFormView.as_view(), name="new-form"),
     path('new-form-container/', views.new_form_container, name = 'new-form-container'),
@@ -20,6 +22,7 @@ urlpatterns = [
     path('delete_request/<int:request_id>', views.delete_request, name='delete_request'),
     path('faculty_edit_request/<int:request_id>', views.edit_request, name = 'faculty_edit_request'),
     path('submit_issue_ticket', views.submit_issue_ticket, name='submit_issue_ticket'),
+    path("resolve_issue_ticket", views.resolve_issue_ticket, name="resolve_issue_ticket"),
     
 
     # path('clear_credential', views.clear_credential, name = 'clear_credential'),
