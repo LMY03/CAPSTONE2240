@@ -304,6 +304,9 @@ def open_report_page(request):
 
     request.session['formData'] = formData
 
+     # TODO: REMOVE!
+        print(f"formData: {formData}")
+
     return render(request, 'reports/gen-reports.html')
 
 
