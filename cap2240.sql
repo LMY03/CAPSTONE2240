@@ -810,7 +810,7 @@ CREATE TABLE `auth_user` (
 
 LOCK TABLES `auth_user` WRITE;
 /*!40000 ALTER TABLE `auth_user` DISABLE KEYS */;
-INSERT INTO `auth_user` VALUES (1,'pbkdf2_sha256$720000$5gL9pa3JAHZYMUbNgW3qqL$udv7QLPHZ/Fv5ijQQMvklg06MOZvEkkbGY2LJ17dIyM=',NULL,1,'admin','admin','chan','',1,1,'2024-09-14 13:54:58.000000'),(2,'pbkdf2_sha256$720000$5gL9pa3JAHZYMUbNgW3qqL$udv7QLPHZ/Fv5ijQQMvklg06MOZvEkkbGY2LJ17dIyM=',NULL,1,'john.doe','John','Doe','',1,1,'2024-09-14 13:54:58.000000'),(3,'pbkdf2_sha256$720000$5gL9pa3JAHZYMUbNgW3qqL$udv7QLPHZ/Fv5ijQQMvklg06MOZvEkkbGY2LJ17dIyM=',NULL,0,'josephine.cruz','Josephine','Cruz','',0,1,'2024-09-14 13:54:58.000000');
+INSERT INTO `auth_user` VALUES (1,'pbkdf2_sha256$720000$5gL9pa3JAHZYMUbNgW3qqL$udv7QLPHZ/Fv5ijQQMvklg06MOZvEkkbGY2LJ17dIyM=',NULL,1,'admin','admin','chan','',1,1,'2024-09-14 13:54:58.000000'),(2,'pbkdf2_sha256$720000$5gL9pa3JAHZYMUbNgW3qqL$udv7QLPHZ/Fv5ijQQMvklg06MOZvEkkbGY2LJ17dIyM=',NULL,1,'john.doe','John','Doe','jonathan_lin@dlsu.edu.ph',1,1,'2024-09-14 13:54:58.000000'),(3,'pbkdf2_sha256$720000$5gL9pa3JAHZYMUbNgW3qqL$udv7QLPHZ/Fv5ijQQMvklg06MOZvEkkbGY2LJ17dIyM=',NULL,0,'josephine.cruz','Josephine','Cruz','jonathan_lin@dlsu.edu.ph',0,1,'2024-09-14 13:54:58.000000');
 /*!40000 ALTER TABLE `auth_user` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
@@ -1535,7 +1535,7 @@ DROP TABLE IF EXISTS `ticketing_issuefile`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `ticketing_issuefile` (
   `id` bigint NOT NULL AUTO_INCREMENT,
-  `file_address` varchar(1000) NOT NULL,
+  `file` varchar(100) NOT NULL,
   `uploaded_date` datetime(6) NOT NULL,
   `ticket_id` bigint NOT NULL,
   `uploaded_by_id` int NOT NULL,
