@@ -304,8 +304,13 @@ def open_report_page(request):
 
     request.session['formData'] = formData
 
-     # TODO: REMOVE!
-        print(f"formData: {formData}")
+    # TODO: REMOVE!
+    print(f"vmNameList: {formData['vmNameList']}")
+    print(f"nodeNameList: {formData['nodeNameList']}")
+    print(f"vmIdList: {formData['vmIdList']}")
+    print(f"startdate: {formData['startdate']}")
+    print(f"enddate: {formData['enddate']}")
+    print(f"statList: {formData['statList']}")
 
     return render(request, 'reports/gen-reports.html')
 
