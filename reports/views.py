@@ -280,6 +280,8 @@ def open_report_page(request):
     formData = {}
 
     data = request.POST
+    # TODO: REMOVE!
+    print(f"data: {data}")
 
     for name in data.keys():
         if str(name) not in ['categoryFilter', 'select_all', 'csrfmiddlewaretoken', 'vmInfoTable_length',
