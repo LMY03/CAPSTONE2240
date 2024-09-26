@@ -378,7 +378,7 @@ def report_gen(request):
         vm_result = query_api.query(vm_query)
         
         # TODO: REMOVE!
-        print(f"vm_result: {vm_result.raw}")
+        print(f"vm_result: {vm_result}")
 
 
         # Dictionary to store grouped data
