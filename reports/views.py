@@ -102,8 +102,13 @@ def construct_vm_details_flux_query(hosts, metrics, start_date, end_date, window
             |> filter(fn: (r) => {host_filter})
             |> filter(fn: (r) => {field_filter})
             |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
-            |> yield(name: "mean")
             '''
+
+    if len(metrics) == 1 and metrics[0] in ["netin", "netout"]:
+        query += '|> derivative(unit: 10s, nonNegative: true, columns: ["_value"], timeColumn: "_time")'
+    
+    query += '|> yield(name: "mean")'
+    
     return query
 
 def construct_vm_summary_flux_query(hosts, metrics, start_date, end_date):
@@ -374,21 +379,24 @@ def report_gen(request):
         print(f"vm_list: {vm_list}")
 
         cpuUsageList = []
+        memUsageList = []
 
         for vm in vm_list:
             # Query for CPU Usage per VM
             cpuUsageResult = {}
             cpuUsageResult["vmname"] = vm
             cpuUsageResult["data"] = query_api.query(construct_vm_details_flux_query([vm], ['cpu'], sd, ed, '1h'))
-            print(f"=======")
-            constructed_query = construct_vm_summary_flux_query([vm], ['cpu'], sd, ed)
-            print(f"constructed_query: {constructed_query}")
-            cpuUsageResult["tableData"] = query_api.query(constructed_query)
-            cpuUsageData = cpuUsageResult["tableData"]
-            print(f"cpuUsageData: {cpuUsageData}")
+            cpuUsageResult["tableData"] = query_api.query(construct_vm_summary_flux_query([vm], ['cpu'], sd, ed))
             cpuUsageList.append(cpuUsageResult)
+
+            # Query for Memory Used per VM
+            memUsageResult = {}
+            memUsageResult["vmname"] = vm
+            memUsageResult["data"] = query_api.query(construct_vm_details_flux_query([vm], ['mem'], sd, ed, '1h'))
+            memUsageResult["tableData"] = query_api.query(construct_vm_summary_flux_query([vm], ['mem'], sd, ed))
+            memUsageList.append(memUsageResult)
+
         
-        print(f"cpuUsageList: {cpuUsageList}")
 
         influxdb_client.close()
 
