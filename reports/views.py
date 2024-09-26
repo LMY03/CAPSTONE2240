@@ -90,7 +90,7 @@ def get_proxmox_client():
 def get_influxdb_client():
     return InfluxDBClient(url=INFLUX_ADDRESS, token=token, org=org)
 
-def construct_vm_flux_query(hosts, metrics, start_date, end_date, window):
+def construct_vm_details_flux_query(hosts, metrics, start_date, end_date, window):
 
     host_filter = ' or '.join(f'r["host"] == "{host}"' for host in hosts) if hosts else 'true'
     field_filter = ' or '.join(f'r["_field"] == "{metric}"' for metric in metrics) if metrics else 'true'
@@ -106,22 +106,30 @@ def construct_vm_flux_query(hosts, metrics, start_date, end_date, window):
             '''
     return query
 
-# Construct Flux Query
-def construct_flux_query(measurement, fields, hosts, start_date, end_date, window):
-    host_filter = ' or '.join(f'r.host == "{host}"' for host in hosts) if hosts else 'true'
-    field_filter = ' or '.join(f'r._field == "{field}"' for field in fields) if fields else 'true'
+def construct_vm_summary_flux_query(hosts, metrics, start_date, end_date):
+    host_filter = ' or '.join(f'r["host"] == "{host}"' for host in hosts) if hosts else 'true'
+    field_filter = ' or '.join(f'r["_field"] == "{metric}"' for metric in metrics) if metrics else 'true'
 
     query = f'''
-            from(bucket:"{bucket}")
+            data = from(bucket:"{bucket}")
             |> range(start: {start_date}, stop: {end_date})
-            |> filter(fn: (r) => r._measurement == "{measurement}")
+            |> filter(fn: (r) => r["_measurement"] == "system")
             |> filter(fn: (r) => {host_filter})
             |> filter(fn: (r) => {field_filter})
-            |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
-            |> yield(name: "mean")
+            |> filter(fn: (r) => r._value != 0)
+            |> group(columns: ["host"])
+
+            mean = data
+            |> mean()
+            |> map(fn: (r) => ({{ r with _value: r._value * 100.0, _field: "man_cpu" }}))
+
+            max = data
+            |> max()
+            |> map(fn: (r) => ({{ r with _value: r._value * 100.0, _field: "max_cpu" }}))
+
+            union(tables: [mean, max])
+            |> yeild(name: "usage_summary")
             '''
-    # TODO: REMOVE!
-    print(f"query statement: {query}")
     return query
 
 # Process Query Result
@@ -203,7 +211,7 @@ def index_csv(request):
         writer = csv.writer(response)
 
         # TODO: add window in response
-        vm_query = construct_vm_flux_query(selected_vms, selected_metrics, start_date, end_date, '1h')
+        vm_query = construct_vm_details_flux_query(selected_vms, selected_metrics, start_date, end_date, '1h')
         # TODO: REMOVE!
         print(f"vm_query: {vm_query}")
         vm_result = query_api.query(vm_query)
@@ -335,7 +343,7 @@ def report_gen(request):
 
         sd = datetime.strptime(start_date, "%Y-%m-%d")
         ed = datetime.strptime(end_date, "%Y-%m-%d")
-        date_diff = (ed - sd).days
+        date_diff = abs((ed - sd).days)
 
         window = "1d" if date_diff >= 30 else "1h"
 
@@ -366,11 +374,11 @@ def report_gen(request):
         vm_data = {}
         vm_list = form_data.get('vmNameList', [])
         print(f"vm_list: {vm_list}")
-        vm_query = construct_vm_flux_query(vm_list, selected_metrics, start_date, end_date, '1h')
+        vm_query = construct_vm_details_flux_query(vm_list, selected_metrics, start_date, end_date, '1h')
         vm_result = query_api.query(vm_query)
         
         # TODO: REMOVE!
-        print(f"vm_result: {vm_result}")
+        print(f"vm_result: {vm_result.raw}")
 
 
         # Dictionary to store grouped data
