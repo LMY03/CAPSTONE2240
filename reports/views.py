@@ -128,7 +128,7 @@ def construct_vm_summary_flux_query(hosts, metrics, start_date, end_date):
             |> map(fn: (r) => ({{ r with _value: r._value * 100.0, _field: "max_cpu" }}))
 
             union(tables: [mean, max])
-            |> yeild(name: "usage_summary")
+            |> yield(name: "usage_summary")
             '''
     return query
 
