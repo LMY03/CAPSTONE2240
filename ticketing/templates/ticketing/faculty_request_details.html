@@ -25,7 +25,9 @@ Request Details {{ request_entry.id }}
                                 </a>
                                 {% endif %}
                                 {% if request_entry.status == "PENDING" or request_entry.status == "FOR REVISION" %}
-                                <a class="btn btn-success me-1" href="{% url 'ticketing:faculty_edit_request' request_entry.id %}" role="button">Edit</a>
+                                    <a class="btn btn-primary me-2" href="{% url 'ticketing:faculty_edit_request' request_entry.id %}" role="button">
+                                        <i class="bi bi-pencil-square me-2"></i>Edit
+                                    </a>                                
                                 {% endif %}
                                 {% if request_entry.status == "ONGOING" %}
                                 <button type="button" class="btn btn-success me-2" data-toggle="modal" data-target="#issueModal">

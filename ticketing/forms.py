@@ -81,7 +81,7 @@ class IssueCommentForm(forms.ModelForm):
         model = IssueComment
         fields = ['comment']
         widgets = {
-            'comment': forms.Textarea(attrs={'class': 'form-control'}),
+            'comment': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
-    
+
     ticket = forms.CharField(widget=forms.HiddenInput())

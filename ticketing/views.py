@@ -172,9 +172,14 @@ def faculty_ticket_details(request, ticket_id):
     issue_ticket = get_object_or_404(IssueTicket, pk=ticket_id)
     issue_files = IssueFile.objects.filter(ticket=issue_ticket)
 
+    comments = IssueComment.objects.filter(ticket=issue_ticket).order_by('date_time')
+    for comment in comments : comment.files = IssueCommentFile.objects.filter(comment=comment)
+
     context = {
         'issue_ticket': issue_ticket,
         'issue_files': issue_files,
+        'comments': comments,
+        'issue_comment_form': IssueCommentForm(initial={'ticket': ticket_id}),
     }
 
     return render(request, 'ticketing/faculty_ticket_details.html', context)
