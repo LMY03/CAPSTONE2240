@@ -155,7 +155,7 @@ class UserProfile (models.Model):
 class Comment(models.Model):
     request_entry = models.ForeignKey(RequestEntry, on_delete=models.CASCADE)
     comment = models.TextField()
-    date_time = models.DateTimeField(default=timezone.localdate())
+    date_time = models.DateTimeField(default=timezone.localtime)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     class Meta:
@@ -216,4 +216,15 @@ class IssueFile(models.Model):
 
     ticket = models.ForeignKey(IssueTicket, on_delete=models.CASCADE)
     uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE)
-    
+
+class IssueComment(models.Model):
+    ticket = models.ForeignKey(IssueTicket, on_delete=models.CASCADE)
+    comment = models.TextField()
+    date_time = models.DateTimeField(default=timezone.localtime)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+class IssueCommentFile(models.Model):
+    file = models.FileField(upload_to='issue_files/comments/')
+    uploaded_date = models.DateTimeField(default=timezone.localtime)
+
+    comment = models.ForeignKey(IssueComment, on_delete=models.CASCADE)
