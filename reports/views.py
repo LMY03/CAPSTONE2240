@@ -371,51 +371,20 @@ def report_gen(request):
         #     node_result = query_api.query(node_query)
         #     node_data[node] = process_query_result(node_result, node_metrics)
 
-        vm_data = {}
         vm_list = form_data.get('vmNameList', [])
         print(f"vm_list: {vm_list}")
-        vm_query = construct_vm_details_flux_query(vm_list, selected_metrics, start_date, end_date, '1h')
-        vm_result = query_api.query(vm_query)
+
+        cpuUsageList = []
+
+        for vm in vm_list:
+            # Query for CPU Usage per VM
+            cpuUsageResult = {}
+            cpuUsageResult["vmname"] = vm
+            cpuUsageResult["data"] = query_api.query(construct_vm_details_flux_query([vm], ['cpu'], start_date, end_date, '1h'))
+            cpuUsageResult["tableData"] = query_api.query(construct_vm_summary_flux_query([vm], ['cpu'], start_date, end_date))
+            cpuUsageList.append(cpuUsageResult)
         
-        # TODO: REMOVE!
-        print(f"vm_result: {vm_result}")
-
-
-        # Dictionary to store grouped data
-        grouped_data = {}
-
-        for table in vm_result:
-            for record in table.records:
-                timestamp = record.get_time().strftime('%Y-%m-%d %H:%M:%S')
-                host = record.values.get('host', '')
-                nodename = record.values.get('nodename', '')
-                field = record.values.get('_field', '')
-                value = record.values.get('_value', '')
-
-                # Unique key for each timestamp-host combination
-                key = (timestamp, host, nodename)
-
-                # # TODO: REMOVE!
-                # print(f"timestamp: {timestamp}")
-                # print(f"host: {host}")
-                # print(f"nodename: {nodename}")
-                # print(f"field: {field}")
-                # print(f"value: {value}")
-                # print(f"key: {key}")
-
-                if key not in grouped_data:
-                    grouped_data[key] = {metric: '' for metric in selected_metrics}
-
-                # Add value to the corresponding metric
-                if field in selected_metrics:
-                    if field == 'cpu':
-                        value = str(round(value * 100, 2)) + "%"
-                    elif field == 'mem' or field == 'maxmem':
-                        value = str(round(value / (1024*1024*1024), 2)) + "GiB"
-                    grouped_data[key][field] = str(value).strip().replace('\n', '').replace('\r', '')
-
-        # TODO: REMOVE!
-        print(f"grouped_data: {grouped_data}")
+        print(f"cpuUsageList: {cpuUsageList}")
 
         influxdb_client.close()
 
