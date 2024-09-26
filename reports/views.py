@@ -90,26 +90,65 @@ def get_proxmox_client():
 def get_influxdb_client():
     return InfluxDBClient(url=INFLUX_ADDRESS, token=token, org=org)
 
+# def construct_vm_details_flux_query(hosts, metrics, start_date, end_date, window):
+
+#     host_filter = ' or '.join(f'r["host"] == "{host}"' for host in hosts) if hosts else 'true'
+#     field_filter = ' or '.join(f'r["_field"] == "{metric}"' for metric in metrics) if metrics else 'true'
+
+#     query = f'''
+#             from(bucket:"{bucket}")
+#             |> range(start: {start_date}, stop: {end_date})
+#             |> filter(fn: (r) => r["_measurement"] == "system")
+#             |> filter(fn: (r) => {host_filter})
+#             |> filter(fn: (r) => {field_filter})
+#             |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
+#             |> yield(name: "mean")
+#             '''
+#     return query
+
 def construct_vm_details_flux_query(hosts, metrics, start_date, end_date, window):
 
     host_filter = ' or '.join(f'r["host"] == "{host}"' for host in hosts) if hosts else 'true'
-    field_filter = ' or '.join(f'r["_field"] == "{metric}"' for metric in metrics) if metrics else 'true'
-
-    query = f'''
+    
+    # field_filter includes [network_metrics] and [other metrics]
+    network_metrics = [m for m in metrics if m in ['netin', 'netout']]
+    other_metrics = [m for m in metrics if m not in ['netin', 'netout']]
+    
+    
+    network_metrics_filter = ' or '.join(f'r["_field"] == "{metric}"' for metric in network_metrics) if network_metrics else 'true'
+    network_query = f'''
             from(bucket:"{bucket}")
             |> range(start: {start_date}, stop: {end_date})
             |> filter(fn: (r) => r["_measurement"] == "system")
             |> filter(fn: (r) => {host_filter})
-            |> filter(fn: (r) => {field_filter})
+            |> filter(fn: (r) => {network_metrics_filter})
+            |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
+            |> derivative(unit: 10s, nonNegative: true, columns: ["_value"], timeColumn: "_time")
+            |> yield(name: "mean")
+            '''
+
+    other_metrics_filter = ' or '.join(f'r["_field"] == "{metric}"' for metric in other_metrics) if other_metrics else 'true'
+    other_query = f'''
+            from(bucket:"{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => {host_filter})
+            |> filter(fn: (r) => {other_metrics_filter})
             |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
             '''
 
-    if len(metrics) == 1 and metrics[0] in ["netin", "netout"]:
-        query += '|> derivative(unit: 10s, nonNegative: true, columns: ["_value"], timeColumn: "_time")'
-    
-    query += '|> yield(name: "mean")'
-    
-    return query
+    # combine
+    combined_query = f'''
+            {network_query}
+
+            {other_query}
+
+            union(tables: [networkData, otherData])
+            |> yield(name: "combined")
+            '''
+
+    return combined_query
+
 
 def construct_vm_summary_flux_query(hosts, metrics, start_date, end_date):
     host_filter = ' or '.join(f'r["host"] == "{host}"' for host in hosts) if hosts else 'true'
