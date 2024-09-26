@@ -338,15 +338,14 @@ def report_gen(request):
         query_api = influxdb_client.query_api()
 
         form_data = request.session.get('formData', {})
-        start_date_str = form_data.get('startdate')
-        end_date_str = form_data.get('enddate')
-
-        sd = parse_form_date(start_date_str)
-        ed = parse_form_date(end_date_str)
-        date_diff = abs((ed - sd).days)
-
+        start_date = form_data.get('startdate')
+        end_date = form_data.get('enddate')
+        date_diff = abs((datetime.strptime(end_date, "%Y-%m-%d") - datetime.strptime(start_date, "%Y-%m-%d")).days)
         window = "1d" if date_diff >= 30 else "1h"
 
+        sd = parse_form_date(start_date)
+        ed = parse_form_date(end_date)
+        
         # node_metrics = ['cpu', 'memused', 'netin', 'netout', 'memtotal', 'swaptotal']
         
         stat_list = form_data['statList']
