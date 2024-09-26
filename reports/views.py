@@ -162,31 +162,59 @@ def construct_vm_details_flux_query(hosts, metrics, start_date, end_date, window
     return combined_query
 
 
-def construct_vm_summary_flux_query(hosts, metrics, start_date, end_date):
+# Fix this
+def construct_vm_summary_flux_query(hosts, metric, start_date, end_date):
     host_filter = ' or '.join(f'r["host"] == "{host}"' for host in hosts) if hosts else 'true'
-    field_filter = ' or '.join(f'r["_field"] == "{metric}"' for metric in metrics) if metrics else 'true'
+    
+    is_network_metric = metric in ['netin', 'netout']
 
-    query = f'''
-            data = from(bucket:"{bucket}")
-            |> range(start: {start_date}, stop: {end_date})
-            |> filter(fn: (r) => r["_measurement"] == "system")
-            |> filter(fn: (r) => {host_filter})
-            |> filter(fn: (r) => {field_filter})
-            |> filter(fn: (r) => r._value != 0)
-            |> group(columns: ["host"])
+    base_query = f'''
+                from(bucket:"{bucket}")
+                |> range(start: {start_date}, stop: {end_date})
+                |> filter(fn: (r) => r["_measurement"] == "system")
+                |> filter(fn: (r) => {host_filter})
+                |> filter(fn: (r) => r["_field"] == "{metric}")
+                '''
+    
+    if is_network_metric:
+        query = f'''
+                {base_query}
+                |> aggregateWindow(every: 1h, fn: mean, createEmpty: false)
+                |> derivative(unit: 1h, nonNegative: true, columns: ["_value"], timeColumn: "_time")
+                |> filter(fn: (r) => r._value != 0)
+                |> group(columns: ["host"])
 
-            mean = data
-            |> mean()
-            |> map(fn: (r) => ({{ r with _value: r._value * 100.0, _field: "man_cpu" }}))
+                mean = data
+                |> mean()
+                |> map(fn: (r) => ({{ r with _value: r._value, _field: "mean_{metric}" }}))
 
-            max = data
-            |> max()
-            |> map(fn: (r) => ({{ r with _value: r._value * 100.0, _field: "max_cpu" }}))
+                max = data
+                |> max()
+                |> map(fn: (r) => ({{ r with _value: r._value, _field: "max_{metric}" }}))
 
-            union(tables: [mean, max])
-            |> yield(name: "usage_summary")
-            '''
+                union(tables: [mean, max])
+                |> yield(name: "usage_summary")
+                '''
+    else:
+        query = f'''
+                {base_query}
+                |> filter(fn: (r) => r._value != 0)
+                |> group(columns: ["host"])
+
+                mean = data
+                |> mean()
+                |> map(fn: (r) => ({{ r with _value: r._value * 100.0, _field: "mean_{metric}" }}))
+
+                max = data
+                |> max()
+                |> map(fn: (r) => ({{ r with _value: r._value * 100.0, _field: "max_{metric}" }}))
+
+                union(tables: [mean, max])
+                |> yield(name: "usage_summary")
+                '''
+    
     return query
+
 
 # Process Query Result
 def process_query_result(result, fields):
@@ -431,29 +459,45 @@ def report_gen(request):
 
         cpuUsageList = []
         memUsageList = []
+        netInUsageList = []
+        netOutUsageList = []
 
         for vm in vm_list:
             # Query for CPU Usage per VM
             cpuUsageResult = {}
             cpuUsageResult["vmname"] = vm
             cpuUsageResult["data"] = query_api.query(construct_vm_details_flux_query([vm], ['cpu'], sd, ed, '1h'))
-            cpuUsageResult["tableData"] = query_api.query(construct_vm_summary_flux_query([vm], ['cpu'], sd, ed))
+            cpuUsageResult["tableData"] = query_api.query(construct_vm_summary_flux_query([vm], 'cpu', sd, ed))
             cpuUsageList.append(cpuUsageResult)
 
             # Query for Memory Used per VM
             memUsageResult = {}
             memUsageResult["vmname"] = vm
             memUsageResult["data"] = query_api.query(construct_vm_details_flux_query([vm], ['mem'], sd, ed, '1h'))
-            memUsageResult["tableData"] = query_api.query(construct_vm_summary_flux_query([vm], ['mem'], sd, ed))
+            memUsageResult["tableData"] = query_api.query(construct_vm_summary_flux_query([vm], 'mem', sd, ed))
             memUsageList.append(memUsageResult)
 
-        
+            # Query for Network In per VM
+            netInUsageResult = {}
+            netInUsageResult["vmname"] = vm
+            netInUsageResult["data"] = query_api.query(construct_vm_details_flux_query([vm], ['netin'], sd, ed, '1h'))
+            netInUsageResult["tableData"] = query_api.query(construct_vm_summary_flux_query([vm], 'netin', sd, ed))
+            netInUsageList.append(netInUsageResult)
+
+            # Query for Network Out per VM
+            netOutUsageResult = {}
+            netOutUsageResult["vmname"] = vm
+            netOutUsageResult["data"] = query_api.query(construct_vm_details_flux_query([vm], ['netout'], sd, ed, '1h'))
+            netOutUsageResult["tableData"] = query_api.query(construct_vm_summary_flux_query([vm], 'netout', sd, ed))
+            netOutUsageList.append(netOutUsageResult)
 
         influxdb_client.close()
 
         return JsonResponse({
-            # 'nodeData': node_data,
-            'vmData': grouped_data,
+            'cpuUsageList':cpuUsageList,
+            'memUsageList':memUsageList,
+            'netInUsageList':netInUsageList,
+            'netOutUsageList':netOutUsageList,
             'dateDiff': date_diff,
             'formData': form_data
         })
