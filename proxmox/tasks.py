@@ -17,7 +17,6 @@ logger = logging.getLogger(__name__)
 
 @shared_task
 def create_test_vm(tsg_user_id, request_id, node):
-    # logger.info("===========================")
     request_entry = get_object_or_404(RequestEntry, pk=request_id)
     if request_entry.is_pending():
         tsg_user = User.objects.get(pk=tsg_user_id)
@@ -43,7 +42,6 @@ def create_test_vm(tsg_user_id, request_id, node):
             request=request_entry,
             node=get_object_or_404(Nodes, name=node),
         )
-        logger.info("===========================")
         upid = proxmox.clone_vm(node, vm_id, new_vm_id, vm_name)
         logger.info(f"upid: {upid}")
         proxmox.wait_for_task(node, upid)
@@ -51,11 +49,7 @@ def create_test_vm(tsg_user_id, request_id, node):
         proxmox.start_vm(node, new_vm_id)
         ip_add = proxmox.wait_and_get_ip(node, new_vm_id)
         proxmox.shutdown_vm(node, new_vm_id)
-        logger.info("===========================2")
         proxmox.wait_for_vm_stop(node, new_vm_id)
-        logger.info("===========================3 ")
-
-        # ip_add = "10.10.10.10"
 
         vm.set_ip_add(ip_add)
         vm.set_shutdown()
