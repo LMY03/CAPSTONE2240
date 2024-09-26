@@ -144,11 +144,11 @@ def construct_vm_details_flux_query(hosts, metrics, start_date, end_date, window
 
     if len(query_parts) > 1:
         combined_query = f'''
-                {query_parts[0]}
+                networkData = {query_parts[0]}
 
-                {query_parts[1]}
+                otherData = {query_parts[1]}
 
-                union(tables: [t0, t1])
+                union(tables: [networkData, otherData])
                 |> yield(name: "combined")
                 '''
     elif len(query_parts) == 1:
