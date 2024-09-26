@@ -114,38 +114,50 @@ def construct_vm_details_flux_query(hosts, metrics, start_date, end_date, window
     network_metrics = [m for m in metrics if m in ['netin', 'netout']]
     other_metrics = [m for m in metrics if m not in ['netin', 'netout']]
     
+    query_parts = []
     
-    network_metrics_filter = ' or '.join(f'r["_field"] == "{metric}"' for metric in network_metrics) if network_metrics else 'true'
-    network_query = f'''
-            from(bucket:"{bucket}")
-            |> range(start: {start_date}, stop: {end_date})
-            |> filter(fn: (r) => r["_measurement"] == "system")
-            |> filter(fn: (r) => {host_filter})
-            |> filter(fn: (r) => {network_metrics_filter})
-            |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
-            |> derivative(unit: 10s, nonNegative: true, columns: ["_value"], timeColumn: "_time")
-            |> yield(name: "mean")
-            '''
+    if network_metrics:
+        network_metrics_filter = ' or '.join(f'r["_field"] == "{metric}"' for metric in network_metrics) if network_metrics else 'true'
+        network_query = f'''
+                from(bucket:"{bucket}")
+                |> range(start: {start_date}, stop: {end_date})
+                |> filter(fn: (r) => r["_measurement"] == "system")
+                |> filter(fn: (r) => {host_filter})
+                |> filter(fn: (r) => {network_metrics_filter})
+                |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
+                |> derivative(unit: 10s, nonNegative: true, columns: ["_value"], timeColumn: "_time")
+                |> yield(name: "mean")
+                '''
+        query_parts.append(network_query)
 
-    other_metrics_filter = ' or '.join(f'r["_field"] == "{metric}"' for metric in other_metrics) if other_metrics else 'true'
-    other_query = f'''
-            from(bucket:"{bucket}")
-            |> range(start: {start_date}, stop: {end_date})
-            |> filter(fn: (r) => r["_measurement"] == "system")
-            |> filter(fn: (r) => {host_filter})
-            |> filter(fn: (r) => {other_metrics_filter})
-            |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
-            '''
+    if other_metrics:
+        other_metrics_filter = ' or '.join(f'r["_field"] == "{metric}"' for metric in other_metrics) if other_metrics else 'true'
+        other_query = f'''
+                from(bucket:"{bucket}")
+                |> range(start: {start_date}, stop: {end_date})
+                |> filter(fn: (r) => r["_measurement"] == "system")
+                |> filter(fn: (r) => {host_filter})
+                |> filter(fn: (r) => {other_metrics_filter})
+                |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
+                '''
+        query_parts.append(other_query)
 
-    # combine
-    combined_query = f'''
-            {network_query}
+    if len(query_parts) > 1:
+        combined_query = f'''
+                {query_parts[0]}
 
-            {other_query}
+                {query_parts[1]}
 
-            union(tables: [networkData, otherData])
-            |> yield(name: "combined")
-            '''
+                union(tables: [t0, t1])
+                |> yield(name: "combined")
+                '''
+    elif len(query_parts) == 1:
+        combined_query = f'''
+                {query_parts[0]}
+                |> yield(name: "combined")
+                '''
+    else:
+        combined_query = "// No metrics specified"
 
     return combined_query
 
