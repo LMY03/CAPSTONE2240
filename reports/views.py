@@ -381,6 +381,7 @@ def report_gen(request):
             cpuUsageResult = {}
             cpuUsageResult["vmname"] = vm
             cpuUsageResult["data"] = query_api.query(construct_vm_details_flux_query([vm], ['cpu'], start_date, end_date, '1h'))
+            print(f"cpuUsageResult[data]: {cpuUsageResult["data"]}")
             cpuUsageResult["tableData"] = query_api.query(construct_vm_summary_flux_query([vm], ['cpu'], start_date, end_date))
             cpuUsageList.append(cpuUsageResult)
         
