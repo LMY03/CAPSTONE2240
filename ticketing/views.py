@@ -676,7 +676,7 @@ def accept_test_vm(request, request_id): #Where the faculty Accepts the test vm 
     request_entry.status = RequestEntry.Status.ACCEPTED
     request_entry.save()
     
-    request_use_case = RequestUseCase.objects.get(request = request_entry)
+    # request_use_case = RequestUseCase.objects.get(request = request_entry)
     # to  = request_entry.assigned_to.email
     # use_case = "Class Course" if request_use_case.request not in ['Thesis', 'Research', 'Test'] else request_use_case.request
     # vmCount = 0
@@ -694,33 +694,6 @@ def accept_test_vm(request, request_id): #Where the faculty Accepts the test vm 
 
     # accept_notif_tsg(to, data)
     return redirect('ticketing:request_details', request_id)
-    # return redirect(f'/ticketing/{request_id}/details')
-
-# def download_credentials(request):
-#     details = request.session['credentials']
-#     usernames = details['usernames']
-#     passwords = details['passwords']
-#     # vm_users = details['vm_user']
-#     # vm_passs = details['vm_passs']
-
-#     # Create the content of the text file
-#     file_content = ["VM Credentials\n"]
-#     for username, password in zip(usernames, passwords):
-#         file_content.append(f"Username: {username}")
-#         file_content.append(f"Password: {password}")
-#         # file_content.append(f"VM_User: {vm_user}")
-#         # file_content.append(f"VM_Pass: {vm_pass}")
-#         file_content.append("-------------------------------")
-
-#     # Join the content into a single string with newlines
-#     file_content_str = "\n".join(file_content)
-#     print(file_content_str)
-
-#     # Create the HttpResponse object with the plain text content
-#     response = HttpResponse(file_content_str, content_type='text/plain')
-#     response['Content-Disposition'] = 'attachment; filename=details.txt'
-    
-#     return response
 
 def reject_test_vm(request, request_id):   
     request_entry = get_object_or_404(RequestEntry, pk=request_id)
