@@ -338,11 +338,11 @@ def report_gen(request):
         query_api = influxdb_client.query_api()
 
         form_data = request.session.get('formData', {})
-        start_date = form_data.get('startdate')
-        end_date = form_data.get('enddate')
+        start_date_str = form_data.get('startdate')
+        end_date_str = form_data.get('enddate')
 
-        sd = datetime.strptime(start_date, "%Y-%m-%d")
-        ed = datetime.strptime(end_date, "%Y-%m-%d")
+        sd = parse_form_date(start_date_str)
+        ed = parse_form_date(end_date_str)
         date_diff = abs((ed - sd).days)
 
         window = "1d" if date_diff >= 30 else "1h"
@@ -380,11 +380,11 @@ def report_gen(request):
             # Query for CPU Usage per VM
             cpuUsageResult = {}
             cpuUsageResult["vmname"] = vm
-            constructed_query = construct_vm_details_flux_query([vm], ['cpu'], start_date, end_date, '1h')
+            constructed_query = construct_vm_details_flux_query([vm], ['cpu'], sd, ed, '1h')
             print("constructed_query" + constructed_query)
             cpuUsageResult["data"] = query_api.query(constructed_query)
             print("cpuUsageResult[data]: " + cpuUsageResult["data"])
-            cpuUsageResult["tableData"] = query_api.query(construct_vm_summary_flux_query([vm], ['cpu'], start_date, end_date))
+            cpuUsageResult["tableData"] = query_api.query(construct_vm_summary_flux_query([vm], ['cpu'], sd, ed))
             cpuUsageList.append(cpuUsageResult)
         
         print(f"cpuUsageList: {cpuUsageList}")
