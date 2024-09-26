@@ -178,7 +178,7 @@ def construct_vm_summary_flux_query(hosts, metric, start_date, end_date):
     
     if is_network_metric:
         query = f'''
-                {base_query}
+                data = {base_query}
                 |> aggregateWindow(every: 1h, fn: mean, createEmpty: false)
                 |> derivative(unit: 1h, nonNegative: true, columns: ["_value"], timeColumn: "_time")
                 |> filter(fn: (r) => r._value != 0)
@@ -197,7 +197,7 @@ def construct_vm_summary_flux_query(hosts, metric, start_date, end_date):
                 '''
     else:
         query = f'''
-                {base_query}
+                data = {base_query}
                 |> filter(fn: (r) => r._value != 0)
                 |> group(columns: ["host"])
 
