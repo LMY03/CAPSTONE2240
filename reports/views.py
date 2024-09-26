@@ -468,7 +468,7 @@ def report_gen(request):
             cpu_data = query_api.query(construct_vm_details_flux_query([vm], ['cpu'], sd, ed, window))
             cpuUsageResult["data"] = process_query_result(cpu_data, ['cpu'])
             cpu_table_data = query_api.query(construct_vm_summary_flux_query([vm], 'cpu', sd, ed))
-            cpuUsageResult["tableData"] = process_query_result(cpu_data, ['mean_cpu', 'max_cpu'])
+            # cpuUsageResult["tableData"] = process_query_result(cpu_data, ['mean_cpu', 'max_cpu'])
             cpuUsageList.append(cpuUsageResult)
 
             # Query for Memory Used per VM
@@ -477,7 +477,7 @@ def report_gen(request):
             mem_data = query_api.query(construct_vm_details_flux_query([vm], ['mem'], sd, ed, window))
             memUsageResult["data"] = process_query_result(mem_data, ['mem'])
             mem_table_data = query_api.query(construct_vm_summary_flux_query([vm], 'mem', sd, ed))
-            memUsageResult["tableData"] = process_query_result(mem_table_data, ['mean_mem', 'max_mem'])
+            # memUsageResult["tableData"] = process_query_result(mem_table_data, ['mean_mem', 'max_mem'])
             memUsageList.append(memUsageResult)
 
             # Query for Network In per VM
@@ -486,7 +486,7 @@ def report_gen(request):
             netin_data = query_api.query(construct_vm_details_flux_query([vm], ['netin'], sd, ed, window))
             netInUsageResult["data"] = process_query_result(netin_data, ['netin'])
             netin_table_data = query_api.query(construct_vm_summary_flux_query([vm], 'netin', sd, ed))
-            netInUsageResult["tableData"] = process_query_result(netin_table_data, ['mean_netin', 'max_netin'])
+            # netInUsageResult["tableData"] = process_query_result(netin_table_data, ['mean_netin', 'max_netin'])
             netInUsageList.append(netInUsageResult)
 
             # Query for Network Out per VM
@@ -495,7 +495,7 @@ def report_gen(request):
             netout_data = query_api.query(construct_vm_details_flux_query([vm], ['netout'], sd, ed, window))
             netOutUsageResult["data"] = process_query_result(netout_data, ['netout'])
             netout_table_data = query_api.query(construct_vm_summary_flux_query([vm], 'netout', sd, ed))
-            netOutUsageResult["tableData"] = process_query_result(netout_table_data, ['mean_netout', 'max_netout'])
+            # netOutUsageResult["tableData"] = process_query_result(netout_table_data, ['mean_netout', 'max_netout'])
             netOutUsageList.append(netOutUsageResult)
 
         influxdb_client.close()
