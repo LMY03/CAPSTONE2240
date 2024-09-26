@@ -401,4 +401,5 @@ def report_gen(request):
 
     except Exception as e:
         # TODO: logger error - error generating report page
+        print(f"Error: {str(e)}")
         return JsonResponse({'error': 'An error occurred while preparing the report generation page.'}, status=500)
