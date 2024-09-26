@@ -66,6 +66,37 @@ Ticket Details {{ issue_ticket.pk }}
                 <button type="submit">Download Attached Files</button>
             </form>
             {% endif %}
+            {% if comments %}
+                <!-- Comment Section -->
+                <div class="mt-5">
+                    <h2>Comments</h2>
+                    <!-- Display Comments -->
+                        <div class="list-group">
+                            {% for comment in comments %}
+                                <div class="list-group-item">
+                                    <p><strong>{{ comment.user.first_name }} {{ comment.user.last_name }}:</strong> {{ comment.comment }}</p>
+                                    <small class="text-muted">{{ comment.date_time }}</small>
+                                    {% if comment.files %}
+                                    <form method="get" action="{% url 'ticketing:download_issue_comment_files' comment.id %}">
+                                        <button type="submit">Download Attached Files</button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    
+                    {% if issue_ticket.request.status == "ONGOING" %}
+                    <!-- Add Comment Form -->
+                    <form action="{% url 'ticketing:add_ticket_comment' issue_ticket.pk %}" method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        {{ issue_comment_form.as_p }}
+                        <label for="files">Upload Files:</label>
+                        <input type="file" name="files" multiple>
+                        <button type="submit" class="btn btn-primary">Submit Comment</button>
+                    </form>
+                </div>
+            {% endif %}
         </div>
 {% endblock content %}
 

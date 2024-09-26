@@ -23,8 +23,10 @@ urlpatterns = [
     path('faculty_edit_request/<int:request_id>', views.edit_request, name = 'faculty_edit_request'),
     path('submit_issue_ticket', views.submit_issue_ticket, name='submit_issue_ticket'),
     path("resolve_issue_ticket", views.resolve_issue_ticket, name="resolve_issue_ticket"),
+    path('add_ticket_comment/<int:issue_ticket_id>/', views.add_ticket_comment, name='add_ticket_comment'),
     
     path('<int:ticket_id>/download_issue_files', views.download_issue_files, name='download_issue_files'),
+    path('<int:issue_comment_id>/download_issue_comment_files', views.download_issue_comment_files, name='download_issue_comment_files'),
     # path('clear_credential', views.clear_credential, name = 'clear_credential'),
     # path('download_credentials', views.download_credentials, name='download_credentials'),
 ]

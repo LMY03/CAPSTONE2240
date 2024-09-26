@@ -696,9 +696,24 @@ JOIN guacamole_user            ON guacamole_user.entity_id = affected.entity_id;
 -- Current Database: `cap2240db`
 --
 
-CREATE DATABASE /*!32312 IF NOT EXISTS*/ `cap2240db` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
-
+CREATE DATABASE  IF NOT EXISTS `cap2240db` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
 USE `cap2240db`;
+-- MySQL dump 10.13  Distrib 8.0.31, for Win64 (x86_64)
+--
+-- Host: localhost    Database: cap2240db
+-- ------------------------------------------------------
+-- Server version	8.0.39
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!50503 SET NAMES utf8 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
 -- Table structure for table `auth_group`
@@ -1527,6 +1542,63 @@ LOCK TABLES `ticketing_comment` WRITE;
 UNLOCK TABLES;
 
 --
+-- Table structure for table `ticketing_issuecomment`
+--
+
+DROP TABLE IF EXISTS `ticketing_issuecomment`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `ticketing_issuecomment` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `comment` longtext NOT NULL,
+  `date_time` datetime(6) NOT NULL,
+  `ticket_id` bigint NOT NULL,
+  `user_id` int NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `ticketing_issuecomme_ticket_id_582d3c44_fk_ticketing` (`ticket_id`),
+  KEY `ticketing_issuecomment_user_id_05834b5d_fk_auth_user_id` (`user_id`),
+  CONSTRAINT `ticketing_issuecomme_ticket_id_582d3c44_fk_ticketing` FOREIGN KEY (`ticket_id`) REFERENCES `ticketing_issueticket` (`id`),
+  CONSTRAINT `ticketing_issuecomment_user_id_05834b5d_fk_auth_user_id` FOREIGN KEY (`user_id`) REFERENCES `auth_user` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `ticketing_issuecomment`
+--
+
+LOCK TABLES `ticketing_issuecomment` WRITE;
+/*!40000 ALTER TABLE `ticketing_issuecomment` DISABLE KEYS */;
+/*!40000 ALTER TABLE `ticketing_issuecomment` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `ticketing_issuecommentfile`
+--
+
+DROP TABLE IF EXISTS `ticketing_issuecommentfile`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `ticketing_issuecommentfile` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `file` varchar(100) NOT NULL,
+  `uploaded_date` datetime(6) NOT NULL,
+  `comment_id` bigint NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `ticketing_issuecomme_comment_id_19319833_fk_ticketing` (`comment_id`),
+  CONSTRAINT `ticketing_issuecomme_comment_id_19319833_fk_ticketing` FOREIGN KEY (`comment_id`) REFERENCES `ticketing_issuecomment` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `ticketing_issuecommentfile`
+--
+
+LOCK TABLES `ticketing_issuecommentfile` WRITE;
+/*!40000 ALTER TABLE `ticketing_issuecommentfile` DISABLE KEYS */;
+/*!40000 ALTER TABLE `ticketing_issuecommentfile` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `ticketing_issuefile`
 --
 
@@ -1730,7 +1802,7 @@ CREATE TABLE `ticketing_userprofile` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `user_id` (`user_id`),
   CONSTRAINT `ticketing_userprofile_user_id_e3bea9bb_fk_auth_user_id` FOREIGN KEY (`user_id`) REFERENCES `auth_user` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1761,7 +1833,7 @@ CREATE TABLE `ticketing_vmtemplates` (
   `is_lxc` tinyint(1) NOT NULL,
   `guacamole_protocol` varchar(10) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1773,3 +1845,22 @@ LOCK TABLES `ticketing_vmtemplates` WRITE;
 INSERT INTO `ticketing_vmtemplates` VALUES (1,'3000','Ubuntu-Desktop-24 (GUI)',1,1024,15,'pve',0,'rdp'),(2,'3001','Ubuntu-Desktop-22 (GUI)',1,1024,15,'pve',0,'rdp'),(3,'3002','Ubuntu-Server-24 (TUI)',1,1024,15,'pve',0,'ssh'),(4,'3003','Ubuntu-Server-22 (TUI)',1,1024,15,'pve',0,'ssh'),(5,'5000','Ubuntu-LXC-23',1,1024,10,'pve',1,'ssh');
 /*!40000 ALTER TABLE `ticketing_vmtemplates` ENABLE KEYS */;
 UNLOCK TABLES;
+
+--
+-- Dumping events for database 'cap2240db'
+--
+
+--
+-- Dumping routines for database 'cap2240db'
+--
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+-- Dump completed on 2024-09-26  9:43:01

@@ -20,12 +20,12 @@ from guacamole import guacamole
 from proxmox import views, proxmox
 from pfsense.views import add_port_forward_rules, delete_port_forward_rules
 
-from .models import RequestEntry, Comment, RequestUseCase, PortRules, UserProfile, RequestEntryAudit, VMTemplates, IssueTicket, IssueFile
+from .models import RequestEntry, Comment, RequestUseCase, PortRules, UserProfile, RequestEntryAudit, VMTemplates, IssueTicket, IssueFile, IssueComment, IssueCommentFile
 from proxmox.models import VirtualMachines, Nodes
 from guacamole.models import GuacamoleConnection, GuacamoleUser
 from pfsense.models import DestinationPorts
 from notifications.views import comment_notif_faculty, comment_notif_tsg, testVM_notif_faculty, reject_notif_faculty, accept_notif_tsg
-from .forms import IssueTicketForm
+from .forms import IssueTicketForm, IssueCommentForm
 
 from CAPSTONE2240.utils import download_files
 
@@ -184,9 +184,14 @@ def tsg_ticket_details(request, ticket_id):
     issue_ticket = get_object_or_404(IssueTicket, pk=ticket_id)
     issue_files = IssueFile.objects.filter(ticket=issue_ticket)
 
+    comments = IssueComment.objects.filter(ticket=issue_ticket).order_by('date_time')
+    for comment in comments : comment.files = IssueCommentFile.objects.filter(comment=comment)
+
     context = {
         'issue_ticket': issue_ticket,
         'issue_files': issue_files,
+        'comments': comments,
+        'issue_comment_form': IssueCommentForm(initial={'ticket': ticket_id}),
     }
 
     return render(request, 'ticketing/tsg_ticket_details.html', context)
@@ -229,6 +234,40 @@ def resolve_issue_ticket(request):
 def download_issue_files(request, ticket_id):
     file_paths = IssueFile.objects.filter(ticket__pk=ticket_id).values_list('file', flat=True)
     zip_filename = f"ticket_{ticket_id}_files.zip"
+    
+    return download_files(zip_filename, file_paths)
+
+@login_required
+def add_ticket_comment(request, issue_ticket_id):
+    if request.method == 'POST':
+        print("posted")
+        form = IssueCommentForm(request.POST)
+
+        if form.is_valid():
+            print("valid")
+            issue_comment = form.save(commit=False)
+            issue_ticket_id = form.cleaned_data['ticket']
+            issue_ticket = get_object_or_404(IssueTicket, pk=issue_ticket_id)
+            issue_comment.ticket = issue_ticket
+            issue_comment.user = request.user
+            issue_comment.save()
+            
+            files = request.FILES.getlist('files')
+            if files:
+                for file in files:
+                    IssueCommentFile.objects.create(
+                        file=file,
+                        comment=issue_comment,
+                    )
+            
+
+            return redirect(reverse('ticketing:ticket_details', args=[issue_ticket_id]))
+        
+    return redirect('ticketing:index')
+
+def download_issue_comment_files(request, issue_comment_id):
+    file_paths = IssueCommentFile.objects.filter(comment__pk=issue_comment_id).values_list('file', flat=True)
+    zip_filename = f"ticket_{issue_comment_id}_files.zip"
     
     return download_files(zip_filename, file_paths)
 
