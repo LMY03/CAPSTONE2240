@@ -48,7 +48,9 @@ Ticket Details {{ issue_ticket.pk }}
                     <h5 class="card-title mb-3">Additional Details</h5>
                     <p><strong>Date Created:</strong> {{ issue_ticket.date_created }}</p>
                     <p><strong>Status:</strong> {{ issue_ticket.get_status }}</p>
-                    <p><strong>Resolve Date:</strong> {{ issue_ticket.resolve_date }}</p>
+                    {% if issue_ticket.resolve_date %}
+                        <p><strong>Resolve Date:</strong> {{ issue_ticket.resolve_date }}</p>
+                    {% endif %}
                     <p><strong>Created By:</strong> {{ issue_ticket.get_requester }}</p>
                 </div>
             </div>
