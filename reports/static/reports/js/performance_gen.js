@@ -64,9 +64,10 @@ $(document).ready(function() {
     form.attr('action', 'extract_csv');
     var data = form.serializeArray();
     // submit form
-    if(checkData(data))
+    if(checkData(data)){
       console.log("Form data:", data);
       form.submit();
+    }
   })
 
 })
