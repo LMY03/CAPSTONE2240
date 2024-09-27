@@ -36,7 +36,7 @@ Virtual Machine List
                 <tr>
                     <td><i class="bi bi-display"></i> {{ vm.vm_name }}</td> <!-- Removed hyperlink -->
                     <td>{{ vm.request.get_request_type }}</td>
-                    <td>{{ vm.request.get_fulfilled_by }}</td>
+                    <td>{{ vm.request.get_assigned_to }}</td>
                     <td>
                         {% if vm.status == "SHUTDOWN" %}
                             <span class="text-danger"><strong>{{ vm.status }}</strong></span> <!-- Red for SHUTDOWN -->
