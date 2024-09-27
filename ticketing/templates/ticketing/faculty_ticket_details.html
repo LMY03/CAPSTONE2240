@@ -13,15 +13,6 @@ Ticket Details {{ issue_ticket.pk }}
 <div class="col-md-10 content mt-3">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1>Detail View for the Request Ticket</h1>
-        <div>
-            {% if issue_ticket.request.status == "ONGOING" %}
-            <form action="{% url 'ticketing:resolve_issue_ticket' %}" method="post">
-                {% csrf_token %}
-                <input type="hidden" id="issue_ticket_id" name="issue_ticket_id" value="{{ issue_ticket.pk }}" />
-                <button type="submit" class="btn btn-success">Resolve</button>
-            </form>
-            {% endif %}
-        </div>
     </div>
 
     <div class="row g-4">
