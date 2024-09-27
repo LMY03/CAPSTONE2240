@@ -25,12 +25,23 @@
       <div class="card h-100">
         <div class="card-body">
           <h5 class="card-title mb-3">Conditions</h5>
+
           <div class="mb-3">
             <label class="form-label me-2">Data from</label>
             <input id="dateStart" name="startdate" type="date" class="form-control form-control-sm d-inline-block w-auto me-2">
             <label class="form-label me-2">to</label>
             <input id="dateEnd" name="enddate" type="date" class="form-control form-control-sm d-inline-block w-auto">
           </div>
+
+          <div class="mb-3">
+            <label for="scopeSelect" class="form-label me-2">Scope</label>
+            <select name="scope" id="scopeSelect" class="form-select form-select-sm d-inline-block w-auto">
+              <option value="all">All</option>
+              <option value="per_node">Per Node</option>
+              <option value="per_class">Per Class</option>
+            </select>
+          </div>
+
         </div>
       </div>
     </div>
