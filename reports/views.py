@@ -515,3 +515,7 @@ def report_gen(request):
         import traceback
         print(traceback.format_exc())
         return JsonResponse({'error': 'An error occurred while preparing the report generation page.'}, status=500)
+
+
+def performance_gen(request):
+    return render(request, 'reports/performance_gen.html')
