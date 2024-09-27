@@ -66,7 +66,7 @@ $(document).ready(function() {
     // submit form
     if(checkData(data))
       console.log("Form data:", data);
-    form.submit();
+      form.submit();
   })
 
 })
