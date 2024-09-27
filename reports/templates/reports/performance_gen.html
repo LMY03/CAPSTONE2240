@@ -17,6 +17,22 @@
 
 {% block content %}
 <div id="main" class="min-vh-100" style="padding: 1rem 0rem 1rem 1rem">
+
+  <!-- Toast -->
+  <div class="toast-container" style="display: none;right:20px; width:20%;">
+    <div id="incToast" class="toast fade" role="alert" aria-live="assertive" aria-atomic="true" data-bs-animation="true" data-bs-autohide="true" data-delay="4000" style="display:none;border-left:5px solid darkred">
+      <div id="incToastBody" class="toast-body">
+        <span>Error: Incomplete Data</span>
+      </div>
+    </div>
+
+    <div id="datesToast" class="toast fade" role="alert" aria-live="assertive" aria-atomic="true" data-bs-animation="true" data-bs-autohide="true" data-delay="4000" style="display:none;border-left:5px solid darkred">
+      <div id="datesToastBody" class="toast-body">
+          <span>Error: Invalid Dates</span>
+      </div>
+    </div>
+  </div>
+
   <h1 style="font-size:2vw;font-weight:600;display:block;margin:0.5rem 1rem;">
     Select Conditions</h1>
 
