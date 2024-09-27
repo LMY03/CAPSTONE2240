@@ -70,10 +70,15 @@ class RequestEntry(models.Model):
         if requester.first_name != None and requester.last_name != None : return f'{requester.first_name} {requester.last_name}'
         else : return requester.username
 
+    def get_assigned_to(self):
+        assigned_to = self.assigned_to
+        if assigned_to.first_name != None and assigned_to.last_name != None : return f'{assigned_to.first_name} {assigned_to.last_name}'
+        else : return assigned_to.username
+
     def get_fulfilled_by(self):
-        requester = self.fulfilled_by
-        if requester.first_name != None and requester.last_name != None : return f'{requester.first_name} {requester.last_name}'
-        else : return requester.username
+        fulfilled_by = self.fulfilled_by
+        if fulfilled_by.first_name != None and fulfilled_by.last_name != None : return f'{fulfilled_by.first_name} {fulfilled_by.last_name}'
+        else : return fulfilled_by.username
 
     def is_pending(self) : return self.status == RequestEntry.Status.PENDING
     def is_for_revision(self) : return self.status == RequestEntry.Status.FOR_REVISION
