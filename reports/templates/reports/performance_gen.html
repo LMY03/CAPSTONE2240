@@ -20,7 +20,7 @@
   <h1 style="font-size:2vw;font-weight:600;display:block;margin:0.5rem 1rem;">
     Select Conditions</h1>
 
-  <form method="POST">
+  <form method="POST" id="conditionForm">
     <div class="col-md-6">
       <div class="card">
         <div class="card-body">
@@ -42,7 +42,9 @@
         </div>
       </div>
     </div>
-    <button type="submit" class="btn btn-primary">Apply</button>
+    <div style="margin:1.3rem 0.5rem; float:right;">
+      <button id="extract-btn" type="button" class="btn btn-primary">Extract Report</button>
+    </div>
   </form>
 
 
@@ -50,5 +52,5 @@
 {% endblock content %}
 
 {% block script %}
-
+<script src="{% static 'reports/js/performance_gen.js' %}"></script>
 {% endblock script %}

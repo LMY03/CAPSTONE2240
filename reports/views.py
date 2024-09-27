@@ -519,3 +519,15 @@ def report_gen(request):
 
 def performance_gen(request):
     return render(request, 'reports/performance_gen.html')
+
+def extract_csv(request):
+    # Process request data
+    start_date_str = request.POST.get('startdate')
+    end_date_str = request.POST.get('enddate')
+    scope = request.POST.get('scope')
+
+    return JsonResponse({
+        'start_date_str':start_date_str,
+        'end_date_str':end_date_str,
+        'scope':scope
+    })
