@@ -112,7 +112,7 @@ Request Details {{ request_entry.id }}
                                 {% for port in port_rules %}
                                 <div class="col-md-8">
                                     <div class="p-3 bg-light border">
-                                        <p><strong>Port:</strong> {{ port.protocol }}</p>
+                                        <p><strong>Port:</strong> {{ port.protocol|upper }}</p>
                                     </div>
                                 </div>
                                 <div class="col-md-4">
