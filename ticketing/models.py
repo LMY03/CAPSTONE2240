@@ -152,7 +152,7 @@ class UserProfile (models.Model):
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     user_type = models.CharField (max_length= 20, choices=USER_TYPE_CHOICES, default='student')
-    system_password = models.CharField(max_length=45, null=True, default=None)
+    # system_password = models.CharField(max_length=45, null=True, default=None)
     #request_use_case = models.ForeignKey(RequestUseCase, on_delete= models.CASCADE, null = True)
 
     def __str__(self) -> str:
