@@ -19,6 +19,8 @@ urlpatterns = [
     path('login/', views.login_view, name = "login"),
     path('add_users/', views.add_users, name='add_users'),
     path('user_management/', views.user_management, name = 'user_management'),
+    path('delete_user/<int:user_id>', views.delete_user, name = 'delete_user'),
+    path('edit_user/', views.edit_user, name = 'edit_user'),
     
     path('home-filter/', views.home_filter_view, name='home-filter'),
 ]

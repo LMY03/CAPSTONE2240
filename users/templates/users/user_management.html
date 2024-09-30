@@ -43,14 +43,10 @@ User Management
                     <button class="btn btn-sm btn-secondary toggle-password">Show</button>
                   </div>
                 </td>
-                <td class = 'd-flex justify-content-evenly'>
+                <td>
                   <div class = "d-flex justify-content-evenly">
-                    <a href="{% comment %}
-                      {% url 'users:edit_user' user.id %}
-                    {% endcomment %}" class="btn btn-sm btn-warning">Edit</a>
-                    <a href="{% comment %}
-                      {% url 'users:delete_user' user.id %}
-                    {% endcomment %}" class="btn btn-sm btn-danger">Delete</a>
+                    <a data-bs-toggle="modal" data-bs-target="#edit_user_modal" class="btn btn-sm btn-warning" id="edit_user_id_{{user.id}}" onclick="edit_user_id({{user.id}}, '{{user.user_type}}')">Edit</a>
+                    <a href="{% url 'users:delete_user' user.id %}" class="btn btn-sm btn-danger">Delete</a>
                   </div>
                 </td>
             </tr>
@@ -77,10 +73,6 @@ User Management
                             <input type="email" class="form-control" id="email" name="email" placeholder="Enter email">
                         </div>
                         <div class="mb-3">
-                            <label for="password" class="form-label">Password</label>
-                            <input type="password" class="form-control" id="password" name="password" placeholder="Password">
-                        </div>
-                        <div class="mb-3">
                             <label for="user_profile" class="form-label">User profile</label>
                             <select id="user_profile" name="user_profile" class="form-select">
                                 <option value="admin">Admin</option>
@@ -99,6 +91,47 @@ User Management
                 </div>
             </div>
         </div>
+    </div>
+    <!--Edit User modal-->
+    <div class="modal fade" id="edit_user_modal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+      <div class="modal-dialog">
+          <div class="modal-content">
+              <div class="modal-header">
+                  <h5 class="modal-title" id="addUserModalLabel">Edit User</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                  <form method="POST" enctype="multipart/form-data" action="{% url 'users:edit_user' %}">
+                      {% csrf_token %}
+                      {% if message %}
+                      <p class="mb-3">{{ message }}</p>
+                      {% endif %}
+                      <div class="mb-3">
+                          <label for="email" class="form-label">Change Email address</label>
+                          <input type="email" class="form-control" id="change_email" name="change_email" placeholder="Leave the input blank if there is no changes">
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-check-label" for="change_password">
+                          Change password
+                        </label>
+                        <input class="form-check-input" type="checkbox" id="change_password">
+                      </div>
+                      <div class="mb-3">
+                          <label for="user_profile" class="form-label">Change User profile</label>
+                          <select id="change_user_profile" name="change_user_profile" class="form-select">
+                              <option value="admin">Admin</option>
+                              <option value="faculty">Faculty</option>
+                          </select>
+                      </div>
+                      <div class="modal-footer">
+                          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                          <button type="submit" class="btn btn-primary">Submit</button>
+                      </div>
+                      <input type="hidden" value="" id="user_id" name="user_id">
+                  </form>
+              </div>
+          </div>
+      </div>
     </div>
 </div>
 {% endblock content %}
@@ -119,5 +152,10 @@ User Management
             }
         });
     });
+
+    function edit_user_id(user_id, user_type){
+        document.getElementById('user_id').value = user_id;
+        document.getElementById('change_user_profile').value = user_type
+    }
 </script>
 {% endblock script %}

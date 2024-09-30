@@ -17,7 +17,7 @@ from django.contrib.auth.models import User
 
 from django.core.exceptions import ValidationError
 from django.contrib import messages
-import csv
+import csv, random, string
 
 # Create your views here.
 def login_view(request):
@@ -245,7 +245,7 @@ def add_users (request):
 
                 for row in reader:
                     email = row.get('Email')
-                    password = row.get('Password')
+                    password = generate_random_string()
                     name_parts = email.split('@')[0].split('_')
                     fullname = ' '.join(name_parts).title()
 
@@ -268,7 +268,7 @@ def add_users (request):
         else:
             data = request.POST
             email = data.get("email")
-            password = data.get("password")
+            password = generate_random_string()
             print (email, password, request.POST)
             if email and password:
                 if not User.objects.filter(email=email).exists():
@@ -290,7 +290,7 @@ def add_users (request):
     return redirect('users:user_management')
 
 def user_management (request):
-    users = User.objects.all()
+    users = User.objects.filter(is_active = True)
     
     data = []
     for user in users:
@@ -299,10 +299,41 @@ def user_management (request):
         data.append({
             'id': user.id,
             'full_name': user.get_full_name() if user.first_name or user.last_name else user.username,
-            'email': user.email if user.email == '' else 'No Email',
-            'user_type': user_profile.user_type if user_profile else 'No Profile',
+            'email': user.email if user.email  else 'No Email',
+            'user_type': user_profile.user_type.title() if user_profile else 'No Profile',
             'password' : '123467'
         })
     
     
     return render (request, 'users/user_management.html', {'users': data})
+
+def generate_random_string():
+    characters = string.ascii_letters + string.digits  # Letters (uppercase + lowercase) and numbers
+    random_string = ''.join(random.choice(characters) for _ in range(10))
+    return random_string
+
+def delete_user (request, user_id):
+    user = get_object_or_404(User, id = user_id )
+    user.is_active = False
+    user.save()
+
+    return redirect('users:user_management')
+
+def edit_user(request):
+    data = request.POST
+    user = User.objects.get(id=data.get('user_id'))
+
+    # Check for email change
+    email = data.get('change_email')
+    if email: 
+        user.email = email
+
+    # Check for password change
+    if data.get('change_password') == 'on': 
+        new_password = generate_random_string()
+        user.set_password(new_password)  
+
+
+    user.save()
+
+    return redirect('some_view')\
