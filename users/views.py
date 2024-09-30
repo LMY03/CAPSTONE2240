@@ -287,7 +287,7 @@ def add_users (request):
             else:
                 messages.error(request, 'Please provide both email and password for manual entry.')
     print("Inside the add_users functions")
-    return render(request, 'users/user_management.html')
+    return redirect('users:user_management')
 
 def user_management (request):
     users = User.objects.all()
