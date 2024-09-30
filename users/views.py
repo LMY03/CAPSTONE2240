@@ -294,12 +294,12 @@ def user_management (request):
     
     data = []
     for user in users:
-        user_profile = get_object_or_404(UserProfile, user=user).user_type
+        user_profile = UserProfile.objects.filter(user=user).first()
         data.append({
             'id': user.id,
             'full_name': user.get_full_name(),
             'email': user.email,
-            'user_type': user_profile,
+            'user_type': user_profile.user_type,
             'password' : '123467'
         })
     
