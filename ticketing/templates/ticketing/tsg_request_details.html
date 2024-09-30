@@ -107,7 +107,7 @@ Request Details {{ request_entry.id }}
                                 {% for port in port_rules %}
                                 <div class="col-md-8">
                                     <div class="p-3 bg-light border">
-                                        <p><strong>Port:</strong> {{ port.protocol }}</p>
+                                        <p><strong>Port:</strong> {{ port.protocol|upper }}</p>
                                     </div>
                                 </div>
                                 <div class="col-md-4">
@@ -203,45 +203,66 @@ Request Details {{ request_entry.id }}
         <!-- <form action="{% url 'ticketing:request-confirm' request_entry.id %}" method="post"> -->
             {% csrf_token %}
         <!-- Acceptance Form Summary -->
-            <div class="modal fade" id="vmformsummary" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="exampleModalLabel">VM Form Summary</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <p><strong>Requester Name:</strong> {{ request_entry.requester.first_name }} {{ request_entry.requester.last_name }} </p>
-                            <p><strong>Template:</strong> {{ request_entry.template.vm_name }}</p>
-                            <p><strong>Cores:</strong> {{ request_entry.cores }}</p>
-                            <p><strong>RAM:</strong> {{ request_entry.ram }}</p>
-                            <p><strong>Storage:</strong> {{ request_entry.template.storage }}</p>
-                            <p><strong>Port Forwarding:</strong> {{ request_entry.has_internet }}</p>
-                            <p><strong>Date needed:</strong> {{ request_entry.date_needed }}</p>
-                            <p><strong>Expiration date:</strong> {{ request_entry.expiration_date }}</p>
-                            
-                            {% if request_entry.use_case == 'Class Course' %}
-                                {% for use_case in request_use_cases %}
-                                    <p><strong>Use case:</strong> {{ use_case.request_use_case }}</p>
-                                    <p id="virtualmachine_count"><strong>VM Count:</strong> {{ use_case.vm_count }}</p>
-                                {% endfor %}
+        <div class="modal fade" id="vmformsummary" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg"> <!-- Added modal-lg for wider modal -->
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">VM Form Summary</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <!-- First column for primary details -->
+                            <div class="col-md-6">
+                                <p><strong>Requester Name:</strong> {{ request_entry.requester.first_name }} {{ request_entry.requester.last_name }}</p>
+                                <p><strong>Template:</strong> {{ request_entry.template.vm_name }}</p>
+                                <p><strong>Cores:</strong> {{ request_entry.cores }}</p>
+                                <p><strong>RAM:</strong> {{ request_entry.ram }} GB</p>
+                                <p><strong>Storage:</strong> {{ request_entry.template.storage }} GB</p>
+                                <p><strong>Port Forwarding:</strong> {{ request_entry.has_internet }}</p>
+                            </div>
+        
+                            <!-- Second column for secondary details -->
+                            <div class="col-md-6">
+                                <p><strong>Date needed:</strong> {{ request_entry.date_needed }}</p>
+                                <p><strong>Expiration date:</strong> {{ request_entry.expiration_date }}</p>
+                                {% if request_entry.use_case == 'Class Course' %}
+                                    {% for use_case in request_use_cases %}
+                                        <p><strong>Use case:</strong> {{ use_case.request_use_case }}</p>
+                                        <p><strong>VM Count:</strong> {{ use_case.vm_count }}</p>
+                                    {% endfor %}
                                 {% else %}
                                     <p><strong>Use case:</strong> {{ request_entry.use_case }}</p>
                                     <p><strong>VM Count:</strong> {{ request_use_cases.first.vm_count }}</p>
-                            {% endif %}
-                        
-                        <p><strong>Other configs:</strong> {{ request_entry.other_config }}</p>
-                        <h1>Total system usage:</h1>
-                        <p id="totalCores"><strong>Total Cores:</strong> {{ total_request_details.total_cores }}</p>
-                        <p id="totalRam"><strong>Total Ram:</strong> {{ total_request_details.total_ram }} </p>
-                        <p id="totalStorage"><strong>Total Storage:</strong> {{ total_request_details.total_storage }} GB</p>
+                                {% endif %}
+                                <p><strong>Other configs:</strong> {{ request_entry.other_config }}</p>
+                            </div>
+                        </div>
+        
+                        <!-- Total system usage section -->
+                        <h5 class="mt-4">Total system usage:</h5>
+                        <div class="row">
+                            <div class="col-md-4">
+                                <p><strong>Total Cores:</strong> {{ total_request_details.total_cores }}</p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Total RAM:</strong> {{ total_request_details.total_ram }} GB</p>
+                            </div>
+                            <div class="col-md-4">
+                                <p><strong>Total Storage:</strong> {{ total_request_details.total_storage }} GB</p>
+                            </div>
+                        </div>
                     </div>
+        
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <a href="{% url 'ticketing:request-confirm' request_entry.id %}"><button type="button" class="btn btn-primary">Accept request</button></a>
+                        <a href="{% url 'ticketing:request-confirm' request_entry.id %}">
+                            <button type="button" class="btn btn-primary">Accept request</button>
+                        </a>
                     </div>
                 </div>
             </div>
+        </div>
         <!-- </form> -->
         {% endif %}
     </div>

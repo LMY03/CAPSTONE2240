@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
-from .models import VMTemplates, IssueTicket
+from .models import VMTemplates, IssueTicket, IssueComment
 
 class UserCreationForm(forms.ModelForm):
     password1 = forms.CharField(label='Password', widget=forms.PasswordInput)
@@ -73,4 +73,15 @@ class IssueTicketForm(forms.ModelForm):
             'subject': forms.TextInput(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'class': 'form-control'}),
         }
+    
     request_entry = forms.CharField(widget=forms.HiddenInput())
+
+class IssueCommentForm(forms.ModelForm):
+    class Meta:
+        model = IssueComment
+        fields = ['comment']
+        widgets = {
+            'comment': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }
+
+    ticket = forms.CharField(widget=forms.HiddenInput())

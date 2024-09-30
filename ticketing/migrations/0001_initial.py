@@ -107,7 +107,7 @@ class Migration(migrations.Migration):
             name='IssueFile',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('file_address', models.CharField(max_length=1000)),
+                ('file', models.FileField(upload_to='issue_files/')),  # Replaced file_address
                 ('uploaded_date', models.DateTimeField(default=django.utils.timezone.localtime)),
                 ('ticket', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='ticketing.issueticket')),
                 ('uploaded_by', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
@@ -118,12 +118,31 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('comment', models.TextField()),
-                ('date_time', models.DateTimeField(default=datetime.date(2024, 9, 14))),
+                ('date_time', models.DateTimeField(default=django.utils.timezone.localtime)),
                 ('request_entry', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='ticketing.requestentry')),
                 ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
             options={
                 'unique_together': {('id', 'request_entry')},
             },
+        ),
+        migrations.CreateModel(
+            name='IssueComment',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('comment', models.TextField()),
+                ('date_time', models.DateTimeField(default=django.utils.timezone.localtime)),
+                ('ticket', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='ticketing.issueticket')),
+                ('user', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='auth.User')),
+            ],
+        ),
+        migrations.CreateModel(
+            name='IssueCommentFile',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('file', models.FileField(upload_to='issue_files/comments/')),
+                ('uploaded_date', models.DateTimeField(default=django.utils.timezone.localtime)),
+                ('comment', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='ticketing.issuecomment')),
+            ],
         ),
     ]

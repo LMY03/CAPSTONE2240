@@ -30,15 +30,20 @@
                                 <i class="bi bi-list"></i> Requests
                             </a>
                             <ul class="dropdown-menu custom-dropdown-menu">
-                                <li><a class="dropdown-item" href="{% url 'ticketing:new-form' %}">Request a new VM</a></li>
-                                <li><a class="dropdown-item" href="{% url 'ticketing:new-form-container' %}">Request a new Container</a></li>
-                                <li><a class="dropdown-item" href="{% url 'ticketing:index' %}">My requests</a></li>
+                                <li><a class="dropdown-item" href="{% url 'ticketing:new-form' %}">Request a VM</a></li>
+                                <li><a class="dropdown-item" href="{% url 'ticketing:new-form-container' %}">Request a Container</a></li>
+                                <li><a class="dropdown-item" href="{% url 'ticketing:index' %}">My Requests</a></li>
                             </ul>
                         </div>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link" href="{% url 'ticketing:ticket_list' %}">
+                            <i class="bi bi-ticket-perforated"></i> Ticket List
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="{% url 'proxmox:index' %}">
-                            <i class="bi bi-server"></i> VMs
+                            <i class="bi bi-server"></i> Virtual Machines
                         </a>
                     </li>
                 </ul>

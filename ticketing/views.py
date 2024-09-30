@@ -3,6 +3,7 @@ from django import forms
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from django.views import generic
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
@@ -19,16 +20,16 @@ from guacamole import guacamole
 from proxmox import views, proxmox
 from pfsense.views import add_port_forward_rules, delete_port_forward_rules
 
-from .models import RequestEntry, Comment, RequestUseCase, PortRules, UserProfile, RequestEntryAudit, VMTemplates
+from .models import RequestEntry, Comment, RequestUseCase, PortRules, UserProfile, RequestEntryAudit, VMTemplates, IssueTicket, IssueFile, IssueComment, IssueCommentFile
 from proxmox.models import VirtualMachines, Nodes
 from guacamole.models import GuacamoleConnection, GuacamoleUser
 from pfsense.models import DestinationPorts
 from notifications.views import comment_notif_faculty, comment_notif_tsg, testVM_notif_faculty, reject_notif_faculty, accept_notif_tsg
-from .forms import IssueTicketForm
+from .forms import IssueTicketForm, IssueCommentForm
 from django.core.exceptions import ValidationError
 from django.contrib import messages
 
-
+from CAPSTONE2240.utils import download_files
 
 # Create your views here.
 
@@ -134,6 +135,74 @@ def tsg_request_details(request, request_id):
         
     return render (request, 'ticketing/tsg_request_details.html', context=context)
 
+@login_required
+def ticket_list(request):
+    user_role = get_object_or_404(UserProfile, user=request.user).user_type
+    if user_role == 'faculty' : return faculty_ticket_list(request)
+    elif user_role == 'admin' : return tsg_ticket_list(request)
+    else : return redirect('/')
+
+def tsg_ticket_list(request):
+
+    issue_tickets = IssueTicket.objects.all().order_by('-id')
+
+    context = {
+        'issue_tickets': issue_tickets
+    }
+
+    return render(request, 'ticketing/tsg_ticket_list.html', context)
+
+def faculty_ticket_list(request):
+
+    issue_tickets = IssueTicket.objects.filter().order_by('-id')
+
+    context = {
+        'issue_tickets': issue_tickets
+    }
+
+    return render(request, 'ticketing/faculty_ticket_list.html', context)
+
+@login_required
+def ticket_details(request, ticket_id):
+    user_role = get_object_or_404(UserProfile, user=request.user).user_type
+    if user_role == 'faculty' : return faculty_ticket_details(request, ticket_id)
+    elif user_role == 'admin' : return tsg_ticket_details(request, ticket_id)
+    else : return redirect('/')
+
+def faculty_ticket_details(request, ticket_id):
+
+    issue_ticket = get_object_or_404(IssueTicket, pk=ticket_id)
+    issue_files = IssueFile.objects.filter(ticket=issue_ticket)
+
+    comments = IssueComment.objects.filter(ticket=issue_ticket).order_by('date_time')
+    for comment in comments : comment.files = IssueCommentFile.objects.filter(comment=comment)
+
+    context = {
+        'issue_ticket': issue_ticket,
+        'issue_files': issue_files,
+        'comments': comments,
+        'issue_comment_form': IssueCommentForm(initial={'ticket': ticket_id}),
+    }
+
+    return render(request, 'ticketing/faculty_ticket_details.html', context)
+
+def tsg_ticket_details(request, ticket_id):
+
+    issue_ticket = get_object_or_404(IssueTicket, pk=ticket_id)
+    issue_files = IssueFile.objects.filter(ticket=issue_ticket)
+
+    comments = IssueComment.objects.filter(ticket=issue_ticket).order_by('date_time')
+    for comment in comments : comment.files = IssueCommentFile.objects.filter(comment=comment)
+
+    context = {
+        'issue_ticket': issue_ticket,
+        'issue_files': issue_files,
+        'comments': comments,
+        'issue_comment_form': IssueCommentForm(initial={'ticket': ticket_id}),
+    }
+
+    return render(request, 'ticketing/tsg_ticket_details.html', context)
+
 def submit_issue_ticket(request):
     if request.method == 'POST':
         form = IssueTicketForm(request.POST)
@@ -145,9 +214,69 @@ def submit_issue_ticket(request):
             issue_ticket.created_by = request.user
             issue_ticket.save()
 
+            files = request.FILES.getlist('files')
+            for file in files:
+                IssueFile.objects.create(
+                    file=file,  # This will save the actual file
+                    uploaded_date=timezone.now(),
+                    ticket=issue_ticket,
+                    uploaded_by=request.user
+                )
+
             return redirect(reverse('ticketing:request_details', args=[request_entry_id]))
         
     return redirect('ticketing:index')
+
+def resolve_issue_ticket(request):
+    if request.method == 'POST':
+        issue_ticket_id = request.POST.get('issue_ticket_id')
+        issue_ticket = get_object_or_404(IssueTicket, pk=issue_ticket_id)
+        
+        issue_ticket.resolve_ticket()
+
+        return redirect(reverse('ticketing:ticket_details', args=[issue_ticket_id]))
+    
+    return redirect('ticketing:ticket_list')
+
+def download_issue_files(request, ticket_id):
+    file_paths = IssueFile.objects.filter(ticket__pk=ticket_id).values_list('file', flat=True)
+    zip_filename = f"ticket_{ticket_id}_files.zip"
+    
+    return download_files(zip_filename, file_paths)
+
+@login_required
+def add_ticket_comment(request, issue_ticket_id):
+    if request.method == 'POST':
+        print("posted")
+        form = IssueCommentForm(request.POST)
+
+        if form.is_valid():
+            print("valid")
+            issue_comment = form.save(commit=False)
+            issue_ticket_id = form.cleaned_data['ticket']
+            issue_ticket = get_object_or_404(IssueTicket, pk=issue_ticket_id)
+            issue_comment.ticket = issue_ticket
+            issue_comment.user = request.user
+            issue_comment.save()
+            
+            files = request.FILES.getlist('files')
+            if files:
+                for file in files:
+                    IssueCommentFile.objects.create(
+                        file=file,
+                        comment=issue_comment,
+                    )
+            
+
+            return redirect(reverse('ticketing:ticket_details', args=[issue_ticket_id]))
+        
+    return redirect('ticketing:index')
+
+def download_issue_comment_files(request, issue_comment_id):
+    file_paths = IssueCommentFile.objects.filter(comment__pk=issue_comment_id).values_list('file', flat=True)
+    zip_filename = f"ticket_{issue_comment_id}_files.zip"
+    
+    return download_files(zip_filename, file_paths)
 
 @login_required
 def add_comment(request, pk):
@@ -491,6 +620,7 @@ def request_confirm(request, request_id):
 
     node = "pve"
     request_entry = get_object_or_404(RequestEntry, id = request_id)
+    request_entry.assigned_to = request.user
     to = request_entry.requester.email
     data = {
         "faculty_name" : request_entry.requester.get_full_name(),
@@ -553,51 +683,24 @@ def accept_test_vm(request, request_id): #Where the faculty Accepts the test vm 
     request_entry.status = RequestEntry.Status.ACCEPTED
     request_entry.save()
     
-    request_use_case = RequestUseCase.objects.get(request = request_entry)
-    to  = request_entry.assigned_to.email
-    use_case = "Class Course" if request_use_case.request not in ['Thesis', 'Research', 'Test'] else request_use_case.request
-    vmCount = 0
-    if use_case == "Class Course":
-        for case in request_use_case:
-            vmCount += case.vm_count
-    else:
-        vmCount = request_use_case.vm_count
-    data = {
-        "id" : request_id,
-        "faculty_name" : request_entry.requester.get_full_name(),
-        "use_case" : use_case,
-        "vm_count" : vmCount,
-    }
+    # request_use_case = RequestUseCase.objects.get(request = request_entry)
+    # to  = request_entry.assigned_to.email
+    # use_case = "Class Course" if request_use_case.request not in ['Thesis', 'Research', 'Test'] else request_use_case.request
+    # vmCount = 0
+    # if use_case == "Class Course":
+    #     for case in request_use_case:
+    #         vmCount += case.vm_count
+    # else:
+    #     vmCount = request_use_case.vm_count
+    # data = {
+    #     "id" : request_id,
+    #     "faculty_name" : request_entry.requester.get_full_name(),
+    #     "use_case" : use_case,
+    #     "vm_count" : vmCount,
+    # }
 
-    accept_notif_tsg(to, data)
+    # accept_notif_tsg(to, data)
     return redirect('ticketing:request_details', request_id)
-    # return redirect(f'/ticketing/{request_id}/details')
-
-# def download_credentials(request):
-#     details = request.session['credentials']
-#     usernames = details['usernames']
-#     passwords = details['passwords']
-#     # vm_users = details['vm_user']
-#     # vm_passs = details['vm_passs']
-
-#     # Create the content of the text file
-#     file_content = ["VM Credentials\n"]
-#     for username, password in zip(usernames, passwords):
-#         file_content.append(f"Username: {username}")
-#         file_content.append(f"Password: {password}")
-#         # file_content.append(f"VM_User: {vm_user}")
-#         # file_content.append(f"VM_Pass: {vm_pass}")
-#         file_content.append("-------------------------------")
-
-#     # Join the content into a single string with newlines
-#     file_content_str = "\n".join(file_content)
-#     print(file_content_str)
-
-#     # Create the HttpResponse object with the plain text content
-#     response = HttpResponse(file_content_str, content_type='text/plain')
-#     response['Content-Disposition'] = 'attachment; filename=details.txt'
-    
-#     return response
 
 def reject_test_vm(request, request_id):   
     request_entry = get_object_or_404(RequestEntry, pk=request_id)

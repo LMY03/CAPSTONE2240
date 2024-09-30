@@ -70,10 +70,15 @@ class RequestEntry(models.Model):
         if requester.first_name != None and requester.last_name != None : return f'{requester.first_name} {requester.last_name}'
         else : return requester.username
 
+    def get_assigned_to(self):
+        assigned_to = self.assigned_to
+        if assigned_to.first_name != None and assigned_to.last_name != None : return f'{assigned_to.first_name} {assigned_to.last_name}'
+        else : return assigned_to.username
+
     def get_fulfilled_by(self):
-        requester = self.fulfilled_by
-        if requester.first_name != None and requester.last_name != None : return f'{requester.first_name} {requester.last_name}'
-        else : return requester.username
+        fulfilled_by = self.fulfilled_by
+        if fulfilled_by.first_name != None and fulfilled_by.last_name != None : return f'{fulfilled_by.first_name} {fulfilled_by.last_name}'
+        else : return fulfilled_by.username
 
     def is_pending(self) : return self.status == RequestEntry.Status.PENDING
     def is_for_revision(self) : return self.status == RequestEntry.Status.FOR_REVISION
@@ -156,7 +161,7 @@ class UserProfile (models.Model):
 class Comment(models.Model):
     request_entry = models.ForeignKey(RequestEntry, on_delete=models.CASCADE)
     comment = models.TextField()
-    date_time = models.DateTimeField(default=timezone.localdate())
+    date_time = models.DateTimeField(default=timezone.localtime)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     class Meta:
@@ -198,10 +203,34 @@ class IssueTicket(models.Model):
 
     def is_resolved(self) : return self.resolve_date != None
 
+    def get_status(self):
+        if self.is_resolved() : return "Resolved"
+        else : return "Unresolved"
+
+    def get_requester(self):
+        requester = self.created_by
+        if requester.first_name != None and requester.last_name != None : return f'{requester.first_name} {requester.last_name}'
+        else : return requester.username
+
+    def resolve_ticket(self):
+        self.resolve_date = timezone.localtime()
+        self.save()
+
 class IssueFile(models.Model):
-    file_address = models.CharField(max_length=1000)
+    file = models.FileField(upload_to='issue_files/')
     uploaded_date = models.DateTimeField(default=timezone.localtime)
 
     ticket = models.ForeignKey(IssueTicket, on_delete=models.CASCADE)
     uploaded_by = models.ForeignKey(User, on_delete=models.CASCADE)
-    
+
+class IssueComment(models.Model):
+    ticket = models.ForeignKey(IssueTicket, on_delete=models.CASCADE)
+    comment = models.TextField()
+    date_time = models.DateTimeField(default=timezone.localtime)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+class IssueCommentFile(models.Model):
+    file = models.FileField(upload_to='issue_files/comments/')
+    uploaded_date = models.DateTimeField(default=timezone.localtime)
+
+    comment = models.ForeignKey(IssueComment, on_delete=models.CASCADE)

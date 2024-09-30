@@ -1,0 +1,97 @@
+{% extends 'users/base_tsg.html' %}
+
+{% block title %}
+Ticket Details {{ issue_ticket.pk }}
+{% endblock title %}
+{% load static %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'users/css/student_home.css' %}">
+{% endblock css %} 
+
+{% block content %}
+<div class="col-md-10 content mt-3">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Detail View for the Request Ticket</h1>
+        <div>
+            {% if issue_ticket.request.status == "ONGOING" and not issue_ticket.is_resolved %}
+            <form action="{% url 'ticketing:resolve_issue_ticket' %}" method="post">
+                {% csrf_token %}
+                <input type="hidden" id="issue_ticket_id" name="issue_ticket_id" value="{{ issue_ticket.pk }}" />
+                <button type="submit" class="btn btn-success">Resolve</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Ticket Information</h5>
+                    <p><strong>Request ID:</strong> {{ issue_ticket.request.pk }}</p>
+                    <p><strong>Subject:</strong> {{ issue_ticket.subject }}</p>
+                    <p><strong>Description:</strong> {{ issue_ticket.description }}</p>
+
+                    <!-- Move the Download Attached Files button here -->
+                    {% if issue_files %}
+                    <form method="get" action="{% url 'ticketing:download_issue_files' issue_ticket.id %}">
+                        <button type="submit" class="btn btn-primary mt-3">Download Attached Files</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Additional Details</h5>
+                    <p><strong>Date Created:</strong> {{ issue_ticket.date_created }}</p>
+                    <p><strong>Status:</strong> {{ issue_ticket.get_status }}</p>
+                    {% if issue_ticket.resolve_date %}
+                        <p><strong>Resolve Date:</strong> {{ issue_ticket.resolve_date }}</p>
+                    {% endif %}
+                    <p><strong>Created By:</strong> {{ issue_ticket.get_requester }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if comments %}
+    <div class="mt-5">
+        <h2>Comments</h2>
+        <div class="list-group">
+            {% for comment in comments %}
+            <div class="list-group-item">
+                <p><strong>{{ comment.user.first_name }} {{ comment.user.last_name }}:</strong> {{ comment.comment }}</p>
+                <small class="text-muted">{{ comment.date_time }}</small>
+                {% if comment.files %}
+                <form method="get" action="{% url 'ticketing:download_issue_comment_files' comment.id %}">
+                    <button type="submit" class="btn btn-link">Download Attached Files</button>
+                </form>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if issue_ticket.request.status == "ONGOING" %}
+    <div class="mt-4">
+        <h3>Add a Comment</h3>
+        <form action="{% url 'ticketing:add_ticket_comment' issue_ticket.pk %}" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ issue_comment_form.as_p }}
+            <div class="mb-3">
+                <label for="files">Upload Files:</label>
+                <input type="file" name="files" class="form-control" multiple>
+            </div>
+            <button type="submit" class="btn btn-primary">Submit Comment</button>
+        </form>
+    </div>
+    {% endif %}
+</div>
+{% endblock content %}
+
+{% block script %}
+{% endblock %}

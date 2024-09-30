@@ -17,127 +17,40 @@
 
 {% block content %}
 <div id="main" class="min-vh-100" style="padding: 1rem 0rem 1rem 1rem">
+  <div class="card">
+    <div class="card-body">
+      <h5 class="card-title">VM Performance Report</h5>
+      <ul class="list-group list-group-flush">
+        <!-- Summary Report -->
+        <li class="list-group-item">
+          <a href="performance_gen" class="text-decoration-none">
+            <i class="bi bi-chevron-right"></i> Summary Reports
+          </a>
+        </li>
+        <!-- Detailed Report -->
+        <li class="list-group-item">
+          <a href="#" class="text-decoration-none">
+            <i class="bi bi-chevron-right"></i> Detailed Reports
+          </a>
+        </li>
+      </ul>
 
-  <div class="toast-container" style="display: none;right:20px; width:20%;">
-    <div id="incToast" class="toast fade" role="alert" aria-live="assertive" aria-atomic="true" data-bs-animation="true" data-bs-autohide="true" data-delay="4000" style="display:none;border-left:5px solid darkred">
-      <div id="incToastBody" class="toast-body">
-        <span>Error: Incomplete Data</span>
-      </div>
+      <!-- Details Report -->
+      <h5 class="card-title mt-4">Ticketing Report</h5>
+      <ul class="list-group list-group-flush">
+        <li class="list-group-item">
+          <a href="#" class="text-decoration-none">
+            <i class="bi bi-chevron-right"></i> General
+          </a>
+        </li>
+      </ul>
+
     </div>
 
-    <div id="datesToast" class="toast fade" role="alert" aria-live="assertive" aria-atomic="true" data-bs-animation="true" data-bs-autohide="true" data-delay="4000" style="display:none;border-left:5px solid darkred">
-      <div id="datesToastBody" class="toast-body">
-          <span>Error: Invalid Dates</span>
-      </div>
-    </div>
   </div>
-
-  <h1 style="font-size:2vw;font-weight:600;display:block;margin:0.5rem 1rem;">
-    Report Generation</h1>
-
-    <form method="POST" id="filterForm">
-      {% csrf_token %}
-      <!-- Conditions -->
-      <div class="row g-3">
-        <!-- DATE selection -->
-        <div class="col-md-6">
-          <div class="card h-100">
-            <div class="card-body">
-              <h5 class="card-title mb-3">Conditions</h5>
-              <div class="mb-3">
-                <label class="form-label me-2">Data from</label>
-                <input id="dateStart" name="startdate" type="date" class="form-control form-control-sm d-inline-block w-auto me-2">
-                <label class="form-label me-2">to</label>
-                <input id="dateEnd" name="enddate" type="date" class="form-control form-control-sm d-inline-block w-auto">
-              </div>
-            </div>
-          </div>
-        </div>
-    
-        <!-- METRICS selection -->
-        <div class="col-md-6">
-          <div class="card h-100">
-            <div class="card-body">
-              <h5 class="card-title mb-3">Metrics</h5>
-              <div class="row">
-                <div class="col-md-6">
-                  <!-- CPU Usage -->
-                  <div class="form-check mb-2">
-                    <input type="checkbox" id="cpuCheck" value="cpuUsage" name="cpuUsage" class="form-check-input">
-                    <label for="cpuCheck" class="form-check-label">CPU Usage</label>
-                  </div>
-                  <!-- RAM Usage -->
-                  <div class="form-check mb-2">
-                    <input type="checkbox" id="ramCheck" value="memoryUsage" name="memoryUsage" class="form-check-input">
-                    <label for="ramCheck" class="form-check-label">Memory Usage</label>
-                  </div>
-                </div>
-                <div class="col-md-6">
-                  <!-- NET IN -->
-                  <div class="form-check mb-2">
-                    <input type="checkbox" id="netInCheck" value="netin" name="netin" class="form-check-input">
-                    <label for="netInCheck" class="form-check-label">Network In</label>
-                  </div>
-                  <!-- NET OUT -->
-                  <div class="form-check mb-2">
-                    <input type="checkbox" id="netOutCheck" value="netout" name="netout" class="form-check-input">
-                    <label for="netOutCheck" class="form-check-label">Network Out</label>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Machines List -->
-      <div class="card w-100">
-        <div class="card-body">
-          <h5 class="card-title mb-3">Select Machines</h5>
-      
-          <!-- Filter -->
-          <div class="mb-3">
-            <select name="categoryFilter" id="categoryFilter" class="form-select w-auto">
-              <option value="">All nodes</option>
-              <option value="bsitprox1">server1</option>
-              <option value="bsitprox2">server2</option>
-            </select>
-          </div>
-      
-          <!-- Table -->
-          <div class="table-responsive">
-            <table id="vmInfoTable" class="table table-striped">
-              <thead>
-                <tr>
-                  <th>
-                    <div class="form-check">
-                      <input class="form-check-input" type="checkbox" name="select_all" value="1" id="cb-select-all">
-                    </div>
-                  </th>
-                  <th>ID</th>
-                  <th>Name</th>
-                  <th>Node</th>
-                  <th>Type</th>
-                </tr>
-              </thead>
-              <tbody class="vminfo">
-                <!-- Table body content will be dynamically populated -->
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-
-      <div style="margin:1.3rem 0.5rem; float:right;">
-        <button id="extract-btn" class="filter-btn" type="button">Extract Data</button>
-        <button id="report-btn" class="filter-btn" type="button">Generate Report</button>
-      </div>
-
-    </form>
-    
 </div>
 {% endblock content %}
 
 {% block script %}
-<script src="{% static 'reports/js/reports.js' %}"></script>
+
 {% endblock script %}

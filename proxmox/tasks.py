@@ -17,7 +17,6 @@ logger = logging.getLogger(__name__)
 
 @shared_task
 def create_test_vm(tsg_user_id, request_id, node):
-    # logger.info("===========================")
     request_entry = get_object_or_404(RequestEntry, pk=request_id)
     if request_entry.is_pending():
         tsg_user = User.objects.get(pk=tsg_user_id)
@@ -43,19 +42,13 @@ def create_test_vm(tsg_user_id, request_id, node):
             request=request_entry,
             node=get_object_or_404(Nodes, name=node),
         )
-        logger.info("===========================")
         upid = proxmox.clone_vm(node, vm_id, new_vm_id, vm_name)
-        logger.info(f"upid: {upid}")
         proxmox.wait_for_task(node, upid)
         proxmox.config_vm(node, new_vm_id, cpu_cores, ram)
         proxmox.start_vm(node, new_vm_id)
         ip_add = proxmox.wait_and_get_ip(node, new_vm_id)
         proxmox.shutdown_vm(node, new_vm_id)
-        logger.info("===========================2")
         proxmox.wait_for_vm_stop(node, new_vm_id)
-        logger.info("===========================3 ")
-
-        # ip_add = "10.10.10.10"
 
         vm.set_ip_add(ip_add)
         vm.set_shutdown()
@@ -73,24 +66,12 @@ def create_test_vm(tsg_user_id, request_id, node):
         guacamole_connection_id = guacamole.create_connection(vm_name, protocol, port, ip_add, config('DEFAULT_VM_USERNAME'), config('DEFAULT_VM_PASSWORD'), guacamole_connection_group_id)
         guacamole.assign_connection(tsg_gaucamole_user.username, guacamole_connection_id)
 
-        # vm = VirtualMachines(
-        #     vm_id=new_vm_id, 
-        #     vm_name=vm_name, 
-        #     cores=cpu_cores, 
-        #     ram=ram, 
-        #     storage=request_entry.template.storage, 
-        #     ip_add=ip_add, 
-        #     request=request_entry, 
-        #     node=node,
-        #     status=VirtualMachines.Status.SHUTDOWN
-        # )
-        # vm.save()
         GuacamoleConnection(user=get_object_or_404(GuacamoleUser, system_user=tsg_user), connection_id=guacamole_connection_id, connection_group_id=guacamole_connection_group_id, vm=vm).save()
 
         request_entry = get_object_or_404(RequestEntry, pk=request_id)
 
         request_entry.status = RequestEntry.Status.PROCESSING
-        request_entry.fulfilled_by = tsg_user
+        request_entry.assigned_to = tsg_user
         request_entry.save()
 
 def vm_provision(request_id):

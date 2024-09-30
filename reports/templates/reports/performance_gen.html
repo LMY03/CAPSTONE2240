@@ -1,0 +1,73 @@
+
+{% load static %}
+
+{% block css %}
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+<link rel="stylesheet" href="{% static 'reports/css/styles.css' %}">
+
+<!-- jquery -->
+<link rel="stylesheet" type="text/css" href="https://gyrocode.github.io/jquery-datatables-checkboxes/1.2.12/css/dataTables.checkboxes.css"  />
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<!-- bootstrap5 -->
+<script src="https://cdn.datatables.net/1.11.5/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script><script type="text/javascript" src="https://gyrocode.github.io/jquery-datatables-checkboxes/1.2.12/js/dataTables.checkboxes.min.js"></script>
+
+{% endblock css %} 
+
+{% block content %}
+<div id="main" class="min-vh-100" style="padding: 1rem 0rem 1rem 1rem">
+
+  <!-- Toast -->
+  <div class="toast-container" style="display: none;right:20px; width:20%;">
+    <div id="incToast" class="toast fade" role="alert" aria-live="assertive" aria-atomic="true" data-bs-animation="true" data-bs-autohide="true" data-delay="4000" style="display:none;border-left:5px solid darkred">
+      <div id="incToastBody" class="toast-body">
+        <span>Error: Incomplete Data</span>
+      </div>
+    </div>
+
+    <div id="datesToast" class="toast fade" role="alert" aria-live="assertive" aria-atomic="true" data-bs-animation="true" data-bs-autohide="true" data-delay="4000" style="display:none;border-left:5px solid darkred">
+      <div id="datesToastBody" class="toast-body">
+          <span>Error: Invalid Dates</span>
+      </div>
+    </div>
+  </div>
+
+  <h1 style="font-size:2vw;font-weight:600;display:block;margin:0.5rem 1rem;">
+    Select Conditions</h1>
+
+  <form method="POST" id="conditionForm">
+    {% csrf_token %}
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-body">
+          <div class="mb-3">
+            <label class="form-label form-label-lg me-2">Data from</label>
+            <input id="dateStart" name="startdate" type="date" class="form-control form-control-lg d-inline-block w-auto me-2">
+            <label class="form-label form-label-lg me-2">to</label>
+            <input id="dateEnd" name="enddate" type="date" class="form-control form-control-lg d-inline-block w-auto">
+          </div>
+
+          <div class="mb-3">
+            <label for="scopeSelect" class="form-label form-label-lg me-2">Scope</label>
+            <select name="scope" id="scopeSelect" class="form-select form-select-lg d-inline-block w-auto">
+              <option value="all">All</option>
+              <option value="per_node">Per Node</option>
+              <option value="per_class">Per Class</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="margin:1.3rem 0.5rem; float:right;">
+      <button id="extract-btn" type="button" class="btn btn-primary">Extract Report</button>
+    </div>
+  </form>
+
+
+</div>
+{% endblock content %}
+
+{% block script %}
+<script src="{% static 'reports/js/performance_gen.js' %}"></script>
+{% endblock script %}
