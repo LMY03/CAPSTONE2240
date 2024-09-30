@@ -298,8 +298,8 @@ def user_management (request):
         print (user_profile)
         data.append({
             'id': user.id,
-            'full_name': user.get_full_name(),
-            'email': user.email,
+            'full_name': user.get_full_name() if user.first_name or user.last_name else user.username,
+            'email': user.email if user.email == '' else 'No Email',
             'user_type': user_profile.user_type if user_profile else 'No Profile',
             'password' : '123467'
         })

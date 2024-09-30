@@ -13,7 +13,8 @@ User Management
 {% block content %}
 <div class="col-md-10 content">
     <!-- Add User Button -->
-    <div class="d-flex justify-content-end mb-3">
+    <div class="d-flex justify-content-between mb-3">
+        <h1>User management</h1>
         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add_user_modal">
             Add User
         </button>
@@ -37,16 +38,20 @@ User Management
                 <td>{{ user.email }}</td>
                 <td>{{ user.user_type }}</td>
                 <td>
+                  <div class = "d-flex justify-content-evenly">
                     <span class="password" data-password="{{ user.password }}">••••••••</span>
                     <button class="btn btn-sm btn-secondary toggle-password">Show</button>
+                  </div>
                 </td>
-                <td>
+                <td class = 'd-flex justify-content-evenly'>
+                  <div class = "d-flex justify-content-evenly">
                     <a href="{% comment %}
                       {% url 'users:edit_user' user.id %}
                     {% endcomment %}" class="btn btn-sm btn-warning">Edit</a>
                     <a href="{% comment %}
                       {% url 'users:delete_user' user.id %}
                     {% endcomment %}" class="btn btn-sm btn-danger">Delete</a>
+                  </div>
                 </td>
             </tr>
             {% endfor %}
