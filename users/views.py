@@ -295,11 +295,12 @@ def user_management (request):
     data = []
     for user in users:
         user_profile = UserProfile.objects.filter(user=user).first()
+        print (user_profile)
         data.append({
             'id': user.id,
             'full_name': user.get_full_name(),
             'email': user.email,
-            'user_type': user_profile.user_type,
+            'user_type': user_profile.user_type if user_profile else 'No Profile',
             'password' : '123467'
         })
     
