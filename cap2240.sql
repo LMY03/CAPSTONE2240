@@ -1800,6 +1800,7 @@ CREATE TABLE `ticketing_userprofile` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `user_type` varchar(20) NOT NULL,
   `user_id` int NOT NULL,
+  `system_password` varchar(45) DEFAULT NULL, 
   PRIMARY KEY (`id`),
   UNIQUE KEY `user_id` (`user_id`),
   CONSTRAINT `ticketing_userprofile_user_id_e3bea9bb_fk_auth_user_id` FOREIGN KEY (`user_id`) REFERENCES `auth_user` (`id`)
