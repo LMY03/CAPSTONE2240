@@ -25,6 +25,8 @@ from guacamole.models import GuacamoleConnection, GuacamoleUser
 from pfsense.models import DestinationPorts
 from notifications.views import comment_notif_faculty, comment_notif_tsg, testVM_notif_faculty, reject_notif_faculty, accept_notif_tsg
 from .forms import IssueTicketForm
+from django.core.exceptions import ValidationError
+from django.contrib import messages
 
 
 
@@ -698,3 +700,29 @@ def new_form_container(request):
 #             request.session.pop('credentials', None)
 #             return JsonResponse({'status': 'success'})
 #         return JsonResponse({'status': 'invalid method'}, status=405)
+
+
+def add_vm_template (request):
+    if request.method == 'POST':
+        data = request.POST
+        
+        vm_id = data.get('vm_id')
+        vm_name = data.get('vm_id_name')
+        cores = data.get('cores')
+        ram = data.get('ram')
+        storage = data.get('storage')  
+        guacamole_protocol = data.get('guacamole_protocol')
+        node = data.get('node')
+
+        if vm_id and vm_name and cores and ram and storage:
+            if not VMTemplates.objects.filter(vm_id = vm_id).exists():
+                try:
+                    VMTemplates.objects.create(vm_id = vm_id, vm_name = vm_name, cores = cores, ram = ram, storage = storage, node = node, guacamole_protocol = guacamole_protocol)
+                except ValidationError as e:
+                    messages.error (request, f"Error creating VM template")
+            else:  
+                messages.info(request, "VM template exists")
+        else:
+            messages.error(request, 'Please fill out all the details required.')
+            
+    return render (request, 'ticketings/add_vm_template.html')

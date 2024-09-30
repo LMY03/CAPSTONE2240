@@ -287,4 +287,20 @@ def add_users (request):
             else:
                 messages.error(request, 'Please provide both email and password for manual entry.')
     print("Inside the add_users functions")
-    return render(request, 'users/add_users.html')
+    return render(request, 'users/user_management.html')
+
+def user_management (request):
+    users = User.objects.all()
+    
+    data = []
+    for user in users:
+        user_profile = UserProfile.objects.filter(user=user)
+        data.append({
+            'id': user.id,
+            'full_name': user.get_full_name(),
+            'email': user.email,
+            'user_type': user_profile.user_type if user_profile else 'No profile',  # Handle missing UserProfile
+        })
+    
+    
+    return render (request, 'users/user_management.html', {'users': data})

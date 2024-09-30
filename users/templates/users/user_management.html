@@ -1,0 +1,114 @@
+{% extends 'users/base_tsg.html' %}
+
+{% block title %}
+User Management
+{% endblock title %}
+
+{% load static %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'users/css/student_home.css' %}">
+{% endblock css %}
+
+{% block content %}
+<div class="col-md-10 content">
+    <!-- Add User Button -->
+    <div class="d-flex justify-content-end mb-3">
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add_user_modal">
+            Add User
+        </button>
+    </div>
+
+    <!-- Users Table -->
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>User</th>
+                <th>Email</th>
+                <th>User Type</th>
+                <th>Password</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in data %}
+            <tr>
+                <td>{{ user.full_name }}</td>
+                <td>{{ user.email }}</td>
+                <td>{{ user.user_type }}</td>
+                <td>
+                    <span class="password" data-password="{{ user.password }}">••••••••</span>
+                    <button class="btn btn-sm btn-secondary toggle-password">Show</button>
+                </td>
+                <td>
+                    <a href="{% url 'users:edit_user' user.id %}" class="btn btn-sm btn-warning">Edit</a>
+                    <a href="{% url 'users:delete_user' user.id %}" class="btn btn-sm btn-danger">Delete</a>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Add User Modal -->
+    <div class="modal fade" id="add_user_modal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addUserModalLabel">Add User</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="POST" enctype="multipart/form-data" action="{% url 'users:add_users' %}">
+                        {% csrf_token %}
+                        {% if message %}
+                        <p class="mb-3">{{ message }}</p>
+                        {% endif %}
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email address</label>
+                            <input type="email" class="form-control" id="email" name="email" placeholder="Enter email">
+                        </div>
+                        <div class="mb-3">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="password" name="password" placeholder="Password">
+                        </div>
+                        <div class="mb-3">
+                            <label for="user_profile" class="form-label">User profile</label>
+                            <select id="user_profile" name="user_profile" class="form-select">
+                                <option value="admin">Admin</option>
+                                <option value="faculty">Faculty</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="csv_file" class="form-label">Upload CSV File</label>
+                            <input type="file" class="form-control" id="csv_file" name="csv_file" accept=".csv">
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary">Submit</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block script %}
+<script>
+    // Toggle password visibility
+    document.querySelectorAll('.toggle-password').forEach(button => {
+        button.addEventListener('click', function() {
+            const passwordField = this.previousElementSibling;
+            const hiddenPassword = passwordField.getAttribute('data-password');
+            if (passwordField.textContent === '••••••••') {
+                passwordField.textContent = hiddenPassword;
+                this.textContent = 'Hide';
+            } else {
+                passwordField.textContent = '••••••••';
+                this.textContent = 'Show';
+            }
+        });
+    });
+</script>
+{% endblock script %}

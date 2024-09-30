@@ -158,3 +158,6 @@ def accept_notif_tsg (to_email, data):
     }
 
     return send_email_sendgrid(email_data)
+
+def confirm_notif_faculty(to_email, data):
+    return send_email_sendgrid(data)
