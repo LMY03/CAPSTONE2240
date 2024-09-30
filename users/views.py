@@ -336,4 +336,4 @@ def edit_user(request):
 
     user.save()
 
-    return redirect('some_view')\
+    return redirect('users:user_management')
