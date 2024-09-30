@@ -41,8 +41,12 @@ User Management
                     <button class="btn btn-sm btn-secondary toggle-password">Show</button>
                 </td>
                 <td>
-                    <a href="{% url 'users:edit_user' user.id %}" class="btn btn-sm btn-warning">Edit</a>
-                    <a href="{% url 'users:delete_user' user.id %}" class="btn btn-sm btn-danger">Delete</a>
+                    <a href="{% comment %}
+                      {% url 'users:edit_user' user.id %}
+                    {% endcomment %}" class="btn btn-sm btn-warning">Edit</a>
+                    <a href="{% comment %}
+                      {% url 'users:delete_user' user.id %}
+                    {% endcomment %}" class="btn btn-sm btn-danger">Delete</a>
                 </td>
             </tr>
             {% endfor %}
