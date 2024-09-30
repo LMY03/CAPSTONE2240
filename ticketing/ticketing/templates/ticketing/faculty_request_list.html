@@ -1,0 +1,62 @@
+{% extends 'users/base_faculty.html' %}
+
+{% block title %}
+Request List
+{% endblock title %}
+{% load static %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'users/css/student_home.css' %}">
+<link rel='stylesheet' href="{% static 'users/css/faculty_request_list.css' %}">
+{% endblock css %} 
+
+{% block content %}
+<div class="col-md-10 main-content p-5">
+    <h1>Request Tracker</h1>
+    <div class="filter">
+        <input type="text" class="form-control w-25" placeholder="Search">
+        <button class="btn btn-light"><i class="bi bi-filter"></i> Filter by</button>
+    </div>
+    {% if request_entries %}
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th class="text-center">Ticket ID</th>
+                <th class="text-center">Category</th>
+                <th class="text-center">Request Type</th>
+                <th class="text-center">Date Requested</th>
+                <th class="text-center">Status</th>
+                <th class="text-center">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for request in request_entries  %}
+            <tr>
+                <td>{{ request.id }}</td>
+                <td>{% if not request.template.is_lxc %}
+                    Virtual Machine
+                    {% else %}
+                    Linux Container
+                    {% endif %}
+                </td>
+                <td>{{ request.get_request_type }}</td>
+                <td>{{ request.requestDate }}</td>
+                <td>{{ request.status }}</td>
+                <td>
+                    <div class = 'd-flex justify-content-evenly'>
+                    <a href="{% url 'ticketing:request_details' request.id %}" class="btn btn-outline-primary">Open</a>
+                    {% if request.status == 'PENDING' or request.status == 'FOR REVISION' %}
+                    <a class="btn btn-outline-primary" href="{% url 'ticketing:faculty_edit_request' request.id %}" role="button">Edit</a>
+                    {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <h1>No request found</h1>
+    {% endif %}
+    </div>
+</div>
+{% endblock content %}

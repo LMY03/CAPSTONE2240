@@ -1,0 +1,184 @@
+{% extends 'users/base_faculty.html' %}
+
+{% block title %}
+New Container request form
+{% endblock title %}
+{% load static %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'users/css/student_home.css' %}">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+{% endblock css %} 
+
+{% block content %}
+<div class="col-md-10 content">
+    <form method="post" action="{% url 'ticketing:new-form-submit' %}" id="vm-form">
+        {% csrf_token %}
+
+        <!-- Accordion for grouping form fields -->
+        <div class="accordion" id="formAccordion">
+
+            <!-- Group 1: VM, Cores, RAM, Storage -->
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="vmGroupHeader">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#vmCollapse" aria-expanded="true" aria-controls="vmCollapse">
+                        Container Details
+                    </button>
+                </h2>
+                <div id="vmCollapse" class="accordion-collapse collapse show" aria-labelledby="vmGroupHeader" data-bs-parent="#formAccordion">
+                    <div class="accordion-body">
+                        <div class="mb-3">
+                            <label for="template_id" class="form-label">Container Template: 
+                                <a href="#" class="tooltip-icon" data-bs-toggle="tooltip" data-bs-placement="top" title="Note: The number beside the OS is the storage per VM">
+                                    <i class="bi bi-info-circle"></i>
+                                </a>
+                            </label>
+                            <select class="form-control" id="template_id" name="template_id">
+                                {% for container in container_template %}
+                                    <option value="{{ container.id }}">{{ container.vm_name }} {{ container.storage }} GB</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="cores" class="form-label">Cores:</label>
+                            <select class="form-control" id="cores" name="cores">
+                                <option value="1">1 core</option>
+                                <option value="2">2 core</option>
+                                <option value="4">4 core</option>
+                                <option value="8">8 core</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="ram" class="form-label">RAM:</label>
+                            <select class="form-control" id="ram" name="ram">
+                                <option value="1024">1 GB</option>
+                                <option value="2048">2 GB</option>
+                                <option value="4096">4 GB</option>
+                                <option value="8192">8 GB</option>
+                            </select>
+                        </div>
+                        {% comment %} <div class="mb-3">
+                            <label for="storage" class="form-label">Storage:</label>
+                            <a href="#" class="tooltip-icon" data-bs-toggle="tooltip" data-bs-placement="top" title="Select a storage per VM, ONLY IF YOU OPTED OUT OF THE VM TEMPLATE">
+                                <i class="bi bi-info-circle"></i>
+                            </a>
+                            <select class="form-control" id="storage" name="storage">
+                                <option value="0" selected>0 GB</option>
+                                <option value="1">1 GB</option>
+                                <option value="2">2 GB</option>
+                                <option value="4">4 GB</option>
+                                <option value="8">8 GB</option>
+                                <option value="16">16 GB</option>
+                                <option value="32">32 GB</option>
+                                <option value="64">64 GB</option>
+                                <option value="128">128 GB</option>
+                            </select>
+                        </div> {% endcomment %}
+                        <div class="mb-3">
+                            <label for="has_internet" class="form-label">Port Forwarding:</label>
+                            <select class="form-control" name="has_internet" id = "external_access">
+                                <option value="true">Yes</option>
+                                <option value="false" selected>No</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% comment %} Accordion for port rules {% endcomment %}
+            <div class="accordion" id="networkAccordion" style = 'display:none;'>
+                <!-- Accordion Item -->
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="networkHeader">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#networkCollapse" aria-expanded="true" aria-controls="networkCollapse">
+                            Network Details
+                        </button>
+                    </h2>
+                    <div id="networkCollapse" class="accordion-collapse collapse show" aria-labelledby="networkHeader">
+                        <div class="accordion-body" >
+                            <div id = "accordionBody_networkDetails"> 
+                                <div class="mb-3">
+                                    <div class = 'd-flex justify-content-between mb-2 align-items-baseline'>
+                                        <label for="protocol" class="form-label">Protocol:</label>
+                                        <button type = "button" id = "addProtocolButton">Add protocol</button>
+                                    </div>
+                                    <select class="form-control" id="protocol1" name="protocol1">
+                                        <option value="TCP">TCP</option>
+                                        <option value="UDP">UDP</option>
+                                        <option value="ICMP">ICMP</option>
+                                        <option value="HTTP">HTTP</option>
+                                        <option value="HTTPS">HTTPS</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="destination_port" class="form-label">Destination Port:</label>
+                                    <input type="text" class="form-control" id="destination_port1" name="destination_port1">
+                                </div>
+                            </div>
+                            {% comment %} <div class="mb-3">
+                                <label for="description" class="form-label">Description:</label>
+                                <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                            </div> {% endcomment %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Group 3: Use Case, VM Count, Internet Access, Dates, Add Users -->
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="additionalDetailsGroupHeader">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additionalDetailsCollapse" aria-expanded="false" aria-controls="additionalDetailsCollapse">
+                        Additional Details
+                    </button>
+                </h2>
+                <div id="additionalDetailsCollapse" class="accordion-collapse collapse" aria-labelledby="additionalDetailsGroupHeader" data-bs-parent="#formAccordion">
+                    <div class="accordion-body">
+                        <div class="mb-3">
+                            <label for="use_case" class="form-label">Use case:</label>
+                            <select class="form-control" id="use_case" name="use_case">
+                                <option value="RESEARCH">Research</option>
+                                <option value="THESIS">Thesis</option>
+                                <option value="TEST">Test</option>
+                                <option value="CLASS_COURSE">Class Course</option>
+                            </select>
+                        </div>
+                        <div id = 'vm_and_coursecode'>
+                            <div class="mb-3" id="class_course_input" style="display: none;">
+                                <div class = "d-flex justify-content-between">
+                                    <label for="course_code" class="form-label">Course Code: Add the section at the end of the course code (e.g CCINFOM_S15)</label>
+                                    <button type='button' id='add_course_button'>Add a section</button>
+                                </div>
+                                <input type="text" class="form-control w-25" id="course_code1" name="course_code1">
+                            </div>
+                            <div class="mb-3">
+                                <label for="vm_count" class="form-label">VM Count:</label>
+                                <input type="number" id="vm_count1" name="vm_count1" min="1" max="40">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="date_needed" class="form-label">Date Needed:</label>
+                            <input type="date" id="date_needed" name="date_needed">
+                        </div>
+                        <div class="mb-3">
+                            <label for="expiration_date" class="form-label">Expiration Date:</label>
+                            <input type="date" id="expiration_date" name="expiration_date">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="mb-3">
+            <label for="other_configs" class="form-label">Other configuration / Request:</label>
+            <textarea class="form-control" id="other_configs" name="other_configs" rows="2"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+</div>
+<script src="{% static 'ticketing/js/new-form-script.js' %}"></script>
+{% endblock content %}
+
+<!-- Bootstrap Tooltip initialization -->
+<script>
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+</script>

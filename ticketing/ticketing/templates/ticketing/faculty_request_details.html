@@ -1,0 +1,230 @@
+{% extends 'users/base_faculty.html' %}
+
+{% block title %}
+Request Details {{ request_entry.id }}
+{% endblock title %}
+{% load static %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'users/css/student_home.css' %}">
+{% endblock css %} 
+
+{% block content %}
+                    <div class="col-md-10 content mt-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h1>Detail View for the Request Ticket</h1>
+                            <div>
+                                {% if request_entry.status == "PROCESSING" and request_entry.is_vm_tested == True %}
+                                <form id="start_vm_form" action="{% url 'guacamole:access_vm' %}" method="post" onsubmit="submitForm(event)" class="d-inline">
+                                    {% csrf_token %}
+                                    <input type="hidden" id="vm_id" name="vm_id" value="{{ request_entry.vm_id }}" />
+                                    <button type="submit" class="btn btn-success me-1">Open Test VM</button>
+                                </form>
+                                <a href="{% url 'proxmox:shutdown_vm' request_entry.vm_id %}" class="d-inline">
+                                    <button type="submit" class="btn btn-danger">Shutdown</button>
+                                </a>
+                                {% endif %}
+                                {% if request_entry.status == "PENDING" or request_entry.status == "FOR REVISION" %}
+                                    <a class="btn btn-primary me-2" href="{% url 'ticketing:faculty_edit_request' request_entry.id %}" role="button">
+                                        <i class="bi bi-pencil-square me-2"></i>Edit
+                                    </a>                                
+                                {% endif %}
+                                {% if request_entry.status == "ONGOING" %}
+                                <button type="button" class="btn btn-success me-2" data-toggle="modal" data-target="#issueModal">
+                                    Create Ticket
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="p-3 bg-light border">
+                                    <p><strong>Requester Name:</strong> {{ request_entry.requester.first_name }} {{ request_entry.requester.last_name }}</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="p-3 bg-light border">
+                                    <p><strong>Template:</strong> {{ request_entry.template.vm_name }}</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="p-3 bg-light border">
+                                    <p id="cores"><strong>Status:</strong> {{ request_entry.status }}</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="p-3 bg-light border">
+                                    <p id="cores"><strong>Cores:</strong> {{ request_entry.cores }}</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="p-3 bg-light border">
+                                    <p id="ram"><strong>RAM:</strong> {{ request_entry.ram }}</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="p-3 bg-light border">
+                                    <p id="storage"><strong>Storage:</strong> {{ request_entry.storage }}</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="p-3 bg-light border">
+                                    <p><strong>Port Forwarding:</strong> {{ request_entry.has_internet }}</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="p-3 bg-light border">
+                                    <p><strong>Date needed:</strong> {{ request_entry.date_needed }}</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="p-3 bg-light border">
+                                    <p><strong>Expiration date:</strong> {{ request_entry.expiration_date }}</p>
+                                </div>
+                            </div>
+                            {% if request_entry.use_case == 'Class Course' %}
+                            {% for use_case in request_use_cases %}
+                            <div class="col-md-8">
+                                <div class="p-3 bg-light border">
+                                    <p><strong>Use case:</strong> {{ use_case.request_use_case }}</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="p-3 bg-light border">
+                                    <p id="vm_count"><strong>VM Count:</strong> {{ use_case.vm_count }}</p>
+                                </div>
+                            </div>
+                            {% endfor %}
+                            {% else %}
+                            <div class="col-md-8">
+                                <div class="p-3 bg-light border">
+                                    <p><strong>Use case:</strong> {{ request_entry.use_case }}</p>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="p-3 bg-light border">
+                                    <p id="vm_count"><strong>VM Count:</strong> {{ request_use_cases.first.vm_count }}</p>
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% if request_entry.has_internet == 1 %}
+                                {% for port in port_rules %}
+                                <div class="col-md-8">
+                                    <div class="p-3 bg-light border">
+                                        <p><strong>Port:</strong> {{ port.protocol|upper }}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="p-3 bg-light border">
+                                        <p><strong>Destination Ports:</strong> {{ port.dest_ports }}</p>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% endif %}
+                            {% if request_entry.status == "ONGOING" %}
+                                {% for destination_port in destination_ports %}
+                                    <div class="col-md-8">
+                                        <div class="p-3 bg-light border">
+                                            <p><strong>VM Name:</strong> {{ destination_port.vm.vm_name }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="p-3 bg-light border">
+                                            <p><strong>Public Ports:</strong> {{ destination_port.dest_port }}</p>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                                
+                                {% for system_account in system_accounts %}
+                                    <div class="col-md-8">
+                                        <div class="p-3 bg-light border">
+                                            <p><strong>System Username:</strong> {{ system_account.vm_name }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="p-3 bg-light border">
+                                            <p><strong>System Password:</strong> {{ system_account.system_password }}</p>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            {% endif %}
+                            <div class="col-12">
+                                <div class="p-3 bg-light border">
+                                    <p><strong>Other configs:</strong> {{ request_entry.other_config }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if request_entry.status == "PROCESSING" and request_entry.is_vm_tested == True %}
+                        <div class="row g-3 mt-3">
+                            <div class="col">
+                                <a href="{% url 'ticketing:accept_test_vm' request_entry.id %}"><button type="submit" class="btn btn-primary w-25">Accept Test VM</button></a>
+                                <a href="{% url 'ticketing:reject_test_vm' request_entry.id %}"><button type="button" class="btn btn-danger w-25 ms-5" id="reject_button">Reject Test VM</button></a>
+                            </div>
+                        </div>
+                        {% endif %}
+                    
+                        {% if comments %}
+                        <!-- Comment Section -->
+                        <div class="mt-5">
+                            <h2>Comments</h2>
+                            <!-- Display Comments -->
+                                <div class="list-group">
+                                    {% for comment in comments %}
+                                        <div class="list-group-item">
+                                            <p><strong>{{ comment.user.first_name }} {{ comment.user.last_name }}:</strong> {{ comment.comment }}</p>
+                                            <small class="text-muted">{{ comment.date_time }}</small>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                    
+                            {% if request_entry.status != "REJECTED" and request_entry.status != "COMPLETED" and request_entry.status != "DELETED" %}
+                            <!-- Add Comment Form -->
+                            <form action="{% url 'ticketing:add_comment' request_entry.id %}" method="post" class="mt-3">
+                                {% csrf_token %}
+                                <div class="mb-3">
+                                    <label for="comment" class="form-label">Add a Comment</label>
+                                    <textarea class="form-control" id="comment" name="comment" rows="3" required></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Submit Comment</button>
+                            </form>
+                            {% endif %}
+                        </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Issue Modal -->
+<div class="modal fade" id="issueModal" tabindex="-1" role="dialog" aria-labelledby="issueModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="issueModalLabel">Create Ticket</h5>
+                <button type="button" class="btn-close" data-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form action="{% url 'ticketing:submit_issue_ticket' %}" method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    {{ issue_form.as_p }}
+
+                    <label for="files">Upload Files:</label>
+                    <input type="file" name="files" multiple>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-success">Submit</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+{% block script %}
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script> -->
+    <script src="{% static 'guacamole/js/launch-vm.js' %}"></script>
+{% endblock script %}

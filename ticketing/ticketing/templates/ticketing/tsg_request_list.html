@@ -1,0 +1,62 @@
+{% extends 'users/base_tsg.html' %}
+
+{% block title %}
+Request List
+{% endblock title %}
+{% load static %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'users/css/student_home.css' %}">
+{% endblock css %} 
+
+{% block content %}
+    <div class="col-md-10 content">
+      <div class="w-25 mb-3">
+        <select class="form-select" onchange="window.location.href=this.value">
+          <option value="{% url 'users:tsg_home' %}">All</option>
+          <option value="{% url 'users:home-filter' %}?status=PENDING" {% if status == 'PENDING' %} selected {% endif %}>Pending</option>
+          <option value="{% url 'users:home-filter' %}?status=FOR_REVISION" {% if status == 'FOR_REVISION' %} selected {% endif %}>For revision</option>
+          <option value="{% url 'users:home-filter' %}?status=ONGOING" {% if status == 'ONGOING' %} selected {% endif %}>Ongoing</option>
+          <option value="{% url 'users:home-filter' %}?status=ONGOING" {% if status == 'PROCESSING' %} selected {% endif %}>Processing</option>
+          <option value="{% url 'users:home-filter' %}?status=COMPLETED" {% if status == 'COMPLETED' %} selected {% endif %}>Completed</option>
+          <option value="{% url 'users:home-filter' %}?status=DELETED" {% if status == 'DELETED' %} selected {% endif %}>Delete</option>
+          <option value="{% url 'users:home-filter' %}?status=DELETED" {% if status == 'REJECTED' %} selected {% endif %}>Rejected</option>
+        </select>
+        
+      </div>
+      {% if request_entries %}
+        <table class="table table-bordered table-striped">
+          <thead>
+            <tr>
+              <th>Ticket ID</th>
+              <th>Requester</th>
+              <th>Template OS</th>
+              <th>Cores</th>
+              <th>RAM</th>
+              <th>Port Forward</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for request_entry in request_entries %}
+              <tr>
+                <td>{{ request_entry.id }}</td>
+                <td>{{ request_entry.get_requester }}</td>
+                <td>{{ request_entry.template.vm_name }}</td>
+                <td>{{ request_entry.cores }}</td>
+                <td>{{ request_entry.ram }}</td>
+                <td>{{ request_entry.has_internet }}</td>
+                <td>{{ request_entry.status }}</td>
+                <td><a href="{% url 'ticketing:request_details' request_entry.id %}" class="btn btn-primary">Open</a></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <p>No Requests are available.</p>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock content %}

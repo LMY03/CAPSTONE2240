@@ -1,0 +1,60 @@
+{% extends 'users/base_tsg.html' %}
+
+{% block title %}
+Ticket List
+{% endblock title %}
+{% load static %}
+
+{% block css %} 
+<link rel="stylesheet" href="{% static 'users/css/student_home.css' %}">
+{% endblock css %} 
+
+{% block content %}
+    <!-- Main Content -->
+    <div class="col-md-10 content">
+        <h2>Ticket List</h2>
+        <div class="table-container">
+            <div class="d-flex justify-content-between mb-3">
+                <input type="text" class="form-control w-25" placeholder="Search">
+                <button class="btn btn-outline-secondary">
+                    Filter by <i class="bi bi-funnel"></i>
+                </button>
+            </div>
+            <table class="table table-hover">
+                <thead class="table-light">
+                    <tr>
+                        <th scope="col">Ticket ID</th>
+                        <th scope="col">Request ID</th>
+                        <th scope="col">Subject</th>
+                        <th scope="col">Date Created</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for issue_ticket in issue_tickets %}
+                    <tr>
+                        <td>{{ issue_ticket.pk }}</td>
+                        <td>{{ issue_ticket.request.pk }}</td>
+                        <td>{{ issue_ticket.subject }}</td>
+                        <td>{{ issue_ticket.date_created }}</td>
+                        <td>
+                            {% if issue_ticket.get_status == "Unresolved" %}
+                                <span class="text-danger"><strong>{{ issue_ticket.get_status }}</strong></span> <!-- Unresolved in red -->
+                            {% elif issue_ticket.get_status == "Resolved" %}
+                                <span class="text-success"><strong>{{ issue_ticket.get_status }}</strong></span> <!-- Resolved in green -->
+                            {% else %}
+                                <span>{{ issue_ticket.get_status }}</span> <!-- Default for other statuses -->
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'ticketing:ticket_details' issue_ticket.pk %}" class="btn btn-primary btn-sm">Open</a> <!-- Open button -->
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock content %}

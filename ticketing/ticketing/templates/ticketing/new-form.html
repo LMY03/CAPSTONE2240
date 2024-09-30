@@ -1,0 +1,190 @@
+{% extends 'users/base_faculty.html' %}
+
+{% block title %}
+New VM Request Form
+{% endblock title %}
+{% load static %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'users/css/student_home.css' %}">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+{% endblock css %}
+
+{% block content %}
+<div class="col-md-10 content">
+    <form method="post" action="{% url 'ticketing:new-form-submit' %}" id="vm-form">
+        {% csrf_token %}
+
+        <!-- Accordion for grouping form fields -->
+        <div class="accordion" id="formAccordion">
+
+            <!-- Group 1: VM, Cores, RAM, Storage -->
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="vmGroupHeader">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#vmCollapse" aria-expanded="true" aria-controls="vmCollapse">
+                        <i class="bi bi-server me-2"></i> VM Details
+                    </button>
+                </h2>
+                <div id="vmCollapse" class="accordion-collapse collapse show" aria-labelledby="vmGroupHeader" data-bs-parent="#formAccordion">
+                    <div class="accordion-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="template_id" class="form-label">VM Template: 
+                                    <a href="#" class="tooltip-icon" data-bs-toggle="tooltip" data-bs-placement="top" title="Note: The number beside the OS is the storage per VM">
+                                        <i class="bi bi-info-circle"></i>
+                                    </a>
+                                </label>
+                                <select class="form-control" id="template_id" name="template_id">
+                                    {% for id, vm_name, storage in vmtemplate_list %}
+                                        <option value="{{ id }}">{{ vm_name }} {{ storage }} GB</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="cores" class="form-label">Cores: <i class="bi bi-cpu"></i></label>
+                                <select class="form-control" id="cores" name="cores">
+                                    <option value="1">1 core</option>
+                                    <option value="2">2 cores</option>
+                                    <option value="4">4 cores</option>
+                                    <option value="8">8 cores</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="ram" class="form-label">RAM: <i class="bi bi-memory"></i></label>
+                                <select class="form-control" id="ram" name="ram">
+                                    <option value="1024">1 GB</option>
+                                    <option value="2048">2 GB</option>
+                                    <option value="4096">4 GB</option>
+                                    <option value="8192">8 GB</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="has_internet" class="form-label">Port Forwarding: <i class="bi bi-arrow-left-right"></i></label>
+                                <select class="form-control" name="has_internet" id="external_access">
+                                    <option value="true">Yes</option>
+                                    <option value="false" selected>No</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Group 2: Network Details (hidden initially) -->
+            <div class="accordion" id="networkAccordion" style='display:none;'>
+                <div class="accordion-item">
+                    <h2 class="accordion-header" id="networkHeader">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#networkCollapse" aria-expanded="true" aria-controls="networkCollapse">
+                            <i class="bi bi-router me-2"></i> Network Details
+                        </button>
+                    </h2>
+                    <div id="networkCollapse" class="accordion-collapse collapse show" aria-labelledby="networkHeader">
+                        <div class="accordion-body">
+                            <div id='accordionBody_networkDetails'> 
+                                <div class="mb-3">
+                                    <div class='d-flex justify-content-between mb-2 align-items-baseline'>
+                                        <label for="protocol" class="form-label">Protocol:</label>
+                                        <button type="button" id="addProtocolButton" class="btn btn-outline-secondary">Add Protocol</button>
+                                    </div>
+                                    <select class="form-control" id="protocol1" name="protocol1">
+                                        <option value="tcp">TCP</option>
+                                        <option value="udp">UDP</option>
+                                        <option value="tcp/udp">TCP/UDP</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="destination_port" class="form-label">Destination Port:</label>
+                                    <input type="text" class="form-control" id="destination_port1" name="destination_port1">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Group 3: Additional Details -->
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="additionalDetailsGroupHeader">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additionalDetailsCollapse" aria-expanded="false" aria-controls="additionalDetailsCollapse">
+                        <i class="bi bi-file-earmark-plus me-2"></i> Additional Details
+                    </button>
+                </h2>
+                <div id="additionalDetailsCollapse" class="accordion-collapse collapse" aria-labelledby="additionalDetailsGroupHeader" data-bs-parent="#formAccordion">
+                    <div class="accordion-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="use_case" class="form-label">Use case: <i class="bi bi-lightbulb"></i></label>
+                                <select class="form-control" id="use_case" name="use_case">
+                                    <option value="RESEARCH">Research</option>
+                                    <option value="THESIS">Thesis</option>
+                                    <option value="TEST">Test</option>
+                                    <option value="CLASS_COURSE">Class Course</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label for="vm_count" class="form-label">VM Count: <i class="bi bi-layers"></i></label>
+                                <input type="number" id="vm_count1" name="vm_count1" class="form-control" min="1" max="40">
+                            </div>
+                        </div>
+                        <div id='vm_and_coursecode'>
+                            <div class="mb-3" id="class_course_input" style="display: none;">
+                                <div class='d-flex justify-content-between'>
+                                    <label for="course_code" class="form-label">Course Code: Add the section at the end of the course code (e.g CCINFOM_S15)</label>
+                                    <button type="button" id="add_course_button" class="btn btn-outline-secondary">Add Section</button>
+                                </div>
+                                <input type="text" class="form-control w-25" id="course_code1" name="course_code1">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="recurring" class="form-label">Recurring: <i class="bi bi-calendar-repeat"></i></label>
+                            <input type="checkbox" id="recurring" name="recurring">
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="date_needed" class="form-label">Date Needed: <i class="bi bi-calendar-event"></i></label>
+                                <input type="date" id="date_needed" name="date_needed" class="form-control">
+                            </div>
+                            <div class="col-md-6 mb-3" id="expirationDateContainer">
+                                <label for="expiration_date" class="form-label">Expiration Date: <i class="bi bi-calendar-x"></i></label>
+                                <input type="date" id="expiration_date" name="expiration_date" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label for="other_configs" class="form-label">Other configuration / Request: <i class="bi bi-gear"></i></label>
+            <textarea class="form-control" id="other_configs" name="other_configs" rows="2"></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary"><i class="bi bi-send"></i> Submit</button>
+    </form>
+</div>
+
+<script src="{% static 'ticketing/js/new-form-script.js' %}"></script>
+
+<!-- Bootstrap Tooltip initialization -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var recurringCheckbox = document.getElementById('recurring');
+        var expirationDateContainer = document.getElementById('expirationDateContainer');
+
+        function toggleExpirationDate() {
+            if (recurringCheckbox.checked) {
+                expirationDateContainer.style.display = 'none';  // Hide expiration date
+            } else {
+                expirationDateContainer.style.display = 'block';  // Show expiration date
+            }
+        }
+
+        // Initially check the checkbox state on page load
+        toggleExpirationDate();
+
+        // Add event listener to toggle on change
+        recurringCheckbox.addEventListener('change', toggleExpirationDate);
+    });
+</script>
+{% endblock content %}
