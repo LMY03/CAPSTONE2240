@@ -45,7 +45,7 @@ User Management
                 </td>
                 <td>
                   <div class = "d-flex justify-content-evenly">
-                    <a data-bs-toggle="modal" data-bs-target="#edit_user_modal" class="btn btn-sm btn-warning" id="edit_user_id_{{user.id}}" onclick="edit_user_id({{user.id}}, '{{user.user_type}}')">Edit</a>
+                    <a data-bs-toggle="modal" data-bs-target="#edit_user_modal" class="btn btn-sm btn-warning" id="edit_user_id_{{user.id}}" onclick="edit_user_id({{user.id}}, '{{user.user_type}}', '{{user.email}}')">Edit</a>
                     <a href="{% url 'users:delete_user' user.id %}" class="btn btn-sm btn-danger">Delete</a>
                   </div>
                 </td>
@@ -117,7 +117,7 @@ User Management
                         <input class="form-check-input" type="checkbox" id="change_password">
                       </div>
                       <div class="mb-3">
-                          <label for="user_profile" class="form-label">Change User profile</label>
+                          <label for="change_user_profile" class="form-label">Change User profile</label>
                           <select id="change_user_profile" name="change_user_profile" class="form-select">
                               <option value="admin">Admin</option>
                               <option value="faculty">Faculty</option>
@@ -153,9 +153,12 @@ User Management
         });
     });
 
-    function edit_user_id(user_id, user_type){
+    function edit_user_id(user_id, user_type, user_email){
+        document.getElementById('change_email').value = user_email
         document.getElementById('user_id').value = user_id;
-        document.getElementById('change_user_profile').value = user_type
+
+        option_value = user_type.charAt(0).toLowerCase() + user_type.slice(1)
+        document.getElementById('change_user_profile').value = option_value
     }
 </script>
 {% endblock script %}

@@ -325,7 +325,7 @@ def edit_user(request):
 
     # Check for email change
     email = data.get('change_email')
-    if email: 
+    if email != 'No email' and email: 
         user.email = email
 
     # Check for password change
