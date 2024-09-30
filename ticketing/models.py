@@ -200,7 +200,19 @@ class IssueTicket(models.Model):
     resolve_date = models.DateTimeField(null=True)
     request = models.ForeignKey(RequestEntry, on_delete=models.CASCADE)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
-
+    class Category(models.TextChoices):
+        SYSTEM_USERNAME = 'System Username'
+        SYSTEM_PASSWORD = 'System Password'
+        VM_CONNECTION = 'Virtual Machine Connection'
+        INSTALLATION_ISSUES = 'Installation Issues'
+        REQUEST_FOR_EXTENSION = 'Request for Extension'
+        TERMINATE_REQUEST = 'Terminate Request'
+        ADDITIONAL = 'Additional Installation / Modification'
+        OTHERS = 'General Problems'
+        
+    category = models.CharField(
+        max_length=100, 
+        choices=Category.choices)
     def is_resolved(self) : return self.resolve_date != None
 
     def get_status(self):
