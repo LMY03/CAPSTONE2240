@@ -299,7 +299,8 @@ def user_management (request):
             'id': user.id,
             'full_name': user.get_full_name(),
             'email': user.email,
-            'user_type': user_profile.user_type if user_profile else 'No profile',  # Handle missing UserProfile
+            'user_type': user_profile.user_type if user_profile else 'No profile',  # Handle missing UserProfile,
+            'password' : '123467'
         })
     
     
