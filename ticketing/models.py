@@ -200,6 +200,7 @@ class IssueTicket(models.Model):
     resolve_date = models.DateTimeField(null=True)
     request = models.ForeignKey(RequestEntry, on_delete=models.CASCADE)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
+    
     class Category(models.TextChoices):
         SYSTEM_USERNAME = 'System Username'
         SYSTEM_PASSWORD = 'System Password'
