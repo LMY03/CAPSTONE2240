@@ -68,9 +68,10 @@ class AddVMTemplates(forms.ModelForm):
 class IssueTicketForm(forms.ModelForm):
     class Meta:
         model = IssueTicket
-        fields = ['subject', 'description']
+        fields = ['subject', 'category', 'description']
         widgets = {
             'subject': forms.TextInput(attrs={'class': 'form-control'}),
+            'category': forms.Select(attrs={'class': 'form-control'}),
             'description': forms.Textarea(attrs={'class': 'form-control'}),
         }
     

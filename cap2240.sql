@@ -1638,6 +1638,7 @@ DROP TABLE IF EXISTS `ticketing_issueticket`;
 CREATE TABLE `ticketing_issueticket` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `subject` varchar(100) NOT NULL,
+  `category` varchar(100) NOT NULL,
   `description` varchar(10000) NOT NULL,
   `date_created` datetime(6) NOT NULL,
   `resolve_date` datetime(6) DEFAULT NULL,

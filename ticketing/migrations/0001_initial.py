@@ -96,6 +96,7 @@ class Migration(migrations.Migration):
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('subject', models.CharField(max_length=100)),
+                ('category', models.CharField(choices=[('System Username', 'System Username'), ('System Password', 'System Password'), ('Virtual Machine Connection', 'Vm Connection'), ('Installation Issues', 'Installation Issues'), ('Request for Extension', 'Request For Extension'), ('Terminate Request', 'Terminate Request'), ('Additional Installation / Modification', 'Additional'), ('General Problems', 'Others')], max_length=100)),
                 ('description', models.CharField(max_length=10000)),
                 ('date_created', models.DateTimeField(default=django.utils.timezone.localtime)),
                 ('resolve_date', models.DateTimeField(null=True)),
