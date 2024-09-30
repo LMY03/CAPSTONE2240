@@ -322,6 +322,7 @@ def delete_user (request, user_id):
 def edit_user(request):
     data = request.POST
     user = User.objects.get(id=data.get('user_id'))
+    user_profile = UserProfile.objects.get(user = user)
 
     # Check for email change
     email = data.get('change_email')
@@ -333,6 +334,9 @@ def edit_user(request):
         new_password = generate_random_string()
         user.set_password(new_password)  
 
+    if data.get('change_user_profile'):
+        user_profile.user_type = data.get('change_user_profile')
+        user_profile.save()
 
     user.save()
 
