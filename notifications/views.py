@@ -167,12 +167,12 @@ def confirm_notif_faculty(to_email, data):
     return send_email_sendgrid(data)
 
 
-CLIENT_SECRET_FILE = './credentials.json'
-API_NAME = 'gmail'
-API_VERSION = 'v1'
-SCOPES = ['https://mail.google.com/']
+# CLIENT_SECRET_FILE = './credentials.json'
+# API_NAME = 'gmail'
+# API_VERSION = 'v1'
+# SCOPES = ['https://mail.google.com/']
 
-service = Create_Service(CLIENT_SECRET_FILE, API_NAME, API_VERSION, SCOPES)
+# service = Create_Service(CLIENT_SECRET_FILE, API_NAME, API_VERSION, SCOPES)
 
 # emailMsg = 'You won $100,000'
 # mimeMessage = MIMEMultipart()
