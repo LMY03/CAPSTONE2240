@@ -8,6 +8,7 @@ from google.auth.transport.requests import Request
 
 def Create_Service(client_secret_file, api_name, api_version, *scopes):
     print(client_secret_file, api_name, api_version, scopes, sep='-')
+    print(os.path.abspath(CLIENT_SECRET_FILE))  
     CLIENT_SECRET_FILE = client_secret_file
     API_SERVICE_NAME = api_name
     API_VERSION = api_version
@@ -28,7 +29,7 @@ def Create_Service(client_secret_file, api_name, api_version, *scopes):
             cred.refresh(Request())
         else:
             flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRET_FILE, SCOPES)
-            cred = flow.run_local_server()
+            cred = flow.run_console()
 
         with open(pickle_file, 'wb') as token:
             pickle.dump(cred, token)
