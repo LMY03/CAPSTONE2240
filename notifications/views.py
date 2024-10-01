@@ -167,7 +167,7 @@ def confirm_notif_faculty(to_email, data):
     return send_email_sendgrid(data)
 
 
-CLIENT_SECRET_FILE = '../credentials.json'
+CLIENT_SECRET_FILE = '/home/jin/CAPSTONE2240/credentials.json'
 API_NAME = 'gmail'
 API_VERSION = 'v1'
 SCOPES = ['https://mail.google.com/']
