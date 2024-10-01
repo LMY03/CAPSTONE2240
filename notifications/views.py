@@ -3,10 +3,14 @@ import os
 import requests
 import json
 from decouple import config
+from services.google_services import Create_Service
 
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 
+import base64
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 
 def send_email_sendgrid (paramData):
 
@@ -161,3 +165,37 @@ def accept_notif_tsg (to_email, data):
 
 def confirm_notif_faculty(to_email, data):
     return send_email_sendgrid(data)
+
+
+CLIENT_SECRET_FILE = {
+    "web": {
+        "client_id": config("SECRET_CLIENT_ID"),
+        "project_id": "capstone-2240",
+        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+        "token_uri": "https://oauth2.googleapis.com/token",
+        "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+        "client_secret": config("SECRET_CLIENT_SECRET"),
+        "redirect_uris": [
+            "http://localhost:8000/social-auth/complete/google-oauth2/"
+        ],
+        "javascript_origins": [
+            "http://localhost:8000",
+            "http://127.0.0.1:8000"
+        ]
+    }
+}
+API_NAME = 'gmail'
+API_VERSION = 'v1'
+SCOPES = ['https://mail.google.com/']
+
+service = Create_Service(CLIENT_SECRET_FILE, API_NAME, API_VERSION, SCOPES)
+
+# emailMsg = 'You won $100,000'
+# mimeMessage = MIMEMultipart()
+# mimeMessage['to'] = '<Receipient>@gmail.com'
+# mimeMessage['subject'] = 'You won'
+# mimeMessage.attach(MIMEText(emailMsg, 'plain'))
+# raw_string = base64.urlsafe_b64encode(mimeMessage.as_bytes()).decode()
+
+# message = service.users().messages().send(userId='me', body={'raw': raw_string}).execute()
+# print(message)
