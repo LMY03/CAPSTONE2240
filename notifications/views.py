@@ -167,23 +167,7 @@ def confirm_notif_faculty(to_email, data):
     return send_email_sendgrid(data)
 
 
-CLIENT_SECRET_FILE = {
-    "web": {
-        "client_id": config("SECRET_CLIENT_ID"),
-        "project_id": "capstone-2240",
-        "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-        "token_uri": "https://oauth2.googleapis.com/token",
-        "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-        "client_secret": config("SECRET_CLIENT_SECRET"),
-        "redirect_uris": [
-            "http://localhost:8000/social-auth/complete/google-oauth2/"
-        ],
-        "javascript_origins": [
-            "http://localhost:8000",
-            "http://127.0.0.1:8000"
-        ]
-    }
-}
+CLIENT_SECRET_FILE = '../credentials.json'
 API_NAME = 'gmail'
 API_VERSION = 'v1'
 SCOPES = ['https://mail.google.com/']
