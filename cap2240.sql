@@ -1800,7 +1800,7 @@ CREATE TABLE `ticketing_userprofile` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `user_type` varchar(20) NOT NULL,
   `user_id` int NOT NULL,
-  `system_password` varchar(45) DEFAULT NULL, 
+  `system_password` varchar(45), 
   PRIMARY KEY (`id`),
   UNIQUE KEY `user_id` (`user_id`),
   CONSTRAINT `ticketing_userprofile_user_id_e3bea9bb_fk_auth_user_id` FOREIGN KEY (`user_id`) REFERENCES `auth_user` (`id`)
@@ -1813,7 +1813,7 @@ CREATE TABLE `ticketing_userprofile` (
 
 LOCK TABLES `ticketing_userprofile` WRITE;
 /*!40000 ALTER TABLE `ticketing_userprofile` DISABLE KEYS */;
-INSERT INTO `ticketing_userprofile` VALUES (1,'admin',1),(2,'admin',2),(3,'faculty',3);
+INSERT INTO `ticketing_userprofile` VALUES (1,'admin',1,'123456'),(2,'admin',2,'123456'),(3,'faculty',3,'123456');
 /*!40000 ALTER TABLE `ticketing_userprofile` ENABLE KEYS */;
 UNLOCK TABLES;
 
