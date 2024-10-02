@@ -524,51 +524,68 @@ def performance_gen(request):
 
 # TODO: 可以直接在这个函数中拓展，加入其他metrics的查询如mem，memmax等
 def generate_resource_query(start_date, end_date, query_type, class_list=None):
-    base_query = f'''
-                from(bucket:"{bucket}")
-                |> range(start: {start_date}, stop: {end_date})
-                |> filter(fn: (r) => r["_measurement"] == "system")
-                |> filter(fn: (r) => r["_field"] == "cpus")
-                '''
-    
-    if query_type == "all":
-        query = f'''
-                {base_query}
-                |> last()
-                |> group()
-                |> sum(column: "_value")
-                |> yield(name: "total_cpus")
-                '''
-    # TODO: 根据节点来分组好像不是这样的，是用 |> group(columns: ["host"]) 吗
-    elif query_type == "per node":
-        query = f'''
-                {base_query}
-                |> last()
-                |> group(columns: ["host"])
-                |> sum(column: "_value")
-                |> yield(name: "cpus_per_node")
-                '''
-    elif query_type == "per class":
-        # TODO: need to get a list of class name for the query (maybe connecting to our own db to get the data)
-        # TODO: 貌似不是vm_name, 得去influxdb中看一下vm主机名对应的是什么
-        class_filters = ' or '.join([f'r["host"] =~ /{class_name}/' for class_name in class_list])
-        class_assignments = ' else '.join([f'if r["host"] =~ /{class_name}/ then "{class_name}"' for class_name in class_list]) + ' else "Unknown"'
-        query = f'''
-                {base_query}
-                |> filter(fn: (r) => {class_filters})
-                |> last()
-                |> map(fn: (r) => ({{
-                    _value: r._value,
-                    class: if {class_assignments}
-                }}))
-                |> group(columns: ["class"])
-                |> sum(column: "_value")
-                |> yield(name: "cpus_per_class")
-                '''
-    else:
-        raise ValueError("Invalid query type.")
 
-    return query
+    resources = {
+        "cpu": {"field": "cpus"},
+        "mem": {"field": "mem"},
+        "maxmem": {"field": "maxmem"},
+        "used": {"field": "used"},
+        "total": {"field": "total"}
+    }
+
+    queries = {}
+
+    for resource, config in resources.items():
+        base_query = f'''
+                    from(bucket:"{bucket}")
+                    |> range(start: {start_date}, stop: {end_date})
+                    |> filter(fn: (r) => r["_measurement"] == "system")
+                    |> filter(fn: (r) => r["_field"] == "{config['field']}")
+                    '''
+    
+        if query_type == "all":
+            query = f'''
+                    {base_query}
+                    |> last()
+                    |> group()
+                    |> sum(column: "_value")
+                    |> yield(name: "total_{resource}")
+                    '''
+        # TODO: 根据节点来分组好像不是这样的，是用 |> group(columns: ["host"]) 吗
+        elif query_type == "per node":
+            query = f'''
+                    {base_query}
+                    |> last()
+                    |> group(columns: ["host"])
+                    |> sum(column: "_value")
+                    |> yield(name: "{resource}_per_node")
+                    '''
+        elif query_type == "per class":
+            if not class_list:
+                raise ValueError("Class list is required for 'per class' query type.")
+            # TODO: need to get a list of class name for the query (maybe connecting to our own db to get the data)
+            # TODO: 貌似不是vm_name, 得去influxdb中看一下vm主机名对应的是什么
+            class_filters = ' or '.join([f'r["host"] =~ /{class_name}/' for class_name in class_list])
+            class_assignments = ' else '.join([f'if r["host"] =~ /{class_name}/ then "{class_name}"' for class_name in class_list]) + ' else "Unknown"'
+            query = f'''
+                    {base_query}
+                    |> filter(fn: (r) => {class_filters})
+                    |> last()
+                    |> map(fn: (r) => ({{
+                        _value: r._value,
+                        class: if {class_assignments}
+                    }}))
+                    |> group(columns: ["class"])
+                    |> sum(column: "_value")
+                    |> yield(name: "cpus_per_class")
+                    '''
+        else:
+            raise ValueError("Invalid query type.")
+        
+        queries[resource] = query
+        print(f"query: {query}")
+
+    return queries
 
 
 def generate_cpu_usage_query(query_type, start_date, end_date, class_list=None):
@@ -738,10 +755,13 @@ def extract_general_stat(request):
     # TODO: Static for now, remove this when we can dynamically get the list of class
     class_list = ["CCINFOM", "ITCMSY2", "CCICOMP"] # 这里能获取到吗
     # class_list = None
-    query =  generate_resource_query(start_date, end_date, query_type, class_list)
-    print(f"query: {query}")
+    queries =  generate_resource_query(start_date, end_date, query_type, class_list)
 
-    result = query_api.query(query=query)
+    results = {}
+
+    for resource, query in queries.items():
+        results[resource] = query_api.query(query=query)
+
 
     influxdb_client.close()
     # process result
