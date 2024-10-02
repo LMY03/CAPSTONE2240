@@ -34,11 +34,12 @@ def getVmList(request):
     #Connection between Proxmox API and application
     proxmox = ProxmoxAPI('10.1.200.11', user='root@pam', password='cap2240', verify_ssl=False)
     client = InfluxDBClient(url=INFLUX_ADDRESS, token=token, org=org)
+    query_api = client.query_api()
     
     #Get VM Info from Proxmox API
     vmids = proxmox.cluster.resources.get(type='vm')    
     VMList= []
-    query_api = client.query_api()
+    
     #Query to get all nodes being used
     
     flux_query = f'''
@@ -520,11 +521,222 @@ def report_gen(request):
 def performance_gen(request):
     return render(request, 'reports/performance_gen.html')
 
-def extract_csv(request):
+# TODO: 可以直接在这个函数中拓展，加入其他metrics的查询如mem，memmax等
+def generate_resource_query(start_date, end_date, query_type, class_list=None):
+    base_query = f'''
+                from(bucket:"{bucket}")
+                |> range(start: {start_date}, stop: {end_date})
+                |> filter(fn: (r) => r["_measurement"] == "system")
+                |> filter(fn: (r) => r["_field"] == "cpus")
+                '''
+    
+    if query_type == "all":
+        query = f'''
+                {base_query}
+                |> last()
+                |> group()
+                |> sum(column: "_value")
+                |> yield(name: "total_cpus")
+                '''
+    # TODO: 根据节点来分组好像不是这样的，是用 |> group(columns: ["host"]) 吗
+    elif query_type == "per node":
+        query = f'''
+                {base_query}
+                |> last()
+                |> group(columns: ["host"])
+                |> sum(column: "_value")
+                |> yield(name: "cpus_per_node")
+                '''
+    elif query_type == "per class":
+        # TODO: need to get a list of class name for the query (maybe connecting to our own db to get the data)
+        # TODO: 貌似不是vm_name, 得去influxdb中看一下vm主机名对应的是什么
+        class_filters = ' or '.join([f'r["host"] =~ /{class_name}/' for class_name in class_list])
+        class_assignments = ' else '.join([f'if r["host"] =~ /{class_name}/ then "{class_name}"' for class_name in class_list]) + ' else "Unknown"'
+        query = f'''
+                {base_query}
+                |> filter(fn: (r) => {class_filters})
+                |> last()
+                |> map(fn: (r) => ({{
+                    _value: r._value,
+                    class: if {class_assignments}
+                }}))
+                |> group(columns: ["class"])
+                |> sum(column: "_value")
+                |> yield(name: "cpus_per_class")
+                '''
+    else:
+        raise ValueError("Invalid query type.")
+
+    return query
+
+
+def generate_cpu_usage_query(query_type, start_date, end_date, class_list=None):
+    base_query = f'''
+                from(bucket:"{bucket}")
+                |> range(start: {start_date}, stop: {end_date})
+                |> filter(fn: (r) => r["_measurement"] == "system")
+                |> filter(fn: (r) => r["_field"] == "cpu")
+                '''
+    
+    if query_type == "all":
+        query = f'''
+                {base_query}
+                |> mean()
+                |> yield(name: "total_cpu_usage")
+                '''
+
+    elif query_type == "per node":
+        query = f'''
+                {base_query}
+                |> group(columns: ["host"])
+                |> mean()
+                |> yield(name: "cpu_usage_per_node")
+                '''
+
+    elif query_type == "per class":
+        class_filters = ' or '.join([f'r["host"] =~ /{class_name}/' for class_name in class_list])
+        class_assignments = ' else '.join([f'if r["host"] =~ /{class_name}/ then "{class_name}"' for class_name in class_list]) + ' else "Unknown"'
+
+        query = f'''
+                {base_query}
+                |> filter(fn: (r) => {class_filters})
+                |> map(fn: (r) => ({{
+                    _value: r._value,
+                    class: if {class_assignments}
+                }}))
+                |> group(columns: ["class"])
+                |> mean()
+                |> yield(name: "cpu_usage_per_class")
+                '''
+    else:
+        raise ValueError("Invalid query type. ")
+
+    return query
+
+# TODO: 如果成了，加上network的数据
+# VM detailed resource info
+def generate_vm_resource_query(start_date, end_date, query_type, category_values=None):
+    if query_type not in ["all", "nodes", "classes"]:
+        raise ValueError("Invalid category type. Choose 'all', 'nodes', or 'classes'")
+    
+    base_query = f'''
+                from(bucket:"{bucket}")
+                |> range(start: {start_date}, stop: {end_date})
+                |> filter(fn: (r) => r["_measurement"] == "system")
+                '''
+
+    # Add category-specific filters，这里的r["host"]到底是节点还是vm呢？
+    if query_type == "nodes" and category_values:
+        node_filters = ' or '.join([f'r["host"] == "{node}"' for node in category_values])
+        base_query += f'  |> filter(fn: (r) => {node_filters})\n'
+    elif query_type == "classes" and category_values:
+        class_filters = ' or '.join([f'r["vm_name"] =~ /{class_name}/' for class_name in category_values])
+        base_query += f'  |> filter(fn: (r) => {class_filters})\n'
+
+    # Query for CPU count (assuming it's a static value per VM)
+    cpu_count_query = f'''
+                {base_query}
+                |> filter(fn: (r) => r["_field"] == "cpus")
+                |> last()
+                |> group(columns: ["vm_name"])
+                |> yield(name: "cpu_count")
+                '''
+
+    # Query for CPU usage
+    cpu_usage_query = f'''
+                {base_query}
+                |> filter(fn: (r) => r["_field"] == "cpu")
+                |> mean()
+                |> group(columns: ["vm_name"])
+                |> yield(name: "cpu_usage")
+                '''
+
+    # Query for total memory (assuming it's a static value per VM)
+    total_mem_query = f'''
+                {base_query}
+                |> filter(fn: (r) => r["_field"] == "maxmem")
+                |> last()
+                |> group(columns: ["vm_name"])
+                |> yield(name: "total_memory")
+                '''
+
+    # Query for memory usage
+    mem_usage_query = f'''{base_query}
+                |> filter(fn: (r) => r["_field"] == "mem")
+                |> mean()
+                |> group(columns: ["vm_name"])
+                |> yield(name: "memory_usage")
+                '''
+
+    # Combine all queries
+    combined_query = f'''
+                {cpu_count_query}
+
+                {cpu_usage_query}
+
+                {total_mem_query}
+
+                {mem_usage_query}
+
+                // Join the results
+                join(
+                tables: {{
+                    cpu_count: cpu_count,
+                    cpu_usage: cpu_usage,
+                    total_memory: total_memory,
+                    memory_usage: memory_usage
+                }},
+                on: ["vm_name"]
+                )
+                '''
+
+    return combined_query
+                
+
+def extract_detail_stat(request):
+
+    influxdb_client = InfluxDBClient(url=INFLUX_ADDRESS, token=token, org=org)
+    query_api = influxdb_client.query_api()
+
+    start_date_str = request.POST.get('startdate')
+    end_date_str = request.POST.get('enddate')
+    scope = request.POST.get('scope') # All, nodes, classes
+    category_values = request.POST.get('category_values') # 前端根据选择的 all, node, class 来生成表格供用户选择
+
+    # TODO: add uptime
+    query = generate_vm_resource_query(start_date, end_date, scope, category_values)
+    result = query_api.query(query=flux_query)
+
+    # process result, 
+
+    # csv?
+    # generate table?
+
+    influxdb_client.close()
+    
+    return HttpResponse("Extract detail Stat")
+
+# General Stats
+def extract_general_stat(request):
+    influxdb_client = InfluxDBClient(url=INFLUX_ADDRESS, token=token, org=org)
+    query_api = influxdb_client.query_api()
+
     # Process request data
     start_date_str = request.POST.get('startdate')
     end_date_str = request.POST.get('enddate')
-    scope = request.POST.get('scope')
+    scope = request.POST.get('scope') # All, per node, per class
+
+
+    # Get needed metrics 
+    # (number of VMs, total CPU, CPU%, total mem, mem%, total storage, storage%, netin and netout)
+    # TODO: Static for now, remove this when we can dynamically get the list of class
+    class_list = ["CCINFOM", "ITCMSY2", "CCICOMP"] # 这里能获取到吗
+    # class_list = None
+    query =  generate_resource_query(start_date, end_date, query_type, class_list)
+    result = query_api.query(query=flux_query)
+
+    influxdb_client.close()
+    # process result
 
     return JsonResponse({
         'start_date_str':start_date_str,
