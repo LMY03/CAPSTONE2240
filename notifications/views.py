@@ -104,10 +104,10 @@ def comment_notif_faculty(to_email, data, *faculty):
 
     service = Create_Service(CLIENT_SECRET_FILE, API_NAME, API_VERSION, SCOPES)
 
-    emailMsg = 'You won $100,000'
+    emailMsg = 'this is sent from the virtual machine :)'
     mimeMessage = MIMEMultipart()
-    mimeMessage['to'] = '<Receipient>@gmail.com'
-    mimeMessage['subject'] = 'You won'
+    mimeMessage['to'] = 'curses520@gmail.com'
+    mimeMessage['subject'] = 'gusto ko na mamatay'
     mimeMessage.attach(MIMEText(emailMsg, 'plain'))
     raw_string = base64.urlsafe_b64encode(mimeMessage.as_bytes()).decode()
 
