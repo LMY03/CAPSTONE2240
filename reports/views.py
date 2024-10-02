@@ -738,6 +738,44 @@ def extract_detail_stat(request):
     
     return HttpResponse("Extract detail Stat")
 
+
+def process_resource_data(results, query_type, start_date, end_date):
+    processed_data = []
+    
+    if query_type == "all":
+        row = {
+            'startdate': start_date,
+            'enddate': end_date,
+            'cpu': results['cpu'][0].records[0].values['_value'],
+            'mem': results['mem'][0].records[0].values['_value'],
+            'maxmem': results['maxmem'][0].records[0].values['_value'],
+            'used': results['used'][0].records[0].values['_value'],
+            'total': results['total'][0].records[0].values['_value']
+        }
+        row['mem_usage(%)'] = (row['mem'] / row['maxmem']) * 100 if row['maxmem'] != 0 else 0
+        row['storage_usage(%)'] = (row['used'] / row['total']) * 100 if row['total'] != 0 else 0
+        processed_data.append(row)
+    
+    elif query_type in ["per node", "per class"]:
+        key = 'host' if query_type == "per node" else 'class'
+        for cpu_record in results['cpu'][0].records:
+            node_or_class = cpu_record.values[key]
+            row = {
+                key: node_or_class,
+                'startdate': start_date,
+                'enddate': end_date,
+                'cpu': cpu_record.values['_value'],
+                'mem': next(r.values['_value'] for r in results['mem'][0].records if r.values[key] == node_or_class),
+                'maxmem': next(r.values['_value'] for r in results['maxmem'][0].records if r.values[key] == node_or_class),
+                'used': next(r.values['_value'] for r in results['used'][0].records if r.values[key] == node_or_class),
+                'total': next(r.values['_value'] for r in results['total'][0].records if r.values[key] == node_or_class)
+            }
+            row['mem_usage(%)'] = (row['mem'] / row['maxmem']) * 100 if row['maxmem'] != 0 else 0
+            row['storage_usage(%)'] = (row['used'] / row['total']) * 100 if row['total'] != 0 else 0
+            processed_data.append(row)
+
+    return processed_data
+
 # General Stats
 def extract_general_stat(request):
     influxdb_client = InfluxDBClient(url=INFLUX_ADDRESS, token=token, org=org)
@@ -746,10 +784,8 @@ def extract_general_stat(request):
     # Process request data
     start_date_str = request.POST.get('startdate')
     end_date_str = request.POST.get('enddate')
-    scope = request.POST.get('scope') # All, per node, per class
+    query_type = request.POST.get('scope') # All, per node, per class
 
-    print(f"scope: {scope}")
-    query_type = scope
     start_date = parse_form_date(start_date_str, 1)
     end_date = parse_form_date(end_date_str, 0)
 
@@ -765,17 +801,13 @@ def extract_general_stat(request):
 
     for resource, query in queries.items():
         result = query_api.query(query=query)
-        for table in result:
-            for record in table.records:
-                print(f"record:{record}")
-
         results[resource] = result   
 
+    # process result
+    processed_data = process_resource_data(results, query_type, start_date, end_date)
+    print(f"processed_data: {processed_data}")
 
     influxdb_client.close()
-    # process result
-
-
     return JsonResponse({
         'start_date_str':start_date_str,
         'end_date_str':end_date_str,
