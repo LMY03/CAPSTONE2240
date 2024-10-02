@@ -726,6 +726,8 @@ def extract_general_stat(request):
     end_date_str = request.POST.get('enddate')
     scope = request.POST.get('scope') # All, per node, per class
 
+    print(f"scope: {scope}")
+    query_type = scope
     start_date = parse_form_date(start_date_str)
     end_date = parse_form_date(end_date_str)
 
