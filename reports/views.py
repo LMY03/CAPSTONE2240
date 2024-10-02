@@ -811,5 +811,4 @@ def extract_general_stat(request):
     return JsonResponse({
         'start_date_str':start_date_str,
         'end_date_str':end_date_str,
-        'scope':scope
     })
