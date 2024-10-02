@@ -17,10 +17,14 @@ bucket = config('INFLUXDB_BUCKET')
 proxmox_password = config('PROXMOX_PASSWORD')
 
 # Parse date to InfluxDB compatible
-def parse_form_date(date_string):
+def parse_form_date(date_string, is_start):
     try:
         dt = datetime.strptime(date_string, "%Y-%m-%d")
-        return dt.strftime("%Y-%m-%dT00:00:00Z")
+        if is_start:
+            return dt.strftime("%Y-%m-%dT00:00:00Z")
+        else:
+            next_day = dt + timedelta(days=1)
+            return next_day.strftime("%Y-%m-%dT00:00:00Z")
     except ValueError:
         raise ValueError(f"Invalid date format: {date_string}. Expected YYYY-MM-DD")
         
@@ -260,8 +264,8 @@ def index_csv(request):
         if not start_date_str or not end_date_str:
             return HttpResponse("Start date and end date are required", status=400)
 
-        start_date = parse_form_date(start_date_str)
-        end_date = parse_form_date(end_date_str)
+        start_date = parse_form_date(start_date_str, 1)
+        end_date = parse_form_date(end_date_str, 0)
 
         # # TODO: REMOVE!
         # print(f"Parsed start date: {start_date}")
@@ -428,8 +432,8 @@ def report_gen(request):
         date_diff = abs((datetime.strptime(end_date, "%Y-%m-%d") - datetime.strptime(start_date, "%Y-%m-%d")).days)
         window = "1d" if date_diff >= 30 else "1h"
 
-        sd = parse_form_date(start_date)
-        ed = parse_form_date(end_date)
+        sd = parse_form_date(start_date, 1)
+        ed = parse_form_date(end_date, 0)
         
         # node_metrics = ['cpu', 'memused', 'netin', 'netout', 'memtotal', 'swaptotal']
         
@@ -746,8 +750,8 @@ def extract_general_stat(request):
 
     print(f"scope: {scope}")
     query_type = scope
-    start_date = parse_form_date(start_date_str)
-    end_date = parse_form_date(end_date_str)
+    start_date = parse_form_date(start_date_str, 1)
+    end_date = parse_form_date(end_date_str, 0)
 
 
     # Get needed metrics 
