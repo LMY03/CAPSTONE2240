@@ -765,7 +765,10 @@ def extract_general_stat(request):
 
     for resource, query in queries.items():
         result = query_api.query(query=query)
-        print(f"result: {result}")
+        for table in result:
+            for record in table.records:
+                print(f"record:{record}")
+
         results[resource] = result   
 
 
