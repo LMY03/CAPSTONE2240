@@ -7,19 +7,30 @@ $(document).ready(function () {
   $('#filterForm').on('submit', function(e) {
     e.preventDefault();     // prevent the default action
 
-    $.ajax({
-      url: 'extract_general_stat',
-      type: "POST",
-      data: $(this).serialize(),
-      headers: {
-        "X-CSRFToken": $('input[name=csrfmiddlewaretoken]').val()
-      },
-      success: function(response) {
-        console.log("successful")
-      },
-      error: function(xhr, status, error) {
-        console.log("error")
-      }
-    })
-  })
+    // Create a form element
+    var form = document.createElement('form');
+    form.method = 'POST';
+    form.action = 'extract_general_stat';
+    
+    // Append all input fields from #filterForm
+    $(this).find('input, select').each(function() {
+      var input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = this.name;
+      input.value = this.value;
+      form.appendChild(input);
+    });
+
+    // Append CSRF token
+    var csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = 'csrfmiddlewaretoken';
+    csrfInput.value = $('input[name=csrfmiddlewaretoken]').val();
+    form.appendChild(csrfInput);
+
+    // Append form to body and submit
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
+  });
 });
