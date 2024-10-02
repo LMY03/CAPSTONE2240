@@ -583,7 +583,6 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
             raise ValueError("Invalid query type.")
         
         queries[resource] = query
-        print(f"query: {query}")
 
     return queries
 
@@ -760,13 +759,18 @@ def extract_general_stat(request):
     results = {}
 
     for resource, query in queries.items():
-        results[resource] = query_api.query(query=query)
+        result = query_api.query(query=query)
+        results[resource] = result   
+        for table in result:
+            for record in table.records:
+                print(f"record:{record}")
+
 
 
     influxdb_client.close()
     # process result
 
-            
+
     return JsonResponse({
         'start_date_str':start_date_str,
         'end_date_str':end_date_str,
