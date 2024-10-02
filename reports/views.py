@@ -577,7 +577,7 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
                     }}))
                     |> group(columns: ["class"])
                     |> sum(column: "_value")
-                    |> yield(name: "cpus_per_class")
+                    |> yield(name: "{resource}_per_class")
                     '''
         else:
             raise ValueError("Invalid query type.")
@@ -760,11 +760,8 @@ def extract_general_stat(request):
 
     for resource, query in queries.items():
         result = query_api.query(query=query)
+        print(f"result: {result}")
         results[resource] = result   
-        for table in result:
-            for record in table.records:
-                print(f"record:{record}")
-
 
 
     influxdb_client.close()
