@@ -15,10 +15,10 @@ $(document).ready(function () {
         "X-CSRFToken": $('input[name=csrfmiddlewaretoken]').val()
       },
       success: function(response) {
-
+        console.log("successful")
       },
       error: function(xhr, status, error) {
-
+        console.log("error")
       }
     })
   })
