@@ -726,6 +726,9 @@ def extract_general_stat(request):
     end_date_str = request.POST.get('enddate')
     scope = request.POST.get('scope') # All, per node, per class
 
+    start_date = parse_form_date(start_date_str)
+    end_date = parse_form_date(end_date_str)
+
 
     # Get needed metrics 
     # (number of VMs, total CPU, CPU%, total mem, mem%, total storage, storage%, netin and netout)
@@ -733,6 +736,8 @@ def extract_general_stat(request):
     class_list = ["CCINFOM", "ITCMSY2", "CCICOMP"] # 这里能获取到吗
     # class_list = None
     query =  generate_resource_query(start_date, end_date, query_type, class_list)
+    print(f"query: {query}")
+
     result = query_api.query(query=flux_query)
 
     influxdb_client.close()
