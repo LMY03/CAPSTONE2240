@@ -22,7 +22,7 @@ def parse_form_date(date_string):
         dt = datetime.strptime(date_string, "%Y-%m-%d")
         return dt.strftime("%Y-%m-%dT00:00:00Z")
     except ValueError:
-        raise ValueError(f"Invalid date format: {data_string}. Expected YYYY-MM-DD")
+        raise ValueError(f"Invalid date format: {date_string}. Expected YYYY-MM-DD")
         
 
 # Get Report Page
@@ -423,6 +423,7 @@ def report_gen(request):
 
         form_data = request.session.get('formData', {})
         start_date = form_data.get('startdate')
+        print(f"start_date: {start_date}")
         end_date = form_data.get('enddate')
         date_diff = abs((datetime.strptime(end_date, "%Y-%m-%d") - datetime.strptime(start_date, "%Y-%m-%d")).days)
         window = "1d" if date_diff >= 30 else "1h"
