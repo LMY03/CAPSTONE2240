@@ -741,7 +741,7 @@ def extract_general_stat(request):
     query =  generate_resource_query(start_date, end_date, query_type, class_list)
     print(f"query: {query}")
 
-    result = query_api.query(query=flux_query)
+    result = query_api.query(query=query)
 
     influxdb_client.close()
     # process result
