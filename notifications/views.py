@@ -5,8 +5,13 @@ import json
 from decouple import config
 from services.google_services import Create_Service
 
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
+from google_auth_oauthlib.flow import Flow, InstalledAppFlow
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaFileUpload, MediaIoBaseDownload
+from google.auth.transport.requests import Request
+
+# from sendgrid import SendGridAPIClient
+# from sendgrid.helpers.mail import Mail
 
 import base64
 from email.mime.multipart import MIMEMultipart
@@ -61,38 +66,56 @@ def comment_notif_tsg (to_email, data):
 
 def comment_notif_faculty(to_email, data, *faculty):
     print('inside comment_notif_faculty')
-    faculty = faculty if faculty else ('default_value',)
-    faculty_name = data.get('faculty_name', '')
-    email_data = {
-        "from": {
-            "email": config('EMAIL_HOST_USER')
-        },
-        "personalizations": [
-            {
-                "to": [],  # Placeholder to be populated
-                "dynamic_template_data": {
-                    "request_id": data['request_entry_id'],
-                    "comment": data['comment'],
-                    "faculty_name": faculty_name,
-                    "receipt": True,
-                }
-            }
-        ]
-    }
+    # faculty = faculty if faculty else ('default_value',)
+    # faculty_name = data.get('faculty_name', '')
+    # email_data = {
+    #     "from": {
+    #         "email": config('EMAIL_HOST_USER')
+    #     },
+    #     "personalizations": [
+    #         {
+    #             "to": [],  # Placeholder to be populated
+    #             "dynamic_template_data": {
+    #                 "request_id": data['request_entry_id'],
+    #                 "comment": data['comment'],
+    #                 "faculty_name": faculty_name,
+    #                 "receipt": True,
+    #             }
+    #         }
+    #     ]
+    # }
 
-    if 'faculty' in faculty:
-        email_data['personalizations'][0]['to'] = [{"email": f"{to_email}"}]  
-        email_data["template_id"] = "d-f532416d64ea429a81671879794c0958"  
-    elif 'admin' in faculty:
-        # Assuming `to_email` is a list of emails for admins
-        recipients = [{"email": email} for email in to_email]
-        email_data['personalizations'][0]['to'] = recipients
-        email_data["template_id"] = "d-e3593d8aabbc435ba143717a33ce1485"  
-    else:
-        email_data['personalizations'][0]['to'] = [{"email": f"{to_email}"}]
-        email_data["template_id"] = "d-0aabc8df6cf444c09777b1a3e485bf9d"  
+    # if 'faculty' in faculty:
+    #     email_data['personalizations'][0]['to'] = [{"email": f"{to_email}"}]  
+    #     email_data["template_id"] = "d-f532416d64ea429a81671879794c0958"  
+    # elif 'admin' in faculty:
+    #     # Assuming `to_email` is a list of emails for admins
+    #     recipients = [{"email": email} for email in to_email]
+    #     email_data['personalizations'][0]['to'] = recipients
+    #     email_data["template_id"] = "d-e3593d8aabbc435ba143717a33ce1485"  
+    # else:
+    #     email_data['personalizations'][0]['to'] = [{"email": f"{to_email}"}]
+    #     email_data["template_id"] = "d-0aabc8df6cf444c09777b1a3e485bf9d"
+
+    CLIENT_SECRET_FILE = './credentials.json'
+    API_NAME = 'gmail'
+    API_VERSION = 'v1'
+    SCOPES = ['https://mail.google.com/']
+
+    service = Create_Service(CLIENT_SECRET_FILE, API_NAME, API_VERSION, SCOPES)
+
+    emailMsg = 'You won $100,000'
+    mimeMessage = MIMEMultipart()
+    mimeMessage['to'] = '<Receipient>@gmail.com'
+    mimeMessage['subject'] = 'You won'
+    mimeMessage.attach(MIMEText(emailMsg, 'plain'))
+    raw_string = base64.urlsafe_b64encode(mimeMessage.as_bytes()).decode()
+
+    message = service.users().messages().send(userId='me', body={'raw': raw_string}).execute()
+    print(message)
+    print(service)
     
-    return send_email_sendgrid(email_data)
+    return service
 
 def testVM_notif_faculty(to_email, data):
     email_data = {

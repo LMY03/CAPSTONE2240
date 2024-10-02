@@ -7,20 +7,17 @@ from google.auth.transport.requests import Request
 
 
 def Create_Service(client_secret_file, api_name, api_version, *scopes):
-    print(client_secret_file, api_name, api_version, scopes, sep='-')
     CLIENT_SECRET_FILE = client_secret_file
-    print(os.path.abspath(CLIENT_SECRET_FILE))  
     API_SERVICE_NAME = api_name
     API_VERSION = api_version
     SCOPES = [scope for scope in scopes[0]]
-    print(SCOPES)
 
     cred = None
-
     pickle_file = f'token_{API_SERVICE_NAME}_{API_VERSION}.pickle'
-    # print(pickle_file)
+    absolute_path = os.path.abspath(pickle_file)
 
     if os.path.exists(pickle_file):
+        print(f"Loading pickle file {absolute_path}")
         with open(pickle_file, 'rb') as token:
             cred = pickle.load(token)
 
@@ -29,14 +26,16 @@ def Create_Service(client_secret_file, api_name, api_version, *scopes):
             cred.refresh(Request())
         else:
             flow = InstalledAppFlow.from_client_secrets_file(CLIENT_SECRET_FILE, SCOPES)
-            cred = flow.run_console()
-
-        with open(pickle_file, 'wb') as token:
-            pickle.dump(cred, token)
+            cred = flow.run_local_server()
+            print("Authorization successful")
+        try:
+            with open(pickle_file, 'wb') as token:
+                pickle.dump(cred, token)
+        except Exception as e:
+            print("Error during credentials handling:", e)
 
     try:
         service = build(API_SERVICE_NAME, API_VERSION, credentials=cred)
-        print(API_SERVICE_NAME, 'service created successfully')
         return service
     except Exception as e:
         print('Unable to connect.')
