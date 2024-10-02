@@ -582,6 +582,7 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
         else:
             raise ValueError("Invalid query type.")
         
+        print(f"query: {query}")
         queries[resource] = query
 
     return queries
