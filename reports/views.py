@@ -776,6 +776,24 @@ def process_resource_data(results, query_type, start_date, end_date):
 
     return processed_data
 
+def output_to_csv(data, query_type, filename):
+    if query_type == "all":
+        fieldnames = ['startdate', 'enddate', 'cpu', 'mem', 'maxmem', 'mem_usage(%)', 'used', 'total', 'storage_usage(%)']
+    elif query_type == "per node":
+        fieldnames = ['nodename', 'startdate', 'enddate', 'cpu', 'mem', 'maxmem', 'mem_usage(%)', 'used', 'total', 'storage_usage(%)']
+    elif query_type == "per class":
+        fieldnames = ['classname', 'startdate', 'enddate', 'cpu', 'mem', 'maxmem', 'mem_usage(%)', 'used', 'total', 'storage_usage(%)']
+    
+    with open(filename, 'w', newline='') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in data:
+            if query_type == "per node":
+                row['nodename'] = row.pop('node')
+            elif query_type == "per class":
+                row['classname'] = row.pop('class')
+            writer.writerow(row)
+
 # General Stats
 def extract_general_stat(request):
     influxdb_client = InfluxDBClient(url=INFLUX_ADDRESS, token=token, org=org)
@@ -806,6 +824,8 @@ def extract_general_stat(request):
     # process result
     processed_data = process_resource_data(results, query_type, start_date, end_date)
     print(f"processed_data: {processed_data}")
+
+    output_to_csv(processed_data, query_type, f"resource_usage_{query_type}_{start_date_str}_{end_date_str}.csv")
 
     influxdb_client.close()
     return JsonResponse({
