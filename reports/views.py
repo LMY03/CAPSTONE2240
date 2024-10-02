@@ -4,6 +4,7 @@ from django.http import JsonResponse, HttpResponse
 from django.core import serializers
 from proxmoxer import ProxmoxAPI
 from influxdb_client import InfluxDBClient
+from io import StringIO
 import json
 import csv
 from decouple import config
