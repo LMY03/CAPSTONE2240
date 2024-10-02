@@ -766,10 +766,6 @@ def extract_general_stat(request):
     influxdb_client.close()
     # process result
 
-    for table in result:
-        for record in table.records:
-            print(f"record:{record}")
-
             
     return JsonResponse({
         'start_date_str':start_date_str,
