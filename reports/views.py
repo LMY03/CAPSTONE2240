@@ -833,4 +833,4 @@ def extract_general_stat(request):
     print(f"processed_data: {processed_data}")
 
     influxdb_client.close()
-    return generate_csv_response(processed_data, query_type, f"resource_usage_{query_type}_{start_date_str}_{end_date_str}.csv")
+    return generate_csv_response(processed_data, query_type, start_date_str, end_date_str)
