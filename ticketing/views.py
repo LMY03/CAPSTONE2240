@@ -256,8 +256,6 @@ def add_ticket_comment(request, issue_ticket_id):
             issue_comment.ticket = issue_ticket
             issue_comment.user = request.user
             issue_comment.save()
-
-            user_profile = UserProfile.objects.get(user=request.user)
             
             files = request.FILES.getlist('files')
             if files:
@@ -267,6 +265,7 @@ def add_ticket_comment(request, issue_ticket_id):
                         comment=issue_comment,
                     )
 
+            user_profile = UserProfile.objects.get(user=request.user)
             if user_profile.is_faculty():
                 issue_ticket.resolve_date = None
                 issue_ticket.save()
