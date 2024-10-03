@@ -247,11 +247,9 @@ def download_issue_files(request, ticket_id):
 @login_required
 def add_ticket_comment(request, issue_ticket_id):
     if request.method == 'POST':
-        print("posted")
         form = IssueCommentForm(request.POST)
 
         if form.is_valid():
-            print("valid")
             issue_comment = form.save(commit=False)
             issue_ticket_id = form.cleaned_data['ticket']
             issue_ticket = get_object_or_404(IssueTicket, pk=issue_ticket_id)
@@ -263,6 +261,7 @@ def add_ticket_comment(request, issue_ticket_id):
 
             if user_profile.is_faculty():
                 issue_ticket.resolve_date = None
+                issue_ticket.save()
             
             files = request.FILES.getlist('files')
             if files:
@@ -271,8 +270,6 @@ def add_ticket_comment(request, issue_ticket_id):
                         file=file,
                         comment=issue_comment,
                     )
-            
-
 
             return redirect(reverse('ticketing:ticket_details', args=[issue_ticket_id]))
         
