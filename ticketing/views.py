@@ -258,10 +258,6 @@ def add_ticket_comment(request, issue_ticket_id):
             issue_comment.save()
 
             user_profile = UserProfile.objects.get(user=request.user)
-
-            if user_profile.is_faculty():
-                issue_ticket.resolve_date = None
-                issue_ticket.save()
             
             files = request.FILES.getlist('files')
             if files:
@@ -270,6 +266,10 @@ def add_ticket_comment(request, issue_ticket_id):
                         file=file,
                         comment=issue_comment,
                     )
+
+            if user_profile.is_faculty():
+                issue_ticket.resolve_date = None
+                issue_ticket.save()
 
             return redirect(reverse('ticketing:ticket_details', args=[issue_ticket_id]))
         
