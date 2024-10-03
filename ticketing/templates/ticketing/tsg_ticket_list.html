@@ -25,6 +25,7 @@ Ticket List
                     <tr>
                         <th scope="col">Ticket ID</th>
                         <th scope="col">Request ID</th>
+                        <th scope="col">Cateogry</th>
                         <th scope="col">Subject</th>
                         <th scope="col">Date Created</th>
                         <th scope="col">Status</th>
@@ -36,6 +37,7 @@ Ticket List
                     <tr>
                         <td>{{ issue_ticket.pk }}</td>
                         <td>{{ issue_ticket.request.pk }}</td>
+                        <td>{{ issue_ticket.category }}</td>
                         <td>{{ issue_ticket.subject }}</td>
                         <td>{{ issue_ticket.date_created }}</td>
                         <td>

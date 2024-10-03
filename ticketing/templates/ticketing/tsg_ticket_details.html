@@ -30,6 +30,7 @@ Ticket Details {{ issue_ticket.pk }}
                 <div class="card-body">
                     <h5 class="card-title mb-3">Ticket Information</h5>
                     <p><strong>Request ID:</strong> {{ issue_ticket.request.pk }}</p>
+                    <p><strong>Category:</strong> {{ issue_ticket.cateogry }}</p>
                     <p><strong>Subject:</strong> {{ issue_ticket.subject }}</p>
                     <p><strong>Description:</strong> {{ issue_ticket.description }}</p>
 

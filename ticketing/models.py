@@ -155,6 +155,8 @@ class UserProfile (models.Model):
     #system_password = models.CharField(max_length=45, null=True, default=None)
     #request_use_case = models.ForeignKey(RequestUseCase, on_delete= models.CASCADE, null = True)
 
+    def is_faculty(self): return self.user_type == 'faculty'
+
     def __str__(self) -> str:
         return f"{self.user.username} - Role: {self.user_type}"
 
@@ -207,7 +209,7 @@ class IssueTicket(models.Model):
         VM_CONNECTION = 'Virtual Machine Connection'
         INSTALLATION_ISSUES = 'Installation Issues'
         REQUEST_FOR_EXTENSION = 'Request for Extension'
-        TERMINATE_REQUEST = 'Terminate Request'
+        DELETE_REQUEST = 'Delete Request'
         ADDITIONAL = 'Additional Installation / Modification'
         OTHERS = 'General Problems'
         

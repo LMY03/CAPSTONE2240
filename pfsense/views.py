@@ -28,7 +28,7 @@ def generate_dest_ports(no_of_ports_needed):
     used_ports_set = set(map(int, used_ports))
 
     # Define the range of dynamic/private ports
-    all_ports = set(range(49152, 65536))
+    all_ports = set(range(2000, 65536))
     available_ports = all_ports - used_ports_set
 
     # numbering scheme, tsg lagay
