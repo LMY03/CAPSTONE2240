@@ -751,7 +751,7 @@ def process_resource_data(results, query_type, start_date, end_date):
         row = {
             'startdate': start_date,
             'enddate': end_date,
-            'cpus': results['cpus'][0].records[0].values['_value'],      
+            'cpu cores': results['cpus'][0].records[0].values['_value'],   
             'cpu': results['cpu'][0].records[0].values['_value'],
             'mem': results['mem'][0].records[0].values['_value'],
             'maxmem': results['maxmem'][0].records[0].values['_value'],
@@ -772,7 +772,7 @@ def process_resource_data(results, query_type, start_date, end_date):
                 key: node_or_class,
                 'startdate': start_date,
                 'enddate': end_date,
-                'cpus': cpu_record.values['_value'],
+                'cpu cores': cpu_record.values['_value'],
                 'cpu': next(r.values['_value'] for r in results['cpu'][0].records if r.values[key] == node_or_class),
                 'mem': next(r.values['_value'] for r in results['mem'][0].records if r.values[key] == node_or_class),
                 'maxmem': next(r.values['_value'] for r in results['maxmem'][0].records if r.values[key] == node_or_class),
