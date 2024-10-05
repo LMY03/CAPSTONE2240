@@ -815,9 +815,9 @@ def generate_csv_response(data, query_type, start_date, end_date):
     writer.writeheader()
     for row in data:
         if query_type == "per-node":
-            row['nodename'] = row.pop('host')
+            row['nodename'] = row.pop('nodename')
         elif query_type == "per-class":
-            row['classname'] = row.pop('class')
+            row['classname'] = row.pop('classname')
         writer.writerow(row)
     
     response = HttpResponse(
