@@ -1244,7 +1244,7 @@ CREATE TABLE `proxmox_vmtemplates` (
 
 LOCK TABLES `proxmox_vmtemplates` WRITE;
 /*!40000 ALTER TABLE `proxmox_vmtemplates` DISABLE KEYS */;
-INSERT INTO `proxmox_vmtemplates` VALUES (1,'3000','Ubuntu-Desktop-24 (GUI)',1,1024,15,'pve',0,'rdp'),(2,'3001','Ubuntu-Desktop-22 (GUI)',1,1024,15,'pve',0,'rdp'),(3,'3002','Ubuntu-Server-24 (TUI)',1,1024,15,'pve',0,'ssh'),(4,'3003','Ubuntu-Server-22 (TUI)',1,1024,15,'pve',0,'ssh'),(5,'5000','Ubuntu-LXC-23',1,1024,10,'pve',1,'ssh');
+INSERT INTO `proxmox_vmtemplates` VALUES (1,'3000','Ubuntu-Desktop-24 (GUI)',1,1024,15,'pve',0,'rdp'),(2,'3001','Ubuntu-Desktop-22 (GUI)',1,1024,15,'pve',0,'rdp'),(3,'3000','Ubuntu-Server-24 (TUI)',1,1024,15,'pve',0,'ssh'),(4,'3001','Ubuntu-Server-22 (TUI)',1,1024,15,'pve',0,'ssh'),(5,'4000','Ubuntu-LXC-23',1,1024,10,'jin',1,'ssh');
 /*!40000 ALTER TABLE `proxmox_vmtemplates` ENABLE KEYS */;
 UNLOCK TABLES;
 
