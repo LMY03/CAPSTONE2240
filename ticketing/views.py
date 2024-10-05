@@ -1,5 +1,6 @@
 from typing import Any
 from django import forms
+from django.db.models import Subquery, OuterRef
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -84,9 +85,12 @@ def faculty_request_details(request, request_id):
 
     if request_entry.is_ongoing:
         context['destination_ports'] = DestinationPorts.objects.filter(port_rule__in=port_rules)
-        context['system_accounts'] = VirtualMachines.objects.filter(request=request_entry)
+        context['system_accounts'] = User.objects.filter(
+            username__in=VirtualMachines.objects.filter(request__pk=request_id).values_list('vm_name', flat=True),
+        )
+        # context['system_accounts'] = VirtualMachines.objects.filter(request=request_entry)
 
-    return render (request, 'ticketing/faculty_request_details.html', context=context)
+    return render(request, 'ticketing/faculty_request_details.html', context=context)
 
 def tsg_request_details(request, request_id):
     request_entry = get_object_or_404(RequestEntry, pk=request_id)
@@ -132,7 +136,9 @@ def tsg_request_details(request, request_id):
 
     if request_entry.is_ongoing:
         context['destination_ports'] = DestinationPorts.objects.filter(port_rule__in=port_rules)
-        context['system_accounts'] = VirtualMachines.objects.filter(request=request_entry)
+        context['system_accounts'] = User.objects.filter(
+            username__in=VirtualMachines.objects.filter(request__pk=request_id).values_list('vm_name', flat=True),
+        )
         
     return render (request, 'ticketing/tsg_request_details.html', context=context)
 
