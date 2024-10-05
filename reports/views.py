@@ -837,7 +837,13 @@ def extract_general_stat(request):
     ).values_list('request_use_case', flat=True)
 
     for entry in raw_class_list:
-        print(f"entry: {entry}")
+        processed_entry = entry.split('_')[0]
+        if processed_entry not in class_list:
+            class_list.append(processed_entry)
+
+    print("CLASS LIST")
+    for i in class_list:
+        print(class_list)
 
     queries =  generate_resource_query(start_date, end_date, query_type, class_list)
 
