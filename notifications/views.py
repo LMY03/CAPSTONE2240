@@ -20,9 +20,8 @@ API_NAME = 'gmail'
 API_VERSION = 'v1'
 SCOPES = ['https://mail.google.com/']
 
-service = Create_Service(CLIENT_SECRET_FILE, API_NAME, API_VERSION, SCOPES)
-
 def comment_notif_tsg (to_email, data):
+    service = Create_Service(CLIENT_SECRET_FILE, API_NAME, API_VERSION, SCOPES)
     mimeMessage = MIMEMultipart()
     mimeMessage["to"] = ", ".join(to_email)
     mimeMessage['subject'] = 'New request ticket for VM provisioning'
@@ -47,6 +46,7 @@ def comment_notif_tsg (to_email, data):
 
 def comment_notif_faculty(to_email, data, *faculty):
     print('inside comment_notif_faculty')
+    service = Create_Service(CLIENT_SECRET_FILE, API_NAME, API_VERSION, SCOPES)
     faculty = faculty if faculty else ('default_value',)
     faculty_name = data.get('faculty_name', '')
     email_data = {
@@ -88,6 +88,7 @@ def comment_notif_faculty(to_email, data, *faculty):
     return message
 
 def testVM_notif_faculty(to_email, data):
+    service = Create_Service(CLIENT_SECRET_FILE, API_NAME, API_VERSION, SCOPES)
     mimeMessage = MIMEMultipart()
     mimeMessage["to"] = f'{to_email}'
     mimeMessage['subject'] = 'A test virtual machine has been created'
@@ -110,6 +111,7 @@ def testVM_notif_faculty(to_email, data):
     return message
 
 def reject_notif_faculty (to_email, data):
+    service = Create_Service(CLIENT_SECRET_FILE, API_NAME, API_VERSION, SCOPES)
     mimeMessage = MIMEMultipart()
     mimeMessage["to"] = f'{to_email}'
     mimeMessage['subject'] = 'Your request has been rejected by the admin'
@@ -132,6 +134,7 @@ def reject_notif_faculty (to_email, data):
     return message
 
 def accept_notif_tsg (to_email, data):
+    service = Create_Service(CLIENT_SECRET_FILE, API_NAME, API_VERSION, SCOPES)
     mimeMessage = MIMEMultipart()
     mimeMessage["to"] = f'{to_email}'
     mimeMessage['subject'] = 'The test virtual machine has been accepted'
