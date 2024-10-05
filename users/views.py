@@ -1,19 +1,18 @@
+# from django.contrib.auth.models import User
 from django.shortcuts import get_object_or_404, render, redirect
-from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
-from ticketing.models import RequestEntry, Comment, RequestUseCase, VMTemplates, UserProfile
-from proxmox.models import VirtualMachines
+from ticketing.models import RequestEntry, Comment, RequestUseCase
+from proxmox.models import VirtualMachines, VMTemplates
 from decouple import config
 
 from guacamole.models import GuacamoleUser, GuacamoleConnection
 from pfsense.models import DestinationPorts
+from users.models import User
 
 from ticketing.views import tsg_requests_list
 
-
 from django.shortcuts import render
-from django.contrib.auth.models import User
 
 from django.core.exceptions import ValidationError
 from django.contrib import messages
@@ -46,10 +45,9 @@ def login_view(request):
 # Not Working
 @login_required
 def render_home(request):
-    user_role = request.user.userprofile.user_type
-    if user_role == 'student': return student_home(request)
-    elif user_role == 'faculty': return faculty_home(request)
-    elif user_role == 'admin': return tsg_home(request)
+    if request.user.is_student() : return student_home(request)
+    elif request.user.is_faculty() : return faculty_home(request)
+    elif request.user.is_tsg() : return tsg_home(request)
 
 def home_filter_view(request):
     status = request.GET.get('status')
@@ -80,7 +78,7 @@ def student_home(request):
 @login_required
 def faculty_home(request):
     vm_list = []
-    request_entries = RequestEntry.objects.filter(requester=request.user, is_vm_tested=True).exclude(status=RequestEntry.Status.DELETED).order_by('-id')
+    request_entries = RequestEntry.objects.filter(requester=request.user, vm_date_tested__isnull=True).exclude(status=RequestEntry.Status.DELETED).order_by('-id')
     
     for request_entry in request_entries:
         vm_list += VirtualMachines.objects.filter(request=request_entry).exclude(is_lxc=True, status=VirtualMachines.Status.DESTROYED)
@@ -89,6 +87,7 @@ def faculty_home(request):
     
 @login_required
 def tsg_home(request):
+    print("test1")
     request_entry = RequestEntry.objects.filter(status = 'PENDING')
     count = request_entry.count()
     context = {}
@@ -205,7 +204,7 @@ def faculty_request_list(request):
     return render(request, 'users/faculty_request_list.html', { 'request_entries': request_entries })
 
 def faculty_vm_list(request):
-    request_entries = RequestEntry.objects.filter(requester=request.user).exclude(is_vm_tested=False).exclude(status=RequestEntry.Status.DELETED).order_by('-id')
+    request_entries = RequestEntry.objects.filter(requester=request.user).exclude(vm_date_tested__isnull=True).exclude(status=RequestEntry.Status.DELETED).order_by('-id')
     vm_list = []
     for request_entry in request_entries:
         vm_list.append(VirtualMachines.objects.filter(request=request_entry).exclude(status=VirtualMachines.Status.DESTROYED).order_by('id'))
@@ -255,7 +254,7 @@ def add_users (request):
                             user = User.objects.create_user(username=email, email=email, password=password)
                             user.first_name = fullname
                             user.save()
-                            user_profile = UserProfile.objects.create(user = user, user_type = user_profile)
+                            # user_profile = UserProfile.objects.create(user = user, user_type = user_profile)
                             messages.success(request, f"User {fullname} ({email}) created successfully.")
                         except ValidationError as e:
                             messages.error(request, f"Error creating user {email}: {e}")
@@ -278,7 +277,7 @@ def add_users (request):
                         fullname = ' '.join(name_parts).title()
                         user.first_name = fullname.title()
                         user.save()
-                        user_profile = UserProfile.objects.create(user = user, user_type = user_profile)
+                        # user_profile = UserProfile.objects.create(user = user, user_type = user_profile)
                         messages.success(request, f"User {email} created successfully.")
                     except ValidationError as e:
                         messages.error(request, f"Error creating user {email}: {e}")
@@ -294,13 +293,13 @@ def user_management (request):
     
     data = []
     for user in users:
-        user_profile = UserProfile.objects.filter(user=user).first()
-        print (user_profile)
+        # user_profile = UserProfile.objects.filter(user=user).first()
+        # print (user_profile)
         data.append({
             'id': user.id,
             'full_name': user.get_full_name() if user.first_name or user.last_name else user.username,
             'email': user.email if user.email  else 'No Email',
-            'user_type': user_profile.user_type.title() if user_profile else 'No Profile',
+            # 'user_type': user_profile.user_type.title() if user_profile else 'No Profile',
             'password' : '123467'
         })
     
@@ -322,7 +321,7 @@ def delete_user (request, user_id):
 def edit_user(request):
     data = request.POST
     user = User.objects.get(id=data.get('user_id'))
-    user_profile = UserProfile.objects.get(user = user)
+    # user_profile = UserProfile.objects.get(user = user)
 
     # Check for email change
     email = data.get('change_email')
@@ -334,9 +333,9 @@ def edit_user(request):
         new_password = generate_random_string()
         user.set_password(new_password)  
 
-    if data.get('change_user_profile'):
-        user_profile.user_type = data.get('change_user_profile')
-        user_profile.save()
+    # if data.get('change_user_profile'):
+    #     user_profile.user_type = data.get('change_user_profile')
+    #     user_profile.save()
 
     user.save()
 

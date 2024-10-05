@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 from django.views import generic
-from django.contrib.auth.models import User
+# from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.forms.models import model_to_dict
 from django.http import JsonResponse
@@ -20,8 +20,9 @@ from guacamole import guacamole
 from proxmox import views, proxmox
 from pfsense.views import add_port_forward_rules, delete_port_forward_rules
 
-from .models import RequestEntry, Comment, RequestUseCase, PortRules, UserProfile, RequestEntryAudit, VMTemplates, IssueTicket, IssueFile, IssueComment, IssueCommentFile
-from proxmox.models import VirtualMachines, Nodes
+from users.models import User
+from .models import RequestEntry, Comment, RequestUseCase, PortRules, RequestEntryAudit, IssueTicket, IssueFile, IssueComment, IssueCommentFile
+from proxmox.models import VirtualMachines, Nodes, VMTemplates
 from guacamole.models import GuacamoleConnection, GuacamoleUser
 from pfsense.models import DestinationPorts
 from notifications.views import comment_notif_faculty, comment_notif_tsg, testVM_notif_faculty, reject_notif_faculty, accept_notif_tsg
@@ -35,9 +36,10 @@ from CAPSTONE2240.utils import download_files
 
 @login_required
 def request_list(request):
-    user_role = get_object_or_404(UserProfile, user=request.user).user_type
-    if user_role == 'faculty' : return faculty_request_list(request)
-    elif user_role == 'admin' : return tsg_requests_list(request)
+    print(request.user.is_tsg)
+    print(request.user.is_tsg())
+    if request.user.is_faculty() : return faculty_request_list(request)
+    elif request.user.is_tsg() : return tsg_requests_list(request)
     else : return redirect('/')
     
 def faculty_request_list(request):
@@ -51,9 +53,8 @@ def tsg_requests_list(request):
 
 @login_required
 def request_details(request, request_id):
-    user_role = get_object_or_404(UserProfile, user=request.user).user_type
-    if user_role == 'faculty' : return faculty_request_details(request, request_id)
-    elif user_role == 'admin' : return tsg_request_details(request, request_id)
+    if request.user.is_faculty() : return faculty_request_details(request, request_id)
+    elif request.user.is_tsg() : return tsg_request_details(request, request_id)
     else : return redirect('/')
 
 def faculty_request_details(request, request_id):
@@ -137,9 +138,8 @@ def tsg_request_details(request, request_id):
 
 @login_required
 def ticket_list(request):
-    user_role = get_object_or_404(UserProfile, user=request.user).user_type
-    if user_role == 'faculty' : return faculty_ticket_list(request)
-    elif user_role == 'admin' : return tsg_ticket_list(request)
+    if request.user.is_faculty() : return faculty_ticket_list(request)
+    elif request.user.is_tsg() : return tsg_ticket_list(request)
     else : return redirect('/')
 
 def tsg_ticket_list(request):
@@ -164,9 +164,8 @@ def faculty_ticket_list(request):
 
 @login_required
 def ticket_details(request, ticket_id):
-    user_role = get_object_or_404(UserProfile, user=request.user).user_type
-    if user_role == 'faculty' : return faculty_ticket_details(request, ticket_id)
-    elif user_role == 'admin' : return tsg_ticket_details(request, ticket_id)
+    if request.user.is_faculty : return faculty_ticket_details(request, ticket_id)
+    elif request.user.is_tsg : return tsg_ticket_details(request, ticket_id)
     else : return redirect('/')
 
 def faculty_ticket_details(request, ticket_id):
@@ -265,8 +264,7 @@ def add_ticket_comment(request, issue_ticket_id):
                         comment=issue_comment,
                     )
 
-            user_profile = UserProfile.objects.get(user=request.user)
-            if user_profile.is_faculty():
+            if request.user.is_faculty():
                 issue_ticket.resolve_date = None
                 issue_ticket.save()
 
@@ -285,11 +283,10 @@ def add_comment(request, pk):
     request_entry = get_object_or_404(RequestEntry, pk=pk)
     if request.method == 'POST':
         user = request.user
-        user_profile = get_object_or_404(UserProfile, user=user)
         requester_user = request_entry.requester
         new_data = {}
         
-        if request_entry.assigned_to is None and user_profile.user_type == 'admin':
+        if request_entry.assigned_to is None and user.is_tsg():
             new_data['assigned_to'] = user
         
         comment_text = request.POST.get('comment')
@@ -297,24 +294,26 @@ def add_comment(request, pk):
         if request_entry.status == RequestEntry.Status.PENDING:
             new_data['status'] = RequestEntry.Status.FOR_REVISION
 
-        if user_profile.user_type == 'admin':
+        if user.is_tsg():
             data = {
                 'comment' : comment_text, 
                 'request_entry_id' : request_entry.id
             }
             print(requester_user.email, data)
             comment_notif_faculty(requester_user.email, data) # Admin comments to the request ticket
-        elif user_profile.user_type == 'faculty':
+        elif user.is_faculty():
             data = {
                 'comment' : comment_text, 
                 'request_entry_id' : request_entry.id, 
                 'faculty_name': requester_user.get_full_name()
             }
             if request_entry.assigned_to and request_entry.assigned_to.email: #Checks if there is an assigned TSG
-                comment_notif_faculty(request_entry.assigned_to.email, data, user_profile.user_type) # Faculty replies back to the comment
+                comment_notif_faculty(request_entry.assigned_to.email, data, user.user_type) # Faculty replies back to the comment
             else: # This is for the situation where there is no assigned to yet, and the faculty comments
-                admin_user_profiles = UserProfile.objects.filter(user_type='admin')
-                admin_user_ids = admin_user_profiles.values_list('user_id', flat=True)
+                # admin_user_profiles = UserProfile.objects.filter(user_type='admin')
+                # admin_user_ids = admin_user_profiles.values_list('user_id', flat=True)
+
+                admin_user_ids = User.objects.filter(user_type=User.UserType.TSG).values_list('user_id', flat=True)
 
                 tsgUsers = User.objects.filter(id__in = admin_user_ids)
                 tsgEmails = []
@@ -364,7 +363,6 @@ def new_form_submit(request):
     if request.method == "POST":
         print("Inside the request.method post")
         # get data
-        requester = get_object_or_404(User, username=request.user)
         data = request.POST
         template_id = data.get("template_id")
         cores = data.get("cores")
@@ -375,10 +373,12 @@ def new_form_submit(request):
         other_config = data.get("other_configs")
         use_case = data.get('use_case')
         is_recurring = data.get('recurring')
-        vmTemplateID = VMTemplates.objects.get(id = template_id)
         # TODO: data verification
 
-        if is_recurring: expiration_date = None
+        vmTemplateID = VMTemplates.objects.get(id=template_id)
+        requester = get_object_or_404(User, pk=request.user.pk)
+
+        if is_recurring : expiration_date = None
         
         # create request object
         new_request = RequestEntry.objects.create(
@@ -430,22 +430,23 @@ def new_form_submit(request):
                         #description = description
                     )
 
-        admin_user_profiles = UserProfile.objects.filter(user_type='admin')
-        admin_user_ids = admin_user_profiles.values_list('user_id', flat=True)
+        # admin_user_profiles = UserProfile.objects.filter(user_type='admin')
+        # admin_user_ids = admin_user_profiles.values_list('user_id', flat=True)
+        tsg_emails = User.objects.filter(user_type=User.UserType.TSG).values_list('email', flat=True)
 
-        tsgUsers = User.objects.filter(id__in = admin_user_ids)
-        tsgEmails = []
-        for tsg in tsgUsers:
-            tsgEmails.append(tsg.email)
+        # tsgUsers = User.objects.filter(id__in = admin_user_ids)
+        # tsgEmails = []
+        # for tsg in tsgUsers:
+        #     tsgEmails.append(tsg.email)
         
-        print (tsgEmails)
+        print (tsg_emails)
         data = {
             'vm_template_name' : vmTemplateID.vm_name,
             'use_case' : use_case,
             'vm_count' : gVM_count,
             'faculty_name' : requester.get_full_name()
         }
-        comment_notif_tsg(tsgEmails, data)
+        comment_notif_tsg(tsg_emails, data)
     return JsonResponse({'status': 'ok'}, status=200)
 
 def log_request_entry_changes(request_entry, changed_by, new_data, user):
@@ -649,7 +650,7 @@ def request_reject(request, id):
 def request_test_vm_ready(request, id):
     
     request_entry = get_object_or_404(RequestEntry, pk=id)
-    request_entry.is_vm_tested = True
+    request_entry.vm_date_tested = timezone.localtime()
     request_entry.save()
     
     vm = get_object_or_404(VirtualMachines, request=request_entry)

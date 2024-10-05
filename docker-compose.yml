@@ -12,13 +12,12 @@ services:
       MYSQL_PASSWORD: ${MYSQL_CAP2240_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./cap2240.sql:/docker-entrypoint-initdb.d/cap2240.sql
+      - ./test.sql:/docker-entrypoint-initdb.d/cap2240.sql
+      # - ./cap2240.sql:/docker-entrypoint-initdb.d/cap2240.sql
     healthcheck:
       test: ["CMD", "mysql", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}", "-e", "SELECT 1"]
       timeout: 20s
       retries: 10
-    networks:
-      - app-network
 
   django:
     build:
@@ -32,8 +31,6 @@ services:
     restart: always
     volumes:
       - .:/app
-      - /home/${USERNAME}/.ssh/id_rsa:/root/.ssh/id_rsa:ro
-      - /home/${USERNAME}/.ssh/id_rsa.pub:/root/.ssh/id_rsa.pub:ro
     ports:
       - "8000:8000"
     env_file:
@@ -45,12 +42,6 @@ services:
         condition: service_healthy
       celery:
         condition: service_healthy
-    networks:
-      - app-network
-      # ansible:
-      #   condition: service_started
-    # links:
-    #   - ansible
 
   guacamole:
     image: guacamole/guacamole:latest
@@ -69,8 +60,6 @@ services:
     depends_on:
       - guacd
       - mysql
-    networks:
-      - app-network
 
   guacd:
     image: guacamole/guacd:latest
@@ -78,8 +67,6 @@ services:
     restart: always
     ports:
       - "4822:4822"
-    networks:
-      - app-network
     
   influxdb:
     image: influxdb:latest
@@ -97,8 +84,6 @@ services:
     volumes:
       - influxdb_data:/var/lib/influxdb2
       - influxdb_config:/etc/influxdb2
-    networks:
-      - app-network
 
   redis:
     image: redis:6.0
@@ -111,8 +96,6 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-    networks:
-      - app-network
 
   celery:
     build:
@@ -138,62 +121,11 @@ services:
       interval: 15s
       timeout: 5s
       retries: 5
-    networks:
-      - app-network
-
-  # netdata:
-  #   image: netdata/netdata:latest
-  #   container_name: netdata
-  #   hostname: CAP-2240
-  #   pid: host
-  #   network_mode: host
-  #   restart: unless-stopped
-  #   ports:
-  #     - "19999:19999"
-  #   cap_add:
-  #     - SYS_PTRACE
-  #     - SYS_ADMIN
-  #   security_opt:
-  #     - apparmor:unconfined
-  #   volumes:
-  #     - netdataconfig:/etc/netdata
-  #     - netdatalib:/var/lib/netdata
-  #     - netdatacache:/var/cache/netdata
-  #     - /etc/passwd:/host/etc/passwd:ro
-  #     - /etc/group:/host/etc/group:ro
-  #     - /etc/localtime:/etc/localtime:ro
-  #     - /proc:/host/proc:ro
-  #     - /sys:/host/sys:ro
-  #     - /etc/os-release:/host/etc/os-release:ro
-  #     - /var/log:/host/var/log:ro
-  #     - /var/run/docker.sock:/var/run/docker.sock:ro
-
-  # ansible:
-  #   image: cytopia/ansible:latest
-  #   restart: always
-  #   container_name: ansible
-  #   volumes:
-  #     - /home/${USERNAME}/playbooks:/playbooks
-  #     - /home/${USERNAME}/inventory:/inventory
-  #     - /home/${USERNAME}/.ssh/id_rsa:/root/.ssh/id_rsa:ro
-  #     - /home/${USERNAME}/.ssh/id_rsa.pub:/root/.ssh/id_rsa.pub:ro
-  #   environment:
-  #     ANSIBLE_HOST_KEY_CHECKING: "False"
-  #   working_dir: /playbooks
-  #   entrypoint: ["sh", "-c"]
-  #   command: ["apk update && apk add --no-cache openssh-client && tail -f /dev/null"]
 
 volumes:
   mysql_data:
   influxdb_data:
   influxdb_config:
-  # netdataconfig:
-  # netdatalib:
-  # netdatacache:
-
-networks:
-  app-network:
-    driver: bridge
 
 # References
 

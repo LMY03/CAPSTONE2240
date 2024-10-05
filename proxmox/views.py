@@ -5,11 +5,10 @@ from decouple import config
 import secrets, string
 
 from guacamole import guacamole
-from autotool import ansible
 from . import proxmox
 
-from . models import VirtualMachines
-from ticketing.models import RequestEntry, UserProfile, VMTemplates
+from . models import VirtualMachines, VMTemplates
+from ticketing.models import RequestEntry, RequestUseCase
 from guacamole.models import GuacamoleConnection, GuacamoleUser
 from pfsense.models import DestinationPorts
 
@@ -19,13 +18,12 @@ from django.contrib.auth.models import User
 
 @login_required
 def vm_list(request):
-    user_role = get_object_or_404(UserProfile, user=request.user).user_type
-    if user_role == 'faculty' : return faculty_vm_list(request)
-    elif user_role == 'admin' : return tsg_vm_list(request)
+    if request.user.is_faculty() : return faculty_vm_list(request)
+    elif request.user.is_tsg() : return tsg_vm_list(request)
     else : return redirect('/')
 
 def faculty_vm_list(request):
-    request_entries = RequestEntry.objects.filter(requester=request.user, is_vm_tested=True).exclude(status=RequestEntry.Status.DELETED).order_by('-id')
+    request_entries = RequestEntry.objects.filter(requester=request.user, vm_date_tested__isnull=False).exclude(status=RequestEntry.Status.DELETED).order_by('-id')
     
     vm_list = []
     for request_entry in request_entries: 
@@ -38,9 +36,8 @@ def tsg_vm_list(request):
 
 @login_required
 def vm_details(request, vm_id):
-    user_role = get_object_or_404(UserProfile, user=request.user).user_type
-    if user_role == 'faculty' : return faculty_vm_details(request, vm_id)
-    elif user_role == 'admin' : return tsg_vm_details(request, vm_id)
+    if request.user.is_faculty() : return faculty_vm_details(request, vm_id)
+    elif request.user.is_tsg() : return tsg_vm_details(request, vm_id)
     else : return redirect('/')
 
 def faculty_vm_details(request, vm_id):
@@ -71,120 +68,21 @@ def generate_vm_ids(no_of_vm):
 
     return new_ids
 
-def vm_provision_process(vm_id, classnames, no_of_vm, cpu_cores, ram, request_id):
+def generate_vm_names(request_id):
+    vm_names = []
+    request_entry = get_object_or_404(RequestEntry, request__id=request_id)
+    request_use_cases = RequestUseCase.objects.filter(request=request_entry).values('request_use_case', 'vm_count')
+    for request_use_case in request_use_cases:
+        for i in range(request_use_case['vm_count']):
+                if request_entry.is_course(): 
+                    vm_name = f"{request_use_case['request_use_case'].replace('_', '-')}"
+                else: 
+                    vm_name = f"{request_entry.get_request_type()}-{request_entry.requester.last_name}-{request_entry.id}"
 
-    request_entry = get_object_or_404(RequestEntry, id=request_id)
-    orig_vm = get_object_or_404(VirtualMachines, vm_id=vm_id, request_id=request_id)
-    guacamole_connection = get_object_or_404(GuacamoleConnection, vm=orig_vm)
-    password = User.objects.make_random_password()
-    orig_vm.system_password = password
-    orig_vm.save()
-    
-    user = User(username=orig_vm.vm_name)
-    user.set_password(password)
-    user.save()
-    UserProfile.objects.create(user=user)
-    guacamole_connection.user = get_object_or_404(GuacamoleUser, system_user=user)
-    guacamole_connection.save()
+                vm_name = f"{vm_name}-Group-{i + 1}"
+                vm_names.append(vm_name)
 
-    node = orig_vm.node.name
-    protocol = request_entry.template.guacamole_protocol
-    port = {
-        'vnc': 5901,
-        'rdp': 3389,
-        'ssh': 22
-    }.get(protocol)
-
-    upids = []
-    new_vm_ids = []
-    hostnames = []
-    passwords = []
-    vm_passwords = []
-
-    new_vm_ids = generate_vm_ids(no_of_vm)
-    orig_vm_password = User.objects.make_random_password()
-    vm_passwords.append(orig_vm_password)
-    # guacamole.update_connection() # change ip of original vm
-
-    if orig_vm.is_active():
-        proxmox.shutdown_vm(node, orig_vm.vm_id)
-        proxmox.wait_for_vm_stop(node, orig_vm.vm_id)
-        orig_vm.set_shutdown()
-
-
-    for new_vm_id, vm_name in zip(new_vm_ids, classnames):
-        password = User.objects.make_random_password()
-        passwords.append(password)
-        VirtualMachines.objects.create(vm_id=new_vm_id, vm_name=vm_name, cores=cpu_cores, ram=ram, storage=request_entry.template.storage, request=request_entry, node=orig_vm.node, system_password=password)
-        upids.append(proxmox.clone_vm(node, vm_id, new_vm_id, vm_name))
-
-    for vm_id, upid in zip(new_vm_ids, upids):
-        proxmox.wait_for_task(node, upid)
-        proxmox.start_vm(node, vm_id)
-
-    tsg_guacamole_username = get_object_or_404(GuacamoleUser, system_user=request_entry.requester).username
-    faculty_guacamole_username = get_object_or_404(GuacamoleUser, system_user=request_entry.requester).username
-
-    guacamole.assign_connection_group(faculty_guacamole_username, guacamole_connection.connection_group_id)
-    guacamole.revoke_connection_group(tsg_guacamole_username, guacamole_connection.connection_group_id)
-
-    guacamole.revoke_connection(tsg_guacamole_username, guacamole_connection.connection_id)
-    guacamole.assign_connection(user.username, guacamole_connection.connection_id)
-    guacamole.assign_connection(faculty_guacamole_username, guacamole_connection.connection_id)
-    
-    vms = []
-    vms.append(orig_vm)
-    proxmox.start_vm(node, orig_vm.vm_id)
-    for vm_id in new_vm_ids:
-        proxmox.wait_for_vm_start(node, vm_id)
-        hostnames.append(proxmox.wait_and_get_ip(node, vm_id))
-        vm_password = User.objects.make_random_password()
-        vm_passwords.append(vm_password)
-
-        # hostnames.append("10.10.10." + str(vm_id))
-
-    # orig_vm.ip_add = "10.10.10.10"
-    orig_vm.ip_add =  proxmox.wait_and_get_ip(node, orig_vm.vm_id)
-    orig_vm.save()
-    hostnames.insert(0, orig_vm.ip_add)
-
-    proxmox.shutdown_vm(node, orig_vm.vm_id)
-
-    for vm_id in new_vm_ids:
-        proxmox.shutdown_vm(node, vm_id)
-        proxmox.wait_for_vm_stop(node, vm_id)
-
-    vm_username = config('DEFAULT_VM_USERNAME')
-
-    for i in range(no_of_vm):
-        # passwords.append(User.objects.make_random_password())
-        user = User(username=classnames[i])
-        user.set_password(passwords[i])
-        user.save()
-        UserProfile.objects.create(user=user)
-
-        # guacamole_connection_ids.append(guacamole.create_connection(classnames[i], protocol, port, hostnames[i], vm_username, passwords[i], guacamole_connection_group_id))
-        # guacamole_connection_id = guacamole.create_connection(classnames[i], protocol, port, hostnames[i+1], vm_username, vm_passwords[i+1], guacamole_connection.connection_group_id)
-        guacamole_connection_id = guacamole.create_connection(classnames[i], protocol, port, hostnames[i], vm_username, "DLSU1234!", guacamole_connection.connection_group_id)
-        guacamole.assign_connection(classnames[i], guacamole_connection_id)
-        guacamole.assign_connection(faculty_guacamole_username, guacamole_connection_id)
-        
-        # vm = VirtualMachines(request=request_entry, vm_id=new_vm_ids[i], vm_name=classnames[i], cores=cpu_cores, ram=ram, storage=request_entry.template.storage, ip_add=hostnames[i], node=orig_vm.node, status=VirtualMachines.Status.SHUTDOWN)
-        vm = get_object_or_404(VirtualMachines, vm_name=classnames[i], status=VirtualMachines.Status.CREATING)
-        vm.set_ip_add(hostnames[i])
-        vm.set_shutdown()
-        vms.append(vm)
-        GuacamoleConnection(user=get_object_or_404(GuacamoleUser, system_user=user), connection_id=guacamole_connection_id, connection_group_id=guacamole_connection.connection_group_id, vm=vm).save()
-
-    # orig_vm.vm_password = User.objects.make_random_password()
-    passwords.insert(0, password)
-    classnames.insert(0, orig_vm.vm_name)
-
-    return {
-        'usernames' : classnames,
-        'passwords' : passwords,
-        # 'vm_passs': vm_passwords,
-    }
+    return vm_names
 
 def shutdown_vm(request, vm_id):
 

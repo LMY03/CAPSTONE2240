@@ -1,11 +1,11 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from django.contrib.auth.models import User
+# from django.contrib.auth.models import User
 from django.utils import timezone
 from datetime import date, timedelta
 import json
 
-from guacamole.models import GuacamoleConnection
+from users.models import User
 
 def expiration_date_default():
     return date.today() + timedelta(days=90)
@@ -13,26 +13,12 @@ def expiration_date_default():
 def date_needed_default():
     return date.today() + timedelta(days=3)
 
-class VMTemplates(models.Model):
-    vm_id = models.CharField(max_length=45)
-    vm_name = models.CharField(max_length=90)
-    cores = models.IntegerField()
-    ram = models.IntegerField()
-    storage = models.IntegerField()
-    node = models.CharField(max_length=45)
-    is_lxc = models.BooleanField(default=False)
-    
-    guacamole_protocol = models.CharField(
-        max_length=10,
-        choices=GuacamoleConnection.Protocol.choices
-    )
-
 class RequestEntry(models.Model):
 
     ram = models.IntegerField(default=2)
     #storage = models.FloatField(default= 0)
     has_internet = models.BooleanField(default=False)
-    other_config = models.TextField(blank=True, null=True)
+    other_config = models.TextField(blank=True, null=True, default=None)
     
     class Status(models.TextChoices):
         PENDING = 'PENDING'
@@ -47,23 +33,25 @@ class RequestEntry(models.Model):
     status = models.CharField(
         max_length=20, 
         choices=Status.choices,
-        default=Status.PENDING)
+        default=Status.PENDING,
+    )
 
     requester = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name='requested_entries')
-    fulfilled_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='fulfilled_entries')
     assigned_to = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='assigned_entries')
-    template = models.ForeignKey(VMTemplates, on_delete=models.DO_NOTHING)
+    template = models.ForeignKey('proxmox.VMTemplates', on_delete=models.DO_NOTHING)
     cores = models.IntegerField(default=1)
     # security options
-    isExpired = models.BooleanField(default=False)
-    requestDate = models.DateTimeField(default=timezone.localtime)
+    request_date = models.DateTimeField(default=timezone.localtime)
 
     date_needed = models.DateField(default=expiration_date_default)
+    expired_date = models.DateField(null=True, default=None)
     expiration_date = models.DateField(null=True)
 
-    is_vm_tested = models.BooleanField(default=False)
+    vm_date_tested = models.DateTimeField(null=True, default=None)
 
     def is_recurring(self) : return self.expiration_date == None
+    
+    def is_vm_tested(self) : return self.vm_date_tested is not None
 
     def get_requester(self):
         requester = self.requester
@@ -74,11 +62,6 @@ class RequestEntry(models.Model):
         assigned_to = self.assigned_to
         if assigned_to.first_name != None and assigned_to.last_name != None : return f'{assigned_to.first_name} {assigned_to.last_name}'
         else : return assigned_to.username
-
-    def get_fulfilled_by(self):
-        fulfilled_by = self.fulfilled_by
-        if fulfilled_by.first_name != None and fulfilled_by.last_name != None : return f'{fulfilled_by.first_name} {fulfilled_by.last_name}'
-        else : return fulfilled_by.username
 
     def is_pending(self) : return self.status == RequestEntry.Status.PENDING
     def is_for_revision(self) : return self.status == RequestEntry.Status.FOR_REVISION
@@ -128,8 +111,8 @@ class RequestEntryAudit(models.Model):
 
 class RequestUseCase(models.Model):
     request = models.ForeignKey(RequestEntry, on_delete= models.CASCADE)
-    request_use_case = models.CharField(max_length=45, null=True, default='CLASS_COURSE')
-    vm_count = models.IntegerField(default=1, null=True)
+    request_use_case = models.CharField(max_length=45, default='CLASS_COURSE')
+    vm_count = models.IntegerField(default=1)
 
 # class GroupList (models.Model):
 #     user = models.CharField(null=False, max_length=50, default=" ")
@@ -142,23 +125,6 @@ class PortRules(models.Model):
     protocol = models.CharField (max_length=45)
     dest_ports = models.CharField (max_length=45)
     #description = models.TextField(blank= True, null = True)
-
-class UserProfile (models.Model):
-    USER_TYPE_CHOICES = [
-        ('student', 'Student'),
-        ('faculty', 'Faculty'),
-        ('admin', 'Admin'),
-    ]
-
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
-    user_type = models.CharField (max_length= 20, choices=USER_TYPE_CHOICES, default='student')
-    #system_password = models.CharField(max_length=45, null=True, default=None)
-    #request_use_case = models.ForeignKey(RequestUseCase, on_delete= models.CASCADE, null = True)
-
-    def is_faculty(self): return self.user_type == 'faculty'
-
-    def __str__(self) -> str:
-        return f"{self.user.username} - Role: {self.user_type}"
 
 class Comment(models.Model):
     request_entry = models.ForeignKey(RequestEntry, on_delete=models.CASCADE)
@@ -193,7 +159,6 @@ class Comment(models.Model):
 #     if created:
 #         print("created system user")
 #     # else:
-
 
 class IssueTicket(models.Model):
     subject = models.CharField(max_length=100)
@@ -244,11 +209,6 @@ class IssueComment(models.Model):
     date_time = models.DateTimeField(default=timezone.localtime)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
-class IssueCommentFile(models.Model):
-    file = models.FileField(upload_to='issue_files/comments/')
-    uploaded_date = models.DateTimeField(default=timezone.localtime)
-
-    comment = models.ForeignKey(IssueComment, on_delete=models.CASCADE)
 class IssueCommentFile(models.Model):
     file = models.FileField(upload_to='issue_files/comments/')
     uploaded_date = models.DateTimeField(default=timezone.localtime)
