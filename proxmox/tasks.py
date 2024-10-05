@@ -25,7 +25,7 @@ def create_test_vm(tsg_user_id, request_id):
 
         request_use_case = RequestUseCase.objects.filter(request=request_entry.pk).values('request_use_case', 'vm_count')[0]
 
-        if request_entry.is_course(): vm_name = f"{request_use_case['request_use_case'].replace('_', '-')}"
+        if request_entry.is_course(): vm_name = request_use_case['request_use_case'].split('_')[0]
         else: vm_name = f"{request_entry.get_request_type()}-{request_entry.requester.last_name}-{request_entry.id}"
 
         vm_name = f"{vm_name}-TestVM"
