@@ -20,12 +20,12 @@ API_NAME = 'gmail'
 API_VERSION = 'v1'
 SCOPES = ['https://mail.google.com/']
 
-def comment_notif_tsg (to_email, data):
+def new_request_notif_tsg (to_email, data):
     service = Create_Service(CLIENT_SECRET_FILE, API_NAME, API_VERSION, SCOPES)
     mimeMessage = MIMEMultipart()
     mimeMessage["to"] = ", ".join(to_email)
     mimeMessage['subject'] = 'New request ticket for VM provisioning'
-    with open('/templates/notifications/add_comment_email_tsg.hbs', 'r') as f:
+    with open('templates/notifications/add_comment_email_tsg.hbs', 'r') as f:
             source = f.read()
     data = {
             "vm_template_name": data['vm_template_name'],
@@ -61,19 +61,19 @@ def comment_notif_faculty(to_email, data, *faculty):
         mimeMessage['to'] = f'{to_email}'
         #     email_data["template_id"] = "d-f532416d64ea429a81671879794c0958"
         mimeMessage['subject'] = 'The faculty has replied to your comment'
-        with open('/templates/notifications/replied_comment_faculty.hbs', 'r') as f:
+        with open('templates/notifications/replied_comment_faculty.hbs', 'r') as f:
             source = f.read()
     elif 'admin' in faculty:
         mimeMessage['to'] = ', '.join(to_email)
         mimeMessage["subject"] = 'Faculty has added a new comment in their request ticket'
         #     email_data["template_id"] = "d-e3593d8aabbc435ba143717a33ce1485"
-        with open('/templates/notifications/add_comment_without_assigned_tsg.hbs', 'r') as f:
+        with open('templates/notifications/add_comment_without_assigned_tsg.hbs', 'r') as f:
             source = f.read()
     else:
         mimeMessage['to'] = f'{to_email}'
         mimeMessage["subject"] = 'An Admin has made some comments about your request'
         #     email_data["template_id"] = "d-0aabc8df6cf444c09777b1a3e485bf9d"
-        with open('/templates/notifications/add_comment_email.hbs', 'r') as f:
+        with open('templates/notifications/add_comment_email.hbs', 'r') as f:
             source = f.read()
 
     compiler = pybars.Compiler()
@@ -96,7 +96,7 @@ def testVM_notif_faculty(to_email, data):
             "faculty_name": data['faculty_name'],
             "request_entry_id": data['id'],
     }
-    with open('/templates/notifications/test_vm_notif_faculty.hbs', 'r') as f:
+    with open('templates/notifications/test_vm_notif_faculty.hbs', 'r') as f:
             source = f.read()
     
     compiler = pybars.Compiler()
@@ -120,7 +120,7 @@ def reject_notif_faculty (to_email, data):
             "request_entry_id": data['id'],
             "receipt": True,
     }
-    with open('/templates/notifications/reject_ticket_faculty.hbs', 'r') as f:
+    with open('templates/notifications/reject_ticket_faculty.hbs', 'r') as f:
         source = f.read()
     compiler = pybars.Compiler()
     template = compiler.compile(source)
@@ -144,7 +144,7 @@ def accept_notif_tsg (to_email, data):
         "use_case" : data['use_case'],
         "vm_count" : data['vm_count'],
     }
-    with open('/templates/notifications/faculty_accept_test_vm_tsg.hbs', 'r') as f:
+    with open('templates/notifications/faculty_accept_test_vm_tsg.hbs', 'r') as f:
         source = f.read()
     compiler = pybars.Compiler()
     template = compiler.compile(source)

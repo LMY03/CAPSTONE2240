@@ -340,3 +340,6 @@ def edit_user(request):
     user.save()
 
     return redirect('users:user_management')
+
+def reset_password (request):
+    return redirect('users:user_management')

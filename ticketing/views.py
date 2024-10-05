@@ -26,7 +26,7 @@ from .models import RequestEntry, Comment, RequestUseCase, PortRules, RequestEnt
 from proxmox.models import VirtualMachines, Nodes, VMTemplates
 from guacamole.models import GuacamoleConnection, GuacamoleUser
 from pfsense.models import DestinationPorts
-from notifications.views import comment_notif_faculty, comment_notif_tsg, testVM_notif_faculty, reject_notif_faculty, accept_notif_tsg
+from notifications.views import comment_notif_faculty, new_request_notif_tsg, testVM_notif_faculty, reject_notif_faculty, accept_notif_tsg
 from .forms import IssueTicketForm, IssueCommentForm
 from django.core.exceptions import ValidationError
 from django.contrib import messages
@@ -452,7 +452,7 @@ def new_form_submit(request):
             'vm_count' : gVM_count,
             'faculty_name' : requester.get_full_name()
         }
-        comment_notif_tsg(tsg_emails, data)
+        new_request_notif_tsg(tsg_emails, data)
     return JsonResponse({'status': 'ok'}, status=200)
 
 def log_request_entry_changes(request_entry, changed_by, new_data, user):

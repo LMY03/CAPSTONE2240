@@ -27,7 +27,7 @@ User Management
                 <th>User</th>
                 <th>Email</th>
                 <th>User Type</th>
-                <th>Password</th>
+                <th>Reset Password</th>
                 <th>Action</th>
             </tr>
         </thead>
@@ -39,8 +39,9 @@ User Management
                 <td>{{ user.user_type }}</td>
                 <td>
                   <div class = "d-flex justify-content-evenly">
-                    <span class="password" data-password="{{ user.password }}">••••••••</span>
-                    <button class="btn btn-sm btn-secondary toggle-password">Show</button>
+                    <button class="btn btn-sm btn-secondary toggle-password" onclick="window.location.href='{% url "users:reset_password" user.id %}';">
+                        Reset Password
+                    </button>
                   </div>
                 </td>
                 <td>
@@ -138,21 +139,6 @@ User Management
 
 {% block script %}
 <script>
-    // Toggle password visibility
-    document.querySelectorAll('.toggle-password').forEach(button => {
-        button.addEventListener('click', function() {
-            const passwordField = this.previousElementSibling;
-            const hiddenPassword = passwordField.getAttribute('data-password');
-            if (passwordField.textContent === '••••••••') {
-                passwordField.textContent = hiddenPassword;
-                this.textContent = 'Hide';
-            } else {
-                passwordField.textContent = '••••••••';
-                this.textContent = 'Show';
-            }
-        });
-    });
-
     function edit_user_id(user_id, user_type, user_email){
         document.getElementById('change_email').value = user_email
         document.getElementById('user_id').value = user_id;
