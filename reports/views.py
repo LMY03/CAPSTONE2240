@@ -827,7 +827,8 @@ def extract_general_stat(request):
     # (number of VMs, total CPU, CPU%, total mem, mem%, total storage, storage%, netin and netout)
     # TODO: Static for now, remove this when we can dynamically get the list of class
     
-    class_list = RequestUseCase.objects.all().exclude(
+    class_list = []
+    raw_class_list = RequestUseCase.objects.all().exclude(
         request_use_case__icontains="Research"
     ).exclude(
         request_use_case__icontains="Test"
@@ -835,22 +836,20 @@ def extract_general_stat(request):
         request_use_case__icontains="Thesis"
     ).values_list('request_use_case', flat=True)
 
-    print(f"class_list: {class_list}")
+    for entry in class:
+        print(f"entry: {entry}")
 
+    queries =  generate_resource_query(start_date, end_date, query_type, class_list)
 
-    # class_list = ["CCINFOM", "ITCMSY2", "CCICOMP"] # 这里能获取到吗
-    # class_list = None
-    # queries =  generate_resource_query(start_date, end_date, query_type, class_list)
+    results = {}
 
-    # results = {}
+    for resource, query in queries.items():
+        result = query_api.query(query=query)
+        results[resource] = result   
 
-    # for resource, query in queries.items():
-    #     result = query_api.query(query=query)
-    #     results[resource] = result   
-
-    # # process result
-    # processed_data = process_resource_data(results, query_type, start_date, end_date)
-    # print(f"processed_data: {processed_data}")
+    # process result
+    processed_data = process_resource_data(results, query_type, start_date, end_date)
+    print(f"processed_data: {processed_data}")
 
     influxdb_client.close()
     return generate_csv_response(processed_data, query_type, start_date_str, end_date_str)
