@@ -528,7 +528,6 @@ def report_gen(request):
 def performance_gen(request):
     return render(request, 'reports/performance_gen.html')
 
-# TODO: 可以直接在这个函数中拓展，加入其他metrics的查询如mem，memmax等
 def generate_resource_query(start_date, end_date, query_type, class_list=None):
 
     resources = {
@@ -828,8 +827,6 @@ def extract_general_stat(request):
 
     # Get needed metrics 
     # (number of VMs, total CPU, CPU%, total mem, mem%, total storage, storage%, netin and netout)
-    # TODO: Static for now, remove this when we can dynamically get the list of class
-    
     
     raw_class_list = RequestUseCase.objects.all().exclude(
         request_use_case__icontains="Research"
@@ -846,9 +843,10 @@ def extract_general_stat(request):
             class_list.append(processed_entry)
 
     queries =  generate_resource_query(start_date, end_date, query_type, class_list)
+    print(f"queries: {queries}")
+
 
     results = {}
-
     for resource, query in queries.items():
         result = query_api.query(query=query)
         results[resource] = result   
