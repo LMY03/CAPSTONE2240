@@ -564,7 +564,7 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
             query = f'''
                     {base_query}
                     |> last()
-                    |> group(columns: ["host"])
+                    |> group(columns: ["nodename"])
                     |> sum(column: "_value")
                     |> yield(name: "{resource}_per_node")
                     '''
@@ -574,22 +574,22 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
             # TODO: need to get a list of class name for the query (maybe connecting to our own db to get the data)
             # TODO: 貌似不是vm_name, 得去influxdb中看一下vm主机名对应的是什么
             class_filters = ' or '.join([f'r["host"] =~ /{class_name}/' for class_name in class_list])
-            class_assignments = ' else '.join([f'if r["host"] =~ /{class_name}/ then "{class_name}"' for class_name in class_list]) + ' else "Unknown"'
             query = f'''
                     {base_query}
                     |> filter(fn: (r) => {class_filters})
                     |> last()
                     |> map(fn: (r) => ({{
                         _value: r._value,
-                        class: if {class_assignments}
+                        class: {' '.join([f'if r["host"] =~ /{c}/ then "{c}" else' for c in class_list])} "Unknown"
                     }}))
                     |> group(columns: ["class"])
-                    |> sum(column: "_value")
+                    |> mean()
                     |> yield(name: "{resource}_per_class")
                     '''
         else:
             raise ValueError("Invalid query type.")
         
+        print(f"resource: {resource}")
         print(f"query: {query}")
         queries[resource] = query
 
@@ -846,8 +846,6 @@ def extract_general_stat(request):
 
     results = {}
     for resource, query in queries.items():
-        print(f"resource: {resource}")
-        print(f"query: {query}")
         result = query_api.query(query=query)
         results[resource] = result   
 
