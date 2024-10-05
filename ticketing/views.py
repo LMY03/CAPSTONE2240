@@ -37,8 +37,6 @@ from CAPSTONE2240.utils import download_files
 
 @login_required
 def request_list(request):
-    print(request.user.is_tsg)
-    print(request.user.is_tsg())
     if request.user.is_faculty() : return faculty_request_list(request)
     elif request.user.is_tsg() : return tsg_requests_list(request)
     else : return redirect('/')
@@ -138,7 +136,7 @@ def tsg_request_details(request, request_id):
         context['system_accounts'] = User.objects.filter(
             username__in=VirtualMachines.objects.filter(request__pk=request_id).values_list('vm_name', flat=True),
         )
-        
+
     return render (request, 'ticketing/tsg_request_details.html', context=context)
 
 @login_required

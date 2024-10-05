@@ -675,27 +675,6 @@ JOIN guacamole_entity affected ON permissions.affected_username = affected.name 
 JOIN guacamole_user            ON guacamole_user.entity_id = affected.entity_id;
 
 
--- MySQL dump 10.13  Distrib 8.0.31, for Win64 (x86_64)
---
--- Host: 192.168.1.9    Database: cap2240db
--- ------------------------------------------------------
--- Server version	8.0.39
-
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!50503 SET NAMES utf8 */;
-/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
-/*!40103 SET TIME_ZONE='+00:00' */;
-/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
-/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
-/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
-/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
-
---
--- Current Database: `cap2240db`
---
-
 CREATE DATABASE  IF NOT EXISTS `cap2240db` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
 USE `cap2240db`;
 -- MySQL dump 10.13  Distrib 8.0.31, for Win64 (x86_64)
@@ -782,7 +761,7 @@ CREATE TABLE `auth_permission` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `auth_permission_content_type_id_codename_01ab375a_uniq` (`content_type_id`,`codename`),
   CONSTRAINT `auth_permission_content_type_id_2f476e4b_fk_django_co` FOREIGN KEY (`content_type_id`) REFERENCES `django_content_type` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=125 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=109 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -791,133 +770,8 @@ CREATE TABLE `auth_permission` (
 
 LOCK TABLES `auth_permission` WRITE;
 /*!40000 ALTER TABLE `auth_permission` DISABLE KEYS */;
-INSERT INTO `auth_permission` VALUES (1,'Can add request entry',1,'add_requestentry'),(2,'Can change request entry',1,'change_requestentry'),(3,'Can delete request entry',1,'delete_requestentry'),(4,'Can view request entry',1,'view_requestentry'),(5,'Can add vm templates',2,'add_vmtemplates'),(6,'Can change vm templates',2,'change_vmtemplates'),(7,'Can delete vm templates',2,'delete_vmtemplates'),(8,'Can view vm templates',2,'view_vmtemplates'),(9,'Can add user profile',3,'add_userprofile'),(10,'Can change user profile',3,'change_userprofile'),(11,'Can delete user profile',3,'delete_userprofile'),(12,'Can view user profile',3,'view_userprofile'),(13,'Can add request use case',4,'add_requestusecase'),(14,'Can change request use case',4,'change_requestusecase'),(15,'Can delete request use case',4,'delete_requestusecase'),(16,'Can view request use case',4,'view_requestusecase'),(17,'Can add request entry audit',5,'add_requestentryaudit'),(18,'Can change request entry audit',5,'change_requestentryaudit'),(19,'Can delete request entry audit',5,'delete_requestentryaudit'),(20,'Can view request entry audit',5,'view_requestentryaudit'),(21,'Can add port rules',6,'add_portrules'),(22,'Can change port rules',6,'change_portrules'),(23,'Can delete port rules',6,'delete_portrules'),(24,'Can view port rules',6,'view_portrules'),(25,'Can add issue ticket',7,'add_issueticket'),(26,'Can change issue ticket',7,'change_issueticket'),(27,'Can delete issue ticket',7,'delete_issueticket'),(28,'Can view issue ticket',7,'view_issueticket'),(29,'Can add issue file',8,'add_issuefile'),(30,'Can change issue file',8,'change_issuefile'),(31,'Can delete issue file',8,'delete_issuefile'),(32,'Can view issue file',8,'view_issuefile'),(33,'Can add comment',9,'add_comment'),(34,'Can change comment',9,'change_comment'),(35,'Can delete comment',9,'delete_comment'),(36,'Can view comment',9,'view_comment'),(37,'Can add guacamole user',10,'add_guacamoleuser'),(38,'Can change guacamole user',10,'change_guacamoleuser'),(39,'Can delete guacamole user',10,'delete_guacamoleuser'),(40,'Can view guacamole user',10,'view_guacamoleuser'),(41,'Can add guacamole connection',11,'add_guacamoleconnection'),(42,'Can change guacamole connection',11,'change_guacamoleconnection'),(43,'Can delete guacamole connection',11,'delete_guacamoleconnection'),(44,'Can view guacamole connection',11,'view_guacamoleconnection'),(45,'Can add destination ports',12,'add_destinationports'),(46,'Can change destination ports',12,'change_destinationports'),(47,'Can delete destination ports',12,'delete_destinationports'),(48,'Can view destination ports',12,'view_destinationports'),(49,'Can add nodes',13,'add_nodes'),(50,'Can change nodes',13,'change_nodes'),(51,'Can delete nodes',13,'delete_nodes'),(52,'Can view nodes',13,'view_nodes'),(53,'Can add virtual machines',14,'add_virtualmachines'),(54,'Can change virtual machines',14,'change_virtualmachines'),(55,'Can delete virtual machines',14,'delete_virtualmachines'),(56,'Can view virtual machines',14,'view_virtualmachines'),(57,'Can add log entry',15,'add_logentry'),(58,'Can change log entry',15,'change_logentry'),(59,'Can delete log entry',15,'delete_logentry'),(60,'Can view log entry',15,'view_logentry'),(61,'Can add permission',16,'add_permission'),(62,'Can change permission',16,'change_permission'),(63,'Can delete permission',16,'delete_permission'),(64,'Can view permission',16,'view_permission'),(65,'Can add group',17,'add_group'),(66,'Can change group',17,'change_group'),(67,'Can delete group',17,'delete_group'),(68,'Can view group',17,'view_group'),(69,'Can add user',18,'add_user'),(70,'Can change user',18,'change_user'),(71,'Can delete user',18,'delete_user'),(72,'Can view user',18,'view_user'),(73,'Can add content type',19,'add_contenttype'),(74,'Can change content type',19,'change_contenttype'),(75,'Can delete content type',19,'delete_contenttype'),(76,'Can view content type',19,'view_contenttype'),(77,'Can add session',20,'add_session'),(78,'Can change session',20,'change_session'),(79,'Can delete session',20,'delete_session'),(80,'Can view session',20,'view_session'),(81,'Can add association',21,'add_association'),(82,'Can change association',21,'change_association'),(83,'Can delete association',21,'delete_association'),(84,'Can view association',21,'view_association'),(85,'Can add code',22,'add_code'),(86,'Can change code',22,'change_code'),(87,'Can delete code',22,'delete_code'),(88,'Can view code',22,'view_code'),(89,'Can add nonce',23,'add_nonce'),(90,'Can change nonce',23,'change_nonce'),(91,'Can delete nonce',23,'delete_nonce'),(92,'Can view nonce',23,'view_nonce'),(93,'Can add user social auth',24,'add_usersocialauth'),(94,'Can change user social auth',24,'change_usersocialauth'),(95,'Can delete user social auth',24,'delete_usersocialauth'),(96,'Can view user social auth',24,'view_usersocialauth'),(97,'Can add partial',25,'add_partial'),(98,'Can change partial',25,'change_partial'),(99,'Can delete partial',25,'delete_partial'),(100,'Can view partial',25,'view_partial'),(101,'Can add crontab',26,'add_crontabschedule'),(102,'Can change crontab',26,'change_crontabschedule'),(103,'Can delete crontab',26,'delete_crontabschedule'),(104,'Can view crontab',26,'view_crontabschedule'),(105,'Can add interval',27,'add_intervalschedule'),(106,'Can change interval',27,'change_intervalschedule'),(107,'Can delete interval',27,'delete_intervalschedule'),(108,'Can view interval',27,'view_intervalschedule'),(109,'Can add periodic task',28,'add_periodictask'),(110,'Can change periodic task',28,'change_periodictask'),(111,'Can delete periodic task',28,'delete_periodictask'),(112,'Can view periodic task',28,'view_periodictask'),(113,'Can add periodic task track',29,'add_periodictasks'),(114,'Can change periodic task track',29,'change_periodictasks'),(115,'Can delete periodic task track',29,'delete_periodictasks'),(116,'Can view periodic task track',29,'view_periodictasks'),(117,'Can add solar event',30,'add_solarschedule'),(118,'Can change solar event',30,'change_solarschedule'),(119,'Can delete solar event',30,'delete_solarschedule'),(120,'Can view solar event',30,'view_solarschedule'),(121,'Can add clocked',31,'add_clockedschedule'),(122,'Can change clocked',31,'change_clockedschedule'),(123,'Can delete clocked',31,'delete_clockedschedule'),(124,'Can view clocked',31,'view_clockedschedule');
+INSERT INTO `auth_permission` VALUES (1,'Can add issue comment',1,'add_issuecomment'),(2,'Can change issue comment',1,'change_issuecomment'),(3,'Can delete issue comment',1,'delete_issuecomment'),(4,'Can view issue comment',1,'view_issuecomment'),(5,'Can add request entry',2,'add_requestentry'),(6,'Can change request entry',2,'change_requestentry'),(7,'Can delete request entry',2,'delete_requestentry'),(8,'Can view request entry',2,'view_requestentry'),(9,'Can add request use case',3,'add_requestusecase'),(10,'Can change request use case',3,'change_requestusecase'),(11,'Can delete request use case',3,'delete_requestusecase'),(12,'Can view request use case',3,'view_requestusecase'),(13,'Can add request entry audit',4,'add_requestentryaudit'),(14,'Can change request entry audit',4,'change_requestentryaudit'),(15,'Can delete request entry audit',4,'delete_requestentryaudit'),(16,'Can view request entry audit',4,'view_requestentryaudit'),(17,'Can add port rules',5,'add_portrules'),(18,'Can change port rules',5,'change_portrules'),(19,'Can delete port rules',5,'delete_portrules'),(20,'Can view port rules',5,'view_portrules'),(21,'Can add issue ticket',6,'add_issueticket'),(22,'Can change issue ticket',6,'change_issueticket'),(23,'Can delete issue ticket',6,'delete_issueticket'),(24,'Can view issue ticket',6,'view_issueticket'),(25,'Can add issue file',7,'add_issuefile'),(26,'Can change issue file',7,'change_issuefile'),(27,'Can delete issue file',7,'delete_issuefile'),(28,'Can view issue file',7,'view_issuefile'),(29,'Can add issue comment file',8,'add_issuecommentfile'),(30,'Can change issue comment file',8,'change_issuecommentfile'),(31,'Can delete issue comment file',8,'delete_issuecommentfile'),(32,'Can view issue comment file',8,'view_issuecommentfile'),(33,'Can add comment',9,'add_comment'),(34,'Can change comment',9,'change_comment'),(35,'Can delete comment',9,'delete_comment'),(36,'Can view comment',9,'view_comment'),(37,'Can add guacamole user',10,'add_guacamoleuser'),(38,'Can change guacamole user',10,'change_guacamoleuser'),(39,'Can delete guacamole user',10,'delete_guacamoleuser'),(40,'Can view guacamole user',10,'view_guacamoleuser'),(41,'Can add guacamole connection',11,'add_guacamoleconnection'),(42,'Can change guacamole connection',11,'change_guacamoleconnection'),(43,'Can delete guacamole connection',11,'delete_guacamoleconnection'),(44,'Can view guacamole connection',11,'view_guacamoleconnection'),(45,'Can add destination ports',12,'add_destinationports'),(46,'Can change destination ports',12,'change_destinationports'),(47,'Can delete destination ports',12,'delete_destinationports'),(48,'Can view destination ports',12,'view_destinationports'),(49,'Can add nodes',13,'add_nodes'),(50,'Can change nodes',13,'change_nodes'),(51,'Can delete nodes',13,'delete_nodes'),(52,'Can view nodes',13,'view_nodes'),(53,'Can add vm templates',14,'add_vmtemplates'),(54,'Can change vm templates',14,'change_vmtemplates'),(55,'Can delete vm templates',14,'delete_vmtemplates'),(56,'Can view vm templates',14,'view_vmtemplates'),(57,'Can add virtual machines',15,'add_virtualmachines'),(58,'Can change virtual machines',15,'change_virtualmachines'),(59,'Can delete virtual machines',15,'delete_virtualmachines'),(60,'Can view virtual machines',15,'view_virtualmachines'),(61,'Can add log entry',16,'add_logentry'),(62,'Can change log entry',16,'change_logentry'),(63,'Can delete log entry',16,'delete_logentry'),(64,'Can view log entry',16,'view_logentry'),(65,'Can add permission',17,'add_permission'),(66,'Can change permission',17,'change_permission'),(67,'Can delete permission',17,'delete_permission'),(68,'Can view permission',17,'view_permission'),(69,'Can add group',18,'add_group'),(70,'Can change group',18,'change_group'),(71,'Can delete group',18,'delete_group'),(72,'Can view group',18,'view_group'),(73,'Can add content type',19,'add_contenttype'),(74,'Can change content type',19,'change_contenttype'),(75,'Can delete content type',19,'delete_contenttype'),(76,'Can view content type',19,'view_contenttype'),(77,'Can add session',20,'add_session'),(78,'Can change session',20,'change_session'),(79,'Can delete session',20,'delete_session'),(80,'Can view session',20,'view_session'),(81,'Can add user',21,'add_user'),(82,'Can change user',21,'change_user'),(83,'Can delete user',21,'delete_user'),(84,'Can view user',21,'view_user'),(85,'Can add crontab',22,'add_crontabschedule'),(86,'Can change crontab',22,'change_crontabschedule'),(87,'Can delete crontab',22,'delete_crontabschedule'),(88,'Can view crontab',22,'view_crontabschedule'),(89,'Can add interval',23,'add_intervalschedule'),(90,'Can change interval',23,'change_intervalschedule'),(91,'Can delete interval',23,'delete_intervalschedule'),(92,'Can view interval',23,'view_intervalschedule'),(93,'Can add periodic task',24,'add_periodictask'),(94,'Can change periodic task',24,'change_periodictask'),(95,'Can delete periodic task',24,'delete_periodictask'),(96,'Can view periodic task',24,'view_periodictask'),(97,'Can add periodic task track',25,'add_periodictasks'),(98,'Can change periodic task track',25,'change_periodictasks'),(99,'Can delete periodic task track',25,'delete_periodictasks'),(100,'Can view periodic task track',25,'view_periodictasks'),(101,'Can add solar event',26,'add_solarschedule'),(102,'Can change solar event',26,'change_solarschedule'),(103,'Can delete solar event',26,'delete_solarschedule'),(104,'Can view solar event',26,'view_solarschedule'),(105,'Can add clocked',27,'add_clockedschedule'),(106,'Can change clocked',27,'change_clockedschedule'),(107,'Can delete clocked',27,'delete_clockedschedule'),(108,'Can view clocked',27,'view_clockedschedule');
 /*!40000 ALTER TABLE `auth_permission` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `auth_user`
---
-
-DROP TABLE IF EXISTS `auth_user`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `auth_user` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `password` varchar(128) NOT NULL,
-  `last_login` datetime(6) DEFAULT NULL,
-  `is_superuser` tinyint(1) NOT NULL,
-  `username` varchar(150) NOT NULL,
-  `first_name` varchar(150) NOT NULL,
-  `last_name` varchar(150) NOT NULL,
-  `email` varchar(254) NOT NULL,
-  `is_staff` tinyint(1) NOT NULL,
-  `is_active` tinyint(1) NOT NULL,
-  `date_joined` datetime(6) NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `username` (`username`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `auth_user`
---
-
-LOCK TABLES `auth_user` WRITE;
-/*!40000 ALTER TABLE `auth_user` DISABLE KEYS */;
-INSERT INTO `auth_user` VALUES (1,'pbkdf2_sha256$720000$5gL9pa3JAHZYMUbNgW3qqL$udv7QLPHZ/Fv5ijQQMvklg06MOZvEkkbGY2LJ17dIyM=',NULL,1,'admin','admin','chan','',1,1,'2024-09-14 13:54:58.000000'),(2,'pbkdf2_sha256$720000$5gL9pa3JAHZYMUbNgW3qqL$udv7QLPHZ/Fv5ijQQMvklg06MOZvEkkbGY2LJ17dIyM=',NULL,1,'john.doe','John','Doe','jonathan_lin@dlsu.edu.ph',1,1,'2024-09-14 13:54:58.000000'),(3,'pbkdf2_sha256$720000$5gL9pa3JAHZYMUbNgW3qqL$udv7QLPHZ/Fv5ijQQMvklg06MOZvEkkbGY2LJ17dIyM=',NULL,0,'josephine.cruz','Josephine','Cruz','jonathan_lin@dlsu.edu.ph',0,1,'2024-09-14 13:54:58.000000');
-/*!40000 ALTER TABLE `auth_user` ENABLE KEYS */;
-UNLOCK TABLES;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`%`*/ /*!50003 TRIGGER `create_guac_user` AFTER INSERT ON `auth_user` FOR EACH ROW BEGIN
-	DECLARE guac_entity_id INT;
-    SET @salt = UNHEX(SHA2(UUID(), 256));
-    
-    -- INSERT guacamole_user into cap2240db
-    INSERT INTO cap2240db.guacamole_guacamoleuser (username, password, system_user_id, is_active)
-    VALUES (NEW.username, NEW.password, NEW.id, 1);
-    
-    -- INSERT the new system user into guacamole_db.guacamole_entity
-    INSERT INTO guacamole_db.guacamole_entity (name, type) VALUES (NEW.username, 'USER');
-
-    -- Get the entity_id of the new system user
-    SELECT entity_id INTO guac_entity_id FROM guacamole_db.guacamole_entity WHERE name = NEW.username;
-
-    -- INSERT the new system user into guacamole_db.guacamole_user
-    INSERT INTO guacamole_db.guacamole_user (entity_id, password_salt, password_hash, password_date, disabled, expired)
-	VALUES (
-		guac_entity_id, @salt, UNHEX(SHA2(CONCAT(NEW.password, HEX(@salt)), 256)), NOW(), 0, 0);
-        
-    -- TODO: Add system_admin_account to guacamole_admin_group
-END */;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
-
---
--- Table structure for table `auth_user_groups`
---
-
-DROP TABLE IF EXISTS `auth_user_groups`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `auth_user_groups` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `user_id` int NOT NULL,
-  `group_id` int NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `auth_user_groups_user_id_group_id_94350c0c_uniq` (`user_id`,`group_id`),
-  KEY `auth_user_groups_group_id_97559544_fk_auth_group_id` (`group_id`),
-  CONSTRAINT `auth_user_groups_group_id_97559544_fk_auth_group_id` FOREIGN KEY (`group_id`) REFERENCES `auth_group` (`id`),
-  CONSTRAINT `auth_user_groups_user_id_6a12ed8b_fk_auth_user_id` FOREIGN KEY (`user_id`) REFERENCES `auth_user` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `auth_user_groups`
---
-
-LOCK TABLES `auth_user_groups` WRITE;
-/*!40000 ALTER TABLE `auth_user_groups` DISABLE KEYS */;
-/*!40000 ALTER TABLE `auth_user_groups` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `auth_user_user_permissions`
---
-
-DROP TABLE IF EXISTS `auth_user_user_permissions`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `auth_user_user_permissions` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `user_id` int NOT NULL,
-  `permission_id` int NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `auth_user_user_permissions_user_id_permission_id_14a6b632_uniq` (`user_id`,`permission_id`),
-  KEY `auth_user_user_permi_permission_id_1fbb5f2c_fk_auth_perm` (`permission_id`),
-  CONSTRAINT `auth_user_user_permi_permission_id_1fbb5f2c_fk_auth_perm` FOREIGN KEY (`permission_id`) REFERENCES `auth_permission` (`id`),
-  CONSTRAINT `auth_user_user_permissions_user_id_a95ead1b_fk_auth_user_id` FOREIGN KEY (`user_id`) REFERENCES `auth_user` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `auth_user_user_permissions`
---
-
-LOCK TABLES `auth_user_user_permissions` WRITE;
-/*!40000 ALTER TABLE `auth_user_user_permissions` DISABLE KEYS */;
-/*!40000 ALTER TABLE `auth_user_user_permissions` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -935,12 +789,12 @@ CREATE TABLE `django_admin_log` (
   `action_flag` smallint unsigned NOT NULL,
   `change_message` longtext NOT NULL,
   `content_type_id` int DEFAULT NULL,
-  `user_id` int NOT NULL,
+  `user_id` bigint NOT NULL,
   PRIMARY KEY (`id`),
   KEY `django_admin_log_content_type_id_c4bce8eb_fk_django_co` (`content_type_id`),
-  KEY `django_admin_log_user_id_c564eba6_fk_auth_user_id` (`user_id`),
+  KEY `django_admin_log_user_id_c564eba6_fk_users_user_id` (`user_id`),
   CONSTRAINT `django_admin_log_content_type_id_c4bce8eb_fk_django_co` FOREIGN KEY (`content_type_id`) REFERENCES `django_content_type` (`id`),
-  CONSTRAINT `django_admin_log_user_id_c564eba6_fk_auth_user_id` FOREIGN KEY (`user_id`) REFERENCES `auth_user` (`id`),
+  CONSTRAINT `django_admin_log_user_id_c564eba6_fk_users_user_id` FOREIGN KEY (`user_id`) REFERENCES `users_user` (`id`),
   CONSTRAINT `django_admin_log_chk_1` CHECK ((`action_flag` >= 0))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -1002,7 +856,7 @@ CREATE TABLE `django_celery_beat_crontabschedule` (
 
 LOCK TABLES `django_celery_beat_crontabschedule` WRITE;
 /*!40000 ALTER TABLE `django_celery_beat_crontabschedule` DISABLE KEYS */;
-INSERT INTO `django_celery_beat_crontabschedule` VALUES (1,'0','4','*','*','*','Asia/Manila'),(2,'*','*','*','*','*','Asia/Manila');
+INSERT INTO `django_celery_beat_crontabschedule` VALUES (1,'0','4','*','*','*','Asia/Manila'),(2,'0','0','*','*','*','Asia/Manila');
 /*!40000 ALTER TABLE `django_celery_beat_crontabschedule` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1083,7 +937,7 @@ CREATE TABLE `django_celery_beat_periodictask` (
 
 LOCK TABLES `django_celery_beat_periodictask` WRITE;
 /*!40000 ALTER TABLE `django_celery_beat_periodictask` DISABLE KEYS */;
-INSERT INTO `django_celery_beat_periodictask` VALUES (1,'celery.backend_cleanup','celery.backend_cleanup','[]','{}',NULL,NULL,NULL,NULL,1,NULL,0,'2024-09-14 13:52:54.611598','',1,NULL,NULL,0,NULL,NULL,'{}',NULL,43200),(2,'delete-expired-requests','ticketing.tasks.delete_expired_requests','[]','{}',NULL,NULL,NULL,NULL,1,'2024-09-14 13:55:00.002856',3,'2024-09-14 13:55:59.999284','',2,NULL,NULL,0,NULL,NULL,'{}',NULL,NULL);
+INSERT INTO `django_celery_beat_periodictask` VALUES (1,'celery.backend_cleanup','celery.backend_cleanup','[]','{}',NULL,NULL,NULL,NULL,1,NULL,0,'2024-10-04 08:08:24.869602','',1,NULL,NULL,0,NULL,NULL,'{}',NULL,43200),(2,'delete-expired-requests','ticketing.tasks.delete_expired_requests','[]','{}',NULL,NULL,NULL,NULL,1,NULL,0,'2024-10-04 08:08:24.903481','',2,NULL,NULL,0,NULL,NULL,'{}',NULL,NULL);
 /*!40000 ALTER TABLE `django_celery_beat_periodictask` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1107,7 +961,7 @@ CREATE TABLE `django_celery_beat_periodictasks` (
 
 LOCK TABLES `django_celery_beat_periodictasks` WRITE;
 /*!40000 ALTER TABLE `django_celery_beat_periodictasks` DISABLE KEYS */;
-INSERT INTO `django_celery_beat_periodictasks` VALUES (1,'2024-09-14 13:52:54.659132');
+INSERT INTO `django_celery_beat_periodictasks` VALUES (1,'2024-10-04 08:08:24.904348');
 /*!40000 ALTER TABLE `django_celery_beat_periodictasks` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1150,7 +1004,7 @@ CREATE TABLE `django_content_type` (
   `model` varchar(100) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `django_content_type_app_label_model_76bd3d3b_uniq` (`app_label`,`model`)
-) ENGINE=InnoDB AUTO_INCREMENT=32 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1159,7 +1013,7 @@ CREATE TABLE `django_content_type` (
 
 LOCK TABLES `django_content_type` WRITE;
 /*!40000 ALTER TABLE `django_content_type` DISABLE KEYS */;
-INSERT INTO `django_content_type` VALUES (15,'admin','logentry'),(17,'auth','group'),(16,'auth','permission'),(18,'auth','user'),(19,'contenttypes','contenttype'),(31,'django_celery_beat','clockedschedule'),(26,'django_celery_beat','crontabschedule'),(27,'django_celery_beat','intervalschedule'),(28,'django_celery_beat','periodictask'),(29,'django_celery_beat','periodictasks'),(30,'django_celery_beat','solarschedule'),(11,'guacamole','guacamoleconnection'),(10,'guacamole','guacamoleuser'),(12,'pfsense','destinationports'),(13,'proxmox','nodes'),(14,'proxmox','virtualmachines'),(20,'sessions','session'),(21,'social_django','association'),(22,'social_django','code'),(23,'social_django','nonce'),(25,'social_django','partial'),(24,'social_django','usersocialauth'),(9,'ticketing','comment'),(8,'ticketing','issuefile'),(7,'ticketing','issueticket'),(6,'ticketing','portrules'),(1,'ticketing','requestentry'),(5,'ticketing','requestentryaudit'),(4,'ticketing','requestusecase'),(3,'ticketing','userprofile'),(2,'ticketing','vmtemplates');
+INSERT INTO `django_content_type` VALUES (16,'admin','logentry'),(18,'auth','group'),(17,'auth','permission'),(19,'contenttypes','contenttype'),(27,'django_celery_beat','clockedschedule'),(22,'django_celery_beat','crontabschedule'),(23,'django_celery_beat','intervalschedule'),(24,'django_celery_beat','periodictask'),(25,'django_celery_beat','periodictasks'),(26,'django_celery_beat','solarschedule'),(11,'guacamole','guacamoleconnection'),(10,'guacamole','guacamoleuser'),(12,'pfsense','destinationports'),(13,'proxmox','nodes'),(15,'proxmox','virtualmachines'),(14,'proxmox','vmtemplates'),(20,'sessions','session'),(9,'ticketing','comment'),(1,'ticketing','issuecomment'),(8,'ticketing','issuecommentfile'),(7,'ticketing','issuefile'),(6,'ticketing','issueticket'),(5,'ticketing','portrules'),(2,'ticketing','requestentry'),(4,'ticketing','requestentryaudit'),(3,'ticketing','requestusecase'),(21,'users','user');
 /*!40000 ALTER TABLE `django_content_type` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1176,7 +1030,7 @@ CREATE TABLE `django_migrations` (
   `name` varchar(255) NOT NULL,
   `applied` datetime(6) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=69 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=47 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1185,7 +1039,7 @@ CREATE TABLE `django_migrations` (
 
 LOCK TABLES `django_migrations` WRITE;
 /*!40000 ALTER TABLE `django_migrations` DISABLE KEYS */;
-INSERT INTO `django_migrations` VALUES (1,'django_celery_beat','0001_initial','2024-09-14 13:52:51.614524'),(2,'django_celery_beat','0002_auto_20161118_0346','2024-09-14 13:52:51.844984'),(3,'django_celery_beat','0003_auto_20161209_0049','2024-09-14 13:52:51.904655'),(4,'django_celery_beat','0004_auto_20170221_0000','2024-09-14 13:52:51.920663'),(5,'django_celery_beat','0005_add_solarschedule_events_choices','2024-09-14 13:52:51.929902'),(6,'django_celery_beat','0006_auto_20180322_0932','2024-09-14 13:52:52.132737'),(7,'django_celery_beat','0007_auto_20180521_0826','2024-09-14 13:52:52.276142'),(8,'django_celery_beat','0008_auto_20180914_1922','2024-09-14 13:52:52.321430'),(9,'django_celery_beat','0006_auto_20180210_1226','2024-09-14 13:52:52.351446'),(10,'django_celery_beat','0006_periodictask_priority','2024-09-14 13:52:52.556366'),(11,'django_celery_beat','0009_periodictask_headers','2024-09-14 13:52:52.747148'),(12,'django_celery_beat','0010_auto_20190429_0326','2024-09-14 13:52:53.038120'),(13,'django_celery_beat','0011_auto_20190508_0153','2024-09-14 13:52:53.327650'),(14,'django_celery_beat','0012_periodictask_expire_seconds','2024-09-14 13:52:53.517971'),(15,'django_celery_beat','0013_auto_20200609_0727','2024-09-14 13:52:53.541901'),(16,'django_celery_beat','0014_remove_clockedschedule_enabled','2024-09-14 13:52:53.586723'),(17,'django_celery_beat','0015_edit_solarschedule_events_choices','2024-09-14 13:52:53.599573'),(18,'django_celery_beat','0016_alter_crontabschedule_timezone','2024-09-14 13:52:53.619294'),(19,'django_celery_beat','0017_alter_crontabschedule_month_of_year','2024-09-14 13:52:53.634791'),(20,'django_celery_beat','0018_improve_crontab_helptext','2024-09-14 13:52:53.652533'),(21,'django_celery_beat','0019_alter_periodictasks_options','2024-09-14 13:52:53.663081'),(22,'contenttypes','0001_initial','2024-09-14 13:53:57.236655'),(23,'auth','0001_initial','2024-09-14 13:53:58.732014'),(24,'admin','0001_initial','2024-09-14 13:53:59.106422'),(25,'admin','0002_logentry_remove_auto_add','2024-09-14 13:53:59.143279'),(26,'admin','0003_logentry_add_action_flag_choices','2024-09-14 13:53:59.174231'),(27,'contenttypes','0002_remove_content_type_name','2024-09-14 13:53:59.354890'),(28,'auth','0002_alter_permission_name_max_length','2024-09-14 13:53:59.498429'),(29,'auth','0003_alter_user_email_max_length','2024-09-14 13:53:59.541295'),(30,'auth','0004_alter_user_username_opts','2024-09-14 13:53:59.560392'),(31,'auth','0005_alter_user_last_login_null','2024-09-14 13:53:59.678580'),(32,'auth','0006_require_contenttypes_0002','2024-09-14 13:53:59.686329'),(33,'auth','0007_alter_validators_add_error_messages','2024-09-14 13:53:59.718777'),(34,'auth','0008_alter_user_username_max_length','2024-09-14 13:53:59.867422'),(35,'auth','0009_alter_user_last_name_max_length','2024-09-14 13:54:00.012159'),(36,'auth','0010_alter_group_name_max_length','2024-09-14 13:54:00.058426'),(37,'auth','0011_update_proxy_permissions','2024-09-14 13:54:00.086893'),(38,'auth','0012_alter_user_first_name_max_length','2024-09-14 13:54:00.267360'),(39,'ticketing','0001_initial','2024-09-14 13:54:02.847906'),(40,'proxmox','0001_initial','2024-09-14 13:54:03.288432'),(41,'guacamole','0001_initial','2024-09-14 13:54:03.856500'),(42,'pfsense','0001_initial','2024-09-14 13:54:04.249214'),(43,'sessions','0001_initial','2024-09-14 13:54:04.394162'),(44,'default','0001_initial','2024-09-14 13:54:04.921789'),(45,'social_auth','0001_initial','2024-09-14 13:54:04.931938'),(46,'default','0002_add_related_name','2024-09-14 13:54:04.978977'),(47,'social_auth','0002_add_related_name','2024-09-14 13:54:04.987915'),(48,'default','0003_alter_email_max_length','2024-09-14 13:54:05.018395'),(49,'social_auth','0003_alter_email_max_length','2024-09-14 13:54:05.025449'),(50,'default','0004_auto_20160423_0400','2024-09-14 13:54:05.055391'),(51,'social_auth','0004_auto_20160423_0400','2024-09-14 13:54:05.064578'),(52,'social_auth','0005_auto_20160727_2333','2024-09-14 13:54:05.116029'),(53,'social_django','0006_partial','2024-09-14 13:54:05.231557'),(54,'social_django','0007_code_timestamp','2024-09-14 13:54:05.322844'),(55,'social_django','0008_partial_timestamp','2024-09-14 13:54:05.411003'),(56,'social_django','0009_auto_20191118_0520','2024-09-14 13:54:05.550926'),(57,'social_django','0010_uid_db_index','2024-09-14 13:54:05.616806'),(58,'social_django','0011_alter_id_fields','2024-09-14 13:54:06.348657'),(59,'social_django','0012_usersocialauth_extra_data_new','2024-09-14 13:54:06.633950'),(60,'social_django','0013_migrate_extra_data','2024-09-14 13:54:06.808370'),(61,'social_django','0014_remove_usersocialauth_extra_data','2024-09-14 13:54:06.897121'),(62,'social_django','0015_rename_extra_data_new_usersocialauth_extra_data','2024-09-14 13:54:06.998995'),(63,'social_django','0016_alter_usersocialauth_extra_data','2024-09-14 13:54:07.023001'),(64,'social_django','0001_initial','2024-09-14 13:54:07.037756'),(65,'social_django','0004_auto_20160423_0400','2024-09-14 13:54:07.045671'),(66,'social_django','0005_auto_20160727_2333','2024-09-14 13:54:07.053829'),(67,'social_django','0002_add_related_name','2024-09-14 13:54:07.061132'),(68,'social_django','0003_alter_email_max_length','2024-09-14 13:54:07.069219');
+INSERT INTO `django_migrations` VALUES (1,'contenttypes','0001_initial','2024-10-04 07:30:16.786457'),(2,'contenttypes','0002_remove_content_type_name','2024-10-04 07:30:16.839516'),(3,'auth','0001_initial','2024-10-04 07:30:17.008355'),(4,'auth','0002_alter_permission_name_max_length','2024-10-04 07:30:17.052463'),(5,'auth','0003_alter_user_email_max_length','2024-10-04 07:30:17.057992'),(6,'auth','0004_alter_user_username_opts','2024-10-04 07:30:17.065141'),(7,'auth','0005_alter_user_last_login_null','2024-10-04 07:30:17.071327'),(8,'auth','0006_require_contenttypes_0002','2024-10-04 07:30:17.074550'),(9,'auth','0007_alter_validators_add_error_messages','2024-10-04 07:30:17.079419'),(10,'auth','0008_alter_user_username_max_length','2024-10-04 07:30:17.087573'),(11,'auth','0009_alter_user_last_name_max_length','2024-10-04 07:30:17.093718'),(12,'auth','0010_alter_group_name_max_length','2024-10-04 07:30:17.107566'),(13,'auth','0011_update_proxy_permissions','2024-10-04 07:30:17.114139'),(14,'auth','0012_alter_user_first_name_max_length','2024-10-04 07:30:17.119840'),(15,'users','0001_initial','2024-10-04 07:30:17.326117'),(16,'admin','0001_initial','2024-10-04 07:30:17.431803'),(17,'admin','0002_logentry_remove_auto_add','2024-10-04 07:30:17.439494'),(18,'admin','0003_logentry_add_action_flag_choices','2024-10-04 07:30:17.450572'),(19,'django_celery_beat','0001_initial','2024-10-04 07:30:17.628305'),(20,'django_celery_beat','0002_auto_20161118_0346','2024-10-04 07:30:17.700078'),(21,'django_celery_beat','0003_auto_20161209_0049','2024-10-04 07:30:17.721768'),(22,'django_celery_beat','0004_auto_20170221_0000','2024-10-04 07:30:17.726178'),(23,'django_celery_beat','0005_add_solarschedule_events_choices','2024-10-04 07:30:17.733399'),(24,'django_celery_beat','0006_auto_20180322_0932','2024-10-04 07:30:17.805871'),(25,'django_celery_beat','0007_auto_20180521_0826','2024-10-04 07:30:17.855803'),(26,'django_celery_beat','0008_auto_20180914_1922','2024-10-04 07:30:17.880139'),(27,'django_celery_beat','0006_auto_20180210_1226','2024-10-04 07:30:17.896696'),(28,'django_celery_beat','0006_periodictask_priority','2024-10-04 07:30:17.953957'),(29,'django_celery_beat','0009_periodictask_headers','2024-10-04 07:30:18.006689'),(30,'django_celery_beat','0010_auto_20190429_0326','2024-10-04 07:30:18.151393'),(31,'django_celery_beat','0011_auto_20190508_0153','2024-10-04 07:30:18.228002'),(32,'django_celery_beat','0012_periodictask_expire_seconds','2024-10-04 07:30:18.286923'),(33,'django_celery_beat','0013_auto_20200609_0727','2024-10-04 07:30:18.297021'),(34,'django_celery_beat','0014_remove_clockedschedule_enabled','2024-10-04 07:30:18.310476'),(35,'django_celery_beat','0015_edit_solarschedule_events_choices','2024-10-04 07:30:18.316394'),(36,'django_celery_beat','0016_alter_crontabschedule_timezone','2024-10-04 07:30:18.328522'),(37,'django_celery_beat','0017_alter_crontabschedule_month_of_year','2024-10-04 07:30:18.338159'),(38,'django_celery_beat','0018_improve_crontab_helptext','2024-10-04 07:30:18.346655'),(39,'django_celery_beat','0019_alter_periodictasks_options','2024-10-04 07:30:18.350385'),(40,'proxmox','0001_initial','2024-10-04 07:30:18.448289'),(41,'guacamole','0001_initial','2024-10-04 07:30:18.647926'),(42,'ticketing','0001_initial','2024-10-04 07:30:19.482940'),(43,'pfsense','0001_initial','2024-10-04 07:30:19.571422'),(44,'proxmox','0002_virtualmachines_request','2024-10-04 07:30:19.630959'),(45,'sessions','0001_initial','2024-10-04 07:30:19.661496'),(46,'ticketing','0002_requestentry_template','2024-10-04 07:30:19.735784');
 /*!40000 ALTER TABLE `django_migrations` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1257,11 +1111,11 @@ CREATE TABLE `guacamole_guacamoleuser` (
   `username` varchar(150) NOT NULL,
   `password` varchar(128) NOT NULL,
   `is_active` tinyint(1) NOT NULL,
-  `system_user_id` int NOT NULL,
+  `system_user_id` bigint NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `system_user_id` (`system_user_id`),
-  CONSTRAINT `guacamole_guacamoleuser_system_user_id_8263859b_fk_auth_user_id` FOREIGN KEY (`system_user_id`) REFERENCES `auth_user` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  CONSTRAINT `guacamole_guacamoleuser_system_user_id_8263859b_fk_users_user_id` FOREIGN KEY (`system_user_id`) REFERENCES `users_user` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1343,7 +1197,6 @@ CREATE TABLE `proxmox_virtualmachines` (
   `storage` decimal(5,2) NOT NULL,
   `ip_add` varchar(15) DEFAULT NULL,
   `is_lxc` tinyint(1) NOT NULL,
-  `system_password` varchar(45) DEFAULT NULL,
   `status` varchar(20) NOT NULL,
   `node_id` bigint NOT NULL,
   `request_id` bigint NOT NULL,
@@ -1365,149 +1218,34 @@ LOCK TABLES `proxmox_virtualmachines` WRITE;
 UNLOCK TABLES;
 
 --
--- Table structure for table `social_auth_association`
+-- Table structure for table `proxmox_vmtemplates`
 --
 
-DROP TABLE IF EXISTS `social_auth_association`;
+DROP TABLE IF EXISTS `proxmox_vmtemplates`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `social_auth_association` (
+CREATE TABLE `proxmox_vmtemplates` (
   `id` bigint NOT NULL AUTO_INCREMENT,
-  `server_url` varchar(255) NOT NULL,
-  `handle` varchar(255) NOT NULL,
-  `secret` varchar(255) NOT NULL,
-  `issued` int NOT NULL,
-  `lifetime` int NOT NULL,
-  `assoc_type` varchar(64) NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `social_auth_association_server_url_handle_078befa2_uniq` (`server_url`,`handle`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  `vm_id` varchar(45) NOT NULL,
+  `vm_name` varchar(90) NOT NULL,
+  `cores` int NOT NULL,
+  `ram` int NOT NULL,
+  `storage` int NOT NULL,
+  `node` varchar(45) NOT NULL,
+  `is_lxc` tinyint(1) NOT NULL,
+  `guacamole_protocol` varchar(10) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `social_auth_association`
+-- Dumping data for table `proxmox_vmtemplates`
 --
 
-LOCK TABLES `social_auth_association` WRITE;
-/*!40000 ALTER TABLE `social_auth_association` DISABLE KEYS */;
-/*!40000 ALTER TABLE `social_auth_association` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `social_auth_code`
---
-
-DROP TABLE IF EXISTS `social_auth_code`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `social_auth_code` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `email` varchar(254) NOT NULL,
-  `code` varchar(32) NOT NULL,
-  `verified` tinyint(1) NOT NULL,
-  `timestamp` datetime(6) NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `social_auth_code_email_code_801b2d02_uniq` (`email`,`code`),
-  KEY `social_auth_code_code_a2393167` (`code`),
-  KEY `social_auth_code_timestamp_176b341f` (`timestamp`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `social_auth_code`
---
-
-LOCK TABLES `social_auth_code` WRITE;
-/*!40000 ALTER TABLE `social_auth_code` DISABLE KEYS */;
-/*!40000 ALTER TABLE `social_auth_code` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `social_auth_nonce`
---
-
-DROP TABLE IF EXISTS `social_auth_nonce`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `social_auth_nonce` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `server_url` varchar(255) NOT NULL,
-  `timestamp` int NOT NULL,
-  `salt` varchar(65) NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `social_auth_nonce_server_url_timestamp_salt_f6284463_uniq` (`server_url`,`timestamp`,`salt`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `social_auth_nonce`
---
-
-LOCK TABLES `social_auth_nonce` WRITE;
-/*!40000 ALTER TABLE `social_auth_nonce` DISABLE KEYS */;
-/*!40000 ALTER TABLE `social_auth_nonce` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `social_auth_partial`
---
-
-DROP TABLE IF EXISTS `social_auth_partial`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `social_auth_partial` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `token` varchar(32) NOT NULL,
-  `next_step` smallint unsigned NOT NULL,
-  `backend` varchar(32) NOT NULL,
-  `timestamp` datetime(6) NOT NULL,
-  `data` json NOT NULL DEFAULT (_utf8mb3'{}'),
-  PRIMARY KEY (`id`),
-  KEY `social_auth_partial_token_3017fea3` (`token`),
-  KEY `social_auth_partial_timestamp_50f2119f` (`timestamp`),
-  CONSTRAINT `social_auth_partial_chk_1` CHECK ((`next_step` >= 0))
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `social_auth_partial`
---
-
-LOCK TABLES `social_auth_partial` WRITE;
-/*!40000 ALTER TABLE `social_auth_partial` DISABLE KEYS */;
-/*!40000 ALTER TABLE `social_auth_partial` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `social_auth_usersocialauth`
---
-
-DROP TABLE IF EXISTS `social_auth_usersocialauth`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `social_auth_usersocialauth` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `provider` varchar(32) NOT NULL,
-  `uid` varchar(255) NOT NULL,
-  `user_id` int NOT NULL,
-  `created` datetime(6) NOT NULL,
-  `modified` datetime(6) NOT NULL,
-  `extra_data` json NOT NULL DEFAULT (_utf8mb3'{}'),
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `social_auth_usersocialauth_provider_uid_e6b5e668_uniq` (`provider`,`uid`),
-  KEY `social_auth_usersocialauth_user_id_17d28448_fk_auth_user_id` (`user_id`),
-  KEY `social_auth_usersocialauth_uid_796e51dc` (`uid`),
-  CONSTRAINT `social_auth_usersocialauth_user_id_17d28448_fk_auth_user_id` FOREIGN KEY (`user_id`) REFERENCES `auth_user` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `social_auth_usersocialauth`
---
-
-LOCK TABLES `social_auth_usersocialauth` WRITE;
-/*!40000 ALTER TABLE `social_auth_usersocialauth` DISABLE KEYS */;
-/*!40000 ALTER TABLE `social_auth_usersocialauth` ENABLE KEYS */;
+LOCK TABLES `proxmox_vmtemplates` WRITE;
+/*!40000 ALTER TABLE `proxmox_vmtemplates` DISABLE KEYS */;
+INSERT INTO `proxmox_vmtemplates` VALUES (1,'3000','Ubuntu-Desktop-24 (GUI)',1,1024,15,'pve',0,'rdp'),(2,'3001','Ubuntu-Desktop-22 (GUI)',1,1024,15,'pve',0,'rdp'),(3,'3002','Ubuntu-Server-24 (TUI)',1,1024,15,'pve',0,'ssh'),(4,'3003','Ubuntu-Server-22 (TUI)',1,1024,15,'pve',0,'ssh'),(5,'5000','Ubuntu-LXC-23',1,1024,10,'pve',1,'ssh');
+/*!40000 ALTER TABLE `proxmox_vmtemplates` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -1522,13 +1260,13 @@ CREATE TABLE `ticketing_comment` (
   `comment` longtext NOT NULL,
   `date_time` datetime(6) NOT NULL,
   `request_entry_id` bigint NOT NULL,
-  `user_id` int NOT NULL,
+  `user_id` bigint NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `ticketing_comment_id_request_entry_id_d2fb2bd8_uniq` (`id`,`request_entry_id`),
   KEY `ticketing_comment_request_entry_id_22e7afab_fk_ticketing` (`request_entry_id`),
-  KEY `ticketing_comment_user_id_67ffe313_fk_auth_user_id` (`user_id`),
+  KEY `ticketing_comment_user_id_67ffe313_fk_users_user_id` (`user_id`),
   CONSTRAINT `ticketing_comment_request_entry_id_22e7afab_fk_ticketing` FOREIGN KEY (`request_entry_id`) REFERENCES `ticketing_requestentry` (`id`),
-  CONSTRAINT `ticketing_comment_user_id_67ffe313_fk_auth_user_id` FOREIGN KEY (`user_id`) REFERENCES `auth_user` (`id`)
+  CONSTRAINT `ticketing_comment_user_id_67ffe313_fk_users_user_id` FOREIGN KEY (`user_id`) REFERENCES `users_user` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -1553,12 +1291,12 @@ CREATE TABLE `ticketing_issuecomment` (
   `comment` longtext NOT NULL,
   `date_time` datetime(6) NOT NULL,
   `ticket_id` bigint NOT NULL,
-  `user_id` int NOT NULL,
+  `user_id` bigint NOT NULL,
   PRIMARY KEY (`id`),
   KEY `ticketing_issuecomme_ticket_id_582d3c44_fk_ticketing` (`ticket_id`),
-  KEY `ticketing_issuecomment_user_id_05834b5d_fk_auth_user_id` (`user_id`),
+  KEY `ticketing_issuecomment_user_id_05834b5d_fk_users_user_id` (`user_id`),
   CONSTRAINT `ticketing_issuecomme_ticket_id_582d3c44_fk_ticketing` FOREIGN KEY (`ticket_id`) REFERENCES `ticketing_issueticket` (`id`),
-  CONSTRAINT `ticketing_issuecomment_user_id_05834b5d_fk_auth_user_id` FOREIGN KEY (`user_id`) REFERENCES `auth_user` (`id`)
+  CONSTRAINT `ticketing_issuecomment_user_id_05834b5d_fk_users_user_id` FOREIGN KEY (`user_id`) REFERENCES `users_user` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -1610,12 +1348,12 @@ CREATE TABLE `ticketing_issuefile` (
   `file` varchar(100) NOT NULL,
   `uploaded_date` datetime(6) NOT NULL,
   `ticket_id` bigint NOT NULL,
-  `uploaded_by_id` int NOT NULL,
+  `uploaded_by_id` bigint NOT NULL,
   PRIMARY KEY (`id`),
   KEY `ticketing_issuefile_ticket_id_5293a3b6_fk_ticketing` (`ticket_id`),
-  KEY `ticketing_issuefile_uploaded_by_id_39f13ffc_fk_auth_user_id` (`uploaded_by_id`),
+  KEY `ticketing_issuefile_uploaded_by_id_39f13ffc_fk_users_user_id` (`uploaded_by_id`),
   CONSTRAINT `ticketing_issuefile_ticket_id_5293a3b6_fk_ticketing` FOREIGN KEY (`ticket_id`) REFERENCES `ticketing_issueticket` (`id`),
-  CONSTRAINT `ticketing_issuefile_uploaded_by_id_39f13ffc_fk_auth_user_id` FOREIGN KEY (`uploaded_by_id`) REFERENCES `auth_user` (`id`)
+  CONSTRAINT `ticketing_issuefile_uploaded_by_id_39f13ffc_fk_users_user_id` FOREIGN KEY (`uploaded_by_id`) REFERENCES `users_user` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -1638,17 +1376,17 @@ DROP TABLE IF EXISTS `ticketing_issueticket`;
 CREATE TABLE `ticketing_issueticket` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `subject` varchar(100) NOT NULL,
-  `category` varchar(100) NOT NULL,
   `description` varchar(10000) NOT NULL,
   `date_created` datetime(6) NOT NULL,
   `resolve_date` datetime(6) DEFAULT NULL,
-  `created_by_id` int NOT NULL,
+  `category` varchar(100) NOT NULL,
+  `created_by_id` bigint NOT NULL,
   `request_id` bigint NOT NULL,
   PRIMARY KEY (`id`),
-  KEY `ticketing_issueticket_created_by_id_8b65b615_fk_auth_user_id` (`created_by_id`),
+  KEY `ticketing_issueticket_created_by_id_8b65b615_fk_users_user_id` (`created_by_id`),
   KEY `ticketing_issueticke_request_id_2f6b56ee_fk_ticketing` (`request_id`),
   CONSTRAINT `ticketing_issueticke_request_id_2f6b56ee_fk_ticketing` FOREIGN KEY (`request_id`) REFERENCES `ticketing_requestentry` (`id`),
-  CONSTRAINT `ticketing_issueticket_created_by_id_8b65b615_fk_auth_user_id` FOREIGN KEY (`created_by_id`) REFERENCES `auth_user` (`id`)
+  CONSTRAINT `ticketing_issueticket_created_by_id_8b65b615_fk_users_user_id` FOREIGN KEY (`created_by_id`) REFERENCES `users_user` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -1702,24 +1440,21 @@ CREATE TABLE `ticketing_requestentry` (
   `other_config` longtext,
   `status` varchar(20) NOT NULL,
   `cores` int NOT NULL,
-  `isExpired` tinyint(1) NOT NULL,
-  `requestDate` datetime(6) NOT NULL,
+  `request_date` datetime(6) NOT NULL,
   `date_needed` date NOT NULL,
+  `expired_date` date DEFAULT NULL,
   `expiration_date` date DEFAULT NULL,
-  `is_vm_tested` tinyint(1) NOT NULL,
-  `assigned_to_id` int DEFAULT NULL,
-  `fulfilled_by_id` int DEFAULT NULL,
-  `requester_id` int NOT NULL,
+  `vm_date_tested` datetime(6) DEFAULT NULL,
+  `assigned_to_id` bigint DEFAULT NULL,
+  `requester_id` bigint NOT NULL,
   `template_id` bigint NOT NULL,
   PRIMARY KEY (`id`),
-  KEY `ticketing_requestent_template_id_a12a934a_fk_ticketing` (`template_id`),
-  KEY `ticketing_requestentry_assigned_to_id_506defcc_fk_auth_user_id` (`assigned_to_id`),
-  KEY `ticketing_requestentry_fulfilled_by_id_d919446a_fk_auth_user_id` (`fulfilled_by_id`),
-  KEY `ticketing_requestentry_requester_id_59344ce4_fk_auth_user_id` (`requester_id`),
-  CONSTRAINT `ticketing_requestent_template_id_a12a934a_fk_ticketing` FOREIGN KEY (`template_id`) REFERENCES `ticketing_vmtemplates` (`id`),
-  CONSTRAINT `ticketing_requestentry_assigned_to_id_506defcc_fk_auth_user_id` FOREIGN KEY (`assigned_to_id`) REFERENCES `auth_user` (`id`),
-  CONSTRAINT `ticketing_requestentry_fulfilled_by_id_d919446a_fk_auth_user_id` FOREIGN KEY (`fulfilled_by_id`) REFERENCES `auth_user` (`id`),
-  CONSTRAINT `ticketing_requestentry_requester_id_59344ce4_fk_auth_user_id` FOREIGN KEY (`requester_id`) REFERENCES `auth_user` (`id`)
+  KEY `ticketing_requestentry_assigned_to_id_506defcc_fk_users_user_id` (`assigned_to_id`),
+  KEY `ticketing_requestentry_requester_id_59344ce4_fk_users_user_id` (`requester_id`),
+  KEY `ticketing_requestent_template_id_a12a934a_fk_proxmox_v` (`template_id`),
+  CONSTRAINT `ticketing_requestent_template_id_a12a934a_fk_proxmox_v` FOREIGN KEY (`template_id`) REFERENCES `proxmox_vmtemplates` (`id`),
+  CONSTRAINT `ticketing_requestentry_assigned_to_id_506defcc_fk_users_user_id` FOREIGN KEY (`assigned_to_id`) REFERENCES `users_user` (`id`),
+  CONSTRAINT `ticketing_requestentry_requester_id_59344ce4_fk_users_user_id` FOREIGN KEY (`requester_id`) REFERENCES `users_user` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -1743,12 +1478,12 @@ CREATE TABLE `ticketing_requestentryaudit` (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `change_date` datetime(6) NOT NULL,
   `changes` longtext NOT NULL,
-  `changed_by_id` int DEFAULT NULL,
+  `changed_by_id` bigint DEFAULT NULL,
   `request_entry_id` bigint NOT NULL,
   PRIMARY KEY (`id`),
-  KEY `ticketing_requestent_changed_by_id_922d79a4_fk_auth_user` (`changed_by_id`),
+  KEY `ticketing_requestent_changed_by_id_922d79a4_fk_users_use` (`changed_by_id`),
   KEY `ticketing_requestent_request_entry_id_a321fee1_fk_ticketing` (`request_entry_id`),
-  CONSTRAINT `ticketing_requestent_changed_by_id_922d79a4_fk_auth_user` FOREIGN KEY (`changed_by_id`) REFERENCES `auth_user` (`id`),
+  CONSTRAINT `ticketing_requestent_changed_by_id_922d79a4_fk_users_use` FOREIGN KEY (`changed_by_id`) REFERENCES `users_user` (`id`),
   CONSTRAINT `ticketing_requestent_request_entry_id_a321fee1_fk_ticketing` FOREIGN KEY (`request_entry_id`) REFERENCES `ticketing_requestentry` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -1771,8 +1506,8 @@ DROP TABLE IF EXISTS `ticketing_requestusecase`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `ticketing_requestusecase` (
   `id` bigint NOT NULL AUTO_INCREMENT,
-  `request_use_case` varchar(45) DEFAULT NULL,
-  `vm_count` int DEFAULT NULL,
+  `request_use_case` varchar(45) NOT NULL,
+  `vm_count` int NOT NULL,
   `request_id` bigint NOT NULL,
   PRIMARY KEY (`id`),
   KEY `ticketing_requestuse_request_id_f2fe6137_fk_ticketing` (`request_id`),
@@ -1790,63 +1525,74 @@ LOCK TABLES `ticketing_requestusecase` WRITE;
 UNLOCK TABLES;
 
 --
--- Table structure for table `ticketing_userprofile`
+-- Table structure for table `users_user`
 --
 
-DROP TABLE IF EXISTS `ticketing_userprofile`;
+DROP TABLE IF EXISTS `users_user`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `ticketing_userprofile` (
+CREATE TABLE `users_user` (
   `id` bigint NOT NULL AUTO_INCREMENT,
+  `password` varchar(128) NOT NULL,
+  `last_login` datetime(6) DEFAULT NULL,
+  `is_superuser` tinyint(1) NOT NULL,
+  `username` varchar(150) NOT NULL,
+  `first_name` varchar(150) NOT NULL,
+  `last_name` varchar(150) NOT NULL,
+  `email` varchar(254) NOT NULL,
+  `is_staff` tinyint(1) NOT NULL,
+  `is_active` tinyint(1) NOT NULL,
+  `date_joined` datetime(6) NOT NULL,
   `user_type` varchar(20) NOT NULL,
-  `user_id` int NOT NULL,
-  `system_password` varchar(45), 
   PRIMARY KEY (`id`),
-  UNIQUE KEY `user_id` (`user_id`),
-  CONSTRAINT `ticketing_userprofile_user_id_e3bea9bb_fk_auth_user_id` FOREIGN KEY (`user_id`) REFERENCES `auth_user` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+  UNIQUE KEY `username` (`username`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Dumping data for table `ticketing_userprofile`
+-- Dumping data for table `users_user`
 --
 
-LOCK TABLES `ticketing_userprofile` WRITE;
-/*!40000 ALTER TABLE `ticketing_userprofile` DISABLE KEYS */;
-INSERT INTO `ticketing_userprofile` VALUES (1,'admin',1,'123456'),(2,'admin',2,'123456'),(3,'faculty',3,'123456');
-/*!40000 ALTER TABLE `ticketing_userprofile` ENABLE KEYS */;
+LOCK TABLES `users_user` WRITE;
+/*!40000 ALTER TABLE `users_user` DISABLE KEYS */;
+INSERT INTO `users_user` VALUES (1,'123456',NULL,1,'admin','admin','chan','',1,1,NOW(),'TSG'),(2,'123456',NULL,0,'john.doe','John','Doe','',1,1,NOW(),'TSG'),(3,'123456',NULL,0,'josephine.cruz','Josephine','Cruz','',1,1,NOW(),'FACULTY');
+/*!40000 ALTER TABLE `users_user` ENABLE KEYS */;
 UNLOCK TABLES;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`%`*/ /*!50003 TRIGGER `create_guac_user` AFTER INSERT ON `users_user` FOR EACH ROW BEGIN
+	DECLARE guac_entity_id INT;
+    SET @salt = UNHEX(SHA2(UUID(), 256));
+    
+    -- INSERT guacamole_user into cap2240db
+    INSERT INTO cap2240db.guacamole_guacamoleuser (username, password, system_user_id, is_active)
+    VALUES (NEW.username, NEW.password, NEW.id, 1);
+    
+    -- INSERT the new system user into guacamole_db.guacamole_entity
+    INSERT INTO guacamole_db.guacamole_entity (name, type) VALUES (NEW.username, 'USER');
 
---
--- Table structure for table `ticketing_vmtemplates`
---
+    -- Get the entity_id of the new system user
+    SELECT entity_id INTO guac_entity_id FROM guacamole_db.guacamole_entity WHERE name = NEW.username;
 
-DROP TABLE IF EXISTS `ticketing_vmtemplates`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `ticketing_vmtemplates` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `vm_id` varchar(45) NOT NULL,
-  `vm_name` varchar(90) NOT NULL,
-  `cores` int NOT NULL,
-  `ram` int NOT NULL,
-  `storage` int NOT NULL,
-  `node` varchar(45) NOT NULL,
-  `is_lxc` tinyint(1) NOT NULL,
-  `guacamole_protocol` varchar(10) NOT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `ticketing_vmtemplates`
---
-
-LOCK TABLES `ticketing_vmtemplates` WRITE;
-/*!40000 ALTER TABLE `ticketing_vmtemplates` DISABLE KEYS */;
-INSERT INTO `ticketing_vmtemplates` VALUES (1,'3000','Ubuntu-Desktop-24 (GUI)',1,1024,15,'pve',0,'rdp'),(2,'3001','Ubuntu-Desktop-22 (GUI)',1,1024,15,'pve',0,'rdp'),(3,'3002','Ubuntu-Server-24 (TUI)',1,1024,15,'pve',0,'ssh'),(4,'3003','Ubuntu-Server-22 (TUI)',1,1024,15,'pve',0,'ssh'),(5,'5000','Ubuntu-LXC-23',1,1024,10,'pve',1,'ssh');
-/*!40000 ALTER TABLE `ticketing_vmtemplates` ENABLE KEYS */;
-UNLOCK TABLES;
+    -- INSERT the new system user into guacamole_db.guacamole_user
+    INSERT INTO guacamole_db.guacamole_user (entity_id, password_salt, password_hash, password_date, disabled, expired)
+	VALUES (
+		guac_entity_id, @salt, UNHEX(SHA2(CONCAT(NEW.password, HEX(@salt)), 256)), NOW(), 0, 0);
+        
+    -- TODO: Add system_admin_account to guacamole_admin_group
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
 
 --
 -- Dumping events for database 'cap2240db'
@@ -1865,4 +1611,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2024-09-26  9:43:01
+-- Dump completed on 2024-10-04 16:10:09

@@ -29,7 +29,7 @@ def access_vm(request):
         guacamole_user = get_object_or_404(GuacamoleUser, system_user=request.user)
         guacamole_username = guacamole_user.username
         guacamole_password = guacamole_user.password
-        if request.user.is_tsg:
+        if request.user.is_tsg():
             guacamole_username = 'guacadmin'
             guacamole_password = 'guacadmin'
         connection_id = get_object_or_404(GuacamoleConnection, vm=vm).connection_id
