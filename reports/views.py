@@ -8,6 +8,7 @@ from io import StringIO
 import json
 import csv
 from decouple import config
+from ticketing.models import RequestUseCase
 
 from proxmox.models import VirtualMachines
 
@@ -531,11 +532,14 @@ def performance_gen(request):
 def generate_resource_query(start_date, end_date, query_type, class_list=None):
 
     resources = {
-        "cpu": {"field": "cpus"},
+        "cpus": {"field": "cpus"},         # processer number
+        "cpu": {"field": "cpu"},            # cpu usage %
         "mem": {"field": "mem"},
         "maxmem": {"field": "maxmem"},
         "used": {"field": "used"},
-        "total": {"field": "total"}
+        "total": {"field": "total"},
+        "netin": {"field": "netin"},
+        "netout": {"field": "netout"}
     }
 
     queries = {}
@@ -747,11 +751,14 @@ def process_resource_data(results, query_type, start_date, end_date):
         row = {
             'startdate': start_date,
             'enddate': end_date,
+            'cpus': results['cpus'][0].records[0].values['_value'],
             'cpu': results['cpu'][0].records[0].values['_value'],
             'mem': results['mem'][0].records[0].values['_value'],
             'maxmem': results['maxmem'][0].records[0].values['_value'],
             'used': results['used'][0].records[0].values['_value'],
-            'total': results['total'][0].records[0].values['_value']
+            'total': results['total'][0].records[0].values['_value'],
+            'netin': results['netin'][0].records[0].values['_value'],
+            'netout': results['netout'][0].records[0].values['_value'],
         }
         row['mem_usage(%)'] = (row['mem'] / row['maxmem']) * 100 if row['maxmem'] != 0 else 0
         row['storage_usage(%)'] = (row['used'] / row['total']) * 100 if row['total'] != 0 else 0
@@ -810,7 +817,7 @@ def extract_general_stat(request):
     # Process request data
     start_date_str = request.POST.get('startdate')
     end_date_str = request.POST.get('enddate')
-    query_type = request.POST.get('scope') # All, per node, per class
+    query_type = request.POST.get('scope') # All, per-node, per-class
 
     start_date = parse_form_date(start_date_str, 1)
     end_date = parse_form_date(end_date_str, 0)
@@ -819,19 +826,31 @@ def extract_general_stat(request):
     # Get needed metrics 
     # (number of VMs, total CPU, CPU%, total mem, mem%, total storage, storage%, netin and netout)
     # TODO: Static for now, remove this when we can dynamically get the list of class
-    class_list = ["CCINFOM", "ITCMSY2", "CCICOMP"] # 这里能获取到吗
+    
+    class_list = RequestUseCase.objects.all().exclude(
+        request_use_case__icontains="Research"
+    ).exclude(
+        request_use_case__icontains="Test"
+    ).exclude(
+        request_use_case__icontains="Thesis"
+    ).values_list('request_use_case', flat=True)
+
+    print(f"class_list: {class_list}")
+
+
+    # class_list = ["CCINFOM", "ITCMSY2", "CCICOMP"] # 这里能获取到吗
     # class_list = None
-    queries =  generate_resource_query(start_date, end_date, query_type, class_list)
+    # queries =  generate_resource_query(start_date, end_date, query_type, class_list)
 
-    results = {}
+    # results = {}
 
-    for resource, query in queries.items():
-        result = query_api.query(query=query)
-        results[resource] = result   
+    # for resource, query in queries.items():
+    #     result = query_api.query(query=query)
+    #     results[resource] = result   
 
-    # process result
-    processed_data = process_resource_data(results, query_type, start_date, end_date)
-    print(f"processed_data: {processed_data}")
+    # # process result
+    # processed_data = process_resource_data(results, query_type, start_date, end_date)
+    # print(f"processed_data: {processed_data}")
 
     influxdb_client.close()
     return generate_csv_response(processed_data, query_type, start_date_str, end_date_str)
