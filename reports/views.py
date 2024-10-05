@@ -843,11 +843,11 @@ def extract_general_stat(request):
             class_list.append(processed_entry)
 
     queries =  generate_resource_query(start_date, end_date, query_type, class_list)
-    print(f"queries: {queries}")
-
 
     results = {}
     for resource, query in queries.items():
+        print(f"resource: {resource}")
+        print(f"query: {query}")
         result = query_api.query(query=query)
         results[resource] = result   
 
