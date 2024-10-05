@@ -743,33 +743,34 @@ def process_resource_data(results, query_type, start_date, end_date):
     processed_data = []
 
     def safe_get_value(result, resource, key=None):
-    try:
-        if result and result[0].records:
-            record = result[0].records[0]
-            if key:
-                return record.values.get(key, 0)
-            return record.get_value()
-        return 0
-    except (IndexError, AttributeError):
-        print(f"No data for {resource}")
-        return 0
+        try:
+            if result and result[0].records:
+                for record in result[0].records:
+                    if key is None or record.values.get(key) is not None:
+                        return record.values.get('_value', 0)
+            return None
+        except (IndexError, AttributeError):
+            print(f"No data for {resource}")
+            return None
     
     if query_type == "all":
         row = {
             'startdate': start_date,
             'enddate': end_date,
-            'cpu cores': safe_get_value(results.get('cpus'), 'cpus'),
-            'cpu': safe_get_value(results.get('cpu'), 'cpu'),
-            'mem': safe_get_value(results.get('mem'), 'mem'),
-            'maxmem': safe_get_value(results.get('maxmem'), 'maxmem'),
-            'used': safe_get_value(results.get('used'), 'used'),
-            'total': safe_get_value(results.get('total'), 'total'),
-            'netin': safe_get_value(results.get('netin'), 'netin'),
-            'netout': safe_get_value(results.get('netout'), 'netout'),   
         }
-        row['mem_usage(%)'] = (row['mem'] / row['maxmem']) * 100 if row['maxmem'] != 0 else 0
-        row['storage_usage(%)'] = (row['used'] / row['total']) * 100 if row['total'] != 0 else 0
-        processed_data.append(row)
+
+        for resource in ['cpu cores', 'cpu', 'mem', 'maxmem', 'used', 'total', 'netin', 'netout']:
+            value = safe_get_value(results.get(resource), resource)
+            if value is not None:
+                row[resource] = value
+        
+        if 'mem' in row and 'maxmem' in row and row['maxmem'] != 0:
+            row['mem_usage(%)'] = (row['mem'] / row['maxmem']) * 100
+        if 'used' in row and 'total' in row and row['total'] != 0:
+            row['storage_usage(%)'] = (row['used'] / row['total']) * 100
+        
+        if len(row) > 2:  
+            processed_data.append(row)
     
     elif query_type in ["per-node", "per-class"]:
         key = 'nodename' if query_type == "per-node" else 'class'
@@ -784,18 +785,20 @@ def process_resource_data(results, query_type, start_date, end_date):
                 key: entity,
                 'startdate': start_date,
                 'enddate': end_date,
-                'cpu cores': safe_get_value(results.get('cpus'), 'cpus', key),
-                'cpu': safe_get_value(results.get('cpu'), 'cpu', key),
-                'mem': safe_get_value(results.get('mem'), 'mem', key),
-                'maxmem': safe_get_value(results.get('maxmem'), 'maxmem', key),
-                'used': safe_get_value(results.get('used'), 'used', key),
-                'total': safe_get_value(results.get('total'), 'total', key),
-                'netin': safe_get_value(results.get('netin'), 'netin', key),
-                'netout': safe_get_value(results.get('netout'), 'netout', key),
             }
-            row['mem_usage(%)'] = (row['mem'] / row['maxmem']) * 100 if row['maxmem'] != 0 else 0
-            row['storage_usage(%)'] = (row['used'] / row['total']) * 100 if row['total'] != 0 else 0
-            processed_data.append(row)
+
+            for resource in ['cpu cores', 'cpu', 'mem', 'maxmem', 'used', 'total', 'netin', 'netout']:
+                value = safe_get_value(results.get(resource), resource, entity)
+                if value is not None:
+                    row[resource] = value
+            
+            if 'mem' in row and 'maxmem' in row and row['maxmem'] != 0:
+                row['mem_usage(%)'] = (row['mem'] / row['maxmem']) * 100
+            if 'used' in row and 'total' in row and row['total'] != 0:
+                row['storage_usage(%)'] = (row['used'] / row['total']) * 100
+            
+            if len(row) > 3:
+                processed_data.append(row)
 
     return processed_data
 
