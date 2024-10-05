@@ -253,6 +253,7 @@ def add_users (request):
                         try:
                             user = User.objects.create_user(username=email, email=email, password=password)
                             user.first_name = fullname
+                            user.user_type = user_profile
                             user.save()
                             # user_profile = UserProfile.objects.create(user = user, user_type = user_profile)
                             messages.success(request, f"User {fullname} ({email}) created successfully.")
@@ -276,6 +277,7 @@ def add_users (request):
                         name_parts = email.split('@')[0].split('_')
                         fullname = ' '.join(name_parts).title()
                         user.first_name = fullname.title()
+                        user.user_type = user_profile
                         user.save()
                         # user_profile = UserProfile.objects.create(user = user, user_type = user_profile)
                         messages.success(request, f"User {email} created successfully.")
@@ -299,8 +301,7 @@ def user_management (request):
             'id': user.id,
             'full_name': user.get_full_name() if user.first_name or user.last_name else user.username,
             'email': user.email if user.email  else 'No Email',
-            # 'user_type': user_profile.user_type.title() if user_profile else 'No Profile',
-            'password' : '123467'
+            'user_type': user.user_type,
         })
     
     
@@ -328,18 +329,18 @@ def edit_user(request):
     if email != 'No email' and email: 
         user.email = email
 
-    # Check for password change
-    if data.get('change_password') == 'on': 
-        new_password = generate_random_string()
-        user.set_password(new_password)  
-
-    # if data.get('change_user_profile'):
-    #     user_profile.user_type = data.get('change_user_profile')
-    #     user_profile.save()
+    if data.get('change_user_profile'):
+        user.user_type = data.get('change_user_profile')
 
     user.save()
 
     return redirect('users:user_management')
 
-def reset_password (request):
+def reset_password (request, user_id):
+    user = User.objects.get(id = user_id)
+    generated_password = generate_random_string()
+    user.set_password(generated_password)
+    user.save()
+
+    #TODO: Send an email to the affected user. 
     return redirect('users:user_management')
