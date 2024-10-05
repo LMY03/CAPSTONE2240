@@ -774,7 +774,7 @@ def process_resource_data(results, query_type, start_date, end_date):
     
     elif query_type in ["per-node", "per-class"]:
         key = 'nodename' if query_type == "per-node" else 'class'
-        all_entries = set()
+        all_entities = set()
         
         for resource in results:
             if results[resource] and results[resource][0].records:
