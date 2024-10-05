@@ -751,14 +751,14 @@ def process_resource_data(results, query_type, start_date, end_date):
         row = {
             'startdate': start_date,
             'enddate': end_date,
-            'cpus': results['cpus'][0].records[0].values['_value'],
+            'cpus': results['cpus'][0].records[0].values['_value'],      
             'cpu': results['cpu'][0].records[0].values['_value'],
             'mem': results['mem'][0].records[0].values['_value'],
             'maxmem': results['maxmem'][0].records[0].values['_value'],
             'used': results['used'][0].records[0].values['_value'],
             'total': results['total'][0].records[0].values['_value'],
-            'netin': results['netin'][0].records[0].values['_value'],
-            'netout': results['netout'][0].records[0].values['_value'],
+            'netin': results['netin'][0].records[0].values['_value'],       
+            'netout': results['netout'][0].records[0].values['_value'],      
         }
         row['mem_usage(%)'] = (row['mem'] / row['maxmem']) * 100 if row['maxmem'] != 0 else 0
         row['storage_usage(%)'] = (row['used'] / row['total']) * 100 if row['total'] != 0 else 0
@@ -766,17 +766,20 @@ def process_resource_data(results, query_type, start_date, end_date):
     
     elif query_type in ["per-node", "per-class"]:
         key = 'host' if query_type == "per-node" else 'class'
-        for cpu_record in results['cpu'][0].records:
+        for cpu_record in results['cpus'][0].records:
             node_or_class = cpu_record.values[key]
             row = {
                 key: node_or_class,
                 'startdate': start_date,
                 'enddate': end_date,
-                'cpu': cpu_record.values['_value'],
+                'cpus': cpu_record.values['_value'],
+                'cpu': next(r.values['_value'] for r in results['cpu'][0].records if r.values[key] == node_or_class),
                 'mem': next(r.values['_value'] for r in results['mem'][0].records if r.values[key] == node_or_class),
                 'maxmem': next(r.values['_value'] for r in results['maxmem'][0].records if r.values[key] == node_or_class),
                 'used': next(r.values['_value'] for r in results['used'][0].records if r.values[key] == node_or_class),
-                'total': next(r.values['_value'] for r in results['total'][0].records if r.values[key] == node_or_class)
+                'total': next(r.values['_value'] for r in results['total'][0].records if r.values[key] == node_or_class),
+                'netin': next(r.values['_value'] for r in results['netin'][0].records if r.values[key] == node_or_class),
+                'netout': next(r.values['_value'] for r in results['netout'][0].records if r.values[key] == node_or_class),
             }
             row['mem_usage(%)'] = (row['mem'] / row['maxmem']) * 100 if row['maxmem'] != 0 else 0
             row['storage_usage(%)'] = (row['used'] / row['total']) * 100 if row['total'] != 0 else 0
@@ -786,11 +789,11 @@ def process_resource_data(results, query_type, start_date, end_date):
 
 def generate_csv_response(data, query_type, start_date, end_date):
     if query_type == "all":
-        fieldnames = ['startdate', 'enddate', 'cpu', 'mem', 'maxmem', 'mem_usage(%)', 'used', 'total', 'storage_usage(%)']
+        fieldnames = ['startdate', 'enddate', 'cpu cores', 'cpu', 'mem', 'maxmem', 'mem_usage(%)', 'used', 'total', 'storage_usage(%)', 'netin', 'netout']
     elif query_type == "per-node":
-        fieldnames = ['nodename', 'startdate', 'enddate', 'cpu', 'mem', 'maxmem', 'mem_usage(%)', 'used', 'total', 'storage_usage(%)']
+        fieldnames = ['nodename', 'startdate', 'enddate', 'cpu cores', 'cpu', 'mem', 'maxmem', 'mem_usage(%)', 'used', 'total', 'storage_usage(%)', 'netin', 'netout']
     elif query_type == "per-class":
-        fieldnames = ['classname', 'startdate', 'enddate', 'cpu', 'mem', 'maxmem', 'mem_usage(%)', 'used', 'total', 'storage_usage(%)']
+        fieldnames = ['classname', 'startdate', 'enddate', 'cpu cores', 'cpu', 'mem', 'maxmem', 'mem_usage(%)', 'used', 'total', 'storage_usage(%)', 'netin', 'netout']
     
     csv_buffer = StringIO()
     writer = csv.DictWriter(csv_buffer, fieldnames=fieldnames)
@@ -827,7 +830,7 @@ def extract_general_stat(request):
     # (number of VMs, total CPU, CPU%, total mem, mem%, total storage, storage%, netin and netout)
     # TODO: Static for now, remove this when we can dynamically get the list of class
     
-    class_list = []
+    
     raw_class_list = RequestUseCase.objects.all().exclude(
         request_use_case__icontains="Research"
     ).exclude(
@@ -836,14 +839,11 @@ def extract_general_stat(request):
         request_use_case__icontains="Thesis"
     ).values_list('request_use_case', flat=True)
 
+    class_list = []
     for entry in raw_class_list:
         processed_entry = entry.split('_')[0]
         if processed_entry not in class_list:
             class_list.append(processed_entry)
-
-    print("CLASS LIST")
-    for i in class_list:
-        print(class_list)
 
     queries =  generate_resource_query(start_date, end_date, query_type, class_list)
 
