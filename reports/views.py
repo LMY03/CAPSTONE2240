@@ -562,7 +562,7 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
         elif query_type == "per-node":
             query = f'''
                     {base_query}
-                    |> group(columns: ["nodename"])
+                    |> group(columns: ["host"])
                     |> mean()
                     |> yield(name: "{resource}_per_node")
                     '''
@@ -773,7 +773,7 @@ def process_resource_data(results, query_type, start_date, end_date):
             processed_data.append(row)
     
     elif query_type in ["per-node", "per-class"]:
-        key = 'nodename' if query_type == "per-node" else 'class'
+        key = 'nodename' if query_type == "per-node" else 'classname'
         all_entities = set()
         
         for resource in results:
