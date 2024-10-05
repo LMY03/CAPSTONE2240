@@ -53,7 +53,6 @@ class StudentManager(models.Manager):
         student.save(using=self._db)
         return student
 
-
 class Student(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     password = models.CharField(max_length=128)  # Store plain-text password
