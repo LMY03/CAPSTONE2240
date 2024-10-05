@@ -22,7 +22,6 @@ from django.urls import include, path
 from users.views import render_home
 
 urlpatterns = [
-    path('ansible/', include("autotool.urls")),
     path('monitoring/', include("monitoring.urls")),
     path('reports/', include("reports.urls")),
     path('guacamole/', include("guacamole.urls")),

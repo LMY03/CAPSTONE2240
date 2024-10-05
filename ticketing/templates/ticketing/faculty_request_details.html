@@ -139,12 +139,12 @@ Request Details {{ request_entry.id }}
                                 {% for system_account in system_accounts %}
                                     <div class="col-md-8">
                                         <div class="p-3 bg-light border">
-                                            <p><strong>System Username:</strong> {{ system_account.vm_name }}</p>
+                                            <p><strong>System Username:</strong> {{ system_account.username }}</p>
                                         </div>
                                     </div>
                                     <div class="col-md-4">
                                         <div class="p-3 bg-light border">
-                                            <p><strong>System Password:</strong> {{ system_account.system_password }}</p>
+                                            <p><strong>System Password:</strong> {{ system_account.password }}</p>
                                         </div>
                                     </div>
                                 {% endfor %}

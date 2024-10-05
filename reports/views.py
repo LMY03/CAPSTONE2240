@@ -8,6 +8,7 @@ from io import StringIO
 import json
 import csv
 from decouple import config
+from ticketing.models import RequestUseCase
 
 from proxmox.models import VirtualMachines
 
@@ -527,15 +528,17 @@ def report_gen(request):
 def performance_gen(request):
     return render(request, 'reports/performance_gen.html')
 
-# TODO: 可以直接在这个函数中拓展，加入其他metrics的查询如mem，memmax等
 def generate_resource_query(start_date, end_date, query_type, class_list=None):
 
     resources = {
-        "cpu": {"field": "cpus"},
+        "cpus": {"field": "cpus"},         # processer number
+        "cpu": {"field": "cpu"},            # cpu usage %
         "mem": {"field": "mem"},
         "maxmem": {"field": "maxmem"},
         "used": {"field": "used"},
-        "total": {"field": "total"}
+        "total": {"field": "total"},
+        "netin": {"field": "netin"},
+        "netout": {"field": "netout"}
     }
 
     queries = {}
@@ -551,42 +554,38 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
         if query_type == "all":
             query = f'''
                     {base_query}
-                    |> last()
                     |> group()
-                    |> sum(column: "_value")
+                    |> mean()
                     |> yield(name: "total_{resource}")
                     '''
         # TODO: 根据节点来分组好像不是这样的，是用 |> group(columns: ["host"]) 吗
-        elif query_type == "per node":
+        elif query_type == "per-node":
             query = f'''
                     {base_query}
-                    |> last()
                     |> group(columns: ["host"])
-                    |> sum(column: "_value")
+                    |> mean()
                     |> yield(name: "{resource}_per_node")
                     '''
-        elif query_type == "per class":
+        elif query_type == "per-class":
             if not class_list:
                 raise ValueError("Class list is required for 'per class' query type.")
-            # TODO: need to get a list of class name for the query (maybe connecting to our own db to get the data)
             # TODO: 貌似不是vm_name, 得去influxdb中看一下vm主机名对应的是什么
             class_filters = ' or '.join([f'r["host"] =~ /{class_name}/' for class_name in class_list])
-            class_assignments = ' else '.join([f'if r["host"] =~ /{class_name}/ then "{class_name}"' for class_name in class_list]) + ' else "Unknown"'
             query = f'''
                     {base_query}
                     |> filter(fn: (r) => {class_filters})
-                    |> last()
                     |> map(fn: (r) => ({{
-                        _value: r._value,
-                        class: if {class_assignments}
+                        r with
+                        class: {' '.join([f'if r["host"] =~ /{c}/ then "{c}" else' for c in class_list])} "Unknown"
                     }}))
                     |> group(columns: ["class"])
-                    |> sum(column: "_value")
+                    |> mean()
                     |> yield(name: "{resource}_per_class")
                     '''
         else:
             raise ValueError("Invalid query type.")
         
+        print(f"resource: {resource}")
         print(f"query: {query}")
         queries[resource] = query
 
@@ -608,7 +607,7 @@ def generate_cpu_usage_query(query_type, start_date, end_date, class_list=None):
                 |> yield(name: "total_cpu_usage")
                 '''
 
-    elif query_type == "per node":
+    elif query_type == "per-node":
         query = f'''
                 {base_query}
                 |> group(columns: ["host"])
@@ -616,7 +615,7 @@ def generate_cpu_usage_query(query_type, start_date, end_date, class_list=None):
                 |> yield(name: "cpu_usage_per_node")
                 '''
 
-    elif query_type == "per class":
+    elif query_type == "per-class":
         class_filters = ' or '.join([f'r["host"] =~ /{class_name}/' for class_name in class_list])
         class_assignments = ' else '.join([f'if r["host"] =~ /{class_name}/ then "{class_name}"' for class_name in class_list]) + ' else "Unknown"'
 
@@ -742,57 +741,83 @@ def extract_detail_stat(request):
 
 def process_resource_data(results, query_type, start_date, end_date):
     processed_data = []
+
+    def safe_get_value(result, resource, key=None):
+        try:
+            if result and result[0].records:
+                for record in result[0].records:
+                    if key is None or record.values.get(key) is not None:
+                        return record.values.get('_value', 0)
+            return None
+        except (IndexError, AttributeError):
+            print(f"No data for {resource}")
+            return None
     
     if query_type == "all":
         row = {
             'startdate': start_date,
             'enddate': end_date,
-            'cpu': results['cpu'][0].records[0].values['_value'],
-            'mem': results['mem'][0].records[0].values['_value'],
-            'maxmem': results['maxmem'][0].records[0].values['_value'],
-            'used': results['used'][0].records[0].values['_value'],
-            'total': results['total'][0].records[0].values['_value']
         }
-        row['mem_usage(%)'] = (row['mem'] / row['maxmem']) * 100 if row['maxmem'] != 0 else 0
-        row['storage_usage(%)'] = (row['used'] / row['total']) * 100 if row['total'] != 0 else 0
-        processed_data.append(row)
+
+        for resource in ['cpu cores', 'cpu', 'mem', 'maxmem', 'used', 'total', 'netin', 'netout']:
+            value = safe_get_value(results.get(resource), resource)
+            if value is not None:
+                row[resource] = value
+        
+        if 'mem' in row and 'maxmem' in row and row['maxmem'] != 0:
+            row['mem_usage(%)'] = (row['mem'] / row['maxmem']) * 100
+        if 'used' in row and 'total' in row and row['total'] != 0:
+            row['storage_usage(%)'] = (row['used'] / row['total']) * 100
+        
+        if len(row) > 2:  
+            processed_data.append(row)
     
-    elif query_type in ["per node", "per class"]:
-        key = 'host' if query_type == "per node" else 'class'
-        for cpu_record in results['cpu'][0].records:
-            node_or_class = cpu_record.values[key]
+    elif query_type in ["per-node", "per-class"]:
+        key = 'nodename' if query_type == "per-node" else 'classname'
+        all_entities = set()
+        
+        for resource in results:
+            if results[resource] and results[resource][0].records:
+                all_entities.update(record.values.get(key) for record in results[resource][0].records)
+        
+        for entity in all_entities:
             row = {
-                key: node_or_class,
+                key: entity,
                 'startdate': start_date,
                 'enddate': end_date,
-                'cpu': cpu_record.values['_value'],
-                'mem': next(r.values['_value'] for r in results['mem'][0].records if r.values[key] == node_or_class),
-                'maxmem': next(r.values['_value'] for r in results['maxmem'][0].records if r.values[key] == node_or_class),
-                'used': next(r.values['_value'] for r in results['used'][0].records if r.values[key] == node_or_class),
-                'total': next(r.values['_value'] for r in results['total'][0].records if r.values[key] == node_or_class)
             }
-            row['mem_usage(%)'] = (row['mem'] / row['maxmem']) * 100 if row['maxmem'] != 0 else 0
-            row['storage_usage(%)'] = (row['used'] / row['total']) * 100 if row['total'] != 0 else 0
-            processed_data.append(row)
+
+            for resource in ['cpu cores', 'cpu', 'mem', 'maxmem', 'used', 'total', 'netin', 'netout']:
+                value = safe_get_value(results.get(resource), resource, entity)
+                if value is not None:
+                    row[resource] = value
+            
+            if 'mem' in row and 'maxmem' in row and row['maxmem'] != 0:
+                row['mem_usage(%)'] = (row['mem'] / row['maxmem']) * 100
+            if 'used' in row and 'total' in row and row['total'] != 0:
+                row['storage_usage(%)'] = (row['used'] / row['total']) * 100
+            
+            if len(row) > 3:
+                processed_data.append(row)
 
     return processed_data
 
 def generate_csv_response(data, query_type, start_date, end_date):
     if query_type == "all":
-        fieldnames = ['startdate', 'enddate', 'cpu', 'mem', 'maxmem', 'mem_usage(%)', 'used', 'total', 'storage_usage(%)']
-    elif query_type == "per node":
-        fieldnames = ['nodename', 'startdate', 'enddate', 'cpu', 'mem', 'maxmem', 'mem_usage(%)', 'used', 'total', 'storage_usage(%)']
-    elif query_type == "per class":
-        fieldnames = ['classname', 'startdate', 'enddate', 'cpu', 'mem', 'maxmem', 'mem_usage(%)', 'used', 'total', 'storage_usage(%)']
+        fieldnames = ['startdate', 'enddate', 'cpu cores', 'cpu', 'mem', 'maxmem', 'mem_usage(%)', 'used', 'total', 'storage_usage(%)', 'netin', 'netout']
+    elif query_type == "per-node":
+        fieldnames = ['nodename', 'startdate', 'enddate', 'cpu cores', 'cpu', 'mem', 'maxmem', 'mem_usage(%)', 'used', 'total', 'storage_usage(%)', 'netin', 'netout']
+    elif query_type == "per-class":
+        fieldnames = ['classname', 'startdate', 'enddate', 'cpu cores', 'cpu', 'mem', 'maxmem', 'mem_usage(%)', 'used', 'total', 'storage_usage(%)', 'netin', 'netout']
     
     csv_buffer = StringIO()
     writer = csv.DictWriter(csv_buffer, fieldnames=fieldnames)
     writer.writeheader()
     for row in data:
-        if query_type == "per node":
-            row['nodename'] = row.pop('host')
-        elif query_type == "per class":
-            row['classname'] = row.pop('class')
+        if query_type == "per-node":
+            row['nodename'] = row.pop('nodename')
+        elif query_type == "per-class":
+            row['classname'] = row.pop('classname')
         writer.writerow(row)
     
     response = HttpResponse(
@@ -810,7 +835,7 @@ def extract_general_stat(request):
     # Process request data
     start_date_str = request.POST.get('startdate')
     end_date_str = request.POST.get('enddate')
-    query_type = request.POST.get('scope') # All, per node, per class
+    query_type = request.POST.get('scope') # All, per-node, per-class
 
     start_date = parse_form_date(start_date_str, 1)
     end_date = parse_form_date(end_date_str, 0)
@@ -818,13 +843,24 @@ def extract_general_stat(request):
 
     # Get needed metrics 
     # (number of VMs, total CPU, CPU%, total mem, mem%, total storage, storage%, netin and netout)
-    # TODO: Static for now, remove this when we can dynamically get the list of class
-    class_list = ["CCINFOM", "ITCMSY2", "CCICOMP"] # 这里能获取到吗
-    # class_list = None
+    
+    raw_class_list = RequestUseCase.objects.all().exclude(
+        request_use_case__icontains="Research"
+    ).exclude(
+        request_use_case__icontains="Test"
+    ).exclude(
+        request_use_case__icontains="Thesis"
+    ).values_list('request_use_case', flat=True)
+
+    class_list = []
+    for entry in raw_class_list:
+        processed_entry = entry.split('_')[0]
+        if processed_entry not in class_list:
+            class_list.append(processed_entry)
+
     queries =  generate_resource_query(start_date, end_date, query_type, class_list)
 
     results = {}
-
     for resource, query in queries.items():
         result = query_api.query(query=query)
         results[resource] = result   

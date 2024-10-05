@@ -40,7 +40,6 @@ ALLOWED_HOSTS = config('DJANGO_ALLOWED_HOSTS')
 # Application definition
 
 INSTALLED_APPS = [
-    "autotool.apps.AutotoolConfig",
     "monitoring.apps.MonitoringConfig",
     "reports.apps.ReportsConfig",
     "ticketing.apps.TicketingConfig",
@@ -53,7 +52,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'social_django',
+    # 'social_django',
     'users',
 ]
 
@@ -65,7 +64,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'social_django.middleware.SocialAuthExceptionMiddleware',
+    # 'social_django.middleware.SocialAuthExceptionMiddleware',
 ]
 
 ROOT_URLCONF = 'CAPSTONE2240.urls'
@@ -81,8 +80,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'social_django.context_processors.backends',
-                'social_django.context_processors.login_redirect',
+                # 'social_django.context_processors.backends',
+                # 'social_django.context_processors.login_redirect',
             ],
         },
     },
@@ -93,30 +92,6 @@ WSGI_APPLICATION = 'CAPSTONE2240.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'cap2240db',
-        'USER': 'cap-2240',
-        'PASSWORD': 'CAP_2240',
-        'HOST': 'localhost',
-        #'HOST': 'mysql',
-        'PORT': 3306,
-    }
-}
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.mysql',
-#         'NAME': 'cap2240db',
-#         'USER': 'cap-2240',
-#         'PASSWORD': 'CAP_2240',
-#         # 'HOST': 'localhost',
-#         'HOST': 'mysql',
-#         'PORT': 3306,
-#     }
-# }
 
 DATABASES = {
     'default': {
@@ -139,6 +114,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 4,
+        }
     },
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
@@ -247,3 +225,5 @@ EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD")
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+AUTH_USER_MODEL = "users.User"
