@@ -131,7 +131,6 @@ def tsg_request_details(request, request_id):
     }
 
     if request_entry.is_pending() : context['nodes'] = Nodes.objects.all().values_list('name', flat=True)
-    if 'credentials' in request.session : request_entry.has_credentials = True
     request_entry.storage = request_entry.template.storage
 
     if request_entry.is_ongoing:
