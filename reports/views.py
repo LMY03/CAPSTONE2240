@@ -557,7 +557,7 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
                     |> yield(name: "total_{resource}")
                     '''
         # TODO: 根据节点来分组好像不是这样的，是用 |> group(columns: ["host"]) 吗
-        elif query_type == "per node":
+        elif query_type == "per-node":
             query = f'''
                     {base_query}
                     |> last()
@@ -565,7 +565,7 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
                     |> sum(column: "_value")
                     |> yield(name: "{resource}_per_node")
                     '''
-        elif query_type == "per class":
+        elif query_type == "per-class":
             if not class_list:
                 raise ValueError("Class list is required for 'per class' query type.")
             # TODO: need to get a list of class name for the query (maybe connecting to our own db to get the data)
