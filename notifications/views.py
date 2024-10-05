@@ -25,8 +25,12 @@ def new_request_notif_tsg (to_email, data):
     mimeMessage = MIMEMultipart()
     mimeMessage["to"] = ", ".join(to_email)
     mimeMessage['subject'] = 'New request ticket for VM provisioning'
-    with open('templates/notifications/add_comment_email_tsg.hbs', 'r') as f:
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    template_path = os.path.join(base_dir, 'templates', 'notifications', 'add_comment_email_tsg.hbs')
+    print (template_path)
+    with open(template_path, 'r') as f:
             source = f.read()
+
     data = {
             "vm_template_name": data['vm_template_name'],
             "use_case": data['use_case'],
