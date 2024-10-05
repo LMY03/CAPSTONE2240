@@ -1,7 +1,5 @@
 from django.shortcuts import render
-import os
-import requests
-import json
+import os, requests, json, pybars
 from decouple import config
 from .google_services import Create_Service
 
@@ -17,192 +15,145 @@ import base64
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-def send_email_sendgrid (paramData):
+CLIENT_SECRET_FILE = './credentials.json'
+API_NAME = 'gmail'
+API_VERSION = 'v1'
+SCOPES = ['https://mail.google.com/']
 
-    url = "https://api.sendgrid.com/v3/mail/send"
-    
-    headers = {
-        "Authorization": f"Bearer {config('SEND_GRID_SECRET')}",  # Replace with your API key
-        "Content-Type": "application/json"
-    }
-
-    data = paramData
-    try:
-        response = requests.post(url, headers=headers, data=json.dumps(data))
-        # Check if the request was successful
-        if response.status_code == 202:
-            print("Email sent successfully!")
-        else:
-            print(f"Failed to send email. Status code: {response.status_code}")
-            print(f"Response: {response.text}")
-        return response
-    except Exception as e:
-        return print(f"An error occurred: {str(e)}")
-        
-
+service = Create_Service(CLIENT_SECRET_FILE, API_NAME, API_VERSION, SCOPES)
 
 def comment_notif_tsg (to_email, data):
-    recipients = [{"email": email} for email in to_email]
+    mimeMessage = MIMEMultipart()
+    mimeMessage["to"] = ", ".join(to_email)
+    mimeMessage['subject'] = 'New request ticket for VM provisioning'
+    with open('/templates/notifications/add_comment_email_tsg.hbs', 'r') as f:
+            source = f.read()
     data = {
-        "from": {
-            "email": config('EMAIL_HOST_USER')
-        },
-        "personalizations": [
-            {
-                "to": recipients,
-                "dynamic_template_data": {
-                    "vm_template_name": data['vm_template_name'],
-                    "use_case": data['use_case'],
-                    "vm_count": data['vm_count'],
-                    "faculty_name" : data['faculty_name'],
-                    "receipt": True,
-                }
-            }
-        ],
-        "template_id": "d-4ce501347a4647d6a09acf7f6baa2b8c"  
+            "vm_template_name": data['vm_template_name'],
+            "use_case": data['use_case'],
+            "vm_count": data['vm_count'],
+            "faculty_name" : data['faculty_name']
     }
 
-    return  send_email_sendgrid(data)
+    compiler = pybars.Compiler()
+    template = compiler.compile(source)
+    html_body = template(data)
+    mimeMessage.attach(MIMEText(html_body, 'html'))
+    raw_string = base64.urlsafe_b64encode(mimeMessage.as_bytes()).decode()
+    
+    message = service.users().messages().send(userId='me', body={'raw': raw_string}).execute()
+
+    return  message
 
 def comment_notif_faculty(to_email, data, *faculty):
     print('inside comment_notif_faculty')
-    # faculty = faculty if faculty else ('default_value',)
-    # faculty_name = data.get('faculty_name', '')
-    # email_data = {
-    #     "from": {
-    #         "email": config('EMAIL_HOST_USER')
-    #     },
-    #     "personalizations": [
-    #         {
-    #             "to": [],  # Placeholder to be populated
-    #             "dynamic_template_data": {
-    #                 "request_id": data['request_entry_id'],
-    #                 "comment": data['comment'],
-    #                 "faculty_name": faculty_name,
-    #                 "receipt": True,
-    #             }
-    #         }
-    #     ]
-    # }
+    faculty = faculty if faculty else ('default_value',)
+    faculty_name = data.get('faculty_name', '')
+    email_data = {
+        "request_id": data['request_entry_id'],
+        "comment": data['comment'],
+        "faculty_name": faculty_name,
+        "receipt": True,
+    }
 
-    # if 'faculty' in faculty:
-    #     email_data['personalizations'][0]['to'] = [{"email": f"{to_email}"}]  
-    #     email_data["template_id"] = "d-f532416d64ea429a81671879794c0958"  
-    # elif 'admin' in faculty:
-    #     # Assuming `to_email` is a list of emails for admins
-    #     recipients = [{"email": email} for email in to_email]
-    #     email_data['personalizations'][0]['to'] = recipients
-    #     email_data["template_id"] = "d-e3593d8aabbc435ba143717a33ce1485"  
-    # else:
-    #     email_data['personalizations'][0]['to'] = [{"email": f"{to_email}"}]
-    #     email_data["template_id"] = "d-0aabc8df6cf444c09777b1a3e485bf9d"
-
-    CLIENT_SECRET_FILE = './credentials.json'
-    API_NAME = 'gmail'
-    API_VERSION = 'v1'
-    SCOPES = ['https://mail.google.com/']
-
-    service = Create_Service(CLIENT_SECRET_FILE, API_NAME, API_VERSION, SCOPES)
-
-    emailMsg = 'this is sent from the virtual machine :)'
     mimeMessage = MIMEMultipart()
-    mimeMessage['to'] = 'curses520@gmail.com'
-    mimeMessage['subject'] = 'gusto ko na mamatay'
-    mimeMessage.attach(MIMEText(emailMsg, 'plain'))
-    raw_string = base64.urlsafe_b64encode(mimeMessage.as_bytes()).decode()
+    if 'faculty' in faculty: 
+        mimeMessage['to'] = f'{to_email}'
+        #     email_data["template_id"] = "d-f532416d64ea429a81671879794c0958"
+        mimeMessage['subject'] = 'The faculty has replied to your comment'
+        with open('/templates/notifications/replied_comment_faculty.hbs', 'r') as f:
+            source = f.read()
+    elif 'admin' in faculty:
+        mimeMessage['to'] = ', '.join(to_email)
+        mimeMessage["subject"] = 'Faculty has added a new comment in their request ticket'
+        #     email_data["template_id"] = "d-e3593d8aabbc435ba143717a33ce1485"
+        with open('/templates/notifications/add_comment_without_assigned_tsg.hbs', 'r') as f:
+            source = f.read()
+    else:
+        mimeMessage['to'] = f'{to_email}'
+        mimeMessage["subject"] = 'An Admin has made some comments about your request'
+        #     email_data["template_id"] = "d-0aabc8df6cf444c09777b1a3e485bf9d"
+        with open('/templates/notifications/add_comment_email.hbs', 'r') as f:
+            source = f.read()
 
+    compiler = pybars.Compiler()
+    template = compiler.compile(source)
+    html_body = template(email_data)
+    mimeMessage.attach(MIMEText(html_body, 'html'))
+    raw_string = base64.urlsafe_b64encode(mimeMessage.as_bytes()).decode()
+    
     message = service.users().messages().send(userId='me', body={'raw': raw_string}).execute()
     print(message)
-    print(service)
     
-    return service
+    return message
 
 def testVM_notif_faculty(to_email, data):
+    mimeMessage = MIMEMultipart()
+    mimeMessage["to"] = f'{to_email}'
+    mimeMessage['subject'] = 'A test virtual machine has been created'
     email_data = {
-        "from": {
-            "email": config('EMAIL_HOST_USER')
-        },
-        "personalizations": [
-            {
-                "to": [{
-                    "email" : f"{to_email}"
-                }],
-                "dynamic_template_data": {
-                    "faculty_name": data['faculty_name'],
-                    "request_entry_id": data['id'],
-                    "receipt": True,
-                }
-            }
-        ],
-        "template_id": "d-a81d10b1b37741808e5ffada2ec1998e"  
+            "faculty_name": data['faculty_name'],
+            "request_entry_id": data['id'],
     }
-
-    return send_email_sendgrid(email_data)
+    with open('/templates/notifications/test_vm_notif_faculty.hbs', 'r') as f:
+            source = f.read()
+    
+    compiler = pybars.Compiler()
+    template = compiler.compile(source)
+    html_body = template(email_data)
+    mimeMessage.attach(MIMEText(html_body, 'html'))
+    raw_string = base64.urlsafe_b64encode(mimeMessage.as_bytes()).decode()
+    
+    message = service.users().messages().send(userId='me', body={'raw': raw_string}).execute()
+    print(message)
+    
+    return message
 
 def reject_notif_faculty (to_email, data):
+    mimeMessage = MIMEMultipart()
+    mimeMessage["to"] = f'{to_email}'
+    mimeMessage['subject'] = 'Your request has been rejected by the admin'
     email_data = {
-        "from": {
-            "email": config('EMAIL_HOST_USER')
-        },
-        "personalizations": [
-            {
-                "to": [{
-                    "email" : f"{to_email}"
-                }],
-                "dynamic_template_data": {
-                    "faculty_name": data['faculty_name'],
-                    "request_entry_id": data['id'],
-                    "receipt": True,
-                }
-            }
-        ],
-        "template_id": "d-e68d6433360241df9b5760dc6b0915ea"  
+            "faculty_name": data['faculty_name'],
+            "request_entry_id": data['id'],
+            "receipt": True,
     }
-
-    return send_email_sendgrid(email_data)
-
+    with open('/templates/notifications/reject_ticket_faculty.hbs', 'r') as f:
+        source = f.read()
+    compiler = pybars.Compiler()
+    template = compiler.compile(source)
+    html_body = template(email_data)
+    mimeMessage.attach(MIMEText(html_body, 'html'))
+    raw_string = base64.urlsafe_b64encode(mimeMessage.as_bytes()).decode()
+    
+    message = service.users().messages().send(userId='me', body={'raw': raw_string}).execute()
+    print(message)
+    
+    return message
 
 def accept_notif_tsg (to_email, data):
+    mimeMessage = MIMEMultipart()
+    mimeMessage["to"] = f'{to_email}'
+    mimeMessage['subject'] = 'The test virtual machine has been accepted'
     email_data = {
-        "from": {
-            "email": config('EMAIL_HOST_USER')
-        },
-        "personalizations": [
-            {
-                "to": [{
-                    "email" : f"{to_email}"
-                }],
-                "dynamic_template_data": {
-                    "faculty_name": data['faculty_name'],
-                    "request_entry_id": data['id'],
-                    "use_case" : data['use_case'],
-                    "vm_count" : data['vm_count'],
-                    "receipt": True,
-                }
-            }
-        ],
-        "template_id": "d-049d70ccac974157828e6bfbbe2c8a1a"  
+        "faculty_name": data['faculty_name'],
+        "request_entry_id": data['id'],
+        "use_case" : data['use_case'],
+        "vm_count" : data['vm_count'],
     }
-
-    return send_email_sendgrid(email_data)
+    with open('/templates/notifications/faculty_accept_test_vm_tsg.hbs', 'r') as f:
+        source = f.read()
+    compiler = pybars.Compiler()
+    template = compiler.compile(source)
+    html_body = template(email_data)
+    mimeMessage.attach(MIMEText(html_body, 'html'))
+    raw_string = base64.urlsafe_b64encode(mimeMessage.as_bytes()).decode()
+    
+    message = service.users().messages().send(userId='me', body={'raw': raw_string}).execute()
+    print(message)
+    
+    return message
 
 def confirm_notif_faculty(to_email, data):
     return send_email_sendgrid(data)
 
-
-# CLIENT_SECRET_FILE = './credentials.json'
-# API_NAME = 'gmail'
-# API_VERSION = 'v1'
-# SCOPES = ['https://mail.google.com/']
-
-# service = Create_Service(CLIENT_SECRET_FILE, API_NAME, API_VERSION, SCOPES)
-
-# emailMsg = 'You won $100,000'
-# mimeMessage = MIMEMultipart()
-# mimeMessage['to'] = '<Receipient>@gmail.com'
-# mimeMessage['subject'] = 'You won'
-# mimeMessage.attach(MIMEText(emailMsg, 'plain'))
-# raw_string = base64.urlsafe_b64encode(mimeMessage.as_bytes()).decode()
-
-# message = service.users().messages().send(userId='me', body={'raw': raw_string}).execute()
-# print(message)
