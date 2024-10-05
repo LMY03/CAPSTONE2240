@@ -836,7 +836,7 @@ def extract_general_stat(request):
         request_use_case__icontains="Thesis"
     ).values_list('request_use_case', flat=True)
 
-    for entry in class:
+    for entry in raw_class_list:
         print(f"entry: {entry}")
 
     queries =  generate_resource_query(start_date, end_date, query_type, class_list)
