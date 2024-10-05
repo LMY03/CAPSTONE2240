@@ -22,7 +22,6 @@ def create_test_vm(tsg_user_id, request_id):
     if request_entry.is_pending():
         tsg_user = User.objects.get(pk=tsg_user_id)
         new_vm_id = views.generate_vm_ids(1)[0]
-        vm_id = int(request_entry.template.vm_id)
 
         request_use_case = RequestUseCase.objects.filter(request=request_entry.pk).values('request_use_case', 'vm_count')[0]
 
@@ -35,7 +34,7 @@ def create_test_vm(tsg_user_id, request_id):
         ram = int(request_entry.ram)
         
         #TODO: LOADBALANCING
-        node = "pve"
+        node = views.get_node_to_clone_vms()
 
         vm = VirtualMachines.objects.create(
             vm_id=new_vm_id,
@@ -45,16 +44,18 @@ def create_test_vm(tsg_user_id, request_id):
             storage=request_entry.template.storage,
             request=request_entry,
             node=get_object_or_404(Nodes, name=node),
+            status=VirtualMachines.Status.CREATING
         )
-        # upid = proxmox.clone_vm(node, vm_id, new_vm_id, vm_name)
-        # proxmox.wait_for_task(node, upid)
-        # proxmox.config_vm(node, new_vm_id, cpu_cores, ram)
-        # proxmox.start_vm(node, new_vm_id)
-        # ip_add = proxmox.wait_and_get_ip(node, new_vm_id)
-        # proxmox.shutdown_vm(node, new_vm_id)
-        # proxmox.wait_for_vm_stop(node, new_vm_id)
 
-        ip_add = "10.10.10.10"
+        upid = proxmox.clone_vm(node, request_entry.template.vm_id, new_vm_id, vm_name)
+        proxmox.wait_for_task(node, upid)
+        proxmox.config_vm_core_memory(node, new_vm_id, cpu_cores, ram)
+        proxmox.start_vm(node, new_vm_id)
+        ip_add = proxmox.wait_and_get_ip(node, new_vm_id)
+        proxmox.shutdown_vm(node, new_vm_id)
+        proxmox.wait_for_vm_stop(node, new_vm_id)
+
+        # ip_add = "10.10.10.10"
 
         vm.set_ip_add(ip_add)
         vm.set_shutdown()
@@ -68,9 +69,12 @@ def create_test_vm(tsg_user_id, request_id):
         guacamole_connection_id = guacamole.create_connection(vm_name, protocol, port, ip_add, config('DEFAULT_VM_USERNAME'), config('DEFAULT_VM_PASSWORD'), guacamole_connection_group_id)
         guacamole.assign_connection(tsg_gaucamole_user.username, guacamole_connection_id)
 
-        GuacamoleConnection(user=get_object_or_404(GuacamoleUser, system_user=tsg_user), connection_id=guacamole_connection_id, connection_group_id=guacamole_connection_group_id, vm=vm).save()
-
-        request_entry = get_object_or_404(RequestEntry, pk=request_id)
+        GuacamoleConnection.objects.create(
+            user=get_object_or_404(GuacamoleUser, system_user=tsg_user),
+            connection_id=guacamole_connection_id,
+            connection_group_id=guacamole_connection_group_id,
+            vm=vm
+        )
 
         request_entry.status = RequestEntry.Status.PROCESSING
         request_entry.assigned_to = tsg_user
@@ -91,17 +95,25 @@ def vm_provision(request_id):
 
     request_entry = get_object_or_404(RequestEntry, pk=request_id)
     no_of_clone_vm = request_entry.get_total_no_of_vm() - 1
+
+    # shutdown vm if active
+    if orig_vm.is_active():
+
+        # proxmox.shutdown_vm(vm.node.name, vm.vm_id)
+
+        orig_vm.set_shutdown()
+
+        # proxmox.wait_for_vm_stop(vm.node.name, vm.vm_id)
+    
+    # generate vm names
+    vm_names = views.generate_vm_names(request_id)
+
+    orig_vm.vm_name = vm_names[0]
+    orig_vm.save()
+    proxmox.change_vm_name(vm_names[0])
+
     if no_of_clone_vm > 1:
-        # shutdown vm if active
-        if orig_vm.is_active():
 
-            # proxmox.shutdown_vm(vm.node.name, vm.vm_id)
-
-            orig_vm.set_shutdown()
-
-            # proxmox.wait_for_vm_stop(vm.node.name, vm.vm_id)
-
-        new_vm_ids = []
         node = orig_vm.node.name
 
         new_vm_ids = views.generate_vm_ids(no_of_clone_vm)
@@ -113,9 +125,8 @@ def vm_provision(request_id):
 
         cpu_cores = int(request_entry.cores)
         ram = int(request_entry.ram)
-        
-        # generate vm names
-        vm_names = views.generate_vm_names(request_id).pop(0)
+
+        vm_names.pop(0)        
 
         upids = []
         for new_vm_id, vm_name in zip(new_vm_ids, vm_names):
@@ -168,8 +179,6 @@ def vm_provision(request_id):
             vm = get_object_or_404(VirtualMachines, vm_name=vm_name, status=VirtualMachines.Status.CREATING)
             vm.set_ip_add(hostname)
             vm.set_shutdown()
-
-    # return views.vm_provision_process(vm.vm_id, classnames, total_no_of_vm, cpu_cores, ram, request_id)
 
 @shared_task
 def processing_ticket(request_id):

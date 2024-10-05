@@ -631,7 +631,7 @@ def request_confirm(request, request_id):
         "faculty_name" : request_entry.requester.get_full_name(),
         "id" : request_id
     }
-    create_test_vm.delay(request.user.pk, request_id)
+    create_test_vm(request.user.pk, request_id)
     testVM_notif_faculty (to, data)
     return redirect('ticketing:request_details', request_id)
 
@@ -677,7 +677,7 @@ def confirm_test_vm(request, request_id):
     request_entry.status = RequestEntry.Status.ONGOING
     request_entry.save()
 
-    processing_ticket.delay(request_id)
+    processing_ticket(request_id)
 
     return redirect('ticketing:request_details', request_id)
     # return redirect(f'/ticketing/{request_id}/details')

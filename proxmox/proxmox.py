@@ -158,20 +158,25 @@ def stop_vm(node, vmid):
     response = requests.post(url, headers=headers, verify=CA_CRT)
     return response.json()
 
-# configure VM PUT 
-def config_vm(node, vmid, cpu_cores, memory_mb):
-    token = get_ticket()
-    url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/qemu/{vmid}/config"
-    config = {
+def change_vm_name(node, vm_id, vm_name):
+    config_vm(node, vm_id, { 'name' : vm_name, })
+
+def config_vm_core_memory(node, vm_id, cpu_cores, memory_mb):
+    config_vm(node, vm_id, {
         'cores': cpu_cores,
         'memory': memory_mb,
-    }
+    })
+
+# configure VM PUT 
+def config_vm(node, vmid, config):
+    token = get_ticket()
+    url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/qemu/{vmid}/config"
     headers = {
         'CSRFPreventionToken': token['CSRFPreventionToken'],
         'Cookie': f"PVEAuthCookie={ token['ticket'] }",
     }
     response = requests.put(url, headers=headers, data=config, verify=CA_CRT)
-    if response.status_code != 200 : return config_vm(node, vmid, cpu_cores, memory_mb)
+    if response.status_code != 200 : return config_vm(node, vmid, config)
     return response.json()
 
 def config_vm_disk(node, vmid, size):
