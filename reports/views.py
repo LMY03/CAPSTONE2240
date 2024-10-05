@@ -554,32 +554,28 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
         if query_type == "all":
             query = f'''
                     {base_query}
-                    |> last()
                     |> group()
-                    |> sum(column: "_value")
+                    |> mean()
                     |> yield(name: "total_{resource}")
                     '''
         # TODO: 根据节点来分组好像不是这样的，是用 |> group(columns: ["host"]) 吗
         elif query_type == "per-node":
             query = f'''
                     {base_query}
-                    |> last()
                     |> group(columns: ["nodename"])
-                    |> sum(column: "_value")
+                    |> mean()
                     |> yield(name: "{resource}_per_node")
                     '''
         elif query_type == "per-class":
             if not class_list:
                 raise ValueError("Class list is required for 'per class' query type.")
-            # TODO: need to get a list of class name for the query (maybe connecting to our own db to get the data)
             # TODO: 貌似不是vm_name, 得去influxdb中看一下vm主机名对应的是什么
             class_filters = ' or '.join([f'r["host"] =~ /{class_name}/' for class_name in class_list])
             query = f'''
                     {base_query}
                     |> filter(fn: (r) => {class_filters})
-                    |> last()
                     |> map(fn: (r) => ({{
-                        _value: r._value,
+                        r with
                         class: {' '.join([f'if r["host"] =~ /{c}/ then "{c}" else' for c in class_list])} "Unknown"
                     }}))
                     |> group(columns: ["class"])
