@@ -612,7 +612,7 @@ def generate_cpu_usage_query(query_type, start_date, end_date, class_list=None):
                 |> yield(name: "total_cpu_usage")
                 '''
 
-    elif query_type == "per node":
+    elif query_type == "per-node":
         query = f'''
                 {base_query}
                 |> group(columns: ["host"])
@@ -620,7 +620,7 @@ def generate_cpu_usage_query(query_type, start_date, end_date, class_list=None):
                 |> yield(name: "cpu_usage_per_node")
                 '''
 
-    elif query_type == "per class":
+    elif query_type == "per-class":
         class_filters = ' or '.join([f'r["host"] =~ /{class_name}/' for class_name in class_list])
         class_assignments = ' else '.join([f'if r["host"] =~ /{class_name}/ then "{class_name}"' for class_name in class_list]) + ' else "Unknown"'
 
@@ -764,8 +764,8 @@ def process_resource_data(results, query_type, start_date, end_date):
         row['storage_usage(%)'] = (row['used'] / row['total']) * 100 if row['total'] != 0 else 0
         processed_data.append(row)
     
-    elif query_type in ["per node", "per class"]:
-        key = 'host' if query_type == "per node" else 'class'
+    elif query_type in ["per-node", "per-class"]:
+        key = 'host' if query_type == "per-node" else 'class'
         for cpu_record in results['cpu'][0].records:
             node_or_class = cpu_record.values[key]
             row = {
@@ -787,18 +787,18 @@ def process_resource_data(results, query_type, start_date, end_date):
 def generate_csv_response(data, query_type, start_date, end_date):
     if query_type == "all":
         fieldnames = ['startdate', 'enddate', 'cpu', 'mem', 'maxmem', 'mem_usage(%)', 'used', 'total', 'storage_usage(%)']
-    elif query_type == "per node":
+    elif query_type == "per-node":
         fieldnames = ['nodename', 'startdate', 'enddate', 'cpu', 'mem', 'maxmem', 'mem_usage(%)', 'used', 'total', 'storage_usage(%)']
-    elif query_type == "per class":
+    elif query_type == "per-class":
         fieldnames = ['classname', 'startdate', 'enddate', 'cpu', 'mem', 'maxmem', 'mem_usage(%)', 'used', 'total', 'storage_usage(%)']
     
     csv_buffer = StringIO()
     writer = csv.DictWriter(csv_buffer, fieldnames=fieldnames)
     writer.writeheader()
     for row in data:
-        if query_type == "per node":
+        if query_type == "per-node":
             row['nodename'] = row.pop('host')
-        elif query_type == "per class":
+        elif query_type == "per-class":
             row['classname'] = row.pop('class')
         writer.writerow(row)
     
