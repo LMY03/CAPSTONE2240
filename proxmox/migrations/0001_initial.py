@@ -44,7 +44,6 @@ class Migration(migrations.Migration):
                 ('storage', models.DecimalField(decimal_places=2, max_digits=5)),
                 ('ip_add', models.CharField(default=None, max_length=15, null=True)),
                 ('is_lxc', models.BooleanField(default=False)),
-                ('system_password', models.CharField(default=None, max_length=45, null=True)),
                 ('status', models.CharField(choices=[('CREATING', 'Creating'), ('ACTIVE', 'Active'), ('SHUTDOWN', 'Shutdown'), ('DESTROYED', 'Destroyed')], default='CREATING', max_length=20)),
                 ('node', models.ForeignKey(on_delete=django.db.models.deletion.DO_NOTHING, to='proxmox.nodes')),
             ],

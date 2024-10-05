@@ -1516,6 +1516,32 @@ CREATE TABLE `ticketing_requestusecase` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `users_student`
+--
+
+DROP TABLE IF EXISTS `users_student`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `users_student` (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `password` varchar(128) NOT NULL,
+  `user_id` bigint NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `user_id` (`user_id`),
+  CONSTRAINT `users_student_user_id_dc59cd64_fk_users_user_id` FOREIGN KEY (`user_id`) REFERENCES `users_user` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `users_student`
+--
+
+LOCK TABLES `users_student` WRITE;
+/*!40000 ALTER TABLE `users_student` DISABLE KEYS */;
+/*!40000 ALTER TABLE `users_student` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Dumping data for table `ticketing_requestusecase`
 --
 
@@ -1555,7 +1581,7 @@ CREATE TABLE `users_user` (
 
 LOCK TABLES `users_user` WRITE;
 /*!40000 ALTER TABLE `users_user` DISABLE KEYS */;
-INSERT INTO `users_user` VALUES (1,'123456',NULL,1,'admin','admin','chan','',1,1,NOW(),'TSG'),(2,'123456',NULL,0,'john.doe','John','Doe','',1,1,NOW(),'TSG'),(3,'123456',NULL,0,'josephine.cruz','Josephine','Cruz','',1,1,NOW(),'FACULTY');
+INSERT INTO `users_user` VALUES (1,'pbkdf2_sha256$720000$5gL9pa3JAHZYMUbNgW3qqL$udv7QLPHZ/Fv5ijQQMvklg06MOZvEkkbGY2LJ17dIyM=',NULL,1,'admin','admin','chan','',1,1,NOW(),'TSG'),(2,'pbkdf2_sha256$720000$5gL9pa3JAHZYMUbNgW3qqL$udv7QLPHZ/Fv5ijQQMvklg06MOZvEkkbGY2LJ17dIyM=',NULL,0,'john.doe','John','Doe','',1,1,NOW(),'TSG'),(3,'pbkdf2_sha256$720000$5gL9pa3JAHZYMUbNgW3qqL$udv7QLPHZ/Fv5ijQQMvklg06MOZvEkkbGY2LJ17dIyM=',NULL,0,'josephine.cruz','Josephine','Cruz','',1,1,NOW(),'FACULTY');
 /*!40000 ALTER TABLE `users_user` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;

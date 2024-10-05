@@ -1,6 +1,6 @@
 from typing import Any
 from django import forms
-from django.db.models import Subquery, OuterRef
+from django.db.models import F
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
@@ -21,7 +21,7 @@ from guacamole import guacamole
 from proxmox import views, proxmox
 from pfsense.views import add_port_forward_rules, delete_port_forward_rules
 
-from users.models import User
+from users.models import User, Student
 from .models import RequestEntry, Comment, RequestUseCase, PortRules, RequestEntryAudit, IssueTicket, IssueFile, IssueComment, IssueCommentFile
 from proxmox.models import VirtualMachines, Nodes, VMTemplates
 from guacamole.models import GuacamoleConnection, GuacamoleUser
@@ -83,10 +83,11 @@ def faculty_request_details(request, request_id):
 
     if request_entry.is_ongoing:
         context['destination_ports'] = DestinationPorts.objects.filter(port_rule__in=port_rules)
-        context['system_accounts'] = User.objects.filter(
-            username__in=VirtualMachines.objects.filter(request__pk=request_id).values_list('vm_name', flat=True),
-        )
-        # context['system_accounts'] = VirtualMachines.objects.filter(request=request_entry)
+        context['system_accounts'] = Student.objects.filter(
+            user__username__in=VirtualMachines.objects.filter(request__pk=request_id).values_list('vm_name', flat=True)
+            ).annotate(
+                username=F('user__username'),
+        ).values('username', 'password')
 
     return render(request, 'ticketing/faculty_request_details.html', context=context)
 
@@ -133,9 +134,11 @@ def tsg_request_details(request, request_id):
 
     if request_entry.is_ongoing:
         context['destination_ports'] = DestinationPorts.objects.filter(port_rule__in=port_rules)
-        context['system_accounts'] = User.objects.filter(
-            username__in=VirtualMachines.objects.filter(request__pk=request_id).values_list('vm_name', flat=True),
-        )
+        context['system_accounts'] = Student.objects.filter(
+            user__username__in=VirtualMachines.objects.filter(request__pk=request_id).values_list('vm_name', flat=True)
+            ).annotate(
+                username=F('user__username'),
+        ).values('username', 'password')
 
     return render (request, 'ticketing/tsg_request_details.html', context=context)
 
@@ -621,10 +624,6 @@ def request_confirm(request, request_id):
 
     # if request.method == 'POST':
 
-    data = request.POST
-    # node = data.get('node')
-
-    node = "pve"
     request_entry = get_object_or_404(RequestEntry, id = request_id)
     request_entry.assigned_to = request.user
     to = request_entry.requester.email
@@ -632,7 +631,7 @@ def request_confirm(request, request_id):
         "faculty_name" : request_entry.requester.get_full_name(),
         "id" : request_id
     }
-    create_test_vm.delay(request.user.pk, request_id, node)
+    create_test_vm.delay(request.user.pk, request_id)
     testVM_notif_faculty (to, data)
     return redirect('ticketing:request_details', request_id)
 

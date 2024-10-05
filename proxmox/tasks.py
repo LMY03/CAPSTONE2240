@@ -17,7 +17,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 @shared_task
-def create_test_vm(tsg_user_id, request_id, node):
+def create_test_vm(tsg_user_id, request_id):
     request_entry = get_object_or_404(RequestEntry, pk=request_id)
     if request_entry.is_pending():
         tsg_user = User.objects.get(pk=tsg_user_id)
@@ -29,11 +29,14 @@ def create_test_vm(tsg_user_id, request_id, node):
         if request_entry.is_course(): vm_name = f"{request_use_case['request_use_case'].replace('_', '-')}"
         else: vm_name = f"{request_entry.get_request_type()}-{request_entry.requester.last_name}-{request_entry.id}"
 
-        if request_entry.get_total_no_of_vm() != 1 : vm_name = f"{vm_name}-Group-1"
+        vm_name = f"{vm_name}-TestVM"
 
         cpu_cores = int(request_entry.cores)
         ram = int(request_entry.ram)
         
+        #TODO: LOADBALANCING
+        node = "pve"
+
         vm = VirtualMachines.objects.create(
             vm_id=new_vm_id,
             vm_name=vm_name,
@@ -57,11 +60,7 @@ def create_test_vm(tsg_user_id, request_id, node):
         vm.set_shutdown()
 
         protocol = request_entry.template.guacamole_protocol
-        port = {
-            'vnc': 5901,
-            'rdp': 3389,
-            'ssh': 22
-        }.get(protocol)
+        port = get_port_protocol(protocol)
 
         tsg_gaucamole_user = get_object_or_404(GuacamoleUser, system_user=tsg_user)
         guacamole_connection_group_id = guacamole.create_connection_group(f"{request_id}")
@@ -152,7 +151,7 @@ def vm_provision(request_id):
 
         # get port protocol
         protocol = request_entry.template.guacamole_protocol
-        port = get_port_protocol(request_entry.template.guacamole_protocol)
+        port = get_port_protocol(protocol)
 
         for vm_name, hostname in zip(vm_names, hostnames):
 
