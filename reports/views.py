@@ -741,40 +741,57 @@ def extract_detail_stat(request):
 
 def process_resource_data(results, query_type, start_date, end_date):
     processed_data = []
+
+    def safe_get_value(result, resource, key=None):
+    try:
+        if result and result[0].records:
+            record = result[0].records[0]
+            if key:
+                return record.values.get(key, 0)
+            return record.get_value()
+        return 0
+    except (IndexError, AttributeError):
+        print(f"No data for {resource}")
+        return 0
     
     if query_type == "all":
         row = {
             'startdate': start_date,
             'enddate': end_date,
-            'cpu cores': results['cpus'][0].records[0].values['_value'],   
-            'cpu': results['cpu'][0].records[0].values['_value'],
-            'mem': results['mem'][0].records[0].values['_value'],
-            'maxmem': results['maxmem'][0].records[0].values['_value'],
-            'used': results['used'][0].records[0].values['_value'],
-            'total': results['total'][0].records[0].values['_value'],
-            'netin': results['netin'][0].records[0].values['_value'],       
-            'netout': results['netout'][0].records[0].values['_value'],      
+            'cpu cores': safe_get_value(results.get('cpus'), 'cpus'),
+            'cpu': safe_get_value(results.get('cpu'), 'cpu'),
+            'mem': safe_get_value(results.get('mem'), 'mem'),
+            'maxmem': safe_get_value(results.get('maxmem'), 'maxmem'),
+            'used': safe_get_value(results.get('used'), 'used'),
+            'total': safe_get_value(results.get('total'), 'total'),
+            'netin': safe_get_value(results.get('netin'), 'netin'),
+            'netout': safe_get_value(results.get('netout'), 'netout'),   
         }
         row['mem_usage(%)'] = (row['mem'] / row['maxmem']) * 100 if row['maxmem'] != 0 else 0
         row['storage_usage(%)'] = (row['used'] / row['total']) * 100 if row['total'] != 0 else 0
         processed_data.append(row)
     
     elif query_type in ["per-node", "per-class"]:
-        key = 'host' if query_type == "per-node" else 'class'
-        for cpu_record in results['cpus'][0].records:
-            node_or_class = cpu_record.values[key]
+        key = 'nodename' if query_type == "per-node" else 'class'
+        all_entries = set()
+        
+        for resource in results:
+            if results[resource] and results[resource][0].records:
+                all_entities.update(record.values.get(key) for record in results[resource][0].records)
+        
+        for entity in all_entities:
             row = {
-                key: node_or_class,
+                key: entity,
                 'startdate': start_date,
                 'enddate': end_date,
-                'cpu cores': cpu_record.values['_value'],
-                'cpu': next(r.values['_value'] for r in results['cpu'][0].records if r.values[key] == node_or_class),
-                'mem': next(r.values['_value'] for r in results['mem'][0].records if r.values[key] == node_or_class),
-                'maxmem': next(r.values['_value'] for r in results['maxmem'][0].records if r.values[key] == node_or_class),
-                'used': next(r.values['_value'] for r in results['used'][0].records if r.values[key] == node_or_class),
-                'total': next(r.values['_value'] for r in results['total'][0].records if r.values[key] == node_or_class),
-                'netin': next(r.values['_value'] for r in results['netin'][0].records if r.values[key] == node_or_class),
-                'netout': next(r.values['_value'] for r in results['netout'][0].records if r.values[key] == node_or_class),
+                'cpu cores': safe_get_value(results.get('cpus'), 'cpus', key),
+                'cpu': safe_get_value(results.get('cpu'), 'cpu', key),
+                'mem': safe_get_value(results.get('mem'), 'mem', key),
+                'maxmem': safe_get_value(results.get('maxmem'), 'maxmem', key),
+                'used': safe_get_value(results.get('used'), 'used', key),
+                'total': safe_get_value(results.get('total'), 'total', key),
+                'netin': safe_get_value(results.get('netin'), 'netin', key),
+                'netout': safe_get_value(results.get('netout'), 'netout', key),
             }
             row['mem_usage(%)'] = (row['mem'] / row['maxmem']) * 100 if row['maxmem'] != 0 else 0
             row['storage_usage(%)'] = (row['used'] / row['total']) * 100 if row['total'] != 0 else 0
