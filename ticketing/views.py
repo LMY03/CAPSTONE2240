@@ -792,10 +792,10 @@ def get_comments(request_entry):
         ).order_by('date_time')
 
 def new_form_container(request):
-    container_template = VMTemplates.objects.filter(is_lxc = 1)
+    lxc_templates = VMTemplates.objects.filter(is_lxc=True)
     context = {}
-    context['container_template'] = container_template
-    print (context['container_template'])
+    context['lxc_templates'] = lxc_templates
+    print (context['lxc_templates'])
     return render (request, 'ticketing/new-form-container.html', context)
 
 # def clear_credential(request):

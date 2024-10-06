@@ -35,8 +35,8 @@ New VM Request Form
                                     </a>
                                 </label>
                                 <select class="form-control" id="template_id" name="template_id">
-                                    {% for container in container_template %}
-                                        <option value="{{ container.id }}">{{ container.vm_name }} {{ container.storage }} GB</option>
+                                    {% for lxc_template in lxc_templates %}
+                                        <option value="{{ lxc_template.pk }}">{{ lxc_template.vm_name }} {{ lxc_template.storage }} GB</option>
                                     {% endfor %}
                                 </select>
                             </div>
