@@ -301,10 +301,9 @@ def config_lxc(node, vm_id, cpu_cores, memory_mb):
         memory=memory_mb,
     )
 
-def change_lxc_name(node, vm_id, cpu_cores, memory_mb):
+def change_lxc_name(node, vm_id, vm_name):
     get_proxmox_client().nodes(node).lxc(vm_id).config.put(
-        cores=cpu_cores,
-        memory=memory_mb,
+        namr=vm_name,
     )
 
 def get_lxc_status(node, vm_id):
