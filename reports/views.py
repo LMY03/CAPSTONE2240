@@ -899,18 +899,19 @@ def process_resource_data(results, query_type, start_date, end_date):
     processed_data = []
 
     print(f"Debug: Results keys: {results.keys()}")
-    
+
     def safe_get_value(result, resource, key=None):
         try:
-            if result and result[0].records:
-                for record in result[0].records:
-                    if key is None or record.values.get('host') == key:
-                        return record.values.get('_value', 0)
+            if result:
+                for table in result:
+                    for record in table.records:
+                        if key is None or record.values.get('host') == key:
+                            return record.values.get('_value', 0)
             return None
         except (IndexError, AttributeError):
             print(f"No data for {resource}")
             return None
-    
+
     if query_type == "all":
         row = {
             'startdate': start_date,
@@ -930,8 +931,9 @@ def process_resource_data(results, query_type, start_date, end_date):
         all_entities = set()
         
         for resource in results:
-            if results[resource] and results[resource][0].records:
-                all_entities.update(record.values.get('host' if query_type == "per-node" else 'class') for record in results[resource][0].records)
+            if results[resource]:
+                for table in results[resource]:
+                    all_entities.update(record.values.get('host' if query_type == "per-node" else 'class') for record in table.records)
         
         print(f"all_entities: {all_entities}")
 
