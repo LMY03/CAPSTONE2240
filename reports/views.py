@@ -570,8 +570,7 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
             from(bucket:"{bucket}")
             |> range(start: {start_date}, stop: {end_date})
             |> filter(fn: (r) => r["_field"] == "cpus")
-            |> filter(fn: (r) => r["_measurement"] == "system")
-            |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+            |> filter(fn: (r) => r["_measurement"] == "cpustat")
             |> last()
             |> group()
             |> sum()
@@ -588,6 +587,7 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
             |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
             |> group()
             |> mean()
+            |> map(fn: (r) => ({{ r with _value: r._value * 100.0 }}))
             |> yield(name: "cpu_total")
         '''
         queries["cpu"] = cpu_query
@@ -611,12 +611,12 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
         maxmem_query = f'''
             from(bucket:"{bucket}")
             |> range(start: {start_date}, stop: {end_date})
-            |> filter(fn: (r) => r["_field"] == "mem")
-            |> filter(fn: (r) => r["_measurement"] == "system")
-            |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+            |> filter(fn: (r) => r["_measurement"] == "memory")
+            |> filter(fn: (r) => r["_field"] == "memtotal")
             |> last()
             |> group()
             |> sum()
+            |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 / 1024.0 / 1000.0) }}))
             |> yield(name: "maxmem_total")
         '''
         queries["maxmem"] = maxmem_query
@@ -641,6 +641,7 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
             |> filter(fn: (r) => r["_measurement"] == "cpustat")
             |> group(columns: ["host"])
             |> mean()
+            |> map(fn: (r) => ({{ r with _value: r._value * 100.0 }}))
             |> yield(name: "cpu_per_node")
         '''
         queries["cpu"] = cpu_query
@@ -703,6 +704,7 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
             |> map(fn: (r) => ({{ r with class: {class_map} }}))
             |> group(columns: ["class"])
             |> mean()
+            |> map(fn: (r) => ({{ r with _value: r._value * 100.0 }}))
             |> yield(name: "cpu_per_class")
         '''
         queries["cpu"] = cpu_query
