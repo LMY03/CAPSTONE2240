@@ -1008,6 +1008,7 @@ def extract_general_stat(request):
             results[resource] = result   
 
     # process result
+    processed_data = []
     if results:
         processed_data = process_resource_data(results, query_type, start_date, end_date)
         print(f"processed_data: {processed_data}")
