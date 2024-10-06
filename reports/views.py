@@ -193,11 +193,11 @@ def construct_vm_summary_flux_query(hosts, metric, start_date, end_date):
 
                 mean = data
                 |> mean()
-                |> map(fn: (r) => ({{ r with _value: r._value, _field: "mean_{metric}" }}))
+                |> map(fn: (r) => ({ r with _value: r._value, _field: "mean_{metric}" }))
 
                 max = data
                 |> max()
-                |> map(fn: (r) => ({{ r with _value: r._value, _field: "max_{metric}" }}))
+                |> map(fn: (r) => ({ r with _value: r._value, _field: "max_{metric}" }))
 
                 union(tables: [mean, max])
                 |> yield(name: "usage_summary")
@@ -210,11 +210,11 @@ def construct_vm_summary_flux_query(hosts, metric, start_date, end_date):
 
                 mean = data
                 |> mean()
-                |> map(fn: (r) => ({{ r with _value: r._value * 100.0, _field: "mean_{metric}" }}))
+                |> map(fn: (r) => ({ r with _value: r._value * 100.0, _field: "mean_{metric}" }))
 
                 max = data
                 |> max()
-                |> map(fn: (r) => ({{ r with _value: r._value * 100.0, _field: "max_{metric}" }}))
+                |> map(fn: (r) => ({ r with _value: r._value * 100.0, _field: "max_{metric}" }))
 
                 union(tables: [mean, max])
                 |> yield(name: "usage_summary")
@@ -686,7 +686,7 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
             |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
             |> filter(fn: (r) => {class_filters})
             |> last()
-            |> map(fn: (r) => ({{ r with class: {class_map} }}))
+            |> map(fn: (r) => ({ r with class: {class_map} }))
             |> group(columns: ["class"])
             |> sum()
             |> yield(name: "cpus_per_class")
@@ -701,7 +701,7 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
             |> filter(fn: (r) => r["_measurement"] == "system")
             |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
             |> filter(fn: (r) => {class_filters})
-            |> map(fn: (r) => ({{ r with class: {class_map} }}))
+            |> map(fn: (r) => ({ r with class: {class_map} }))
             |> group(columns: ["class"])
             |> mean()
             |> yield(name: "cpu_per_class")
@@ -716,7 +716,7 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
             |> filter(fn: (r) => r["_measurement"] == "system")
             |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
             |> filter(fn: (r) => {class_filters})
-            |> map(fn: (r) => ({{ r with class: {class_map} }}))
+            |> map(fn: (r) => ({ r with class: {class_map} }))
             |> group(columns: ["class", "_field"])
             |> mean()
             |> pivot(rowKey: ["class"], columnKey: ["_field"], valueColumn: "_value")
@@ -734,7 +734,7 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
             |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
             |> filter(fn: (r) => {class_filters})
             |> last()
-            |> map(fn: (r) => ({{ r with class: {class_map} }}))
+            |> map(fn: (r) => ({ r with class: {class_map} }))
             |> group(columns: ["class"])
             |> sum()
             |> yield(name: "maxmem_per_class")
