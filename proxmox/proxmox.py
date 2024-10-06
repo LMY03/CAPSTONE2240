@@ -403,10 +403,11 @@ def check_clone_status(node, vm_id):
 def start_lxc(node, vm_id):
     get_proxmox_client().nodes(node).lxc(vm_id).status.start().post()
 
-
 def fetch_lxc_ip(node, vm_id):
     network_info = get_proxmox_client().nodes(node).lxc(vm_id).interfaces().get()
     print(f"network_info: {network_info}")
+    print(f"node: {node}")
+    print(f"vm_id: {vm_id}")
     if network_info:
         for interface in network_info:
             if interface['name'] == "eth0":
