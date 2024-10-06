@@ -169,58 +169,58 @@ def construct_vm_details_flux_query(hosts, metrics, start_date, end_date, window
     return combined_query
 
 
-# Fix this
-def construct_vm_summary_flux_query(hosts, metric, start_date, end_date):
-    host_filter = ' or '.join(f'r["host"] == "{host}"' for host in hosts) if hosts else 'true'
+# # Fix this
+# def construct_vm_summary_flux_query(hosts, metric, start_date, end_date):
+#     host_filter = ' or '.join(f'r["host"] == "{host}"' for host in hosts) if hosts else 'true'
     
-    is_network_metric = metric in ['netin', 'netout']
+#     is_network_metric = metric in ['netin', 'netout']
 
-    base_query = f'''
-                from(bucket:"{bucket}")
-                |> range(start: {start_date}, stop: {end_date})
-                |> filter(fn: (r) => r["_measurement"] == "system")
-                |> filter(fn: (r) => {host_filter})
-                |> filter(fn: (r) => r["_field"] == "{metric}")
-                '''
+#     base_query = f'''
+#                 from(bucket:"{bucket}")
+#                 |> range(start: {start_date}, stop: {end_date})
+#                 |> filter(fn: (r) => r["_measurement"] == "system")
+#                 |> filter(fn: (r) => {host_filter})
+#                 |> filter(fn: (r) => r["_field"] == "{metric}")
+#                 '''
     
-    if is_network_metric:
-        query = f'''
-                data = {base_query}
-                |> aggregateWindow(every: 1h, fn: mean, createEmpty: false)
-                |> derivative(unit: 1h, nonNegative: true, columns: ["_value"], timeColumn: "_time")
-                |> filter(fn: (r) => r._value != 0)
-                |> group(columns: ["host"])
+#     if is_network_metric:
+#         query = f'''
+#                 data = {base_query}
+#                 |> aggregateWindow(every: 1h, fn: mean, createEmpty: false)
+#                 |> derivative(unit: 1h, nonNegative: true, columns: ["_value"], timeColumn: "_time")
+#                 |> filter(fn: (r) => r._value != 0)
+#                 |> group(columns: ["host"])
 
-                mean = data
-                |> mean()
-                |> map(fn: (r) => ({{ r with _value: r._value, _field: "mean_{metric}" }}))
+#                 mean = data
+#                 |> mean()
+#                 |> map(fn: (r) => ({ r with _value: r._value, _field: "mean_{metric}" }))
 
-                max = data
-                |> max()
-                |> map(fn: (r) => ({{ r with _value: r._value, _field: "max_{metric}" }}))
+#                 max = data
+#                 |> max()
+#                 |> map(fn: (r) => ({ r with _value: r._value, _field: "max_{metric}" }))
 
-                union(tables: [mean, max])
-                |> yield(name: "usage_summary")
-                '''
-    else:
-        query = f'''
-                data = {base_query}
-                |> filter(fn: (r) => r._value != 0)
-                |> group(columns: ["host"])
+#                 union(tables: [mean, max])
+#                 |> yield(name: "usage_summary")
+#                 '''
+#     else:
+#         query = f'''
+#                 data = {base_query}
+#                 |> filter(fn: (r) => r._value != 0)
+#                 |> group(columns: ["host"])
 
-                mean = data
-                |> mean()
-                |> map(fn: (r) => ({{ r with _value: r._value * 100.0, _field: "mean_{metric}" }}))
+#                 mean = data
+#                 |> mean()
+#                 |> map(fn: (r) => ({ r with _value: r._value * 100.0, _field: "mean_{metric}" }))
 
-                max = data
-                |> max()
-                |> map(fn: (r) => ({{ r with _value: r._value * 100.0, _field: "max_{metric}" }}))
+#                 max = data
+#                 |> max()
+#                 |> map(fn: (r) => ({ r with _value: r._value * 100.0, _field: "max_{metric}" }))
 
-                union(tables: [mean, max])
-                |> yield(name: "usage_summary")
-                '''
+#                 union(tables: [mean, max])
+#                 |> yield(name: "usage_summary")
+#                 '''
     
-    return query
+#     return query
 
 
 # Process Query Result
@@ -528,67 +528,219 @@ def report_gen(request):
 def performance_gen(request):
     return render(request, 'reports/performance_gen.html')
 
+def get_template_hosts_ids(start_date, end_date):
+
+    influxdb_client = InfluxDBClient(url=INFLUX_ADDRESS, token=token, org=org)
+    query_api = influxdb_client.query_api()
+
+    query = f'''
+        from(bucket:"proxmox")
+        |> range(start: {start_date}, stop: {end_date})
+        |> filter(fn: (r) => r["_measurement"] == "system")
+        |> filter(fn: (r) => r["_field"] == "template")
+        |> filter(fn: (r) => r["_value"] == 1)
+        |> group(columns: ["host"])
+        |> distinct(column: "host")
+        |> yield(name: "template_hosts")
+    '''
+
+    result = query_api.query(query=query)
+
+    template_hosts_ids = []
+    for table in result:
+        for record in table.records:
+            template_hosts_ids.append(record.values["vmid"])
+
+    influxdb_client.close()
+    return template_hosts_ids
+
 def generate_resource_query(start_date, end_date, query_type, class_list=None):
 
-    resources = {
-        "cpus": {"field": "cpus"},         # processer number
-        "cpu": {"field": "cpu"},            # cpu usage %
-        "mem": {"field": "mem"},
-        "maxmem": {"field": "maxmem"},
-        "used": {"field": "used"},
-        "total": {"field": "total"},
-        "netin": {"field": "netin"},
-        "netout": {"field": "netout"}
-    }
+    # get template
+    template_hosts_ids = get_template_hosts_ids(start_date, end_date)
+    excluded_vmids_str = '|'.join(map(str, template_hosts_ids))
+
+    print(f"template_hosts: {template_hosts}")
 
     queries = {}
 
-    for resource, config in resources.items():
-        base_query = f'''
-                    from(bucket:"{bucket}")
-                    |> range(start: {start_date}, stop: {end_date})
-                    |> filter(fn: (r) => r["_measurement"] == "system")
-                    |> filter(fn: (r) => r["_field"] == "{config['field']}")
-                    '''
     
-        if query_type == "all":
-            query = f'''
-                    {base_query}
-                    |> group()
-                    |> mean()
-                    |> yield(name: "total_{resource}")
-                    '''
-        # TODO: 根据节点来分组好像不是这样的，是用 |> group(columns: ["host"]) 吗
-        elif query_type == "per-node":
-            query = f'''
-                    {base_query}
-                    |> group(columns: ["host"])
-                    |> mean()
-                    |> yield(name: "{resource}_per_node")
-                    '''
-        elif query_type == "per-class":
-            if not class_list:
-                raise ValueError("Class list is required for 'per class' query type.")
-            # TODO: 貌似不是vm_name, 得去influxdb中看一下vm主机名对应的是什么
-            class_filters = ' or '.join([f'r["host"] =~ /{class_name}/' for class_name in class_list])
-            query = f'''
-                    {base_query}
-                    |> filter(fn: (r) => {class_filters})
-                    |> map(fn: (r) => ({{
-                        r with
-                        class: {' '.join([f'if r["host"] =~ /{c}/ then "{c}" else' for c in class_list])} "Unknown"
-                    }}))
-                    |> group(columns: ["class"])
-                    |> mean()
-                    |> yield(name: "{resource}_per_class")
-                    '''
-        else:
-            raise ValueError("Invalid query type.")
-        
-        print(f"resource: {resource}")
-        print(f"query: {query}")
-        queries[resource] = query
+    if query_type == "all":
+        # cpu cores data
+        cpus_query = f'''
+            from(bucket:"{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_field"] == "cpus")
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+            |> last()
+            |> group()
+            |> sum()
+            |> yield(name: "cpus_total")
+        '''
+        queries["cpus"] = cpus_query
 
+        # cpu data
+        cpu_query = f'''
+            from(bucket:"{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_field"] == "cpu")
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+            |> group()
+            |> mean()
+            |> yield(name: "cpu_total")
+        '''
+        queries["cpu"] = cpu_query
+
+        # mem data
+        mem_query = f'''
+            from(bucket:"{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_field"] == "mem" or r["_field"] == "maxmem")
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+            |> group(columns: ["_field"])
+            |> mean()
+            |> pivot(rowKey: [], columnKey: ["_field"], valueColumn: "_value")
+            |> map(fn: (r) => ({{ r with mem_percentage: (r.mem / r.maxmem) * 100.0 }}))
+            |> yield(name: "mem_total")
+        '''
+        queries["mem"] = mem_query
+
+        # maxmem data
+        maxmem_query = f'''
+            from(bucket:"{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_field"] == "mem")
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+            |> last()
+            |> group()
+            |> sum()
+            |> yield(name: "maxmem_total")
+        '''
+        queries["maxmem"] = maxmem_query
+
+    elif query_type == "per-node":
+        # cpus data
+        cpus_query = f'''
+            from(bucket:"{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_field"] == "cpus")
+            |> filter(fn: (r) => r["_measurement"] == "cpustat")
+            |> last()
+            |> yield(name: "cpus_per_node")
+        '''
+        queries["cpus"] = cpus_query
+        
+        # cpu data
+        cpu_query = f'''
+            from(bucket:"{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_field"] == "cpu")
+            |> filter(fn: (r) => r["_measurement"] == "cpustat")
+            |> group(columns: ["host"])
+            |> mean()
+            |> yield(name: "cpu_per_node")
+        '''
+        queries["cpu"] = cpu_query
+
+        # mem data
+        mem_query = f'''
+            from(bucket:"{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_field"] == "memused" or r["_field"] == "memtotal")
+            |> filter(fn: (r) => r["_measurement"] == "memory")
+            |> group(columns: ["_field", "host"])
+            |> pivot(rowKey: ["host"], columnKey: ["_field"], valueColumn: "_value")
+            |> map(fn: (r) => ({{ r with mem_percentage: (r.memused / r.memtotal) * 100.0, _value: (r.memused / r.memtotal) * 100.0 }}))
+            |> keep(columns: ["host", "mem_percentage", "_value"])
+            |> yield(name: "mem_per_node")
+        '''
+        queries["mem"] = mem_query
+
+        # maxmem data
+        query = f'''
+            from(bucket:"{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_field"] == "memory")
+            |> filter(fn: (r) => r["_measurement"] == "memtotal")
+            |> last()
+            |> yield(name: "maxmem_per_node")
+        '''
+        queries["maxmem"] = maxmem_query
+       
+    elif query_type == "per-class":
+        if not class_list:
+            raise ValueError("Class list is required for 'per class' query type.")
+        class_filters = ' or '.join([f'r["host"] =~ /{class_name}/' for class_name in class_list])
+        class_map = ' '.join([f'if r["host"] =~ /{class_name}/ then "{class_name}" else' for class_name in class_list]) + ' "Unknown"'
+        
+        # cpus data
+        cpus_query = f'''
+            from(bucket:"{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_field"] == "cpus")
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+            |> filter(fn: (r) => {class_filters})
+            |> last()
+            |> map(fn: (r) => ({{ r with class: {class_map} }}))
+            |> group(columns: ["class"])
+            |> sum()
+            |> yield(name: "cpus_per_class")
+        '''
+        queries["cpus"] = cpus_query
+
+        # cpu data
+        cpu_query = f'''
+            from(bucket:"{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_field"] == "cpu")
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+            |> filter(fn: (r) => {class_filters})
+            |> map(fn: (r) => ({{ r with class: {class_map} }}))
+            |> group(columns: ["class"])
+            |> mean()
+            |> yield(name: "cpu_per_class")
+        '''
+        queries["cpu"] = cpu_query
+        
+        # mem data
+        mem_query = f'''
+            from(bucket:"{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_field"] == "mem" or r["_field"] == "maxmem")
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+            |> filter(fn: (r) => {class_filters})
+            |> map(fn: (r) => ({{ r with class: {class_map} }}))
+            |> group(columns: ["class", "_field"])
+            |> mean()
+            |> pivot(rowKey: ["class"], columnKey: ["_field"], valueColumn: "_value")
+            |> map(fn: (r) => ({{ r with mem_percentage: (r.mem / r.maxmem) * 100.0 }}))
+            |> yield(name: "mem_per_class")
+        '''
+        queries["mem"] = mem_query
+        
+        # maxmem data
+        query = f'''
+            from(bucket:"{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_field"] == "mem")
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+            |> filter(fn: (r) => {class_filters})
+            |> last()
+            |> map(fn: (r) => ({{ r with class: {class_map} }}))
+            |> group(columns: ["class"])
+            |> sum()
+            |> yield(name: "maxmem_per_class")
+        '''
+        queries["maxmem"] = maxmem_query
+    
     return queries
 
 
@@ -759,15 +911,10 @@ def process_resource_data(results, query_type, start_date, end_date):
             'enddate': end_date,
         }
 
-        for resource in ['cpu cores', 'cpu', 'mem', 'maxmem', 'used', 'total', 'netin', 'netout']:
+        for resource in ['cps', 'cpu', 'mem', 'maxmem']:
             value = safe_get_value(results.get(resource), resource)
             if value is not None:
                 row[resource] = value
-        
-        if 'mem' in row and 'maxmem' in row and row['maxmem'] != 0:
-            row['mem_usage(%)'] = (row['mem'] / row['maxmem']) * 100
-        if 'used' in row and 'total' in row and row['total'] != 0:
-            row['storage_usage(%)'] = (row['used'] / row['total']) * 100
         
         if len(row) > 2:  
             processed_data.append(row)
@@ -787,16 +934,11 @@ def process_resource_data(results, query_type, start_date, end_date):
                 'enddate': end_date,
             }
 
-            for resource in ['cpu cores', 'cpu', 'mem', 'maxmem', 'used', 'total', 'netin', 'netout']:
+            for resource in ['cpus', 'cpu', 'mem', 'maxmem']:
                 value = safe_get_value(results.get(resource), resource, entity)
                 if value is not None:
                     row[resource] = value
-            
-            if 'mem' in row and 'maxmem' in row and row['maxmem'] != 0:
-                row['mem_usage(%)'] = (row['mem'] / row['maxmem']) * 100
-            if 'used' in row and 'total' in row and row['total'] != 0:
-                row['storage_usage(%)'] = (row['used'] / row['total']) * 100
-            
+
             if len(row) > 3:
                 processed_data.append(row)
 
@@ -804,11 +946,11 @@ def process_resource_data(results, query_type, start_date, end_date):
 
 def generate_csv_response(data, query_type, start_date, end_date):
     if query_type == "all":
-        fieldnames = ['startdate', 'enddate', 'cpu cores', 'cpu', 'mem', 'maxmem', 'mem_usage(%)', 'used', 'total', 'storage_usage(%)', 'netin', 'netout']
+        fieldnames = ['startdate', 'enddate', 'cpus', 'cpu', 'mem', 'maxmem']
     elif query_type == "per-node":
-        fieldnames = ['nodename', 'startdate', 'enddate', 'cpu cores', 'cpu', 'mem', 'maxmem', 'mem_usage(%)', 'used', 'total', 'storage_usage(%)', 'netin', 'netout']
+        fieldnames = ['nodename', 'startdate', 'enddate', 'cpus', 'cpu', 'mem', 'maxmem']
     elif query_type == "per-class":
-        fieldnames = ['classname', 'startdate', 'enddate', 'cpu cores', 'cpu', 'mem', 'maxmem', 'mem_usage(%)', 'used', 'total', 'storage_usage(%)', 'netin', 'netout']
+        fieldnames = ['classname', 'startdate', 'enddate', 'cpus', 'cpu', 'mem', 'maxmem']
     
     csv_buffer = StringIO()
     writer = csv.DictWriter(csv_buffer, fieldnames=fieldnames)
