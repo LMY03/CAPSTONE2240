@@ -303,7 +303,7 @@ def config_lxc(node, vm_id, cpu_cores, memory_mb):
 
 def change_lxc_name(node, vm_id, vm_name):
     get_proxmox_client().nodes(node).lxc(vm_id).config.put(
-        namr=vm_name,
+        name=vm_name,
     )
 
 def get_lxc_status(node, vm_id):
