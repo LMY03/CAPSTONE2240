@@ -24,4 +24,4 @@ def create_guacamole_user(sender, instance : User, created, **kwargs):
         
     # Trigger for create Guacamole User Account after USER is deactivated (is_active set to False)
     elif not instance.is_active:
-        guacamole.delete_user(instance.username) 
+        guacamole.delete_user(instance.username)
