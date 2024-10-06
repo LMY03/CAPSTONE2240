@@ -538,10 +538,9 @@ def get_template_hosts_ids(start_date, end_date):
         |> range(start: {start_date}, stop: {end_date})
         |> filter(fn: (r) => r["_measurement"] == "system")
         |> filter(fn: (r) => r["_field"] == "template")
-        |> filter(fn: (r) => r["_value"] == 1)
-        |> group(columns: ["host"])
         |> distinct(column: "host")
         |> yield(name: "template_hosts")
+
     '''
 
     result = query_api.query(query=query)
