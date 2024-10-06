@@ -875,7 +875,7 @@ def extract_detail_stat(request):
     # process result
     processed_data = []
     if results:
-        processed_data = process_resource_data(results, query_type, start_date, end_date)
+        processed_data = process_vm_resource_data(results, query_type, start_date, end_date)
         print(f"processed_data: {processed_data}")
 
     influxdb_client.close()
