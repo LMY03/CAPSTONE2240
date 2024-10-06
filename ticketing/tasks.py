@@ -38,8 +38,12 @@ def delete_request(request_id):
 
         vm.set_destroyed()
 
-        proxmox.wait_for_vm_stop(vm.node.name, vm.vm_id)
-        proxmox.delete_vm(vm.node.name, vm.vm_id)
+        if not vm.is_lxc():
+            proxmox.wait_for_vm_stop(vm.node.name, vm.vm_id)
+            proxmox.delete_vm(vm.node.name, vm.vm_id)
+        else:
+            proxmox.wait_for_lxc_stop(vm.node.name, vm.vm_id)
+            proxmox.delete_lxc(vm.node.name, vm.vm_id)
 
         guacamole_connection = get_object_or_404(GuacamoleConnection, vm=vm)
         guacamole_connection.is_active = False
