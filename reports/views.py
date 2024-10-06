@@ -672,7 +672,7 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
        
     elif query_type == "per-class":
         if not class_list:
-            raise ValueError("Class list is required for 'per class' query type.")
+            return []
         class_filters = ' or '.join([f'r["host"] =~ /{class_name}/' for class_name in class_list])
         class_map = ' '.join([f'if r["host"] =~ /{class_name}/ then "{class_name}" else' for class_name in class_list]) + ' "Unknown"'
         
@@ -1007,8 +1007,9 @@ def extract_general_stat(request):
         results[resource] = result   
 
     # process result
-    processed_data = process_resource_data(results, query_type, start_date, end_date)
-    print(f"processed_data: {processed_data}")
+    if results:
+        processed_data = process_resource_data(results, query_type, start_date, end_date)
+        print(f"processed_data: {processed_data}")
 
     influxdb_client.close()
     return generate_csv_response(processed_data, query_type, start_date_str, end_date_str)
