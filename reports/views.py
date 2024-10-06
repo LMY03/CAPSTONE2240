@@ -1004,6 +1004,7 @@ def extract_general_stat(request):
     results = {}
     if queries:
         for resource, query in queries.items():
+            print(f"query: {query}")
             result = query_api.query(query=query)
             results[resource] = result
 
