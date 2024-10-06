@@ -113,60 +113,60 @@ def get_influxdb_client():
 #             '''
 #     return query
 
-def construct_vm_details_flux_query(hosts, metrics, start_date, end_date, window):
+# def construct_vm_details_flux_query(hosts, metrics, start_date, end_date, window):
 
-    host_filter = ' or '.join(f'r["host"] == "{host}"' for host in hosts) if hosts else 'true'
+#     host_filter = ' or '.join(f'r["host"] == "{host}"' for host in hosts) if hosts else 'true'
     
-    # field_filter includes [network_metrics] and [other metrics]
-    network_metrics = [m for m in metrics if m in ['netin', 'netout']]
-    other_metrics = [m for m in metrics if m not in ['netin', 'netout']]
+#     # field_filter includes [network_metrics] and [other metrics]
+#     network_metrics = [m for m in metrics if m in ['netin', 'netout']]
+#     other_metrics = [m for m in metrics if m not in ['netin', 'netout']]
     
-    query_parts = []
+#     query_parts = []
     
-    if network_metrics:
-        network_metrics_filter = ' or '.join(f'r["_field"] == "{metric}"' for metric in network_metrics) if network_metrics else 'true'
-        network_query = f'''
-                from(bucket:"{bucket}")
-                |> range(start: {start_date}, stop: {end_date})
-                |> filter(fn: (r) => r["_measurement"] == "system")
-                |> filter(fn: (r) => {host_filter})
-                |> filter(fn: (r) => {network_metrics_filter})
-                |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
-                |> derivative(unit: 10s, nonNegative: true, columns: ["_value"], timeColumn: "_time")
-                |> yield(name: "mean")
-                '''
-        query_parts.append(network_query)
+#     if network_metrics:
+#         network_metrics_filter = ' or '.join(f'r["_field"] == "{metric}"' for metric in network_metrics) if network_metrics else 'true'
+#         network_query = f'''
+#                 from(bucket:"{bucket}")
+#                 |> range(start: {start_date}, stop: {end_date})
+#                 |> filter(fn: (r) => r["_measurement"] == "system")
+#                 |> filter(fn: (r) => {host_filter})
+#                 |> filter(fn: (r) => {network_metrics_filter})
+#                 |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
+#                 |> derivative(unit: 10s, nonNegative: true, columns: ["_value"], timeColumn: "_time")
+#                 |> yield(name: "mean")
+#                 '''
+#         query_parts.append(network_query)
 
-    if other_metrics:
-        other_metrics_filter = ' or '.join(f'r["_field"] == "{metric}"' for metric in other_metrics) if other_metrics else 'true'
-        other_query = f'''
-                from(bucket:"{bucket}")
-                |> range(start: {start_date}, stop: {end_date})
-                |> filter(fn: (r) => r["_measurement"] == "system")
-                |> filter(fn: (r) => {host_filter})
-                |> filter(fn: (r) => {other_metrics_filter})
-                |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
-                '''
-        query_parts.append(other_query)
+#     if other_metrics:
+#         other_metrics_filter = ' or '.join(f'r["_field"] == "{metric}"' for metric in other_metrics) if other_metrics else 'true'
+#         other_query = f'''
+#                 from(bucket:"{bucket}")
+#                 |> range(start: {start_date}, stop: {end_date})
+#                 |> filter(fn: (r) => r["_measurement"] == "system")
+#                 |> filter(fn: (r) => {host_filter})
+#                 |> filter(fn: (r) => {other_metrics_filter})
+#                 |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
+#                 '''
+#         query_parts.append(other_query)
 
-    if len(query_parts) > 1:
-        combined_query = f'''
-                networkData = {query_parts[0]}
+#     if len(query_parts) > 1:
+#         combined_query = f'''
+#                 networkData = {query_parts[0]}
 
-                otherData = {query_parts[1]}
+#                 otherData = {query_parts[1]}
 
-                union(tables: [networkData, otherData])
-                |> yield(name: "combined")
-                '''
-    elif len(query_parts) == 1:
-        combined_query = f'''
-                {query_parts[0]}
-                |> yield(name: "combined")
-                '''
-    else:
-        combined_query = "// No metrics specified"
+#                 union(tables: [networkData, otherData])
+#                 |> yield(name: "combined")
+#                 '''
+#     elif len(query_parts) == 1:
+#         combined_query = f'''
+#                 {query_parts[0]}
+#                 |> yield(name: "combined")
+#                 '''
+#     else:
+#         combined_query = "// No metrics specified"
 
-    return combined_query
+#     return combined_query
 
 
 # # Fix this
@@ -240,184 +240,184 @@ def construct_vm_details_flux_query(hosts, metrics, start_date, end_date, window
 
 #     return processed_data
 
-def write_csv(writer, data, selected_metrics):
-    for row in data:
-        csv_row = [row['time'], row['host'], row['nodename']]
-        for metric in selected_metrics:
-            csv_row.append(row.get(metric, ''))
-        writer.writerow(csv_row)
+# def write_csv(writer, data, selected_metrics):
+#     for row in data:
+#         csv_row = [row['time'], row['host'], row['nodename']]
+#         for metric in selected_metrics:
+#             csv_row.append(row.get(metric, ''))
+#         writer.writerow(csv_row)
 
-# extract data to csv
-def index_csv(request):
-    try:
-        start_time = datetime.now()
-        # TODO: logger info - start csv report
+# # extract data to csv
+# def index_csv(request):
+#     try:
+#         start_time = datetime.now()
+#         # TODO: logger info - start csv report
 
-        # Get clients
-        influxdb_client = get_influxdb_client()
-        proxmox_client = get_proxmox_client()
-        # Prepare and execute queries
-        query_api = influxdb_client.query_api()
+#         # Get clients
+#         influxdb_client = get_influxdb_client()
+#         proxmox_client = get_proxmox_client()
+#         # Prepare and execute queries
+#         query_api = influxdb_client.query_api()
 
-        # Process request data
-        start_date_str = request.POST.get('startdate')
-        end_date_str = request.POST.get('enddate')
+#         # Process request data
+#         start_date_str = request.POST.get('startdate')
+#         end_date_str = request.POST.get('enddate')
 
-        if not start_date_str or not end_date_str:
-            return HttpResponse("Start date and end date are required", status=400)
+#         if not start_date_str or not end_date_str:
+#             return HttpResponse("Start date and end date are required", status=400)
 
-        start_date = parse_form_date(start_date_str, 1)
-        end_date = parse_form_date(end_date_str, 0)
+#         start_date = parse_form_date(start_date_str, 1)
+#         end_date = parse_form_date(end_date_str, 0)
 
-        # # TODO: REMOVE!
-        # print(f"Parsed start date: {start_date}")
-        # print(f"Parsed end date: {end_date}")
+#         # # TODO: REMOVE!
+#         # print(f"Parsed start date: {start_date}")
+#         # print(f"Parsed end date: {end_date}")
 
-        metrics = [key for key in ['cpuUsage', 'memoryUsage', 'netin', 'netout'] if key in request.POST]
-        selected_metrics = []
-        for metric in metrics:
-            if metric == 'cpuUsage':
-                selected_metrics.append('cpu')
-            elif metric == 'memoryUsage':
-                selected_metrics.append('maxmem')
-                selected_metrics.append('mem')
-            elif metric == 'netin':
-                selected_metrics.append('netin')
-            elif metric == 'netout':
-                selected_metrics.append('netout')
+#         metrics = [key for key in ['cpuUsage', 'memoryUsage', 'netin', 'netout'] if key in request.POST]
+#         selected_metrics = []
+#         for metric in metrics:
+#             if metric == 'cpuUsage':
+#                 selected_metrics.append('cpu')
+#             elif metric == 'memoryUsage':
+#                 selected_metrics.append('maxmem')
+#                 selected_metrics.append('mem')
+#             elif metric == 'netin':
+#                 selected_metrics.append('netin')
+#             elif metric == 'netout':
+#                 selected_metrics.append('netout')
 
-        selected_vms = request.POST.getlist('selectedVMs')
-        node_hosts = [node['node'] for node in proxmox_client.nodes.get()]
+#         selected_vms = request.POST.getlist('selectedVMs')
+#         node_hosts = [node['node'] for node in proxmox_client.nodes.get()]
         
-        # # TODO: REMOVE!
-        # print("Selected metrics:", selected_metrics)
-        # print("Selected VMs:", selected_vms)
-        # print(f"all hosts: {node_hosts}")
+#         # # TODO: REMOVE!
+#         # print("Selected metrics:", selected_metrics)
+#         # print("Selected VMs:", selected_vms)
+#         # print(f"all hosts: {node_hosts}")
 
-        # Prepare csv response
-        response = HttpResponse(
-            content_type='text/csv',
-            headers={'Content-Disposition': f'attachment; filename="{start_date_str}_to_{end_date_str}.csv"'},
-        )
-        writer = csv.writer(response)
+#         # Prepare csv response
+#         response = HttpResponse(
+#             content_type='text/csv',
+#             headers={'Content-Disposition': f'attachment; filename="{start_date_str}_to_{end_date_str}.csv"'},
+#         )
+#         writer = csv.writer(response)
 
-        # TODO: add window in response
-        vm_query = construct_vm_details_flux_query(selected_vms, selected_metrics, start_date, end_date, '1h')
-        # TODO: REMOVE!
-        print(f"vm_query: {vm_query}")
-        vm_result = query_api.query(vm_query)
-        # TODO: REMOVE!
-        print(f"vm_result: {vm_result}")
-
-
-        # Write the grouped data to CSV - header
-        writer = csv.writer(response, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-        writer.writerow(['time', 'host', 'nodename'] + selected_metrics)
-
-        # Dictionary to store grouped data
-        grouped_data = {}
-
-        for table in vm_result:
-            for record in table.records:
-                timestamp = record.get_time().strftime('%Y-%m-%d %H:%M:%S')
-                host = record.values.get('host', '')
-                nodename = record.values.get('nodename', '')
-                field = record.values.get('_field', '')
-                value = record.values.get('_value', '')
-
-                # Unique key for each timestamp-host combination
-                key = (timestamp, host, nodename)
-
-                if key not in grouped_data:
-                    grouped_data[key] = {metric: '' for metric in selected_metrics}
-
-                # Add value to the corresponding metric
-                if field in selected_metrics:
-                    if field == 'cpu':
-                        value = str(round(value * 100, 2)) + "%"
-                    elif field == 'mem' or field == 'maxmem':
-                        value = str(round(value / (1024*1024*1024), 2)) + "GiB"
-                    grouped_data[key][field] = str(value).strip().replace('\n', '').replace('\r', '')
+#         # TODO: add window in response
+#         vm_query = construct_vm_details_flux_query(selected_vms, selected_metrics, start_date, end_date, '1h')
+#         # TODO: REMOVE!
+#         print(f"vm_query: {vm_query}")
+#         vm_result = query_api.query(vm_query)
+#         # TODO: REMOVE!
+#         print(f"vm_result: {vm_result}")
 
 
-        # Write the grouped data to CSV - data
-        for (timestamp, host, nodename), metrics in grouped_data.items():
-            row = [timestamp, host, nodename]
-            row.extend([metrics.get(metric, '') for metric in selected_metrics])
-            writer.writerow(row)
+#         # Write the grouped data to CSV - header
+#         writer = csv.writer(response, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+#         writer.writerow(['time', 'host', 'nodename'] + selected_metrics)
 
-        influxdb_client.close()
+#         # Dictionary to store grouped data
+#         grouped_data = {}
 
-        end_time = datetime.now()
-        duration = (end_time - start_time).total_seconds()
-        # TODO: logger info - CSV completed in ? seconds
+#         for table in vm_result:
+#             for record in table.records:
+#                 timestamp = record.get_time().strftime('%Y-%m-%d %H:%M:%S')
+#                 host = record.values.get('host', '')
+#                 nodename = record.values.get('nodename', '')
+#                 field = record.values.get('_field', '')
+#                 value = record.values.get('_value', '')
 
-        return response
+#                 # Unique key for each timestamp-host combination
+#                 key = (timestamp, host, nodename)
 
-    except Exception as e:
-        # logger error - error generating CSV report.
-        return HttpResponse(f"Error generating report: {str(e)}", status=500)
+#                 if key not in grouped_data:
+#                     grouped_data[key] = {metric: '' for metric in selected_metrics}
+
+#                 # Add value to the corresponding metric
+#                 if field in selected_metrics:
+#                     if field == 'cpu':
+#                         value = str(round(value * 100, 2)) + "%"
+#                     elif field == 'mem' or field == 'maxmem':
+#                         value = str(round(value / (1024*1024*1024), 2)) + "GiB"
+#                     grouped_data[key][field] = str(value).strip().replace('\n', '').replace('\r', '')
 
 
-def open_report_page(request):
-    # Get clients
-    influxdb_client = get_influxdb_client()
-    proxmox_client = get_proxmox_client()
-    # Prepare and execute queries
-    query_api = influxdb_client.query_api()
-    vm_infos = proxmox_client.cluster.resources.get(type='vm')
+#         # Write the grouped data to CSV - data
+#         for (timestamp, host, nodename), metrics in grouped_data.items():
+#             row = [timestamp, host, nodename]
+#             row.extend([metrics.get(metric, '') for metric in selected_metrics])
+#             writer.writerow(row)
 
-    node_names = [node['node'] for node in proxmox_client.nodes.get()]
+#         influxdb_client.close()
 
-    # Metrics
-    cpuUsageList = []
-    memUsageList = []
-    netInUsageList = []
-    netOutUsageList = []
-    vmNameList = []
-    vmIdList = []
-    neededStatList = []
-    selectedNodeNameList = []
+#         end_time = datetime.now()
+#         duration = (end_time - start_time).total_seconds()
+#         # TODO: logger info - CSV completed in ? seconds
 
-    formData = {}
+#         return response
 
-    data = request.POST
-    # TODO: REMOVE!
-    print(f"data: {data}")
+#     except Exception as e:
+#         # logger error - error generating CSV report.
+#         return HttpResponse(f"Error generating report: {str(e)}", status=500)
 
-    for name in data.keys():
-        if str(name) not in ['categoryFilter', 'select_all', 'csrfmiddlewaretoken', 'vmInfoTable_length',
-            'cpuUsage', 'memoryUsage', 'netin', 'netout',
-            'enddate', 'startdate']:
-            vmNameList.append(data.get(str(name)))
-            vmIdList.append(str(name))
-        elif str(name) == 'startdate':
-            startdate = data.get(str(name))
-        elif str(name) == 'enddate':
-            enddate = data.get(str(name))
-        elif str(name) in ['cpuUsage', 'memoryUsage', 'netin', 'netout']:
-            neededStatList.append(data.get(str(name)))
 
-    # insert data into formData
-    formData['vmNameList'] = vmNameList
-    formData['nodeNameList'] = selectedNodeNameList
-    # formData['vmIdList'] = vmIdList
-    formData['startdate'] = startdate
-    formData['enddate'] = enddate
-    formData['statList'] = neededStatList
+# def open_report_page(request):
+#     # Get clients
+#     influxdb_client = get_influxdb_client()
+#     proxmox_client = get_proxmox_client()
+#     # Prepare and execute queries
+#     query_api = influxdb_client.query_api()
+#     vm_infos = proxmox_client.cluster.resources.get(type='vm')
 
-    request.session['formData'] = formData
+#     node_names = [node['node'] for node in proxmox_client.nodes.get()]
 
-    # TODO: REMOVE!
-    # print(f"vmNameList: {formData['vmNameList']}")
-    # print(f"nodeNameList: {formData['nodeNameList']}")
-    # print(f"startdate: {formData['startdate']}")
-    # print(f"enddate: {formData['enddate']}")
-    # print(f"statList: {formData['statList']}")
+#     # Metrics
+#     cpuUsageList = []
+#     memUsageList = []
+#     netInUsageList = []
+#     netOutUsageList = []
+#     vmNameList = []
+#     vmIdList = []
+#     neededStatList = []
+#     selectedNodeNameList = []
 
-    influxdb_client.close()
+#     formData = {}
 
-    return render(request, 'reports/gen-reports.html')
+#     data = request.POST
+#     # TODO: REMOVE!
+#     print(f"data: {data}")
+
+#     for name in data.keys():
+#         if str(name) not in ['categoryFilter', 'select_all', 'csrfmiddlewaretoken', 'vmInfoTable_length',
+#             'cpuUsage', 'memoryUsage', 'netin', 'netout',
+#             'enddate', 'startdate']:
+#             vmNameList.append(data.get(str(name)))
+#             vmIdList.append(str(name))
+#         elif str(name) == 'startdate':
+#             startdate = data.get(str(name))
+#         elif str(name) == 'enddate':
+#             enddate = data.get(str(name))
+#         elif str(name) in ['cpuUsage', 'memoryUsage', 'netin', 'netout']:
+#             neededStatList.append(data.get(str(name)))
+
+#     # insert data into formData
+#     formData['vmNameList'] = vmNameList
+#     formData['nodeNameList'] = selectedNodeNameList
+#     # formData['vmIdList'] = vmIdList
+#     formData['startdate'] = startdate
+#     formData['enddate'] = enddate
+#     formData['statList'] = neededStatList
+
+#     request.session['formData'] = formData
+
+#     # TODO: REMOVE!
+#     # print(f"vmNameList: {formData['vmNameList']}")
+#     # print(f"nodeNameList: {formData['nodeNameList']}")
+#     # print(f"startdate: {formData['startdate']}")
+#     # print(f"enddate: {formData['enddate']}")
+#     # print(f"statList: {formData['statList']}")
+
+#     influxdb_client.close()
+
+#     return render(request, 'reports/gen-reports.html')
 
 # def report_gen(request):
 #     try:
@@ -748,48 +748,46 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
     return queries
 
 
-def generate_cpu_usage_query(query_type, start_date, end_date, class_list=None):
-    base_query = f'''
-                from(bucket:"{bucket}")
-                |> range(start: {start_date}, stop: {end_date})
-                |> filter(fn: (r) => r["_measurement"] == "system")
-                |> filter(fn: (r) => r["_field"] == "cpu")
-                '''
-    
-    if query_type == "all":
-        query = f'''
-                {base_query}
-                |> mean()
-                |> yield(name: "total_cpu_usage")
-                '''
+def process_vm_resource_data(results, start_date, end_date):
+    processed_data = []
+    print(f"Debug: Results keys: {results.keys()}")
 
-    elif query_type == "per-node":
-        query = f'''
-                {base_query}
-                |> group(columns: ["host"])
-                |> mean()
-                |> yield(name: "cpu_usage_per_node")
-                '''
+    def safe_get_value(result, resource, host):
+        try:
+            if result:
+                for table in result:
+                    for record in table.records:
+                        if record.values.get('host') == host:
+                            return record.values.get('_value', 0)
+            return None
+        except (IndexError, AttributeError):
+            print(f"No data for {resource} on host {host}")
+            return None
 
-    elif query_type == "per-class":
-        class_filters = ' or '.join([f'r["host"] =~ /{class_name}/' for class_name in class_list])
-        class_assignments = ' else '.join([f'if r["host"] =~ /{class_name}/ then "{class_name}"' for class_name in class_list]) + ' else "Unknown"'
+    all_vms = set()
+    for resource in results:
+        if results[resource]:
+            for table in results[resource]:
+                all_vms.update((record.values.get('nodename'), record.values.get('host')) for record in table.records)
 
-        query = f'''
-                {base_query}
-                |> filter(fn: (r) => {class_filters})
-                |> map(fn: (r) => ({{
-                    _value: r._value,
-                    class: if {class_assignments}
-                }}))
-                |> group(columns: ["class"])
-                |> mean()
-                |> yield(name: "cpu_usage_per_class")
-                '''
-    else:
-        raise ValueError("Invalid query type. ")
+    print(f"all_vms: {all_vms}")
+    for nodename, host in all_vms:
+        row = {
+            'nodename': nodename,
+            'host': host,
+            'startdate': start_date,
+            'enddate': end_date,
+        }
+        for resource in ['cpus', 'cpu', 'mem', 'maxmem']:
+            value = safe_get_value(results.get(resource), resource, host)
+            if value is not None:
+                row[resource] = value
+        if len(row) > 4:  # Ensure we have at least one resource value
+            processed_data.append(row)
 
-    return query
+    return processed_data
+
+
 
 # TODO: 如果成了，加上network的数据
 # VM detailed resource info
