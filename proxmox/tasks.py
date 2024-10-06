@@ -34,9 +34,7 @@ def create_test_vm(tsg_user_id, request_id):
         ram = int(request_entry.ram)
         
         #TODO: LOADBALANCING
-        # node = views.get_node_to_clone_vms()
-        if not request_entry.is_lxc() : node = "pve"
-        else : node = "jin"
+        node = views.get_node_to_clone_vms()
 
         vm = VirtualMachines.objects.create(
             vm_id=new_vm_id,
@@ -52,7 +50,6 @@ def create_test_vm(tsg_user_id, request_id):
         ip_add = "10.10.10.10"
 
         if not request_entry.is_lxc():
-            node = "pve"
             upid = proxmox.clone_vm(node, request_entry.template.vm_id, new_vm_id, vm_name)
             proxmox.wait_for_task(node, upid)
             proxmox.config_vm_core_memory(node, new_vm_id, cpu_cores, ram)
@@ -62,7 +59,6 @@ def create_test_vm(tsg_user_id, request_id):
             # proxmox.wait_for_vm_stop(node, new_vm_id)
         
         else:
-            node = "jin"
             proxmox.clone_lxc(node, request_entry.template.vm_id, new_vm_id, vm_name)
             proxmox.wait_for_clone_completion(node, new_vm_id)
             proxmox.config_lxc(node, new_vm_id, cpu_cores, ram)
