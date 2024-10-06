@@ -854,6 +854,8 @@ def generate_vm_resource_query(start_date, end_date):
 
 def extract_detail_stat(request):
 
+    print("=====================")
+
     influxdb_client = InfluxDBClient(url=INFLUX_ADDRESS, token=token, org=org)
     query_api = influxdb_client.query_api()
 
