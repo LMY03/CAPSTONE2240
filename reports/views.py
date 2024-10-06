@@ -1002,9 +1002,10 @@ def extract_general_stat(request):
     queries =  generate_resource_query(start_date, end_date, query_type, class_list)
 
     results = {}
-    for resource, query in queries.items():
-        result = query_api.query(query=query)
-        results[resource] = result   
+    if queries:
+        for resource, query in queries.items():
+            result = query_api.query(query=query)
+            results[resource] = result   
 
     # process result
     if results:
