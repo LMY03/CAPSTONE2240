@@ -931,6 +931,8 @@ def process_resource_data(results, query_type, start_date, end_date):
             if results[resource] and results[resource][0].records:
                 all_entities.update(record.values.get('host' if query_type == "per-node" else 'class') for record in results[resource][0].records)
         
+        print(f"all_entities: {all_entities}")
+
         for entity in all_entities:
             row = {
                 key: entity,
