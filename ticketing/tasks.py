@@ -31,7 +31,8 @@ def delete_request(request_id):
     for vm in vms:
         if vm.is_active:
 
-            proxmox.stop_vm(vm.node.name, vm.vm_id)
+            if not vm.is_lxc() : proxmox.stop_vm(vm.node.name, vm.vm_id)
+            else : proxmox.stop_lxc(vm.node.name, vm.vm_id)
 
             vm.set_shutdown()
 

@@ -733,7 +733,7 @@ def reject_test_vm(request, request_id):
 
 def delete_request(request, request_id):
 
-    delete_request_process.delay(request_id)
+    delete_request_process(request_id)
 
     return redirect('/ticketing')
 
