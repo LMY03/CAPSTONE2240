@@ -669,7 +669,7 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
             |> filter(fn: (r) => r["_field"] == "memory")
             |> filter(fn: (r) => r["_measurement"] == "memtotal")
             |> last()
-            |> keep(columns: ["_value", "host"])  # Keep the host field
+            |> keep(columns: ["_value", "host"])  
             |> yield(name: "maxmem_per_node")
         '''
         queries["maxmem"] = maxmem_query
