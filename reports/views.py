@@ -559,7 +559,7 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
     template_hosts_ids = get_template_hosts_ids(start_date, end_date)
     excluded_vmids_str = '|'.join(map(str, template_hosts_ids))
 
-    print(f"template_hosts: {template_hosts}")
+    print(f"template_hosts: {template_hosts_ids}")
 
     queries = {}
 
