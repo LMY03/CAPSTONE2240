@@ -265,7 +265,7 @@ def lxc_provision(request_entry : RequestEntry):
         
         for vm_name, vm_id in zip(vm_names, new_vm_ids):
             ip_add = "10.10.10.10"
-            ip_add = proxmox.wait_and_fetch_vm_ip(node, vm_id)
+            ip_add = proxmox.wait_and_fetch_lxc_ip(node, vm_id)
 
             vm = get_object_or_404(VirtualMachines, vm_name=vm_name, status=VirtualMachines.Status.CREATING)
             vm.set_ip_add(ip_add)
