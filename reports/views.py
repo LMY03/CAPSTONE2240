@@ -602,7 +602,7 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
             |> group(columns: ["_field"])
             |> mean()
             |> pivot(rowKey: [], columnKey: ["_field"], valueColumn: "_value")
-            |> map(fn: (r) => ({{ r with mem_percentage: (r.mem / r.maxmem) * 100.0 }}))
+            |> map(fn: (r) => ({{ r with _value: (r.mem / r.maxmem) * 100.0 }}))
             |> yield(name: "mem_total")
         '''
         queries["mem"] = mem_query
@@ -653,8 +653,8 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
             |> filter(fn: (r) => r["_measurement"] == "memory")
             |> group(columns: ["_field", "host"])
             |> pivot(rowKey: ["host"], columnKey: ["_field"], valueColumn: "_value")
-            |> map(fn: (r) => ({{ r with mem_percentage: (r.memused / r.memtotal) * 100.0, _value: (r.memused / r.memtotal) * 100.0 }}))
-            |> keep(columns: ["host", "mem_percentage", "_value"])
+            |> map(fn: (r) => ({{ r with _value: (r.memused / r.memtotal) * 100.0 }}))
+            |> keep(columns: ["host", "_value"])
             |> yield(name: "mem_per_node")
         '''
         queries["mem"] = mem_query
@@ -719,7 +719,7 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
             |> group(columns: ["class", "_field"])
             |> mean()
             |> pivot(rowKey: ["class"], columnKey: ["_field"], valueColumn: "_value")
-            |> map(fn: (r) => ({{ r with mem_percentage: (r.mem / r.maxmem) * 100.0 }}))
+            |> map(fn: (r) => ({{ r with _value: (r.mem / r.maxmem) * 100.0 }}))
             |> yield(name: "mem_per_class")
         '''
         queries["mem"] = mem_query
@@ -728,7 +728,7 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
         query = f'''
             from(bucket:"{bucket}")
             |> range(start: {start_date}, stop: {end_date})
-            |> filter(fn: (r) => r["_field"] == "mem")
+            |> filter(fn: (r) => r["_field"] == "maxmem")
             |> filter(fn: (r) => r["_measurement"] == "system")
             |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
             |> filter(fn: (r) => {class_filters})
