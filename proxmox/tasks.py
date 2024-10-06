@@ -65,7 +65,7 @@ def create_test_vm(tsg_user_id, request_id):
             proxmox.start_lxc(node, new_vm_id)
             ip_add = proxmox.wait_and_fetch_lxc_ip(node, new_vm_id)
             proxmox.shutdown_lxc(node, new_vm_id)
-            proxmox.wait_for_lxc_stop(node, new_vm_id)
+            # proxmox.wait_for_lxc_stop(node, new_vm_id)
 
         vm.set_ip_add(ip_add)
         vm.set_shutdown()
