@@ -261,7 +261,7 @@ def lxc_provision(request_entry : RequestEntry):
             VirtualMachines.objects.create(vm_id=new_vm_id, vm_name=vm_name, cores=cpu_cores, ram=ram, storage=request_entry.template.storage, request=request_entry, node=orig_vm.node)
             proxmox.clone_lxc(node, orig_vm.vm_id, new_vm_id, vm_name)
             proxmox.wait_for_clone_completion(node, new_vm_id)
-            proxmox.start_lxc(node, vm_id)
+            proxmox.start_lxc(node, new_vm_id)
         
         for vm_name, vm_id in zip(vm_names, new_vm_ids):
             ip_add = "10.10.10.10"
