@@ -672,7 +672,7 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
        
     elif query_type == "per-class":
         if not class_list:
-            return []
+            return None
         class_filters = ' or '.join([f'r["host"] =~ /{class_name}/' for class_name in class_list])
         class_map = ' '.join([f'if r["host"] =~ /{class_name}/ then "{class_name}" else' for class_name in class_list]) + ' "Unknown"'
         
