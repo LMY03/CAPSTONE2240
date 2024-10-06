@@ -65,11 +65,11 @@ def create_test_vm(tsg_user_id, request_id):
             node = "jin"
             proxmox.clone_lxc(node, request_entry.template.vm_id, new_vm_id, vm_name)
             proxmox.wait_for_clone_completion(node, new_vm_id)
-            proxmox.config_lxc(node, new_vm_id, cpu_cores, ram)
             proxmox.start_lxc(node, new_vm_id)
             ip_add = proxmox.wait_and_fetch_lxc_ip(node, new_vm_id)
             proxmox.shutdown_lxc(node, new_vm_id)
             proxmox.wait_for_lxc_stop(node, new_vm_id)
+            proxmox.config_lxc(node, new_vm_id, cpu_cores, ram)
 
         vm.set_ip_add(ip_add)
         vm.set_shutdown()
