@@ -90,11 +90,10 @@ def vm_provision(request_id):
     # shutdown vm if active
     if orig_vm.is_active():
 
-        proxmox.shutdown_vm(vm.node.name, vm.vm_id)
+        proxmox.shutdown_vm(orig_vm.node.name, orig_vm.vm_id)
+        proxmox.wait_for_vm_stop(orig_vm.node.name, orig_vm.vm_id)
 
         orig_vm.set_shutdown()
-
-        proxmox.wait_for_vm_stop(vm.node.name, vm.vm_id)
     
     # generate vm names
     vm_names = views.generate_vm_names(request_entry)
