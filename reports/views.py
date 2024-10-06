@@ -793,82 +793,65 @@ def generate_cpu_usage_query(query_type, start_date, end_date, class_list=None):
 
 # TODO: 如果成了，加上network的数据
 # VM detailed resource info
-def generate_vm_resource_query(start_date, end_date, query_type, category_values=None):
-    if query_type not in ["all", "nodes", "classes"]:
-        raise ValueError("Invalid category type. Choose 'all', 'nodes', or 'classes'")
+def generate_vm_resource_query(start_date, end_date):
     
-    base_query = f'''
-                from(bucket:"{bucket}")
-                |> range(start: {start_date}, stop: {end_date})
-                |> filter(fn: (r) => r["_measurement"] == "system")
-                '''
+    # get template
+    template_hosts_ids = get_template_hosts_ids(start_date, end_date)
+    excluded_vmids_str = '|'.join(map(str, template_hosts_ids))
 
-    # Add category-specific filters，这里的r["host"]到底是节点还是vm呢？
-    if query_type == "nodes" and category_values:
-        node_filters = ' or '.join([f'r["host"] == "{node}"' for node in category_values])
-        base_query += f'  |> filter(fn: (r) => {node_filters})\n'
-    elif query_type == "classes" and category_values:
-        class_filters = ' or '.join([f'r["vm_name"] =~ /{class_name}/' for class_name in category_values])
-        base_query += f'  |> filter(fn: (r) => {class_filters})\n'
+    queries = {}
+    cpus_query = f'''
+        from(bucket:"{bucket}")
+        |> range(start: {start_date}, stop: {end_date})
+        |> filter(fn: (r) => r["_field"] == "cpus")
+        |> filter(fn: (r) => r["_measurement"] == "system")
+        |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+        |> keep(columns: ["_value", "host", "nodename"])
+        |> last()
+        |> yield(name: "cpus")
+    '''
+    queries["cpus"] = cpus_query
 
-    # Query for CPU count (assuming it's a static value per VM)
-    cpu_count_query = f'''
-                {base_query}
-                |> filter(fn: (r) => r["_field"] == "cpus")
-                |> last()
-                |> group(columns: ["vm_name"])
-                |> yield(name: "cpu_count")
-                '''
+    cpu_query = f'''
+        from(bucket:"{bucket}")
+        |> range(start: {start_date}, stop: {end_date})
+        |> filter(fn: (r) => r["_measurement"] == "system")
+        |> filter(fn: (r) => r["_field"] == "cpu")
+        |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+        |> keep(columns: ["_value", "host", "nodename"])
+        |> last()
+        |> yield(name: "cpu")
+    '''
+    queries["cpu"] = cpu_query
 
-    # Query for CPU usage
-    cpu_usage_query = f'''
-                {base_query}
-                |> filter(fn: (r) => r["_field"] == "cpu")
-                |> mean()
-                |> group(columns: ["vm_name"])
-                |> yield(name: "cpu_usage")
-                '''
+    # mem data
+    mem_query = f'''
+        from(bucket:"{bucket}")
+        |> range(start: {start_date}, stop: {end_date})
+        |> filter(fn: (r) => r["_measurement"] == "system")
+        |> filter(fn: (r) => r["_field"] == "mem" or r["_field"] == "maxmem")
+        |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+        |> mean()
+        |> pivot(rowKey: [], columnKey: ["_field"], valueColumn: "_value")
+        |> map(fn: (r) => ({{ r with _value: (r.mem / r.maxmem) * 100.0 }}))
+        |> yield(name: "mem")
+    '''
+    queries["mem"] = mem_query
+    
+    # maxmem data
+    query = f'''
+        from(bucket:"{bucket}")
+        |> range(start: {start_date}, stop: {end_date})
+        |> filter(fn: (r) => r["_field"] == "maxmem")
+        |> filter(fn: (r) => r["_measurement"] == "system")
+        |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+        |> last()
+        |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 / 1024.0 / 1000.0) }}))
+        |> yield(name: "maxmem")
+    '''
+    queries["maxmem"] = maxmem_query
 
-    # Query for total memory (assuming it's a static value per VM)
-    total_mem_query = f'''
-                {base_query}
-                |> filter(fn: (r) => r["_field"] == "maxmem")
-                |> last()
-                |> group(columns: ["vm_name"])
-                |> yield(name: "total_memory")
-                '''
-
-    # Query for memory usage
-    mem_usage_query = f'''{base_query}
-                |> filter(fn: (r) => r["_field"] == "mem")
-                |> mean()
-                |> group(columns: ["vm_name"])
-                |> yield(name: "memory_usage")
-                '''
-
-    # Combine all queries
-    combined_query = f'''
-                {cpu_count_query}
-
-                {cpu_usage_query}
-
-                {total_mem_query}
-
-                {mem_usage_query}
-
-                // Join the results
-                join(
-                tables: {{
-                    cpu_count: cpu_count,
-                    cpu_usage: cpu_usage,
-                    total_memory: total_memory,
-                    memory_usage: memory_usage
-                }},
-                on: ["vm_name"]
-                )
-                '''
-
-    return combined_query
+    return queries
                 
 
 def extract_detail_stat(request):
@@ -878,20 +861,29 @@ def extract_detail_stat(request):
 
     start_date_str = request.POST.get('startdate')
     end_date_str = request.POST.get('enddate')
-    scope = request.POST.get('scope') # All, nodes, classes
-    category_values = request.POST.get('category_values') # 前端根据选择的 all, node, class 来生成表格供用户选择
 
     # TODO: add uptime
-    query = generate_vm_resource_query(start_date, end_date, scope, category_values)
+    queries = generate_vm_resource_query(start_date, end_date)
     result = query_api.query(query=flux_query)
 
     # process result, 
+    results = {}
+    if queries:
+        for resource, query in queries.items():
+            result = query_api.query(query=query)
+            print(f"result: {result}")
+            results[resource] = result
 
-    # csv?
-    # generate table?
+    # process result
+    processed_data = []
+    if results:
+        processed_data = process_resource_data(results, query_type, start_date, end_date)
+        print(f"processed_data: {processed_data}")
 
     influxdb_client.close()
     
+    print(f"processed_data: {processed_data}")
+
     return HttpResponse("Extract detail Stat")
 
 
