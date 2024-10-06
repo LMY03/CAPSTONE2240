@@ -12,13 +12,6 @@ def create_guacamole_user(sender, instance : User, created, **kwargs):
     if created:
         # If a new user is created in Django, trigger the Guacamole user creation
         username = instance.username
-        email = instance.email
-        
-        GuacamoleUser.objects.create(
-            django_user=instance,
-            guacamole_username=username,
-            email=email
-        )
         
         guacamole_password = User.objects.make_random_password()
         guacamole.create_user(username, guacamole_password)

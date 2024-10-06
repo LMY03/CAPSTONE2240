@@ -42,8 +42,7 @@ def request_list(request):
     else : return redirect('/')
     
 def faculty_request_list(request):
-    user = get_object_or_404(User, username=request.user.username)
-    request_entries = RequestEntry.objects.filter(requester=user).order_by('-id')
+    request_entries = RequestEntry.objects.filter(requester=request.user).order_by('-id')
 
     return render(request, 'ticketing/faculty_request_list.html', { 'request_entries' : request_entries })
 

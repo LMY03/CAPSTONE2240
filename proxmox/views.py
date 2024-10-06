@@ -66,9 +66,8 @@ def generate_vm_ids(no_of_vm):
 
     return new_ids
 
-def generate_vm_names(request_id):
+def generate_vm_names(request_entry : RequestEntry):
     vm_names = []
-    request_entry = get_object_or_404(RequestEntry, request__pk=request_id)
     request_use_cases = RequestUseCase.objects.filter(request=request_entry).values('request_use_case', 'vm_count')
     for request_use_case in request_use_cases:
         for i in range(request_use_case['vm_count']):
