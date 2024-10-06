@@ -660,7 +660,7 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
         queries["mem"] = mem_query
 
         # maxmem data
-        query = f'''
+        maxmem_query = f'''
             from(bucket:"{bucket}")
             |> range(start: {start_date}, stop: {end_date})
             |> filter(fn: (r) => r["_field"] == "memory")
