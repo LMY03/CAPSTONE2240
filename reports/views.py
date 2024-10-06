@@ -223,22 +223,22 @@ def construct_vm_details_flux_query(hosts, metrics, start_date, end_date, window
 #     return query
 
 
-# Process Query Result
-def process_query_result(result, fields):
-    processed_data = []
-    for table in result:
-        for record in table.records:
-            row = {
-                'time': record.get_time().strftime('%Y-%m-%d %H:%M:%S'),
-                'host': record.values.get('host', ''),
-                'nodename': record.values.get('nodename', ''),
-            }
-            field = record.get_field()
-            if field in fields:
-                row[field] = round(record.get_value(), 2) if record.get_value() is not None else None
-            processed_data.append(row)
+# # Process Query Result
+# def process_query_result(result, fields):
+#     processed_data = []
+#     for table in result:
+#         for record in table.records:
+#             row = {
+#                 'time': record.get_time().strftime('%Y-%m-%d %H:%M:%S'),
+#                 'host': record.values.get('host', ''),
+#                 'nodename': record.values.get('nodename', ''),
+#             }
+#             field = record.get_field()
+#             if field in fields:
+#                 row[field] = round(record.get_value(), 2) if record.get_value() is not None else None
+#             processed_data.append(row)
 
-    return processed_data
+#     return processed_data
 
 def write_csv(writer, data, selected_metrics):
     for row in data:
@@ -419,110 +419,110 @@ def open_report_page(request):
 
     return render(request, 'reports/gen-reports.html')
 
-def report_gen(request):
-    try:
-        # Get clients
-        influxdb_client = get_influxdb_client()
-        proxmox_client = get_proxmox_client()
-        # Prepare and execute queries
-        query_api = influxdb_client.query_api()
+# def report_gen(request):
+#     try:
+#         # Get clients
+#         influxdb_client = get_influxdb_client()
+#         proxmox_client = get_proxmox_client()
+#         # Prepare and execute queries
+#         query_api = influxdb_client.query_api()
 
-        form_data = request.session.get('formData', {})
-        start_date = form_data.get('startdate')
-        print(f"start_date: {start_date}")
-        end_date = form_data.get('enddate')
-        date_diff = abs((datetime.strptime(end_date, "%Y-%m-%d") - datetime.strptime(start_date, "%Y-%m-%d")).days)
-        window = "1d" if date_diff >= 30 else "1h"
+#         form_data = request.session.get('formData', {})
+#         start_date = form_data.get('startdate')
+#         print(f"start_date: {start_date}")
+#         end_date = form_data.get('enddate')
+#         date_diff = abs((datetime.strptime(end_date, "%Y-%m-%d") - datetime.strptime(start_date, "%Y-%m-%d")).days)
+#         window = "1d" if date_diff >= 30 else "1h"
 
-        sd = parse_form_date(start_date, 1)
-        ed = parse_form_date(end_date, 0)
+#         sd = parse_form_date(start_date, 1)
+#         ed = parse_form_date(end_date, 0)
         
-        # node_metrics = ['cpu', 'memused', 'netin', 'netout', 'memtotal', 'swaptotal']
+#         # node_metrics = ['cpu', 'memused', 'netin', 'netout', 'memtotal', 'swaptotal']
         
-        stat_list = form_data['statList']
-        metrics = [key for key in ['cpuUsage', 'memoryUsage', 'netin', 'netout'] if key in stat_list]
-        selected_metrics = []
-        for metric in metrics:
-            if metric == 'cpuUsage':
-                selected_metrics.append('cpu')
-            elif metric == 'memoryUsage':
-                selected_metrics.append('maxmem')
-                selected_metrics.append('mem')
-            elif metric == 'netin':
-                selected_metrics.append('netin')
-            elif metric == 'netout':
-                selected_metrics.append('netout')
+#         stat_list = form_data['statList']
+#         metrics = [key for key in ['cpuUsage', 'memoryUsage', 'netin', 'netout'] if key in stat_list]
+#         selected_metrics = []
+#         for metric in metrics:
+#             if metric == 'cpuUsage':
+#                 selected_metrics.append('cpu')
+#             elif metric == 'memoryUsage':
+#                 selected_metrics.append('maxmem')
+#                 selected_metrics.append('mem')
+#             elif metric == 'netin':
+#                 selected_metrics.append('netin')
+#             elif metric == 'netout':
+#                 selected_metrics.append('netout')
         
-        print(f"selected_metrics: {selected_metrics}")
+#         print(f"selected_metrics: {selected_metrics}")
 
-        # node_data = {}
-        # for node in form_data.get('nodeNameList', []):
-        #     node_query = construct_flux_query('system', node_metrics, [node], start_date, end_date, window)
-        #     node_result = query_api.query(node_query)
-        #     node_data[node] = process_query_result(node_result, node_metrics)
+#         # node_data = {}
+#         # for node in form_data.get('nodeNameList', []):
+#         #     node_query = construct_flux_query('system', node_metrics, [node], start_date, end_date, window)
+#         #     node_result = query_api.query(node_query)
+#         #     node_data[node] = process_query_result(node_result, node_metrics)
 
-        vm_list = form_data.get('vmNameList', [])
-        print(f"vm_list: {vm_list}")
+#         vm_list = form_data.get('vmNameList', [])
+#         print(f"vm_list: {vm_list}")
 
-        cpuUsageList = []
-        memUsageList = []
-        netInUsageList = []
-        netOutUsageList = []
+#         cpuUsageList = []
+#         memUsageList = []
+#         netInUsageList = []
+#         netOutUsageList = []
 
-        for vm in vm_list:
-            # Query for CPU Usage per VM
-            cpuUsageResult = {}
-            cpuUsageResult["vmname"] = vm
-            cpu_data = query_api.query(construct_vm_details_flux_query([vm], ['cpu'], sd, ed, window))
-            cpuUsageResult["data"] = process_query_result(cpu_data, ['cpu'])
-            cpu_table_data = query_api.query(construct_vm_summary_flux_query([vm], 'cpu', sd, ed))
-            # cpuUsageResult["tableData"] = process_query_result(cpu_data, ['mean_cpu', 'max_cpu'])
-            cpuUsageList.append(cpuUsageResult)
+#         for vm in vm_list:
+#             # Query for CPU Usage per VM
+#             cpuUsageResult = {}
+#             cpuUsageResult["vmname"] = vm
+#             cpu_data = query_api.query(construct_vm_details_flux_query([vm], ['cpu'], sd, ed, window))
+#             cpuUsageResult["data"] = process_query_result(cpu_data, ['cpu'])
+#             cpu_table_data = query_api.query(construct_vm_summary_flux_query([vm], 'cpu', sd, ed))
+#             # cpuUsageResult["tableData"] = process_query_result(cpu_data, ['mean_cpu', 'max_cpu'])
+#             cpuUsageList.append(cpuUsageResult)
 
-            # Query for Memory Used per VM
-            memUsageResult = {}
-            memUsageResult["vmname"] = vm
-            mem_data = query_api.query(construct_vm_details_flux_query([vm], ['mem'], sd, ed, window))
-            memUsageResult["data"] = process_query_result(mem_data, ['mem'])
-            mem_table_data = query_api.query(construct_vm_summary_flux_query([vm], 'mem', sd, ed))
-            # memUsageResult["tableData"] = process_query_result(mem_table_data, ['mean_mem', 'max_mem'])
-            memUsageList.append(memUsageResult)
+#             # Query for Memory Used per VM
+#             memUsageResult = {}
+#             memUsageResult["vmname"] = vm
+#             mem_data = query_api.query(construct_vm_details_flux_query([vm], ['mem'], sd, ed, window))
+#             memUsageResult["data"] = process_query_result(mem_data, ['mem'])
+#             mem_table_data = query_api.query(construct_vm_summary_flux_query([vm], 'mem', sd, ed))
+#             # memUsageResult["tableData"] = process_query_result(mem_table_data, ['mean_mem', 'max_mem'])
+#             memUsageList.append(memUsageResult)
 
-            # Query for Network In per VM
-            netInUsageResult = {}
-            netInUsageResult["vmname"] = vm
-            netin_data = query_api.query(construct_vm_details_flux_query([vm], ['netin'], sd, ed, window))
-            netInUsageResult["data"] = process_query_result(netin_data, ['netin'])
-            netin_table_data = query_api.query(construct_vm_summary_flux_query([vm], 'netin', sd, ed))
-            # netInUsageResult["tableData"] = process_query_result(netin_table_data, ['mean_netin', 'max_netin'])
-            netInUsageList.append(netInUsageResult)
+#             # Query for Network In per VM
+#             netInUsageResult = {}
+#             netInUsageResult["vmname"] = vm
+#             netin_data = query_api.query(construct_vm_details_flux_query([vm], ['netin'], sd, ed, window))
+#             netInUsageResult["data"] = process_query_result(netin_data, ['netin'])
+#             netin_table_data = query_api.query(construct_vm_summary_flux_query([vm], 'netin', sd, ed))
+#             # netInUsageResult["tableData"] = process_query_result(netin_table_data, ['mean_netin', 'max_netin'])
+#             netInUsageList.append(netInUsageResult)
 
-            # Query for Network Out per VM
-            netOutUsageResult = {}
-            netOutUsageResult["vmname"] = vm
-            netout_data = query_api.query(construct_vm_details_flux_query([vm], ['netout'], sd, ed, window))
-            netOutUsageResult["data"] = process_query_result(netout_data, ['netout'])
-            netout_table_data = query_api.query(construct_vm_summary_flux_query([vm], 'netout', sd, ed))
-            # netOutUsageResult["tableData"] = process_query_result(netout_table_data, ['mean_netout', 'max_netout'])
-            netOutUsageList.append(netOutUsageResult)
+#             # Query for Network Out per VM
+#             netOutUsageResult = {}
+#             netOutUsageResult["vmname"] = vm
+#             netout_data = query_api.query(construct_vm_details_flux_query([vm], ['netout'], sd, ed, window))
+#             netOutUsageResult["data"] = process_query_result(netout_data, ['netout'])
+#             netout_table_data = query_api.query(construct_vm_summary_flux_query([vm], 'netout', sd, ed))
+#             # netOutUsageResult["tableData"] = process_query_result(netout_table_data, ['mean_netout', 'max_netout'])
+#             netOutUsageList.append(netOutUsageResult)
 
-        influxdb_client.close()
+#         influxdb_client.close()
 
-        return JsonResponse({
-            'cpuUsageList':cpuUsageList,
-            'memUsageList':memUsageList,
-            'netInUsageList':netInUsageList,
-            'netOutUsageList':netOutUsageList,
-            'dateDiff': date_diff,
-            'formData': form_data
-        })
+#         return JsonResponse({
+#             'cpuUsageList':cpuUsageList,
+#             'memUsageList':memUsageList,
+#             'netInUsageList':netInUsageList,
+#             'netOutUsageList':netOutUsageList,
+#             'dateDiff': date_diff,
+#             'formData': form_data
+#         })
 
-    except Exception as e:
-        # TODO: logger error - error generating report page
-        print(f"Error: {str(e)}")
-        import traceback
-        print(traceback.format_exc())
-        return JsonResponse({'error': 'An error occurred while preparing the report generation page.'}, status=500)
+#     except Exception as e:
+#         # TODO: logger error - error generating report page
+#         print(f"Error: {str(e)}")
+#         import traceback
+#         print(traceback.format_exc())
+#         return JsonResponse({'error': 'An error occurred while preparing the report generation page.'}, status=500)
 
 
 def performance_gen(request):
@@ -629,6 +629,7 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
             |> filter(fn: (r) => r["_field"] == "cpus")
             |> filter(fn: (r) => r["_measurement"] == "cpustat")
             |> last()
+            |> keep(columns: ["_value", "host"]) 
             |> yield(name: "cpus_per_node")
         '''
         queries["cpus"] = cpus_query
@@ -642,6 +643,7 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
             |> group(columns: ["host"])
             |> mean()
             |> map(fn: (r) => ({{ r with _value: r._value * 100.0 }}))
+            |> keep(columns: ["_value", "host"])  
             |> yield(name: "cpu_per_node")
         '''
         queries["cpu"] = cpu_query
@@ -667,6 +669,7 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
             |> filter(fn: (r) => r["_field"] == "memory")
             |> filter(fn: (r) => r["_measurement"] == "memtotal")
             |> last()
+            |> keep(columns: ["_value", "host"])  # Keep the host field
             |> yield(name: "maxmem_per_node")
         '''
         queries["maxmem"] = maxmem_query
@@ -899,12 +902,14 @@ def process_resource_data(results, query_type, start_date, end_date):
         try:
             if result and result[0].records:
                 for record in result[0].records:
-                    if key is None or record.values.get(key) is not None:
-                        return record.values.get('_value', 0)
-            return None
+                    if key is None:
+                        return record.values.get('_value', 0), record.values.get('host')
+                    elif record.values.get('host') == key:
+                        return record.values.get('_value', 0), key
+            return None, None
         except (IndexError, AttributeError):
             print(f"No data for {resource}")
-            return None
+            return None, None
     
     if query_type == "all":
         row = {
@@ -926,7 +931,7 @@ def process_resource_data(results, query_type, start_date, end_date):
         
         for resource in results:
             if results[resource] and results[resource][0].records:
-                all_entities.update(record.values.get(key) for record in results[resource][0].records)
+                all_entities.update(record.values.get('host' if query_type == "per-node" else 'class') for record in results[resource][0].records)
         
         for entity in all_entities:
             row = {
