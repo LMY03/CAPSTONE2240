@@ -902,14 +902,12 @@ def process_resource_data(results, query_type, start_date, end_date):
         try:
             if result and result[0].records:
                 for record in result[0].records:
-                    if key is None:
-                        return record.values.get('_value', 0), record.values.get('host')
-                    elif record.values.get('host') == key:
-                        return record.values.get('_value', 0), key
-            return None, None
+                    if key is None or record.values.get('host') == key:
+                        return record.values.get('_value', 0)
+            return None
         except (IndexError, AttributeError):
             print(f"No data for {resource}")
-            return None, None
+            return None
     
     if query_type == "all":
         row = {
