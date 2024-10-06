@@ -100,7 +100,7 @@ def vm_provision(request_id):
 
     orig_vm.vm_name = vm_names[0]
     orig_vm.save()
-    proxmox.change_vm_name(vm_names[0])
+    proxmox.change_vm_name(node, orig_vm.vm_id, vm_names[0])
 
     # create system_account for test vm
     student_user = User.create_student_user(
