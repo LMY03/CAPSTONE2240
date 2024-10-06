@@ -35,6 +35,8 @@ def create_test_vm(tsg_user_id, request_id):
         
         #TODO: LOADBALANCING
         # node = views.get_node_to_clone_vms()
+        if not request_entry.is_lxc() : node = "pve"
+        else : node = "jin"
 
         vm = VirtualMachines.objects.create(
             vm_id=new_vm_id,
