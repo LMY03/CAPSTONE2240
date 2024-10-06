@@ -3,66 +3,47 @@ $(document).ready(function () {
       $(this).find('.chevron').toggleClass('rotated');
   });
 
-  // Handle Form submission
-  $('#summaryfilterForm').on('submit', function(e) {
-    e.preventDefault();     // prevent the default action
+  function showLoading() {
+      // TODO: Implement loading indicator
+      console.log('Loading...');
+  }
 
-    // Create a form element
-    var form = document.createElement('form');
-    form.method = 'POST';
-    form.action = 'extract_general_stat';
-    
-    // Append all input fields from #summaryfilterForm
-    $(this).find('input, select').each(function() {
-      var input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = this.name;
-      input.value = this.value;
-      form.appendChild(input);
-    });
+  function hideLoading() {
+      // TODO: Hide loading indicator
+      console.log('Loading complete');
+  }
 
-    // Append CSRF token
-    var csrfInput = document.createElement('input');
-    csrfInput.type = 'hidden';
-    csrfInput.name = 'csrfmiddlewaretoken';
-    csrfInput.value = $('input[name=csrfmiddlewaretoken]').val();
-    form.appendChild(csrfInput);
+  function handleFormSubmit(formId, actionUrl) {
+      $(formId).on('submit', function(e) {
+          e.preventDefault();
+          showLoading();
 
-    // Append form to body and submit
-    document.body.appendChild(form);
-    form.submit();
-    document.body.removeChild(form);
-  });
-
-    // Handle Form submission
-    $('#detailedFilterForm').on('submit', function(e) {
-      e.preventDefault();     // prevent the default action
-  
-      // Create a form element
-      var form = document.createElement('form');
-      form.method = 'POST';
-      form.action = 'extract_detail_stat';
-      
-      // Append all input fields from #detailedFilterForm
-      $(this).find('input, select').each(function() {
-        var input = document.createElement('input');
-        input.type = 'hidden';
-        input.name = this.name;
-        input.value = this.value;
-        form.appendChild(input);
+          $.ajax({
+              url: actionUrl,
+              type: 'POST',
+              data: $(this).serialize(),
+              success: function(response) {
+                  console.log('Success:', response);
+                  // TODO: Update the page with the response data
+                  // For example:
+                  // $('#resultContainer').html(response);
+              },
+              error: function(xhr, status, error) {
+                  console.error('Error:', error);
+                  // TODO: Show error message to user
+                  // For example:
+                  // $('#errorContainer').text('An error occurred. Please try again.');
+              },
+              complete: function() {
+                  hideLoading();
+              }
+          });
       });
-  
-      // Append CSRF token
-      var csrfInput = document.createElement('input');
-      csrfInput.type = 'hidden';
-      csrfInput.name = 'csrfmiddlewaretoken';
-      csrfInput.value = $('input[name=csrfmiddlewaretoken]').val();
-      form.appendChild(csrfInput);
-  
-      // Append form to body and submit
-      document.body.appendChild(form);
-      form.submit();
-      document.body.removeChild(form);
-    });
+  }
 
+  // Handle Summary Form submission
+  handleFormSubmit('#summaryfilterForm', 'extract_general_stat');
+
+  // Handle Detailed Form submission
+  handleFormSubmit('#detailedFilterForm', 'extract_detail_stat');
 });
