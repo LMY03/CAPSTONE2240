@@ -28,8 +28,6 @@ class VirtualMachines(models.Model):
     ip_add = models.CharField(max_length=15, null=True, default=None)
     request = models.ForeignKey('ticketing.RequestEntry', on_delete=models.DO_NOTHING)
     node = models.ForeignKey(Nodes, on_delete=models.DO_NOTHING)
-    is_lxc = models.BooleanField(default=False)
-    # vm_password = models.CharField(max_length=45, default=config('DEFAULT_VM_PASSWORD'))
 
     class Status(models.TextChoices): 
         CREATING = 'CREATING'
@@ -42,6 +40,8 @@ class VirtualMachines(models.Model):
         choices=Status.choices,
         default=Status.CREATING
     )
+
+    def is_lxc(self) : return self.request.is_lxc() 
 
     def set_ip_add(self, ip_add):
         self.ip_add = ip_add
@@ -62,3 +62,4 @@ class VirtualMachines(models.Model):
     def set_destroyed(self):
         self.status = VirtualMachines.Status.DESTROYED
         self.save()
+    

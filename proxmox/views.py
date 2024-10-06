@@ -21,16 +21,26 @@ def vm_list(request):
     else : return redirect('/')
 
 def faculty_vm_list(request):
-    request_entries = RequestEntry.objects.filter(requester=request.user, vm_date_tested__isnull=False).exclude(status=RequestEntry.Status.DELETED).order_by('-id')
-    
-    vm_list = []
-    for request_entry in request_entries: 
-        vm_list += VirtualMachines.objects.filter(request=request_entry).exclude(status=VirtualMachines.Status.DESTROYED).exclude(status=VirtualMachines.Status.CREATING).exclude(is_lxc=True)
+    vm_list = VirtualMachines.objects.filter(
+        request__in=RequestEntry.objects.filter(
+            requester=request.user, 
+            vm_date_tested__isnull=False, 
+            template__is_lxc=False
+        ).exclude(status=RequestEntry.Status.DELETED)
+    ).exclude(status=VirtualMachines.Status.DESTROYED).exclude(status=VirtualMachines.Status.CREATING).order_by('-request__id')
 
     return render(request, 'proxmox/faculty_vm_list.html', { 'vm_list': vm_list })
     
 def tsg_vm_list(request):
-    return render(request, 'proxmox/tsg_vm_list.html', { 'vm_list': list(VirtualMachines.objects.all().exclude(status=VirtualMachines.Status.DESTROYED).exclude(status=VirtualMachines.Status.CREATING).exclude(is_lxc=True)) })
+
+    vm_list = VirtualMachines.objects.filter(
+        request__in=RequestEntry.objects.filter(
+            assigned_to=request.user, 
+            template__is_lxc=False
+        )
+    ).exclude(status=VirtualMachines.Status.DESTROYED).exclude(status=VirtualMachines.Status.CREATING).order_by('-request__id')
+
+    return render(request, 'proxmox/tsg_vm_list.html', { 'vm_list': vm_list })
 
 @login_required
 def vm_details(request, vm_id):

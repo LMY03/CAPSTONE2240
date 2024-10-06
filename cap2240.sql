@@ -1196,7 +1196,6 @@ CREATE TABLE `proxmox_virtualmachines` (
   `ram` int NOT NULL,
   `storage` decimal(5,2) NOT NULL,
   `ip_add` varchar(15) DEFAULT NULL,
-  `is_lxc` tinyint(1) NOT NULL,
   `status` varchar(20) NOT NULL,
   `node_id` bigint NOT NULL,
   `request_id` bigint NOT NULL,
