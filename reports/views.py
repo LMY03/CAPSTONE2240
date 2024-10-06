@@ -603,7 +603,7 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
             |> group(columns: ["_field"])
             |> mean()
             |> pivot(rowKey: [], columnKey: ["_field"], valueColumn: "_value")
-            |> map(fn: (r) => ({ r with mem_percentage: (r.mem / r.maxmem) * 100.0 }))
+            |> map(fn: (r) => ({{ r with mem_percentage: (r.mem / r.maxmem) * 100.0 }}))
             |> yield(name: "mem_total")
         '''
         queries["mem"] = mem_query
