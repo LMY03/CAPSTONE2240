@@ -910,7 +910,7 @@ def process_resource_data(results, query_type, start_date, end_date):
             'enddate': end_date,
         }
 
-        for resource in ['cps', 'cpu', 'mem', 'maxmem']:
+        for resource in ['cpus', 'cpu', 'mem', 'maxmem']:
             value = safe_get_value(results.get(resource), resource)
             if value is not None:
                 row[resource] = value
@@ -1005,7 +1005,9 @@ def extract_general_stat(request):
     if queries:
         for resource, query in queries.items():
             result = query_api.query(query=query)
-            results[resource] = result   
+            results[resource] = result
+
+    print(f"result: {result}")   
 
     # process result
     processed_data = []
