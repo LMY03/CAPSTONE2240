@@ -728,7 +728,7 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
         query = f'''
             from(bucket:"{bucket}")
             |> range(start: {start_date}, stop: {end_date})
-            |> filter(fn: (r) => r["_field"] == "mem")
+            |> filter(fn: (r) => r["_field"] == "maxmem")
             |> filter(fn: (r) => r["_measurement"] == "system")
             |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
             |> filter(fn: (r) => {class_filters})
