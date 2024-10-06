@@ -169,58 +169,58 @@ def construct_vm_details_flux_query(hosts, metrics, start_date, end_date, window
     return combined_query
 
 
-# Fix this
-def construct_vm_summary_flux_query(hosts, metric, start_date, end_date):
-    host_filter = ' or '.join(f'r["host"] == "{host}"' for host in hosts) if hosts else 'true'
+# # Fix this
+# def construct_vm_summary_flux_query(hosts, metric, start_date, end_date):
+#     host_filter = ' or '.join(f'r["host"] == "{host}"' for host in hosts) if hosts else 'true'
     
-    is_network_metric = metric in ['netin', 'netout']
+#     is_network_metric = metric in ['netin', 'netout']
 
-    base_query = f'''
-                from(bucket:"{bucket}")
-                |> range(start: {start_date}, stop: {end_date})
-                |> filter(fn: (r) => r["_measurement"] == "system")
-                |> filter(fn: (r) => {host_filter})
-                |> filter(fn: (r) => r["_field"] == "{metric}")
-                '''
+#     base_query = f'''
+#                 from(bucket:"{bucket}")
+#                 |> range(start: {start_date}, stop: {end_date})
+#                 |> filter(fn: (r) => r["_measurement"] == "system")
+#                 |> filter(fn: (r) => {host_filter})
+#                 |> filter(fn: (r) => r["_field"] == "{metric}")
+#                 '''
     
-    if is_network_metric:
-        query = f'''
-                data = {base_query}
-                |> aggregateWindow(every: 1h, fn: mean, createEmpty: false)
-                |> derivative(unit: 1h, nonNegative: true, columns: ["_value"], timeColumn: "_time")
-                |> filter(fn: (r) => r._value != 0)
-                |> group(columns: ["host"])
+#     if is_network_metric:
+#         query = f'''
+#                 data = {base_query}
+#                 |> aggregateWindow(every: 1h, fn: mean, createEmpty: false)
+#                 |> derivative(unit: 1h, nonNegative: true, columns: ["_value"], timeColumn: "_time")
+#                 |> filter(fn: (r) => r._value != 0)
+#                 |> group(columns: ["host"])
 
-                mean = data
-                |> mean()
-                |> map(fn: (r) => ({ r with _value: r._value, _field: "mean_{metric}" }))
+#                 mean = data
+#                 |> mean()
+#                 |> map(fn: (r) => ({ r with _value: r._value, _field: "mean_{metric}" }))
 
-                max = data
-                |> max()
-                |> map(fn: (r) => ({ r with _value: r._value, _field: "max_{metric}" }))
+#                 max = data
+#                 |> max()
+#                 |> map(fn: (r) => ({ r with _value: r._value, _field: "max_{metric}" }))
 
-                union(tables: [mean, max])
-                |> yield(name: "usage_summary")
-                '''
-    else:
-        query = f'''
-                data = {base_query}
-                |> filter(fn: (r) => r._value != 0)
-                |> group(columns: ["host"])
+#                 union(tables: [mean, max])
+#                 |> yield(name: "usage_summary")
+#                 '''
+#     else:
+#         query = f'''
+#                 data = {base_query}
+#                 |> filter(fn: (r) => r._value != 0)
+#                 |> group(columns: ["host"])
 
-                mean = data
-                |> mean()
-                |> map(fn: (r) => ({ r with _value: r._value * 100.0, _field: "mean_{metric}" }))
+#                 mean = data
+#                 |> mean()
+#                 |> map(fn: (r) => ({ r with _value: r._value * 100.0, _field: "mean_{metric}" }))
 
-                max = data
-                |> max()
-                |> map(fn: (r) => ({ r with _value: r._value * 100.0, _field: "max_{metric}" }))
+#                 max = data
+#                 |> max()
+#                 |> map(fn: (r) => ({ r with _value: r._value * 100.0, _field: "max_{metric}" }))
 
-                union(tables: [mean, max])
-                |> yield(name: "usage_summary")
-                '''
+#                 union(tables: [mean, max])
+#                 |> yield(name: "usage_summary")
+#                 '''
     
-    return query
+#     return query
 
 
 # Process Query Result
