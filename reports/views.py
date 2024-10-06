@@ -626,8 +626,8 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
         cpus_query = f'''
             from(bucket:"{bucket}")
             |> range(start: {start_date}, stop: {end_date})
-            |> filter(fn: (r) => r["_field"] == "cpus")
             |> filter(fn: (r) => r["_measurement"] == "cpustat")
+            |> filter(fn: (r) => r["_field"] == "cpus")
             |> last()
             |> keep(columns: ["_value", "host"]) 
             |> yield(name: "cpus_per_node")
@@ -666,8 +666,8 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
         maxmem_query = f'''
             from(bucket:"{bucket}")
             |> range(start: {start_date}, stop: {end_date})
-            |> filter(fn: (r) => r["_field"] == "memory")
-            |> filter(fn: (r) => r["_measurement"] == "memtotal")
+            |> filter(fn: (r) => r["_measurement"] == "memory")
+            |> filter(fn: (r) => r["_field"] == "memtotal")
             |> last()
             |> keep(columns: ["_value", "host"])  
             |> yield(name: "maxmem_per_node")
@@ -898,6 +898,8 @@ def extract_detail_stat(request):
 def process_resource_data(results, query_type, start_date, end_date):
     processed_data = []
 
+    print(f"Debug: Results keys: {results.keys()}")
+    
     def safe_get_value(result, resource, key=None):
         try:
             if result and result[0].records:
@@ -1015,7 +1017,7 @@ def extract_general_stat(request):
             result = query_api.query(query=query)
             results[resource] = result
 
-    print(f"result: {result}")   
+    print(f"result: {results}")   
 
     # process result
     processed_data = []
