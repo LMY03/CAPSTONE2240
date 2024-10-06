@@ -29,14 +29,13 @@ def delete_request(request_id):
     if port_rules.exists() : delete_port_forward_rules(len(port_rules), vms.values_list('vm_name', flat=True)) # pfsense
 
     for vm in vms:
-        if vm.is_active:
+        if vm.is_active():
 
             if not vm.is_lxc() : proxmox.stop_vm(vm.node.name, vm.vm_id)
             else : proxmox.stop_lxc(vm.node.name, vm.vm_id)
 
             vm.set_shutdown()
 
-    for vm in vms:
         vm.set_destroyed()
 
         proxmox.wait_for_vm_stop(vm.node.name, vm.vm_id)
