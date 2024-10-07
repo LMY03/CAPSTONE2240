@@ -36,7 +36,7 @@ $(document).ready(function () {
   });
 
     // Handle Form submission
-    $('#detailedFilterForm').on('submit', function(e) {
+    $('#filterForm2').on('submit', function(e) {
       e.preventDefault();     // prevent the default action
   
       // Create a form element
