@@ -695,7 +695,7 @@ def process_vm_resource_data(results, start_date, end_date):
 
 def generate_detail_csv_response(data, start_date, end_date):
     # TODO: add uptime
-    fieldnames = ['nodename', 'vmname', 'startdate', 'enddate', 'cpus', 'cpu', 'mem', 'maxmem']
+    fieldnames = ['nodename', 'host', 'startdate', 'enddate', 'cpus', 'cpu', 'mem', 'maxmem']
     csv_buffer = StringIO()
     writer = csv.DictWriter(csv_buffer, fieldnames=fieldnames)
     writer.writeheader()
