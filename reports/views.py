@@ -854,13 +854,15 @@ def generate_vm_resource_query(start_date, end_date):
 
 def extract_detail_stat(request):
 
-    print("=====================")
 
     influxdb_client = InfluxDBClient(url=INFLUX_ADDRESS, token=token, org=org)
     query_api = influxdb_client.query_api()
 
     start_date_str = request.POST.get('startdate')
     end_date_str = request.POST.get('enddate')
+    
+    start_date = parse_form_date(start_date_str, 1)
+    end_date = parse_form_date(end_date_str, 0)
 
     # TODO: add uptime
     queries = generate_vm_resource_query(start_date, end_date)
