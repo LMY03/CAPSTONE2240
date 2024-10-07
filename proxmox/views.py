@@ -91,9 +91,7 @@ def generate_vm_names(request_entry : RequestEntry):
 
     return vm_names
 
-def shutdown_vm(vm_id):
-
-    vm = get_object_or_404(VirtualMachines, pk=vm_id)
+def shutdown_vm(vm : VirtualMachines):
 
     if vm.is_active():
         
