@@ -677,7 +677,7 @@ def confirm_test_vm(request, request_id):
     to_email = request_entry.requester.email
     request_entry.save()
 
-    processing_ticket.delay(request_id)
+    processing_ticket(request_id)
     
     confirm_notif_faculty(to_email)
     return redirect('ticketing:request_details', request_id)
