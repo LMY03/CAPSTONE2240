@@ -25,7 +25,7 @@ def faculty_vm_list(request):
         request__in=RequestEntry.objects.filter(
             requester=request.user, 
             vm_date_tested__isnull=False, 
-            template__is_lxc=False
+            # template__is_lxc=False
         ).exclude(status=RequestEntry.Status.DELETED)
     ).exclude(status=VirtualMachines.Status.DESTROYED).exclude(status=VirtualMachines.Status.CREATING).order_by('-request__id')
 
@@ -36,7 +36,7 @@ def tsg_vm_list(request):
     vm_list = VirtualMachines.objects.filter(
         request__in=RequestEntry.objects.filter(
             assigned_to=request.user, 
-            template__is_lxc=False
+            # template__is_lxc=False
         )
     ).exclude(status=VirtualMachines.Status.DESTROYED).exclude(status=VirtualMachines.Status.CREATING).order_by('-request__id')
 

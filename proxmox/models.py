@@ -43,6 +43,10 @@ class VirtualMachines(models.Model):
 
     def is_lxc(self) : return self.request.is_lxc() 
 
+    def machine_type(self):
+        if self.is_lxc() : return "Linux Container"
+        else: return "Virtual Machine"
+
     def set_ip_add(self, ip_add):
         self.ip_add = ip_add
         self.save()
