@@ -654,7 +654,7 @@ def generate_vm_resource_query(start_date, end_date):
 
 # Process Detail Query Result
 def process_vm_resource_data(results, start_date, end_date):
-    processed_data = []
+    processed_data = {}
     print(f"Debug: Results keys: {results.keys()}")
 
     def safe_get_value(result, resource, identifier):
@@ -671,32 +671,33 @@ def process_vm_resource_data(results, start_date, end_date):
             print(f"No data for {resource} on host {host}")
             return None
 
-    all_vms  = set()
+    all_identifiers  = set()
     for resource, result in results.items():
         if result:
             for table in result:
                 for record in table.records:
-                    identifier = (record.values.get('vmid'), record.values.get('nodename'), record.values.get('host'))
+                    identifier = (record.values.get('vmid'), record.values.get('host'), record.values.get('nodename'))
                     if all(identifier):
-                        all_vms.add(identifier)
+                        all_identifiers.add(identifier)
 
-    print(f"all_vms: {all_vms}")
-    for vmid, nodename, host in all_vms:
+    print(f"all_identifiers: {all_identifiers}")
+    for vmid, nodename, host in all_identifiers:
+        identifier = (vmid, host, nodename)
         row = {
             'vmid': vmid,
-            'nodename': nodename,
             'host': host,
+            'nodename': nodename,
             'startdate': start_date,
             'enddate': end_date,
         }
         for resource in ['cpus', 'cpu', 'mem', 'maxmem']:
-            value = safe_get_value(results.get(resource), resource, host)
+            value = safe_get_value(results.get(resource), resource, identifier)
             if value is not None:
                 row[resource] = value
         if len(row) > 5:  # Ensure we have at least one resource value
-            processed_data.append(row)
+            processed_data[identifier] = row
 
-    return processed_data
+    return list(processed_data.values())
 
 # Generate Detail CSV Response
 def generate_detail_csv_response(data, start_date, end_date):
