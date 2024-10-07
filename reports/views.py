@@ -676,8 +676,9 @@ def process_vm_resource_data(results, start_date, end_date):
                 all_vms.update((record.values.get('vmid'), record.values.get('nodename'), record.values.get('host')) for record in table.records)
 
     print(f"all_vms: {all_vms}")
-    for nodename, host in all_vms:
+    for vmid, nodename, host in all_vms:
         row = {
+            'vmid': vmid,
             'nodename': nodename,
             'host': host,
             'startdate': start_date,
@@ -687,7 +688,7 @@ def process_vm_resource_data(results, start_date, end_date):
             value = safe_get_value(results.get(resource), resource, host)
             if value is not None:
                 row[resource] = value
-        if len(row) > 4:  # Ensure we have at least one resource value
+        if len(row) > 5:  # Ensure we have at least one resource value
             processed_data.append(row)
 
     return processed_data
