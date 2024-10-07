@@ -13,6 +13,7 @@ from users.models import User
 from ticketing.views import tsg_requests_list
 
 from django.shortcuts import render
+from notifications.views import added_user_notif
 
 from django.core.exceptions import ValidationError
 from django.contrib import messages
@@ -252,6 +253,7 @@ def add_users (request):
                     if not User.objects.filter(email=email).exists():
                         try:
                             user = User.objects.create_user(username=email, email=email, password=password)
+                            added_user_notif(email, email, password)
                             user.first_name = fullname
                             user.user_type = user_profile
                             user.save()
@@ -278,6 +280,7 @@ def add_users (request):
                         fullname = ' '.join(name_parts).title()
                         user.first_name = fullname.title()
                         user.user_type = user_profile
+                        added_user_notif(email, email, password)
                         user.save()
                         # user_profile = UserProfile.objects.create(user = user, user_type = user_profile)
                         messages.success(request, f"User {email} created successfully.")

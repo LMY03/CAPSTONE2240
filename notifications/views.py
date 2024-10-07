@@ -170,6 +170,48 @@ def accept_notif_tsg (to_email, data):
     
     return message
 
-def confirm_notif_faculty(to_email, data):
-    return send_email_sendgrid(data)
+def confirm_notif_faculty(to_email):
+    service = Create_Service(CLIENT_SECRET_FILE, API_NAME, API_VERSION, SCOPES)
+    mimeMessage = MIMEMultipart()
+    mimeMessage["to"] = f'{to_email}'
+    mimeMessage['subject'] = 'You have have a newly created account in Proxmon.'
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    template_path = os.path.join(base_dir, 'templates', 'notifications', 'confirm_notif_faculty.hbs')
+    with open(template_path, 'r') as f:
+        source = f.read()
+    compiler = pybars.Compiler()
+    template = compiler.compile(source)
+    html_body = template()
+    mimeMessage.attach(MIMEText(html_body, 'html'))
+    raw_string = base64.urlsafe_b64encode(mimeMessage.as_bytes()).decode()
+    
+    message = service.users().messages().send(userId='me', body={'raw': raw_string}).execute()
+    print(message)
+    
+    return message
+
+
+def added_user_notif (to_email, username, password):
+    service = Create_Service(CLIENT_SECRET_FILE, API_NAME, API_VERSION, SCOPES)
+    mimeMessage = MIMEMultipart()
+    mimeMessage["to"] = f'{to_email}'
+    mimeMessage['subject'] = 'You have have a newly created account in Proxmon.'
+    email_data = {
+        "username": username,
+        "password": password,
+    }
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    template_path = os.path.join(base_dir, 'templates', 'notifications', 'added_users_email.hbs')
+    with open(template_path, 'r') as f:
+        source = f.read()
+    compiler = pybars.Compiler()
+    template = compiler.compile(source)
+    html_body = template(email_data)
+    mimeMessage.attach(MIMEText(html_body, 'html'))
+    raw_string = base64.urlsafe_b64encode(mimeMessage.as_bytes()).decode()
+    
+    message = service.users().messages().send(userId='me', body={'raw': raw_string}).execute()
+    print(message)
+    
+    return message
 

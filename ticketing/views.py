@@ -26,7 +26,7 @@ from .models import RequestEntry, Comment, RequestUseCase, PortRules, RequestEnt
 from proxmox.models import VirtualMachines, Nodes, VMTemplates
 from guacamole.models import GuacamoleConnection, GuacamoleUser
 from pfsense.models import DestinationPorts
-from notifications.views import comment_notif_faculty, new_request_notif_tsg, testVM_notif_faculty, reject_notif_faculty, accept_notif_tsg
+from notifications.views import comment_notif_faculty, new_request_notif_tsg, testVM_notif_faculty, reject_notif_faculty, accept_notif_tsg, confirm_notif_faculty
 from .forms import IssueTicketForm, IssueCommentForm
 from django.core.exceptions import ValidationError
 from django.contrib import messages
@@ -675,10 +675,12 @@ def confirm_test_vm(request, request_id):
     
     request_entry = get_object_or_404(RequestEntry, pk=request_id)
     request_entry.status = RequestEntry.Status.ONGOING
+    to_email = request_entry.requester.email
     request_entry.save()
 
     processing_ticket.delay(request_id)
-
+    
+    confirm_notif_faculty(to_email)
     return redirect('ticketing:request_details', request_id)
     # return redirect(f'/ticketing/{request_id}/details')
 
@@ -688,23 +690,23 @@ def accept_test_vm(request, request_id): #Where the faculty Accepts the test vm 
     request_entry.status = RequestEntry.Status.ACCEPTED
     request_entry.save()
     
-    # request_use_case = RequestUseCase.objects.get(request = request_entry)
-    # to  = request_entry.assigned_to.email
-    # use_case = "Class Course" if request_use_case.request not in ['Thesis', 'Research', 'Test'] else request_use_case.request
-    # vmCount = 0
-    # if use_case == "Class Course":
-    #     for case in request_use_case:
-    #         vmCount += case.vm_count
-    # else:
-    #     vmCount = request_use_case.vm_count
-    # data = {
-    #     "id" : request_id,
-    #     "faculty_name" : request_entry.requester.get_full_name(),
-    #     "use_case" : use_case,
-    #     "vm_count" : vmCount,
-    # }
+    request_use_case = RequestUseCase.objects.filter(request=request_entry)
+    to  = request_entry.assigned_to.email
+    use_case = "Class Course" if request_use_case[0].request not in ['Thesis', 'Research', 'Test'] else request_use_case[0].request
+    vmCount = 0
+    if use_case == "Class Course":
+        for use_case in request_use_case:
+            vmCount += use_case.vm_count
+    else:
+        vmCount = request_use_case.vm_count
+    data = {
+        "id" : request_id,
+        "faculty_name" : request_entry.requester.get_full_name(),
+        "use_case" : use_case,
+        "vm_count" : vmCount,
+    }
 
-    # accept_notif_tsg(to, data)
+    accept_notif_tsg(to, data)
     return redirect('ticketing:request_details', request_id)
 
 def reject_test_vm(request, request_id):   
