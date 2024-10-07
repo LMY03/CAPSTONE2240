@@ -671,14 +671,14 @@ def process_vm_resource_data(results, start_date, end_date):
             print(f"No data for {resource} on host {host}")
             return None
 
-    all_identifiers  = set()
+    all_vms  = set()
     for resource, result in results.items():
         if result:
             for table in result:
                 for record in table.records:
                     identifier = (record.values.get('vmid'), record.values.get('nodename'), record.values.get('host'))
                     if all(identifier):
-                        all_identifiers.add(identifier)
+                        all_vms.add(identifier)
 
     print(f"all_vms: {all_vms}")
     for vmid, nodename, host in all_vms:
