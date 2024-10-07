@@ -201,7 +201,7 @@ def get_connection_url(connection_id, username, password):
     string_bytes = original_string.encode("utf-8")
     base64_bytes = base64.b64encode(string_bytes)
     base64_string = base64_bytes.decode("utf-8")
-    return f"{config('WAN_ADDRESS')}:8080/guacamole/#/client/{base64_string}?token={token}"
+    return f"{config('WAN_ADDRESS')}:8081/guacamole/#/client/{base64_string}?token={token}"
 
 # def get_connection_token(username, password):
 #     url = f"{GUACAMOLE_HOST}/guacamole/api/tokens"
