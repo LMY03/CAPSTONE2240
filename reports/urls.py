@@ -6,7 +6,7 @@ app_name = "reports"
 
 urlpatterns = [
     path('', views.index, name="index"),
-    path('performance_gen', views.performance_gen, name="performance_gen"),
+    # path('performance_gen', views.performance_gen, name="performance_gen"),
     path('getVmList', views.getVmList, name="getVmList"),
     path('extract_general_stat', views.extract_general_stat, name="extract_general_stat"),
     path('extract_detail_stat', views.extract_detail_stat, name="extract_detail_stat"),
