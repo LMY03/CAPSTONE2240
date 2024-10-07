@@ -97,11 +97,11 @@ def shutdown_vm(vm : VirtualMachines):
         
         if not vm.is_lxc():
             
-            proxmox.shutdown_vm(vm.node.name, vm.vm_id)
+            proxmox.shutdown_lxc(vm.node.name, vm.vm_id)
 
             vm.set_shutdown()
 
-            proxmox.wait_for_vm_stop(vm.node.name, vm.vm_id)
+            proxmox.wait_for_lxc_stop(vm.node.name, vm.vm_id)
         else:
             
             proxmox.shutdown_vm(vm.node.name, vm.vm_id)
