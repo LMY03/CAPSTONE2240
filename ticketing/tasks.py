@@ -30,10 +30,11 @@ def delete_request(request_id):
 
     for vm in vms:
 
-        system_user = guacamole_user.system_user
+        guacamole_connection = get_object_or_404(GuacamoleConnection, vm=vm)
+        system_user = guacamole_connection.user.system_user
         system_user.is_active = False
         system_user.save()
-        
+
         vm.set_destroyed()
 
         if vm.is_active():
@@ -47,12 +48,5 @@ def delete_request(request_id):
         else:
             proxmox.wait_for_lxc_stop(vm.node.name, vm.vm_id)
             proxmox.delete_lxc(vm.node.name, vm.vm_id)
-
-        guacamole_connection = get_object_or_404(GuacamoleConnection, vm=vm)
-        guacamole_connection.is_active = False
-        guacamole_connection.save()
-        guacamole_user = guacamole_connection.user
-        guacamole_user.is_active = False
-        guacamole_user.save()
     
     guacamole.delete_connection_group(guacamole_connection.connection_group_id)
