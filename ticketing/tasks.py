@@ -29,14 +29,17 @@ def delete_request(request_id):
     if port_rules.exists() : delete_port_forward_rules(len(port_rules), vms.values_list('vm_name', flat=True)) # pfsense
 
     for vm in vms:
+
+        system_user = guacamole_user.system_user
+        system_user.is_active = False
+        system_user.save()
+        
+        vm.set_destroyed()
+
         if vm.is_active():
 
             if not vm.is_lxc() : proxmox.stop_vm(vm.node.name, vm.vm_id)
             else : proxmox.stop_lxc(vm.node.name, vm.vm_id)
-
-            vm.set_shutdown()
-
-        vm.set_destroyed()
 
         if not vm.is_lxc():
             proxmox.wait_for_vm_stop(vm.node.name, vm.vm_id)
@@ -51,10 +54,5 @@ def delete_request(request_id):
         guacamole_user = guacamole_connection.user
         guacamole_user.is_active = False
         guacamole_user.save()
-
-        system_user = guacamole_user.system_user
-        system_user.is_active = False
-        system_user.save()
-        guacamole.delete_user(guacamole_user.username)
     
     guacamole.delete_connection_group(guacamole_connection.connection_group_id)
