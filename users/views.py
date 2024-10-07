@@ -84,10 +84,11 @@ def faculty_home(request):
     #         requester=request.user, vm_date_tested__isnull=True
     #     ).exclude(status=RequestEntry.Status.DELETED).order_by('-id')
     # ).exclude(status=VirtualMachines.Status.DESTROYED)
+    
+    # return render(request, 'users/faculty_home.html', {'data': vm_list })
 
     return vm_list(request)
 
-    # return render(request, 'users/faculty_home.html', {'data': vm_list })
     
 @login_required
 def tsg_home(request):
