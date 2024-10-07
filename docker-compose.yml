@@ -12,8 +12,8 @@ services:
       MYSQL_PASSWORD: ${MYSQL_CAP2240_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
-      # - ./guacdb.sql:/docker-entrypoint-initdb.d/guacdb.sql
-      - ./cap2240.sql:/docker-entrypoint-initdb.d/cap2240.sql
+      - ./guacdb.sql:/docker-entrypoint-initdb.d/guacdb.sql
+      # - ./cap2240.sql:/docker-entrypoint-initdb.d/cap2240.sql
     healthcheck:
       test: ["CMD", "mysql", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}", "-e", "SELECT 1"]
       timeout: 20s
@@ -24,7 +24,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: CAP-2240
-    # command: sh -c "python manage.py runserver 0.0.0.0:8000"
+    command: sh -c "python3 manage.py migrate --noinput && python3 manage.py runserver 0.0.0.0:8000"
     # command: sh -c "python3 manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
     # command: sh -c "python3 manage.py makemigrations && python3 manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
     # command: sh -c "python3 manage.py migrate --noinput && python3 manage.py collectstatic --noinput && python manage.py runserver 0.0.0.0:8000"
@@ -103,9 +103,8 @@ services:
       dockerfile: Dockerfile
     container_name: celery
     command: >
-      bash -c "celery -A CAPSTONE2240 worker --loglevel=info --concurrency=1 &
+      bash -c "celery -A CAPSTONE2240 worker --loglevel=info --concurrency=1 &&
                celery -A CAPSTONE2240 beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler"
-    # command: celery -A CAPSTONE2240 worker --loglevel=info --concurrency=1
     restart: always
     volumes:
       - .:/app

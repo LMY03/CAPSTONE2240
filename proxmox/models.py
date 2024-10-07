@@ -13,6 +13,7 @@ class VMTemplates(models.Model):
     storage = models.IntegerField()
     node = models.CharField(max_length=45)
     is_lxc = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
     
     guacamole_protocol = models.CharField(
         max_length=10,

@@ -346,7 +346,8 @@ class RequestFormView(generic.edit.FormView):
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
-        vmtemplate_list = VMTemplates.objects.filter(is_lxc = 0).values_list('id', 'vm_name', 'storage')
+        # vmtemplate_list = VMTemplates.objects.filter(is_lxc = 0).values_list('id', 'vm_name', 'storage')
+        vmtemplate_list = VMTemplates.objects.filter(is_active=True).values_list('id', 'vm_name', 'storage')
         context['vmtemplate_list'] = list(vmtemplate_list)
         return context
 

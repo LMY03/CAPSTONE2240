@@ -7,40 +7,6 @@ import django.contrib.auth.validators
 from django.db import migrations, models
 import django.utils.timezone
 import django.db.models.deletion
-from django.contrib.auth.hashers import make_password  # Import for password hashing
-
-def create_initial_users(apps, schema_editor):
-    # Get the model dynamically
-    User = apps.get_model('users', 'User')
-    
-    # Insert default users with hashed passwords
-    User.objects.create(
-        username='admin',
-        password=make_password('123456'),  # Hash the password
-        is_staff=True,
-        is_active=True,
-        user_type=User.UserType.TSG
-    )
-    User.objects.create(
-        username='john.doe',
-        password=make_password('123456'),  # Hash the password
-        first_name='John',
-        last_name='Doe',
-        email='john.doe@example.com',  # Optional: Provide a valid email
-        is_staff=False,
-        is_active=True,
-        user_type=User.UserType.TSG
-    )
-    User.objects.create(
-        username='josephine.cruz',
-        password=make_password('123456'),  # Hash the password
-        first_name='Josephine',
-        last_name='Cruz',
-        email='josephine.cruz@example.com',  # Optional: Provide a valid email
-        is_staff=False,
-        is_active=True,
-        user_type=User.UserType.Faculty
-    )
 
 class Migration(migrations.Migration):
 
@@ -86,5 +52,4 @@ class Migration(migrations.Migration):
                 ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
             ],
         ),
-        # migrations.RunPython(create_initial_users),
     ]

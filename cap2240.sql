@@ -1124,7 +1124,7 @@ CREATE TABLE `guacamole_guacamoleuser` (
 
 LOCK TABLES `guacamole_guacamoleuser` WRITE;
 /*!40000 ALTER TABLE `guacamole_guacamoleuser` DISABLE KEYS */;
-INSERT INTO `guacamole_guacamoleuser` VALUES (1,'admin','pbkdf2_sha256$720000$5gL9pa3JAHZYMUbNgW3qqL$udv7QLPHZ/Fv5ijQQMvklg06MOZvEkkbGY2LJ17dIyM=',1,1),(2,'john.doe','pbkdf2_sha256$720000$5gL9pa3JAHZYMUbNgW3qqL$udv7QLPHZ/Fv5ijQQMvklg06MOZvEkkbGY2LJ17dIyM=',1,2),(3,'josephine.cruz','pbkdf2_sha256$720000$5gL9pa3JAHZYMUbNgW3qqL$udv7QLPHZ/Fv5ijQQMvklg06MOZvEkkbGY2LJ17dIyM=',1,3);
+-- INSERT INTO `guacamole_guacamoleuser` VALUES (1,'admin','pbkdf2_sha256$720000$5gL9pa3JAHZYMUbNgW3qqL$udv7QLPHZ/Fv5ijQQMvklg06MOZvEkkbGY2LJ17dIyM=',1,1),(2,'john.doe','pbkdf2_sha256$720000$5gL9pa3JAHZYMUbNgW3qqL$udv7QLPHZ/Fv5ijQQMvklg06MOZvEkkbGY2LJ17dIyM=',1,2),(3,'josephine.cruz','pbkdf2_sha256$720000$5gL9pa3JAHZYMUbNgW3qqL$udv7QLPHZ/Fv5ijQQMvklg06MOZvEkkbGY2LJ17dIyM=',1,3);
 /*!40000 ALTER TABLE `guacamole_guacamoleuser` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1232,6 +1232,7 @@ CREATE TABLE `proxmox_vmtemplates` (
   `storage` int NOT NULL,
   `node` varchar(45) NOT NULL,
   `is_lxc` tinyint(1) NOT NULL,
+  `is_active` tinyint(1) NOT NULL,
   `guacamole_protocol` varchar(10) NOT NULL,
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
@@ -1243,7 +1244,7 @@ CREATE TABLE `proxmox_vmtemplates` (
 
 LOCK TABLES `proxmox_vmtemplates` WRITE;
 /*!40000 ALTER TABLE `proxmox_vmtemplates` DISABLE KEYS */;
-INSERT INTO `proxmox_vmtemplates` VALUES (1,'3000','Ubuntu-Desktop-24 (GUI)',1,1024,15,'pve',0,'rdp'),(2,'3001','Ubuntu-Desktop-22 (GUI)',1,1024,15,'pve',0,'rdp'),(3,'3000','Ubuntu-Server-24 (TUI)',1,1024,15,'pve',0,'ssh'),(4,'3001','Ubuntu-Server-22 (TUI)',1,1024,15,'pve',0,'ssh'),(5,'4000','Ubuntu-LXC-23',1,1024,10,'jin',1,'ssh');
+INSERT INTO `proxmox_vmtemplates` VALUES (1,'3000','Ubuntu-Desktop-24 (GUI)',1,1024,15,'pve',0,1,'rdp'),(2,'3001','Ubuntu-Desktop-22 (GUI)',1,1024,15,'pve',0,1,'rdp'),(3,'3000','Ubuntu-Server-24 (TUI)',1,1024,15,'pve',0,1,'ssh'),(4,'3001','Ubuntu-Server-22 (TUI)',1,1024,15,'pve',0,1,'ssh'),(5,'4000','Ubuntu-LXC-23',1,1024,10,'jin',1,1,'ssh');
 /*!40000 ALTER TABLE `proxmox_vmtemplates` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1580,7 +1581,7 @@ CREATE TABLE `users_user` (
 
 LOCK TABLES `users_user` WRITE;
 /*!40000 ALTER TABLE `users_user` DISABLE KEYS */;
-INSERT INTO `users_user` VALUES (1,'pbkdf2_sha256$720000$5gL9pa3JAHZYMUbNgW3qqL$udv7QLPHZ/Fv5ijQQMvklg06MOZvEkkbGY2LJ17dIyM=',NULL,1,'admin','admin','chan','',1,1,NOW(),'TSG'),(2,'pbkdf2_sha256$720000$5gL9pa3JAHZYMUbNgW3qqL$udv7QLPHZ/Fv5ijQQMvklg06MOZvEkkbGY2LJ17dIyM=',NULL,0,'john.doe','John','Doe','',1,1,NOW(),'TSG'),(3,'pbkdf2_sha256$720000$5gL9pa3JAHZYMUbNgW3qqL$udv7QLPHZ/Fv5ijQQMvklg06MOZvEkkbGY2LJ17dIyM=',NULL,0,'josephine.cruz','Josephine','Cruz','',1,1,NOW(),'FACULTY');
+-- INSERT INTO `users_user` VALUES (1,'pbkdf2_sha256$720000$5gL9pa3JAHZYMUbNgW3qqL$udv7QLPHZ/Fv5ijQQMvklg06MOZvEkkbGY2LJ17dIyM=',NULL,1,'admin','admin','chan','',1,1,NOW(),'TSG'),(2,'pbkdf2_sha256$720000$5gL9pa3JAHZYMUbNgW3qqL$udv7QLPHZ/Fv5ijQQMvklg06MOZvEkkbGY2LJ17dIyM=',NULL,0,'john.doe','John','Doe','',1,1,NOW(),'TSG'),(3,'pbkdf2_sha256$720000$5gL9pa3JAHZYMUbNgW3qqL$udv7QLPHZ/Fv5ijQQMvklg06MOZvEkkbGY2LJ17dIyM=',NULL,0,'josephine.cruz','Josephine','Cruz','',1,1,NOW(),'FACULTY');
 /*!40000 ALTER TABLE `users_user` ENABLE KEYS */;
 UNLOCK TABLES;
 -- /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
