@@ -866,7 +866,6 @@ def extract_detail_stat(request):
 
     # TODO: add uptime
     queries = generate_vm_resource_query(start_date, end_date)
-    result = query_api.query(query=flux_query)
 
     # process result, 
     results = {}
