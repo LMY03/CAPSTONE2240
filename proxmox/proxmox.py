@@ -1,7 +1,8 @@
 from decouple import config
 import requests, asyncio, time
 
-from proxmoxer import ProxmoxAPI
+from proxmoxer import ProxmoxAPI, ResourceException
+import time
 
 import urllib3
 
@@ -230,13 +231,17 @@ def wait_and_fetch_vm_ip(node, vmid):
 ###########################################################################################################
 
 def get_proxmox_client():
-    proxmox = ProxmoxAPI(
-        host=PROXMOX_IP,
-        user=PROXMOX_USERNAME,
-        password=PROXMOX_PASSWORD,
-        verify_ssl=CA_CRT
-    )
-    return proxmox
+    try:
+        proxmox = ProxmoxAPI(
+            host=PROXMOX_IP,
+            user=PROXMOX_USERNAME,
+            password=PROXMOX_PASSWORD,
+            verify_ssl=CA_CRT
+        )
+        return proxmox
+    except Exception as e:
+        print(f"Error connecting to Proxmox API: {e}")
+        return None
 
 def convert_to_template(node, vm_id):
     print(f"Converting container {vm_id} to a template...")
@@ -307,7 +312,11 @@ def change_lxc_name(node, vm_id, vm_name):
     )
 
 def get_lxc_status(node, vm_id):
-    return get_proxmox_client().nodes(node).lxc(vm_id).status.current().get()
+    try:
+        return get_proxmox_client().nodes(node).lxc(vm_id).status.current().get()
+    except ResourceException as e:
+        print(f"Error getting LXC status: {e}")
+        return None
 
 def is_template_locked(node, vm_id):
     """
@@ -415,8 +424,12 @@ def fetch_lxc_ip(node, vm_id):
 
 def wait_for_lxc_stop(node, vm_id):
     while True:
-        status = get_lxc_status(node, vm_id).get('status')
-        if status == "stopped" : return status
+        try:
+            status = get_lxc_status(node, vm_id).get('status')
+            if status == "stopped":
+                return status
+        except ResourceException as e:
+            print(f"Error while waiting for LXC to stop: {e}")
         time.sleep(5)
 
 def wait_and_fetch_lxc_ip(node, vm_id):
