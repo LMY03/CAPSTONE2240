@@ -662,9 +662,7 @@ def process_vm_resource_data(results, start_date, end_date):
             if result:
                 for table in result:
                     for record in table.records:
-                        if (record.values.get('vmid') == identifier[0] and
-                            record.values.get('host') == identifier[1] and
-                            record.values.get('nodename') == identifier[2]):
+                        if (record.values.get('vmid') == identifier[0]):
                             return record.values.get('_value', 0)
             return None
         except (IndexError, AttributeError):
