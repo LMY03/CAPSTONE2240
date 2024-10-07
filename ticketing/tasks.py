@@ -39,14 +39,16 @@ def delete_request(request_id):
 
         if vm.is_active():
 
-            if not vm.is_lxc() : proxmox.stop_vm(vm.node.name, vm.vm_id)
-            else : proxmox.stop_lxc(vm.node.name, vm.vm_id)
+            if not vm.is_lxc(): 
+                proxmox.stop_vm(vm.node.name, vm.vm_id)
+                proxmox.wait_for_vm_stop(vm.node.name, vm.vm_id)
+            else: 
+                proxmox.stop_lxc(vm.node.name, vm.vm_id)
+                proxmox.wait_for_lxc_stop(vm.node.name, vm.vm_id)
 
         if not vm.is_lxc():
-            proxmox.wait_for_vm_stop(vm.node.name, vm.vm_id)
             proxmox.delete_vm(vm.node.name, vm.vm_id)
         else:
-            proxmox.wait_for_lxc_stop(vm.node.name, vm.vm_id)
             proxmox.delete_lxc(vm.node.name, vm.vm_id)
     
     guacamole.delete_connection_group(guacamole_connection.connection_group_id)
