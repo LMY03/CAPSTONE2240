@@ -657,23 +657,28 @@ def process_vm_resource_data(results, start_date, end_date):
     processed_data = []
     print(f"Debug: Results keys: {results.keys()}")
 
-    def safe_get_value(result, resource, host):
+    def safe_get_value(result, resource, identifier):
         try:
             if result:
                 for table in result:
                     for record in table.records:
-                        if record.values.get('host') == host:
+                        if (record.values.get('vmid') == identifier[0] and
+                            record.values.get('host') == identifier[1] and
+                            record.values.get('nodename') == identifier[2]):
                             return record.values.get('_value', 0)
             return None
         except (IndexError, AttributeError):
             print(f"No data for {resource} on host {host}")
             return None
 
-    all_vms = set()
-    for resource in results:
-        if results[resource]:
-            for table in results[resource]:
-                all_vms.update((record.values.get('vmid'), record.values.get('nodename'), record.values.get('host')) for record in table.records)
+    all_identifiers  = set()
+    for resource, result in results.items():
+        if result:
+            for table in result:
+                for record in table.records:
+                    identifier = (record.values.get('vmid'), record.values.get('nodename'), record.values.get('host'))
+                    if all(identifier):
+                        all_identifiers.add(identifier)
 
     print(f"all_vms: {all_vms}")
     for vmid, nodename, host in all_vms:
@@ -693,7 +698,7 @@ def process_vm_resource_data(results, start_date, end_date):
 
     return processed_data
 
-
+# Generate Detail CSV Response
 def generate_detail_csv_response(data, start_date, end_date):
     # TODO: add uptime
     fieldnames = ['vmid', 'host', 'nodename', 'startdate', 'enddate', 'cpus', 'cpu', 'mem', 'maxmem']
