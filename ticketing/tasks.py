@@ -43,7 +43,8 @@ def delete_request(request_id):
                 proxmox.stop_vm(vm.node.name, vm.vm_id)
                 proxmox.wait_for_vm_stop(vm.node.name, vm.vm_id)
             else: 
-                proxmox.stop_lxc(vm.node.name, vm.vm_id)
+                # TODO: Change to Stop lxc
+                proxmox.shutdown_lxc(vm.node.name, vm.vm_id)
                 proxmox.wait_for_lxc_stop(vm.node.name, vm.vm_id)
 
         if not vm.is_lxc():
