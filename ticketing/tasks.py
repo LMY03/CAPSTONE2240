@@ -53,8 +53,7 @@ def delete_request(request_id):
         guacamole_user.save()
 
         system_user = guacamole_user.system_user
-        system_user.username = f"{system_user.username}_{request_id}"
-        system_user.is_active = 0
+        system_user.is_active = False
         system_user.save()
         guacamole.delete_user(guacamole_user.username)
     

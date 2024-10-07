@@ -717,13 +717,8 @@ def reject_test_vm(request, request_id):
     guacamole_connection.save()
     guacamole.delete_connection_group(guacamole_connection.connection_group_id)
 
-    if vm.is_active():
-
-        proxmox.stop_vm(vm.node.name, vm.vm_id)
-
-        vm.set_shutdown()
-
-        proxmox.wait_for_vm_stop(vm.node.name, vm.vm_id)
+    # shutdown vm if active
+    views.shutdown_vm(vm)
     
     proxmox.delete_vm(vm.node.name, vm.vm_id)
 

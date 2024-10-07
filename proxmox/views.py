@@ -91,17 +91,30 @@ def generate_vm_names(request_entry : RequestEntry):
 
     return vm_names
 
-def shutdown_vm(request, vm_id):
+def shutdown_vm(vm_id):
 
-    vm = get_object_or_404(VirtualMachines, id=vm_id)
+    vm = get_object_or_404(VirtualMachines, pk=vm_id)
 
     if vm.is_active():
         
-        proxmox.shutdown_vm(vm.node.name, vm.vm_id)
+        if not vm.is_lxc():
+            
+            proxmox.shutdown_vm(vm.node.name, vm.vm_id)
 
-        vm.set_shutdown()
+            vm.set_shutdown()
 
-        proxmox.wait_for_vm_stop(vm.node.name, vm.vm_id)
+            proxmox.wait_for_vm_stop(vm.node.name, vm.vm_id)
+        else:
+            
+            proxmox.shutdown_vm(vm.node.name, vm.vm_id)
+
+            vm.set_shutdown()
+
+            proxmox.wait_for_vm_stop(vm.node.name, vm.vm_id)
+
+def perform_shutdown(request, vm_id):
+
+    shutdown_vm(vm_id)
 
     return redirect(request.META.get('HTTP_REFERER'))
 

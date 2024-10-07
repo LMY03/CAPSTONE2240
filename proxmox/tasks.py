@@ -97,12 +97,7 @@ def vm_provision(request_entry : RequestEntry):
     no_of_clone_vm = request_entry.get_total_no_of_vm() - 1
 
     # shutdown vm if active
-    if orig_vm.is_active():
-
-        proxmox.shutdown_vm(orig_vm.node.name, orig_vm.vm_id)
-        proxmox.wait_for_vm_stop(orig_vm.node.name, orig_vm.vm_id)
-
-        orig_vm.set_shutdown()
+    views.shutdown_vm(orig_vm)
     
     # generate vm names
     vm_names = views.generate_vm_names(request_entry)
@@ -136,10 +131,8 @@ def vm_provision(request_entry : RequestEntry):
 
         node = orig_vm.node.name
 
-        if orig_vm.is_active():
-            proxmox.shutdown_vm(node, orig_vm.vm_id)
-            proxmox.wait_for_vm_stop(node, orig_vm.vm_id)
-            orig_vm.set_shutdown()
+        # shutdown vm if active
+        views.shutdown_vm(orig_vm)
 
         cpu_cores = int(request_entry.cores)
         ram = int(request_entry.ram)
@@ -200,12 +193,7 @@ def lxc_provision(request_entry : RequestEntry):
     no_of_clone_vm = request_entry.get_total_no_of_vm() - 1
 
     # shutdown vm if active
-    if orig_vm.is_active():
-
-        proxmox.shutdown_lxc(orig_vm.node.name, orig_vm.vm_id)
-        proxmox.wait_for_lxc_stop(orig_vm.node.name, orig_vm.vm_id)
-
-        orig_vm.set_shutdown()
+    views.shutdown_vm(orig_vm)
     
     # generate vm names
     vm_names = views.generate_vm_names(request_entry)
@@ -239,10 +227,8 @@ def lxc_provision(request_entry : RequestEntry):
 
         node = orig_vm.node.name
 
-        if orig_vm.is_active():
-            proxmox.shutdown_lxc(node, orig_vm.vm_id)
-            proxmox.wait_for_lxc_stop(node, orig_vm.vm_id)
-            orig_vm.set_shutdown()
+        # shutdown vm if active
+        views.shutdown_vm(orig_vm)
 
         cpu_cores = int(request_entry.cores)
         ram = int(request_entry.ram)
