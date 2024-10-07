@@ -82,7 +82,7 @@ def faculty_home(request):
         request__in=RequestEntry.objects.filter(
             requester=request.user, vm_date_tested__isnull=True
         ).exclude(status=RequestEntry.Status.DELETED).order_by('-id')
-    ).exclude(template__is_lxc=True, status=VirtualMachines.Status.DESTROYED)
+    ).exclude(status=VirtualMachines.Status.DESTROYED)
 
     return render(request, 'users/faculty_home.html', {'data': vm_list })
     
