@@ -1,19 +1,23 @@
 from decouple import config
 import requests, asyncio, time
 
+from proxmoxer import ProxmoxAPI
+
 import urllib3
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 PROXMOX_HOST = config('PROXMOX_HOST')
-USERNAME = config('PROXMOX_USERNAME')
-PASSWORD = config('PROXMOX_PASSWORD')
+PROXMOX_USERNAME = config('PROXMOX_USERNAME')
+PROXMOX_PASSWORD = config('PROXMOX_PASSWORD')
+PROXMOX_IP = config('PROXMOX_IP')
+PROXMOX_PORT = config('PROXMOX_PORT')
 # CA_CRT = config('CA_CRT')
 CA_CRT = False
 
 # def get_proxmox_ticket():
 #     url = f"{PROXMOX_HOST}/api2/json/access/ticket"
-#     data = { 'username': USERNAME, 'password': PASSWORD }
+#     data = { 'username': PROXMOX_USERNAME, 'password': PROXMOX_PASSWORD }
 #     response = requests.post(url, data=data, verify=CA_CRT)
 #     if response.status_code != 200:
 #         time.sleep(5)
@@ -34,7 +38,7 @@ CA_CRT = False
 
 def get_ticket():
     url = f"{PROXMOX_HOST}/api2/json/access/ticket"
-    data = { 'username': USERNAME, 'password': PASSWORD }
+    data = { 'username': PROXMOX_USERNAME, 'password': PROXMOX_PASSWORD }
     
     try:
         response = requests.post(url, data=data, verify=CA_CRT, timeout=10)
@@ -158,20 +162,25 @@ def stop_vm(node, vmid):
     response = requests.post(url, headers=headers, verify=CA_CRT)
     return response.json()
 
-# configure VM PUT 
-def config_vm(node, vmid, cpu_cores, memory_mb):
-    token = get_ticket()
-    url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/qemu/{vmid}/config"
-    config = {
+def change_vm_name(node, vm_id, vm_name):
+    config_vm(node, vm_id, { 'name' : vm_name, })
+
+def config_vm_core_memory(node, vm_id, cpu_cores, memory_mb):
+    config_vm(node, vm_id, {
         'cores': cpu_cores,
         'memory': memory_mb,
-    }
+    })
+
+# configure VM PUT 
+def config_vm(node, vmid, config):
+    token = get_ticket()
+    url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/qemu/{vmid}/config"
     headers = {
         'CSRFPreventionToken': token['CSRFPreventionToken'],
         'Cookie': f"PVEAuthCookie={ token['ticket'] }",
     }
     response = requests.put(url, headers=headers, data=config, verify=CA_CRT)
-    if response.status_code != 200 : return config_vm(node, vmid, cpu_cores, memory_mb)
+    if response.status_code != 200 : return config_vm(node, vmid, config)
     return response.json()
 
 def config_vm_disk(node, vmid, size):
@@ -206,7 +215,7 @@ def wait_for_vm_stop(node, vmid):
         if status == "stopped" : return status
         time.sleep(5)
 
-def wait_and_get_ip(node, vmid):
+def wait_and_fetch_vm_ip(node, vmid):
     while True:
         response = get_vm_ip(node, vmid)
         if response['data'] != None :
@@ -219,184 +228,199 @@ def wait_and_get_ip(node, vmid):
         time.sleep(5)
 
 ###########################################################################################################
-# STORAGE = 'local-lvm'
-# def get_templates(node):
-#     url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/aplinfo"
-#     session = get_authenticated_session()
-#     response = session.get(url)
 
-#     return response.json()
-    
+def get_proxmox_client():
+    proxmox = ProxmoxAPI(
+        host=PROXMOX_IP,
+        user=PROXMOX_USERNAME,
+        password=PROXMOX_PASSWORD,
+        verify_ssl=CA_CRT
+    )
+    return proxmox
 
-# def create_lxc(node, ostemplate, vmid, cores, memory, storage):
-#     session = get_authenticated_session()
-#     url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/lxc"
-#     config = {
-#         'ostemplate': ostemplate,
-#         'vmid': vmid,
-#         # 'hostname': hostname,
-#         'cores': cores,
-#         'memory': memory,
-#         'storage': STORAGE,
-#         'rootfs' : f'{STORAGE}:{storage}',
-#         'password': '123456',
-#         # 'ssh-public-keys': ,
-#         # 'start': True
-#     }
-#     response = session.post(url, data=config)
-#     return response.json()
+def convert_to_template(node, vm_id):
+    print(f"Converting container {vm_id} to a template...")
+    get_proxmox_client().nodes(node).lxc(vm_id).template().create()
+    print(f"Container {vm_id} has been converted to a template.")
 
-# def unlock_lxc(node, vmid):
-#     session = get_authenticated_session()
-#     url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/lxc/{vmid}/status/lock"
-#     response = session.delete(url)
-#     return response.json()
+    wait_for_template_conversion(node, vm_id)
 
-# def clone_lxc(node, vmid, newid):
-#     session = get_authenticated_session()
-#     url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/lxc/{vmid}/clone"
-#     config = {
-#         'newid': newid,
-#         'full': 1,
-#         # 'hostname': hostname,
-#     }
-#     response = session.post(url, data=config)
-#     return response.json()
+def wait_for_template_conversion(node, vm_id, timeout=300, interval=5):
+    """Wait until the container is successfully converted to a template."""
+    print(f"Waiting for container {vm_id} to complete template conversion...")
+    total_time = 0
+    while total_time < timeout:
+        # Check the current status of the container
+        config = get_proxmox_client().nodes(node).lxc(vm_id).status.current().get()
+        if config.get('template', 0) == 1:  # 'template' field becomes 1 when it's a template
+            print(f"Container {vm_id} is now a template.")
+            return True
+        print(f"Container {vm_id} is still converting to a template, waiting...")
+        time.sleep(interval)
+        total_time += interval
+    raise TimeoutError(f"Container {vm_id} did not convert to a template after {timeout} seconds.")
 
-# def start_lxc(node, vmid):
-#     session = get_authenticated_session()
-#     url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/lxc/{vmid}/status/start"
-#     response = session.post(url)
-#     return response.json()
+def create_snapshot(node, vm_id, snapshot_name="automation_snapshot"):
+    get_proxmox_client().nodes(node).lxc(vm_id).snapshot().create(snapname=snapshot_name)
+    return snapshot_name
 
-# def delete_lxc(node, vmid):
-#     session = get_authenticated_session()
-#     url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/lxc/{vmid}"
-#     response = session.delete(url)
-#     return response.json()
+def delete_snapshot(node, vm_id, snapshot_name):
+    get_proxmox_client().nodes(node).lxc(vm_id).snapshot(snapshot_name).delete()
 
-# # shutdown VM POST
-# def shutdown_lxc(node, vmid):
-#     session = get_authenticated_session()
-#     url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/lxc/{vmid}/status/shutdown"
-#     response = session.post(url)
-#     return response.json()
+def clone_container(node, vm_id, snapshot, new_vm_id, new_vm_name):
+    wait_for_unlock(node, vm_id)
+    get_proxmox_client().nodes(node).lxc(vm_id).clone().create(
+        newid=new_vm_id,
+        hostname=new_vm_name,
+        full=1,
+        snapname=snapshot
+    )
 
-# # stop VM POST - only on special occasion like the vm get stuck
-# def stop_lxc(node, vmid):              
-#     session = get_authenticated_session()
-#     url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/lxc/{vmid}/status/stop"
-#     response = session.post(url)
-#     return response.json()
+def clone_lxc(node, template_id, new_vm_id, new_vm_name):
+    print(f"Cloning new container {new_vm_id} ({new_vm_name}) from template {template_id}...")
+    get_proxmox_client().nodes(node).lxc(template_id).clone().create(
+        newid=new_vm_id,
+        hostname=new_vm_name,
+        full=1,
+    )
+    print(f"Clone {new_vm_id} ({new_vm_name}) created successfully.")
+
+def shutdown_lxc(node, vm_id):
+    get_proxmox_client().nodes(node).lxc(vm_id).status.shutdown().post()
+
+def stop_lxc(node, vm_id):
+    get_proxmox_client().nodes(node).lxc(vm_id).status.stop().post()
+
+def delete_lxc(node, vm_id):
+    get_proxmox_client().nodes(node).lxc(vm_id).delete()
 
 # # configure VM PUT 
-# def config_lxc(node, vmid, cpu_cores, memory_mb):
-#     session = get_authenticated_session()
-#     url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/lxc/{vmid}/config"
-#     config = {
-#         'cores': cpu_cores,
-#         'memory': memory_mb,
-#     }
-#     response = session.put(url, data=config)
-#     return response.json()
+def config_lxc(node, vm_id, cpu_cores, memory_mb):
+    get_proxmox_client().nodes(node).lxc(vm_id).config.put(
+        cores=cpu_cores,
+        memory=memory_mb,
+    )
 
-# def get_lxc_status(node, vmid):
-#     session = get_authenticated_session()
-#     url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/lxc/{vmid}/status/current"
-#     response = session.get(url)
+def change_lxc_name(node, vm_id, vm_name):
+    get_proxmox_client().nodes(node).lxc(vm_id).config.put(
+        hostname=vm_name,
+    )
 
-#     return response.json()['data']
+def get_lxc_status(node, vm_id):
+    return get_proxmox_client().nodes(node).lxc(vm_id).status.current().get()
 
-# def get_lxc_ip(node, vmid):
-#     session = get_authenticated_session()
-#     url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/lxc/{vmid}/interfaces"
-#     response = session.get(url)
-#     return response.json()
+def is_template_locked(node, vm_id):
+    """
+    Check if the template or container is locked.
+    :param node: Proxmox node name.
+    :param vm_id: ID of the VM or container.
+    :return: True if locked, False otherwise.
+    """
+    # Query the status of the template/container
+    status = get_proxmox_client().nodes(node).lxc(vm_id).status.current().get()
+    return 'lock' in status
 
-# def wait_for_lxc_lock(node, vmid):
-#     while True:
-#         response = get_lxc_status(node, vmid)
-#         if response != None :
-#             if 'lock' not in response: return
-#             time.sleep(5)
-
-# def wait_for_lxc_start(node, vmid):
-#     while True:
-#         status = get_lxc_status(node, vmid)['status']
-#         if status == "running" : return status
-#         time.sleep(5)
-
-# def wait_for_lxc_stop(node, vmid):
-#     while True:
-#         status = get_lxc_status(node, vmid)['status']
-#         if status == "stopped" : return status
-#         time.sleep(5)
-
-
-# def wait_and_get_lxc_ip(node, vmid):
-#     while True:
-#         response = get_lxc_ip(node, vmid)
-#         if response['data'] != None :
-#             for interface in response['data']:
-#                 if interface['name'] == "eth0":
-#                     if 'inet' not in interface: continue
-#                     for ip in interface['inet']:
-#                         ip = interface['inet'].split('/')[0]  # Split to remove subnet mask
-#                         return ip
-#         time.sleep(5)
-
-# def create_snapshot(node, vmid, snapname):
-#     session = get_authenticated_session()
-#     url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/lxc/{vmid}/snapshot"
-#     response = session.post(url, data={ "snapname": snapname })
-#     return response.json()
-
-# def list_snapshots(node, vmid):
-#     session = get_authenticated_session()
-#     url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/lxc/{vmid}/snapshot"
-#     response = session.get(url)
-#     return response.json()
-
-# def create_backup(node, vmid, dumpdir="/var/lib/vz/dump"):
-#     session = get_authenticated_session()
-#     url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/vzdump"
-#     data = {
-#         "vmid": vmid,
-#         "dumpdir": dumpdir
-#     }
-#     response = session.post(url, data=data)
-#     return response.json()
-
-# def create_container(node, new_vmid, ostemplate, storage, hostname):
-#     session = get_authenticated_session()
-#     url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/lxc"
-#     data = {
-#         "vmid": new_vmid,
-#         "ostemplate": ostemplate,
-#         "storage": storage,
-#         "hostname": hostname
-#     }
-#     response = session.post(url, data=data)
-#     return response.json()
-
-# def restore_container(node, new_vmid, backup_file, storage, network_config):
-#     session = get_authenticated_session()
-#     url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/lxc/{new_vmid}/restore"
-#     data = {
-#         "vmid": new_vmid,
-#         "restore-vmid": new_vmid,
-#         "filename": backup_file,
-#         "storage": storage
-#     }
-#     response = session.post(url, data=data)
+def wait_for_template_unlock(node, vm_id, timeout=300, interval=5):
+    """
+    Wait until the template is unlocked.
+    :param node: Proxmox node name.
+    :param vm_id: ID of the template/container.
+    :param timeout: Maximum time to wait (in seconds).
+    :param interval: Time interval between checks (in seconds).
+    :return: True if unlocked within timeout, False otherwise.
+    """
+    total_time = 0
+    while total_time < timeout:
+        # Check if the template is locked
+        if not is_template_locked(node, vm_id):
+            print(f"Template {vm_id} is now unlocked and ready for cloning.")
+            return True
+        else:
+            print(f"Template {vm_id} is currently locked. Waiting for it to be unlocked...")
+        
+        # Wait for the next interval before checking again
+        time.sleep(interval)
+        total_time += interval
     
-#     # Configure network settings if needed
-#     if response.status_code == 200:
-#         config_url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/lxc/{new_vmid}/config"
-#         network_data = {
-#             "net0": network_config
-#         }
-#         network_response = session.post(config_url, data=network_data)
-#         return network_response.json()
+    print(f"Template {vm_id} is still locked after {timeout} seconds. Exiting.")
+    return False
+
+def wait_for_clone_completion(node, new_vm_id, timeout=300, interval=5):
+    """
+    Wait for a container clone operation to complete, considering config lock status.
     
-#     return response.json()
+    :param node: The Proxmox node name.
+    :param new_vm_id: The ID of the new cloned container.
+    :param timeout: Total time in seconds to wait for the clone to complete.
+    :param interval: Time in seconds between status checks.
+    :return: True if clone completed successfully, False if timeout reached.
+    """
+    total_wait_time = 0
+    while total_wait_time < timeout:
+        # Check the status of the container
+        status = get_proxmox_client().nodes(node).lxc(new_vm_id).status.current().get()
+        print(status)
+        print(f"Checking status of container {new_vm_id}: {status['status']} (Config: {status.get('lock', 'None')})")
+
+        # If the container is not locked, the cloning operation is complete
+        if 'lock' not in status:
+            print(f"Container {new_vm_id} clone operation completed successfully.")
+            return True
+
+        # If the container is locked for creation, continue waiting
+        if status.get('lock') == 'create':
+            print(f"Container {new_vm_id} is still being cloned. Waiting...")
+
+        # Wait for the next interval before checking again
+        time.sleep(interval)
+        total_wait_time += interval
+
+    # If we reach here, the cloning operation did not complete within the timeout
+    print(f"Timeout reached while waiting for clone {new_vm_id} to complete.")
+    return False
+
+
+def wait_for_unlock(node, vm_id, timeout=300, interval=5):
+    total_time = 0
+    while total_time < timeout:
+        # Check if the container is locked
+        config = get_proxmox_client().nodes(node).lxc(vm_id).status.current().get()
+        if 'lock' not in config:
+            return True  # Unlocked, proceed with the next step
+        print(f"Container {vm_id} is locked, waiting...")
+        time.sleep(interval)  # Wait before the next check
+        total_time += interval
+    raise TimeoutError(f"Container {vm_id} is still locked after {timeout} seconds.")
+
+def check_clone_status(node, vm_id):
+    task_status = get_proxmox_client().nodes(node).tasks().get()
+    for task in task_status:
+        if task['upid'].startswith(f"UPID:{node}:{vm_id}:") and task['status'] == 'running':
+            return False
+    return True
+
+def start_lxc(node, vm_id):
+    get_proxmox_client().nodes(node).lxc(vm_id).status.start().post()
+
+def fetch_lxc_ip(node, vm_id):
+    network_info = get_proxmox_client().nodes(node).lxc(vm_id).interfaces().get()
+    print(f"network_info: {network_info}")
+    print(f"node: {node}")
+    print(f"vm_id: {vm_id}")
+    if network_info:
+        for interface in network_info:
+            if interface['name'] == "eth0":
+                if 'inet' in interface:
+                    return interface['inet'].split('/')[0]
+
+def wait_for_lxc_stop(node, vm_id):
+    while True:
+        status = get_lxc_status(node, vm_id).get('status')
+        if status == "stopped" : return status
+        time.sleep(5)
+
+def wait_and_fetch_lxc_ip(node, vm_id):
+    while True:
+        ip_add = fetch_lxc_ip(node, vm_id)
+        if ip_add : return ip_add
+        time.sleep(5)

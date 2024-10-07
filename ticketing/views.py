@@ -42,8 +42,7 @@ def request_list(request):
     else : return redirect('/')
     
 def faculty_request_list(request):
-    user = get_object_or_404(User, username=request.user.username)
-    request_entries = RequestEntry.objects.filter(requester=user).order_by('-id')
+    request_entries = RequestEntry.objects.filter(requester=request.user).order_by('-id')
 
     return render(request, 'ticketing/faculty_request_list.html', { 'request_entries' : request_entries })
 
@@ -720,13 +719,8 @@ def reject_test_vm(request, request_id):
     guacamole_connection.save()
     guacamole.delete_connection_group(guacamole_connection.connection_group_id)
 
-    if vm.is_active():
-
-        proxmox.stop_vm(vm.node.name, vm.vm_id)
-
-        vm.set_shutdown()
-
-        proxmox.wait_for_vm_stop(vm.node.name, vm.vm_id)
+    # shutdown vm if active
+    views.shutdown_vm(vm)
     
     proxmox.delete_vm(vm.node.name, vm.vm_id)
 
@@ -795,10 +789,10 @@ def get_comments(request_entry):
         ).order_by('date_time')
 
 def new_form_container(request):
-    container_template = VMTemplates.objects.filter(is_lxc = 1)
+    lxc_templates = VMTemplates.objects.filter(is_lxc=True)
     context = {}
-    context['container_template'] = container_template
-    print (context['container_template'])
+    context['lxc_templates'] = lxc_templates
+    print (context['lxc_templates'])
     return render (request, 'ticketing/new-form-container.html', context)
 
 # def clear_credential(request):

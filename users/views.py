@@ -228,7 +228,7 @@ def faculty_test_vm (request, request_id):
     }
     return render(request, 'users/faculty_test_vm.html', context)
 
-def add_users (request):
+def add_users(request):
     if request.method == 'POST':
         user_profile = request.POST.get("user_profile")
         # Check if CSV upload method is chosen
@@ -315,7 +315,7 @@ def generate_random_string():
     random_string = ''.join(random.choice(characters) for _ in range(10))
     return random_string
 
-def delete_user (request, user_id):
+def delete_user(request, user_id):
     user = get_object_or_404(User, id = user_id )
     user.is_active = False
     user.save()

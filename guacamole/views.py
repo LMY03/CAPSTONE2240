@@ -36,9 +36,13 @@ def access_vm(request):
 
         if vm.is_shutdown():
 
-            proxmox.start_vm(vm.node.name, vm.vm_id)
-            ip_add = proxmox.wait_and_get_ip(vm.node.name, vm.vm_id)
-
+            if not vm.is_lxc():
+                proxmox.start_vm(vm.node.name, vm.vm_id)
+                ip_add = proxmox.wait_and_fetch_vm_ip(vm.node.name, vm.vm_id)
+            else:
+                proxmox.start_lxc(vm.node.name, vm.vm_id)
+                ip_add = proxmox.wait_and_fetch_lxc_ip(vm.node.name, vm.vm_id)
+                
             ip_add = vm.ip_add
 
             if ip_add != vm.ip_add:

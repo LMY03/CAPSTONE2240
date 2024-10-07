@@ -90,6 +90,8 @@ class RequestEntry(models.Model):
         total_no_of_vm = 0
         for request_use_case in request_use_cases : total_no_of_vm += int(request_use_case['vm_count'])
         return total_no_of_vm
+    
+    def is_lxc(self) : return self.template.is_lxc
 
     def __str__(self):
         return f"{self.id} - {self.status}"

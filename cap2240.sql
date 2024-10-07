@@ -1196,7 +1196,6 @@ CREATE TABLE `proxmox_virtualmachines` (
   `ram` int NOT NULL,
   `storage` decimal(5,2) NOT NULL,
   `ip_add` varchar(15) DEFAULT NULL,
-  `is_lxc` tinyint(1) NOT NULL,
   `status` varchar(20) NOT NULL,
   `node_id` bigint NOT NULL,
   `request_id` bigint NOT NULL,
@@ -1244,7 +1243,7 @@ CREATE TABLE `proxmox_vmtemplates` (
 
 LOCK TABLES `proxmox_vmtemplates` WRITE;
 /*!40000 ALTER TABLE `proxmox_vmtemplates` DISABLE KEYS */;
-INSERT INTO `proxmox_vmtemplates` VALUES (1,'3000','Ubuntu-Desktop-24 (GUI)',1,1024,15,'pve',0,'rdp'),(2,'3001','Ubuntu-Desktop-22 (GUI)',1,1024,15,'pve',0,'rdp'),(3,'3002','Ubuntu-Server-24 (TUI)',1,1024,15,'pve',0,'ssh'),(4,'3003','Ubuntu-Server-22 (TUI)',1,1024,15,'pve',0,'ssh'),(5,'5000','Ubuntu-LXC-23',1,1024,10,'pve',1,'ssh');
+INSERT INTO `proxmox_vmtemplates` VALUES (1,'3000','Ubuntu-Desktop-24 (GUI)',1,1024,15,'pve',0,'rdp'),(2,'3001','Ubuntu-Desktop-22 (GUI)',1,1024,15,'pve',0,'rdp'),(3,'3000','Ubuntu-Server-24 (TUI)',1,1024,15,'pve',0,'ssh'),(4,'3001','Ubuntu-Server-22 (TUI)',1,1024,15,'pve',0,'ssh'),(5,'4000','Ubuntu-LXC-23',1,1024,10,'jin',1,'ssh');
 /*!40000 ALTER TABLE `proxmox_vmtemplates` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1584,41 +1583,41 @@ LOCK TABLES `users_user` WRITE;
 INSERT INTO `users_user` VALUES (1,'pbkdf2_sha256$720000$5gL9pa3JAHZYMUbNgW3qqL$udv7QLPHZ/Fv5ijQQMvklg06MOZvEkkbGY2LJ17dIyM=',NULL,1,'admin','admin','chan','',1,1,NOW(),'TSG'),(2,'pbkdf2_sha256$720000$5gL9pa3JAHZYMUbNgW3qqL$udv7QLPHZ/Fv5ijQQMvklg06MOZvEkkbGY2LJ17dIyM=',NULL,0,'john.doe','John','Doe','',1,1,NOW(),'TSG'),(3,'pbkdf2_sha256$720000$5gL9pa3JAHZYMUbNgW3qqL$udv7QLPHZ/Fv5ijQQMvklg06MOZvEkkbGY2LJ17dIyM=',NULL,0,'josephine.cruz','Josephine','Cruz','',1,1,NOW(),'FACULTY');
 /*!40000 ALTER TABLE `users_user` ENABLE KEYS */;
 UNLOCK TABLES;
-/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
-/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
-/*!50003 SET @saved_col_connection = @@collation_connection */ ;
-/*!50003 SET character_set_client  = utf8mb4 */ ;
-/*!50003 SET character_set_results = utf8mb4 */ ;
-/*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
-/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
-/*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
-DELIMITER ;;
-/*!50003 CREATE*/ /*!50017 DEFINER=`root`@`%`*/ /*!50003 TRIGGER `create_guac_user` AFTER INSERT ON `users_user` FOR EACH ROW BEGIN
-	DECLARE guac_entity_id INT;
-    SET @salt = UNHEX(SHA2(UUID(), 256));
+-- /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+-- /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+-- /*!50003 SET @saved_col_connection = @@collation_connection */ ;
+-- /*!50003 SET character_set_client  = utf8mb4 */ ;
+-- /*!50003 SET character_set_results = utf8mb4 */ ;
+-- /*!50003 SET collation_connection  = utf8mb4_0900_ai_ci */ ;
+-- /*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+-- /*!50003 SET sql_mode              = 'ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION' */ ;
+-- DELIMITER ;;
+-- /*!50003 CREATE*/ /*!50017 DEFINER=`root`@`%`*/ /*!50003 TRIGGER `create_guac_user` AFTER INSERT ON `users_user` FOR EACH ROW BEGIN
+-- 	DECLARE guac_entity_id INT;
+--     SET @salt = UNHEX(SHA2(UUID(), 256));
     
-    -- INSERT guacamole_user into cap2240db
-    INSERT INTO cap2240db.guacamole_guacamoleuser (username, password, system_user_id, is_active)
-    VALUES (NEW.username, NEW.password, NEW.id, 1);
+--     -- INSERT guacamole_user into cap2240db
+--     INSERT INTO cap2240db.guacamole_guacamoleuser (username, password, system_user_id, is_active)
+--     VALUES (NEW.username, NEW.password, NEW.id, 1);
     
-    -- INSERT the new system user into guacamole_db.guacamole_entity
-    INSERT INTO guacamole_db.guacamole_entity (name, type) VALUES (NEW.username, 'USER');
+--     -- INSERT the new system user into guacamole_db.guacamole_entity
+--     INSERT INTO guacamole_db.guacamole_entity (name, type) VALUES (NEW.username, 'USER');
 
-    -- Get the entity_id of the new system user
-    SELECT entity_id INTO guac_entity_id FROM guacamole_db.guacamole_entity WHERE name = NEW.username;
+--     -- Get the entity_id of the new system user
+--     SELECT entity_id INTO guac_entity_id FROM guacamole_db.guacamole_entity WHERE name = NEW.username;
 
-    -- INSERT the new system user into guacamole_db.guacamole_user
-    INSERT INTO guacamole_db.guacamole_user (entity_id, password_salt, password_hash, password_date, disabled, expired)
-	VALUES (
-		guac_entity_id, @salt, UNHEX(SHA2(CONCAT(NEW.password, HEX(@salt)), 256)), NOW(), 0, 0);
+--     -- INSERT the new system user into guacamole_db.guacamole_user
+--     INSERT INTO guacamole_db.guacamole_user (entity_id, password_salt, password_hash, password_date, disabled, expired)
+-- 	VALUES (
+-- 		guac_entity_id, @salt, UNHEX(SHA2(CONCAT(NEW.password, HEX(@salt)), 256)), NOW(), 0, 0);
         
-    -- TODO: Add system_admin_account to guacamole_admin_group
-END */;;
-DELIMITER ;
-/*!50003 SET sql_mode              = @saved_sql_mode */ ;
-/*!50003 SET character_set_client  = @saved_cs_client */ ;
-/*!50003 SET character_set_results = @saved_cs_results */ ;
-/*!50003 SET collation_connection  = @saved_col_connection */ ;
+--     -- TODO: Add system_admin_account to guacamole_admin_group
+-- END */;;
+-- DELIMITER ;
+-- /*!50003 SET sql_mode              = @saved_sql_mode */ ;
+-- /*!50003 SET character_set_client  = @saved_cs_client */ ;
+-- /*!50003 SET character_set_results = @saved_cs_results */ ;
+-- /*!50003 SET collation_connection  = @saved_col_connection */ ;
 
 --
 -- Dumping events for database 'cap2240db'
