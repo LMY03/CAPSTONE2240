@@ -452,7 +452,7 @@ def new_form_submit(request):
             'vm_count' : gVM_count,
             'faculty_name' : requester.get_full_name()
         }
-        new_request_notif_tsg(tsg_emails, data)
+        # new_request_notif_tsg(tsg_emails, data)
     return JsonResponse({'status': 'ok'}, status=200)
 
 def log_request_entry_changes(request_entry, changed_by, new_data, user):
@@ -632,7 +632,7 @@ def request_confirm(request, request_id):
         "id" : request_id
     }
     create_test_vm.delay(request.user.pk, request_id)
-    testVM_notif_faculty (to, data)
+    # testVM_notif_faculty (to, data)
     return redirect('ticketing:request_details', request_id)
 
 def request_reject(request, id):
@@ -645,7 +645,7 @@ def request_reject(request, id):
         "faculty_name" : request_entry.requester.get_full_name(),
         "id" : id
     }
-    reject_notif_faculty(to, data)
+    # reject_notif_faculty(to, data)
 
     return HttpResponseRedirect(reverse("ticketing:index"))
 
@@ -680,7 +680,7 @@ def confirm_test_vm(request, request_id):
 
     processing_ticket.delay(request_id)
     
-    confirm_notif_faculty(to_email)
+    # confirm_notif_faculty(to_email)
     return redirect('ticketing:request_details', request_id)
     # return redirect(f'/ticketing/{request_id}/details')
 
@@ -706,7 +706,7 @@ def accept_test_vm(request, request_id): #Where the faculty Accepts the test vm 
         "vm_count" : vmCount,
     }
 
-    accept_notif_tsg(to, data)
+    # accept_notif_tsg(to, data)
     return redirect('ticketing:request_details', request_id)
 
 def reject_test_vm(request, request_id):   
