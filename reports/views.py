@@ -673,7 +673,7 @@ def process_vm_resource_data(results, start_date, end_date):
     for resource in results:
         if results[resource]:
             for table in results[resource]:
-                all_vms.update((record.values.get('nodename'), record.values.get('host')) for record in table.records)
+                all_vms.update((record.values.get('vmid'), record.values.get('nodename'), record.values.get('host')) for record in table.records)
 
     print(f"all_vms: {all_vms}")
     for nodename, host in all_vms:
@@ -695,7 +695,7 @@ def process_vm_resource_data(results, start_date, end_date):
 
 def generate_detail_csv_response(data, start_date, end_date):
     # TODO: add uptime
-    fieldnames = ['nodename', 'host', 'startdate', 'enddate', 'cpus', 'cpu', 'mem', 'maxmem']
+    fieldnames = ['vmid', 'host', 'nodename', 'startdate', 'enddate', 'cpus', 'cpu', 'mem', 'maxmem']
     csv_buffer = StringIO()
     writer = csv.DictWriter(csv_buffer, fieldnames=fieldnames)
     writer.writeheader()
