@@ -11,6 +11,7 @@ from pfsense.models import DestinationPorts
 from users.models import User
 
 from ticketing.views import tsg_requests_list
+from proxmox.views import vm_list
 
 from django.shortcuts import render
 from notifications.views import added_user_notif
@@ -84,7 +85,7 @@ def faculty_home(request):
     #     ).exclude(status=RequestEntry.Status.DELETED).order_by('-id')
     # ).exclude(status=VirtualMachines.Status.DESTROYED)
 
-    return redirect('proxmox:index')
+    return vm_list(request)
 
     # return render(request, 'users/faculty_home.html', {'data': vm_list })
     
