@@ -715,6 +715,7 @@ def reject_test_vm(request, request_id):
     request_entry.save()
 
     vm = get_object_or_404(VirtualMachines, request=request_entry)
+    guacamole_connection = get_object_or_404(GuacamoleConnection, vm=vm)
     guacamole.delete_connection_group(guacamole_connection.connection_group_id)
 
     # shutdown vm if active

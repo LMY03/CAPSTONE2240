@@ -28,7 +28,10 @@ def create_guacamole_user(sender, instance : User, created, **kwargs):
     elif not instance.is_active:
         guacamole.delete_user(instance.username)
 
-        if instance.is_student():
+        if instance.is_student() and "_" not in instance.username:
+            print("=====================")
+            print("_" not in instance.username)
+            print(f"system username: {instance.username}")
             request_id = get_object_or_404(VirtualMachines, vm_name=instance.username).request.pk
             instance.username = f"{instance.username}_{request_id}"
             instance.save()
