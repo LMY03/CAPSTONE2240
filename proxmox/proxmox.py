@@ -422,15 +422,24 @@ def fetch_lxc_ip(node, vm_id):
                 if 'inet' in interface:
                     return interface['inet'].split('/')[0]
 
-def wait_for_lxc_stop(node, vm_id):
-    while True:
+def wait_for_lxc_stop(node, vm_id, max_retries=10):
+    retries = 0
+    while retries < max_retries:
         try:
-            status = get_lxc_status(node, vm_id).get('status')
+            status_data = get_lxc_status(node, vm_id)
+            if status_data is None:
+                raise Exception("Failed to retrieve LXC status")
+            
+            status = status_data.get('status')
             if status == "stopped":
                 return status
         except ResourceException as e:
             print(f"Error while waiting for LXC to stop: {e}")
+        
+        retries += 1
         time.sleep(5)
+    
+    raise Exception(f"LXC did not stop after {max_retries} retries.")
 
 def wait_and_fetch_lxc_ip(node, vm_id):
     while True:
