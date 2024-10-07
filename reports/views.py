@@ -525,9 +525,11 @@ def get_influxdb_client():
 #         return JsonResponse({'error': 'An error occurred while preparing the report generation page.'}, status=500)
 
 
-def performance_gen(request):
-    return render(request, 'reports/performance_gen.html')
+# def performance_gen(request):
+#     return render(request, 'reports/performance_gen.html')
 
+
+# Get Templates VM ids
 def get_template_hosts_ids(start_date, end_date):
 
     influxdb_client = InfluxDBClient(url=INFLUX_ADDRESS, token=token, org=org)
@@ -553,6 +555,213 @@ def get_template_hosts_ids(start_date, end_date):
     influxdb_client.close()
     return template_hosts_ids
 
+                
+# Detail Stats
+def extract_detail_stat(request):
+
+    influxdb_client = InfluxDBClient(url=INFLUX_ADDRESS, token=token, org=org)
+    query_api = influxdb_client.query_api()
+
+    start_date_str = request.POST.get('startdate')
+    end_date_str = request.POST.get('enddate')
+    
+    start_date = parse_form_date(start_date_str, 1)
+    end_date = parse_form_date(end_date_str, 0)
+
+    # TODO: add uptime
+    queries = generate_vm_resource_query(start_date, end_date)
+
+    # process result, 
+    results = {}
+    if queries:
+        for resource, query in queries.items():
+            result = query_api.query(query=query)
+            print(f"result: {result}")
+            results[resource] = result
+
+    # process result
+    processed_data = []
+    if results:
+        processed_data = process_vm_resource_data(results, start_date, end_date)
+        print(f"processed_data: {processed_data}")
+
+    influxdb_client.close()
+    
+    print(f"processed_data: {processed_data}")
+
+    return generate_detail_csv_response(processed_data, start_date_str, end_date_str)
+
+# Gerenate Detail Query Statement
+def generate_vm_resource_query(start_date, end_date):
+    
+    # get template
+    template_hosts_ids = get_template_hosts_ids(start_date, end_date)
+    excluded_vmids_str = '|'.join(map(str, template_hosts_ids))
+
+    queries = {}
+    cpus_query = f'''
+        from(bucket:"{bucket}")
+        |> range(start: {start_date}, stop: {end_date})
+        |> filter(fn: (r) => r["_field"] == "cpus")
+        |> filter(fn: (r) => r["_measurement"] == "system")
+        |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+        |> keep(columns: ["_value", "host", "nodename", "vmid"])
+        |> last()
+        |> yield(name: "cpus")
+    '''
+    queries["cpus"] = cpus_query
+
+    cpu_query = f'''
+        from(bucket:"{bucket}")
+        |> range(start: {start_date}, stop: {end_date})
+        |> filter(fn: (r) => r["_measurement"] == "system")
+        |> filter(fn: (r) => r["_field"] == "cpu")
+        |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+        |> keep(columns: ["_value", "host", "nodename"])
+        |> last()
+        |> yield(name: "cpu")
+    '''
+    queries["cpu"] = cpu_query
+
+    # mem data
+    mem_query = f'''
+        from(bucket:"{bucket}")
+        |> range(start: {start_date}, stop: {end_date})
+        |> filter(fn: (r) => r["_measurement"] == "system")
+        |> filter(fn: (r) => r["_field"] == "mem" or r["_field"] == "maxmem")
+        |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+        |> mean()
+        |> pivot(rowKey: [], columnKey: ["_field"], valueColumn: "_value")
+        |> map(fn: (r) => ({{ r with _value: (r.mem / r.maxmem) * 100.0 }}))
+        |> yield(name: "mem")
+    '''
+    queries["mem"] = mem_query
+    
+    # maxmem data
+    maxmem_query = f'''
+        from(bucket:"{bucket}")
+        |> range(start: {start_date}, stop: {end_date})
+        |> filter(fn: (r) => r["_field"] == "maxmem")
+        |> filter(fn: (r) => r["_measurement"] == "system")
+        |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+        |> last()
+        |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 / 1024.0 / 1000.0) }}))
+        |> yield(name: "maxmem")
+    '''
+    queries["maxmem"] = maxmem_query
+
+    return queries
+
+# Process Detail Query Result
+def process_vm_resource_data(results, start_date, end_date):
+    processed_data = []
+    print(f"Debug: Results keys: {results.keys()}")
+
+    def safe_get_value(result, resource, host):
+        try:
+            if result:
+                for table in result:
+                    for record in table.records:
+                        if record.values.get('host') == host:
+                            return record.values.get('_value', 0)
+            return None
+        except (IndexError, AttributeError):
+            print(f"No data for {resource} on host {host}")
+            return None
+
+    all_vms = set()
+    for resource in results:
+        if results[resource]:
+            for table in results[resource]:
+                all_vms.update((record.values.get('nodename'), record.values.get('host')) for record in table.records)
+
+    print(f"all_vms: {all_vms}")
+    for nodename, host in all_vms:
+        row = {
+            'nodename': nodename,
+            'host': host,
+            'startdate': start_date,
+            'enddate': end_date,
+        }
+        for resource in ['cpus', 'cpu', 'mem', 'maxmem']:
+            value = safe_get_value(results.get(resource), resource, host)
+            if value is not None:
+                row[resource] = value
+        if len(row) > 4:  # Ensure we have at least one resource value
+            processed_data.append(row)
+
+    return processed_data
+
+
+def generate_detail_csv_response(data, start_date, end_date):
+    # TODO: add uptime
+    fieldnames = ['nodename', 'vmname', 'startdate', 'enddate', 'cpus', 'cpu', 'mem', 'maxmem']
+    csv_buffer = StringIO()
+    writer = csv.DictWriter(csv_buffer, fieldnames=fieldnames)
+    writer.writeheader()
+
+    for row in data:
+        writer.writerow(row)
+    
+    response = HttpResponse(
+        content_type='text/csv',
+        headers={'Content-Disposition': f'attachment; filename="detail_resource_usage_{start_date}_to_{end_date}.csv"'},
+    )
+    response.write(csv_buffer.getvalue())
+    return response
+
+# General Stats
+def extract_general_stat(request):
+    influxdb_client = InfluxDBClient(url=INFLUX_ADDRESS, token=token, org=org)
+    query_api = influxdb_client.query_api()
+
+    # Process request data
+    start_date_str = request.POST.get('startdate')
+    end_date_str = request.POST.get('enddate')
+    query_type = request.POST.get('scope') # All, per-node, per-class
+
+    start_date = parse_form_date(start_date_str, 1)
+    end_date = parse_form_date(end_date_str, 0)
+
+
+    # Get needed metrics 
+    # (number of VMs, total CPU, CPU%, total mem, mem%, total storage, storage%, netin and netout)
+    
+    raw_class_list = RequestUseCase.objects.all().exclude(
+        request_use_case__icontains="Research"
+    ).exclude(
+        request_use_case__icontains="Test"
+    ).exclude(
+        request_use_case__icontains="Thesis"
+    ).values_list('request_use_case', flat=True)
+
+    class_list = []
+    for entry in raw_class_list:
+        processed_entry = entry.split('_')[0]
+        if processed_entry not in class_list:
+            class_list.append(processed_entry)
+
+    queries =  generate_resource_query(start_date, end_date, query_type, class_list)
+
+    results = {}
+    if queries:
+        for resource, query in queries.items():
+            print(f"query: {query}")
+            result = query_api.query(query=query)
+            results[resource] = result
+
+    print(f"result: {results}")   
+
+    # process result
+    processed_data = []
+    if results:
+        processed_data = process_resource_data(results, query_type, start_date, end_date)
+        print(f"processed_data: {processed_data}")
+
+    influxdb_client.close()
+    return generate_csv_response(processed_data, query_type, start_date_str, end_date_str)
+
+# Generate General Query Statement
 def generate_resource_query(start_date, end_date, query_type, class_list=None):
 
     # get template
@@ -747,147 +956,7 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
     
     return queries
 
-
-def process_vm_resource_data(results, start_date, end_date):
-    processed_data = []
-    print(f"Debug: Results keys: {results.keys()}")
-
-    def safe_get_value(result, resource, host):
-        try:
-            if result:
-                for table in result:
-                    for record in table.records:
-                        if record.values.get('host') == host:
-                            return record.values.get('_value', 0)
-            return None
-        except (IndexError, AttributeError):
-            print(f"No data for {resource} on host {host}")
-            return None
-
-    all_vms = set()
-    for resource in results:
-        if results[resource]:
-            for table in results[resource]:
-                all_vms.update((record.values.get('nodename'), record.values.get('host')) for record in table.records)
-
-    print(f"all_vms: {all_vms}")
-    for nodename, host in all_vms:
-        row = {
-            'nodename': nodename,
-            'host': host,
-            'startdate': start_date,
-            'enddate': end_date,
-        }
-        for resource in ['cpus', 'cpu', 'mem', 'maxmem']:
-            value = safe_get_value(results.get(resource), resource, host)
-            if value is not None:
-                row[resource] = value
-        if len(row) > 4:  # Ensure we have at least one resource value
-            processed_data.append(row)
-
-    return processed_data
-
-
-
-# TODO: 如果成了，加上network的数据
-# VM detailed resource info
-def generate_vm_resource_query(start_date, end_date):
-    
-    # get template
-    template_hosts_ids = get_template_hosts_ids(start_date, end_date)
-    excluded_vmids_str = '|'.join(map(str, template_hosts_ids))
-
-    queries = {}
-    cpus_query = f'''
-        from(bucket:"{bucket}")
-        |> range(start: {start_date}, stop: {end_date})
-        |> filter(fn: (r) => r["_field"] == "cpus")
-        |> filter(fn: (r) => r["_measurement"] == "system")
-        |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
-        |> keep(columns: ["_value", "host", "nodename"])
-        |> last()
-        |> yield(name: "cpus")
-    '''
-    queries["cpus"] = cpus_query
-
-    cpu_query = f'''
-        from(bucket:"{bucket}")
-        |> range(start: {start_date}, stop: {end_date})
-        |> filter(fn: (r) => r["_measurement"] == "system")
-        |> filter(fn: (r) => r["_field"] == "cpu")
-        |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
-        |> keep(columns: ["_value", "host", "nodename"])
-        |> last()
-        |> yield(name: "cpu")
-    '''
-    queries["cpu"] = cpu_query
-
-    # mem data
-    mem_query = f'''
-        from(bucket:"{bucket}")
-        |> range(start: {start_date}, stop: {end_date})
-        |> filter(fn: (r) => r["_measurement"] == "system")
-        |> filter(fn: (r) => r["_field"] == "mem" or r["_field"] == "maxmem")
-        |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
-        |> mean()
-        |> pivot(rowKey: [], columnKey: ["_field"], valueColumn: "_value")
-        |> map(fn: (r) => ({{ r with _value: (r.mem / r.maxmem) * 100.0 }}))
-        |> yield(name: "mem")
-    '''
-    queries["mem"] = mem_query
-    
-    # maxmem data
-    maxmem_query = f'''
-        from(bucket:"{bucket}")
-        |> range(start: {start_date}, stop: {end_date})
-        |> filter(fn: (r) => r["_field"] == "maxmem")
-        |> filter(fn: (r) => r["_measurement"] == "system")
-        |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
-        |> last()
-        |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 / 1024.0 / 1000.0) }}))
-        |> yield(name: "maxmem")
-    '''
-    queries["maxmem"] = maxmem_query
-
-    return queries
-                
-
-def extract_detail_stat(request):
-
-
-    influxdb_client = InfluxDBClient(url=INFLUX_ADDRESS, token=token, org=org)
-    query_api = influxdb_client.query_api()
-
-    start_date_str = request.POST.get('startdate')
-    end_date_str = request.POST.get('enddate')
-    
-    start_date = parse_form_date(start_date_str, 1)
-    end_date = parse_form_date(end_date_str, 0)
-
-    # TODO: add uptime
-    queries = generate_vm_resource_query(start_date, end_date)
-
-    # process result, 
-    results = {}
-    if queries:
-        for resource, query in queries.items():
-            result = query_api.query(query=query)
-            print(f"result: {result}")
-            results[resource] = result
-
-    # process result
-    processed_data = []
-    if results:
-        processed_data = process_vm_resource_data(results, start_date, end_date)
-        print(f"processed_data: {processed_data}")
-
-    influxdb_client.close()
-    
-    print(f"processed_data: {processed_data}")
-
-    return HttpResponse("Extract detail Stat")
-
-
+# Process General Query Result
 def process_resource_data(results, query_type, start_date, end_date):
     processed_data = []
 
@@ -947,6 +1016,7 @@ def process_resource_data(results, query_type, start_date, end_date):
 
     return processed_data
 
+# Generate General CSV Response
 def generate_csv_response(data, query_type, start_date, end_date):
     if query_type == "all":
         fieldnames = ['startdate', 'enddate', 'cpus', 'cpu', 'mem', 'maxmem']
@@ -971,54 +1041,3 @@ def generate_csv_response(data, query_type, start_date, end_date):
     )
     response.write(csv_buffer.getvalue())
     return response
-
-# General Stats
-def extract_general_stat(request):
-    influxdb_client = InfluxDBClient(url=INFLUX_ADDRESS, token=token, org=org)
-    query_api = influxdb_client.query_api()
-
-    # Process request data
-    start_date_str = request.POST.get('startdate')
-    end_date_str = request.POST.get('enddate')
-    query_type = request.POST.get('scope') # All, per-node, per-class
-
-    start_date = parse_form_date(start_date_str, 1)
-    end_date = parse_form_date(end_date_str, 0)
-
-
-    # Get needed metrics 
-    # (number of VMs, total CPU, CPU%, total mem, mem%, total storage, storage%, netin and netout)
-    
-    raw_class_list = RequestUseCase.objects.all().exclude(
-        request_use_case__icontains="Research"
-    ).exclude(
-        request_use_case__icontains="Test"
-    ).exclude(
-        request_use_case__icontains="Thesis"
-    ).values_list('request_use_case', flat=True)
-
-    class_list = []
-    for entry in raw_class_list:
-        processed_entry = entry.split('_')[0]
-        if processed_entry not in class_list:
-            class_list.append(processed_entry)
-
-    queries =  generate_resource_query(start_date, end_date, query_type, class_list)
-
-    results = {}
-    if queries:
-        for resource, query in queries.items():
-            print(f"query: {query}")
-            result = query_api.query(query=query)
-            results[resource] = result
-
-    print(f"result: {results}")   
-
-    # process result
-    processed_data = []
-    if results:
-        processed_data = process_resource_data(results, query_type, start_date, end_date)
-        print(f"processed_data: {processed_data}")
-
-    influxdb_client.close()
-    return generate_csv_response(processed_data, query_type, start_date_str, end_date_str)
