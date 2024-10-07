@@ -24,9 +24,8 @@ Virtual Machine List
         <table class="table table-hover">
             <thead class="table-light">
                 <tr>
-                    <th scope="col">Name</th>
+                    <th scope="col">VM Name</th>
                     <th scope="col">Machine Type</th>
-                    <th scope="col">Approved By</th>
                     <th scope="col">Status</th>
                     <th scope="col">Action</th> <!-- Added Action column -->
                 </tr>
@@ -36,7 +35,6 @@ Virtual Machine List
                 <tr>
                     <td><i class="bi bi-display"></i> {{ vm.vm_name }}</td> <!-- Removed hyperlink -->
                     <td>{{ vm.machine_type }}</td>
-                    <td>{{ vm.request.get_assigned_to }}</td>
                     <td>
                         {% if vm.status == "SHUTDOWN" %}
                             <span class="text-danger"><strong>{{ vm.status }}</strong></span> <!-- Red for SHUTDOWN -->

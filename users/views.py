@@ -78,13 +78,15 @@ def student_home(request):
 
 @login_required
 def faculty_home(request):
-    vm_list = VirtualMachines.objects.filter(
-        request__in=RequestEntry.objects.filter(
-            requester=request.user, vm_date_tested__isnull=True
-        ).exclude(status=RequestEntry.Status.DELETED).order_by('-id')
-    ).exclude(status=VirtualMachines.Status.DESTROYED)
+    # vm_list = VirtualMachines.objects.filter(
+    #     request__in=RequestEntry.objects.filter(
+    #         requester=request.user, vm_date_tested__isnull=True
+    #     ).exclude(status=RequestEntry.Status.DELETED).order_by('-id')
+    # ).exclude(status=VirtualMachines.Status.DESTROYED)
 
-    return render(request, 'users/faculty_home.html', {'data': vm_list })
+    return redirect('proxmox:index')
+
+    # return render(request, 'users/faculty_home.html', {'data': vm_list })
     
 @login_required
 def tsg_home(request):
