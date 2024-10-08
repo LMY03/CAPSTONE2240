@@ -335,6 +335,7 @@ def add_comment(request, pk):
             log_request_entry_changes(request_entry, user, new_data, user)
 
     return redirect('ticketing:request_details', request_id=pk)
+
 class RequestForm(forms.ModelForm):
     class Meta:
         model = RequestEntry
