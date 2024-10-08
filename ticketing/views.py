@@ -169,8 +169,8 @@ def faculty_ticket_list(request):
 
 @login_required
 def ticket_details(request, ticket_id):
-    if request.user.is_faculty : return faculty_ticket_details(request, ticket_id)
-    elif request.user.is_tsg : return tsg_ticket_details(request, ticket_id)
+    if request.user.is_faculty() : return faculty_ticket_details(request, ticket_id)
+    elif request.user.is_tsg() : return tsg_ticket_details(request, ticket_id)
     else : return redirect('/')
 
 def faculty_ticket_details(request, ticket_id):
@@ -299,32 +299,32 @@ def add_comment(request, pk):
         if request_entry.status == RequestEntry.Status.PENDING:
             new_data['status'] = RequestEntry.Status.FOR_REVISION
 
-        if user.is_tsg():
-            data = {
-                'comment' : comment_text, 
-                'request_entry_id' : request_entry.id
-            }
-            print(requester_user.email, data)
-            comment_notif_faculty(requester_user.email, data) # Admin comments to the request ticket
-        elif user.is_faculty():
-            data = {
-                'comment' : comment_text, 
-                'request_entry_id' : request_entry.id, 
-                'faculty_name': requester_user.get_full_name()
-            }
-            if request_entry.assigned_to and request_entry.assigned_to.email: #Checks if there is an assigned TSG
-                comment_notif_faculty(request_entry.assigned_to.email, data, user.user_type) # Faculty replies back to the comment
-            else: # This is for the situation where there is no assigned to yet, and the faculty comments
-                # admin_user_profiles = UserProfile.objects.filter(user_type='admin')
-                # admin_user_ids = admin_user_profiles.values_list('user_id', flat=True)
+        # if user.is_tsg():
+        #     data = {
+        #         'comment' : comment_text, 
+        #         'request_entry_id' : request_entry.id
+        #     }
+        #     print(requester_user.email, data)
+        #     comment_notif_faculty(requester_user.email, data) # Admin comments to the request ticket
+        # elif user.is_faculty():
+        #     data = {
+        #         'comment' : comment_text, 
+        #         'request_entry_id' : request_entry.id, 
+        #         'faculty_name': requester_user.get_full_name()
+        #     }
+        #     if request_entry.assigned_to and request_entry.assigned_to.email: #Checks if there is an assigned TSG
+        #         comment_notif_faculty(request_entry.assigned_to.email, data, user.user_type) # Faculty replies back to the comment
+        #     else: # This is for the situation where there is no assigned to yet, and the faculty comments
+        #         # admin_user_profiles = UserProfile.objects.filter(user_type='admin')
+        #         # admin_user_ids = admin_user_profiles.values_list('user_id', flat=True)
 
-                admin_user_ids = User.objects.filter(user_type=User.UserType.TSG).values_list('user_id', flat=True)
+        #         admin_user_ids = User.objects.filter(user_type=User.UserType.TSG).values_list('user_id', flat=True)
 
-                tsgUsers = User.objects.filter(id__in = admin_user_ids)
-                tsgEmails = []
-                for tsg in tsgUsers:
-                    tsgEmails.append(tsg.email)
-                comment_notif_faculty(tsgEmails, data, 'TSG') 
+        #         tsgUsers = User.objects.filter(id__in = admin_user_ids)
+        #         tsgEmails = []
+        #         for tsg in tsgUsers:
+        #             tsgEmails.append(tsg.email)
+        #         comment_notif_faculty(tsgEmails, data, 'TSG') 
         Comment.objects.create(
             request_entry=request_entry,
             comment=comment_text,
@@ -335,6 +335,7 @@ def add_comment(request, pk):
             log_request_entry_changes(request_entry, user, new_data, user)
 
     return redirect('ticketing:request_details', request_id=pk)
+
 class RequestForm(forms.ModelForm):
     class Meta:
         model = RequestEntry
@@ -716,8 +717,6 @@ def reject_test_vm(request, request_id):
 
     vm = get_object_or_404(VirtualMachines, request=request_entry)
     guacamole_connection = get_object_or_404(GuacamoleConnection, vm=vm)
-    guacamole_connection.is_active = False
-    guacamole_connection.save()
     guacamole.delete_connection_group(guacamole_connection.connection_group_id)
 
     # shutdown vm if active
