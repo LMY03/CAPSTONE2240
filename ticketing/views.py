@@ -169,8 +169,8 @@ def faculty_ticket_list(request):
 
 @login_required
 def ticket_details(request, ticket_id):
-    if request.user.is_faculty : return faculty_ticket_details(request, ticket_id)
-    elif request.user.is_tsg : return tsg_ticket_details(request, ticket_id)
+    if request.user.is_faculty() : return faculty_ticket_details(request, ticket_id)
+    elif request.user.is_tsg() : return tsg_ticket_details(request, ticket_id)
     else : return redirect('/')
 
 def faculty_ticket_details(request, ticket_id):

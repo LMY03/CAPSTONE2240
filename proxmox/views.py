@@ -112,7 +112,8 @@ def shutdown_vm(vm : VirtualMachines):
 
 def perform_shutdown(request, vm_id):
 
-    shutdown_vm(get_object_or_404(VirtualMachines, pk=vm_id))
+    vm = get_object_or_404(VirtualMachines, pk=vm_id)
+    shutdown_vm(vm)
 
     return redirect(request.META.get('HTTP_REFERER'))
 
