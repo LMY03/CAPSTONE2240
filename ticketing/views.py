@@ -299,32 +299,32 @@ def add_comment(request, pk):
         if request_entry.status == RequestEntry.Status.PENDING:
             new_data['status'] = RequestEntry.Status.FOR_REVISION
 
-        if user.is_tsg():
-            data = {
-                'comment' : comment_text, 
-                'request_entry_id' : request_entry.id
-            }
-            print(requester_user.email, data)
-            comment_notif_faculty(requester_user.email, data) # Admin comments to the request ticket
-        elif user.is_faculty():
-            data = {
-                'comment' : comment_text, 
-                'request_entry_id' : request_entry.id, 
-                'faculty_name': requester_user.get_full_name()
-            }
-            if request_entry.assigned_to and request_entry.assigned_to.email: #Checks if there is an assigned TSG
-                comment_notif_faculty(request_entry.assigned_to.email, data, user.user_type) # Faculty replies back to the comment
-            else: # This is for the situation where there is no assigned to yet, and the faculty comments
-                # admin_user_profiles = UserProfile.objects.filter(user_type='admin')
-                # admin_user_ids = admin_user_profiles.values_list('user_id', flat=True)
+        # if user.is_tsg():
+        #     data = {
+        #         'comment' : comment_text, 
+        #         'request_entry_id' : request_entry.id
+        #     }
+        #     print(requester_user.email, data)
+        #     comment_notif_faculty(requester_user.email, data) # Admin comments to the request ticket
+        # elif user.is_faculty():
+        #     data = {
+        #         'comment' : comment_text, 
+        #         'request_entry_id' : request_entry.id, 
+        #         'faculty_name': requester_user.get_full_name()
+        #     }
+        #     if request_entry.assigned_to and request_entry.assigned_to.email: #Checks if there is an assigned TSG
+        #         comment_notif_faculty(request_entry.assigned_to.email, data, user.user_type) # Faculty replies back to the comment
+        #     else: # This is for the situation where there is no assigned to yet, and the faculty comments
+        #         # admin_user_profiles = UserProfile.objects.filter(user_type='admin')
+        #         # admin_user_ids = admin_user_profiles.values_list('user_id', flat=True)
 
-                admin_user_ids = User.objects.filter(user_type=User.UserType.TSG).values_list('user_id', flat=True)
+        #         admin_user_ids = User.objects.filter(user_type=User.UserType.TSG).values_list('user_id', flat=True)
 
-                tsgUsers = User.objects.filter(id__in = admin_user_ids)
-                tsgEmails = []
-                for tsg in tsgUsers:
-                    tsgEmails.append(tsg.email)
-                comment_notif_faculty(tsgEmails, data, 'admin') 
+        #         tsgUsers = User.objects.filter(id__in = admin_user_ids)
+        #         tsgEmails = []
+        #         for tsg in tsgUsers:
+        #             tsgEmails.append(tsg.email)
+        #         comment_notif_faculty(tsgEmails, data, 'admin') 
         Comment.objects.create(
             request_entry=request_entry,
             comment=comment_text,
