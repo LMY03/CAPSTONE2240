@@ -102,6 +102,7 @@ def shutdown_vm(vm : VirtualMachines):
             vm.set_shutdown()
 
             proxmox.wait_for_vm_stop(vm.node.name, vm.vm_id)
+            
         else:
             
             proxmox.shutdown_lxc(vm.node.name, vm.vm_id)
