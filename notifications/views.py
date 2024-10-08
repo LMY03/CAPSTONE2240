@@ -61,14 +61,14 @@ def comment_notif_faculty(to_email, data, *faculty):
     }
     base_dir = os.path.dirname(os.path.abspath(__file__))
     mimeMessage = MIMEMultipart()
-    if 'faculty' in faculty: 
+    if "FACULTY" in faculty: 
         mimeMessage['to'] = f'{to_email}'
         #     email_data["template_id"] = "d-f532416d64ea429a81671879794c0958"
         mimeMessage['subject'] = 'The faculty has replied to your comment'
         template_path = os.path.join(base_dir, 'templates', 'notifications', 'replied_comment_faculty.hbs')
         with open(template_path, 'r') as f:
             source = f.read()
-    elif 'admin' in faculty:
+    elif 'TSG' in faculty:
         mimeMessage['to'] = ', '.join(to_email)
         mimeMessage["subject"] = 'Faculty has added a new comment in their request ticket'
         #     email_data["template_id"] = "d-e3593d8aabbc435ba143717a33ce1485"
@@ -192,6 +192,7 @@ def confirm_notif_faculty(to_email):
 
 
 def added_user_notif (to_email, username, password):
+    print('Inside the added_users_notif')
     service = Create_Service(CLIENT_SECRET_FILE, API_NAME, API_VERSION, SCOPES)
     mimeMessage = MIMEMultipart()
     mimeMessage["to"] = f'{to_email}'
@@ -215,3 +216,26 @@ def added_user_notif (to_email, username, password):
     
     return message
 
+
+def reset_password_email (to_email, password):
+    service = Create_Service(CLIENT_SECRET_FILE, API_NAME, API_VERSION, SCOPES)
+    mimeMessage = MIMEMultipart()
+    mimeMessage["to"] = f'{to_email}'
+    mimeMessage['subject'] = 'Your password has successfully been reset'
+    email_data = {
+        "password": password,
+    }
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    template_path = os.path.join(base_dir, 'templates', 'notifications', 'reset_password.hbs')
+    with open(template_path, 'r') as f:
+        source = f.read()
+    compiler = pybars.Compiler()
+    template = compiler.compile(source)
+    html_body = template(email_data)
+    mimeMessage.attach(MIMEText(html_body, 'html'))
+    raw_string = base64.urlsafe_b64encode(mimeMessage.as_bytes()).decode()
+    
+    message = service.users().messages().send(userId='me', body={'raw': raw_string}).execute()
+    print(message)
+    
+    return message

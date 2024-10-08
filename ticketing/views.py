@@ -324,7 +324,7 @@ def add_comment(request, pk):
                 tsgEmails = []
                 for tsg in tsgUsers:
                     tsgEmails.append(tsg.email)
-                comment_notif_faculty(tsgEmails, data, 'admin') 
+                comment_notif_faculty(tsgEmails, data, 'TSG') 
         Comment.objects.create(
             request_entry=request_entry,
             comment=comment_text,
@@ -645,7 +645,7 @@ def request_reject(request, id):
         "faculty_name" : request_entry.requester.get_full_name(),
         "id" : id
     }
-    # reject_notif_faculty(to, data)
+    reject_notif_faculty(to, data)
 
     return HttpResponseRedirect(reverse("ticketing:index"))
 

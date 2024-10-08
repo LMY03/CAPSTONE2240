@@ -19,7 +19,11 @@ User Management
             Add User
         </button>
     </div>
-
+    {% if messages %}
+            {% for message in messages %}
+                <li>{{ message }}</li>
+            {% endfor %}
+    {% endif %}
     <!-- Users Table -->
     <table class="table table-bordered">
         <thead>
@@ -66,9 +70,6 @@ User Management
                 <div class="modal-body">
                     <form method="POST" enctype="multipart/form-data" action="{% url 'users:add_users' %}">
                         {% csrf_token %}
-                        {% if message %}
-                        <p class="mb-3">{{ message }}</p>
-                        {% endif %}
                         <div class="mb-3">
                             <label for="email" class="form-label">Email address</label>
                             <input type="email" class="form-control" id="email" name="email" placeholder="Enter email">
@@ -76,12 +77,12 @@ User Management
                         <div class="mb-3">
                             <label for="user_profile" class="form-label">User profile</label>
                             <select id="user_profile" name="user_profile" class="form-select">
-                                <option value="admin">Admin</option>
-                                <option value="faculty">Faculty</option>
+                                <option value="TSG">TSG</option>
+                                <option value="FACULTY">Faculty</option>
                             </select>
                         </div>
                         <div class="mb-3">
-                            <label for="csv_file" class="form-label">Upload CSV File</label>
+                            <label for="csv_file" class="form-label">Upload CSV File (Add a header named "Email" on cell A1, then continue writing emails on A2, A3 and so forth)</label>
                             <input type="file" class="form-control" id="csv_file" name="csv_file" accept=".csv">
                         </div>
                         <div class="modal-footer">
@@ -104,9 +105,6 @@ User Management
               <div class="modal-body">
                   <form method="POST" enctype="multipart/form-data" action="{% url 'users:edit_user' %}">
                       {% csrf_token %}
-                      {% if message %}
-                      <p class="mb-3">{{ message }}</p>
-                      {% endif %}
                       <div class="mb-3">
                           <label for="email" class="form-label">Change Email address</label>
                           <input type="email" class="form-control" id="change_email" name="change_email" placeholder="Leave the input blank if there is no changes">

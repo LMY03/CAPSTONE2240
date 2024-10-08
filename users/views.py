@@ -14,7 +14,7 @@ from ticketing.views import tsg_requests_list
 from proxmox.views import vm_list
 
 from django.shortcuts import render
-from notifications.views import added_user_notif
+from notifications.views import added_user_notif, reset_password_email
 
 from django.core.exceptions import ValidationError
 from django.contrib import messages
@@ -237,6 +237,7 @@ def add_users(request):
         user_profile = request.POST.get("user_profile")
         # Check if CSV upload method is chosen
         if 'csv_file' in request.FILES:
+            print("Inside the CSV_File block")
             csv_file = request.FILES['csv_file']
             
             if not csv_file.name.endswith('.csv'):
@@ -244,30 +245,34 @@ def add_users(request):
                 return render(request, 'users/add_users.html')
             
             try:
-                file_data = csv_file.read().decode('utf-8').splitlines()
-                reader = csv.DictReader(file_data)
-
-                for row in reader:
-                    email = row.get('Email')
-                    password = generate_random_string()
-                    name_parts = email.split('@')[0].split('_')
-                    fullname = ' '.join(name_parts).title()
-
-                    # Create user if email doesn't exist
-                    if not User.objects.filter(email=email).exists():
-                        try:
-                            user = User.objects.create_user(username=email, email=email, password=password)
-                            added_user_notif(email, email, password)
-                            user.first_name = fullname
-                            user.user_type = user_profile
-                            user.save()
-                            # user_profile = UserProfile.objects.create(user = user, user_type = user_profile)
-                            messages.success(request, f"User {fullname} ({email}) created successfully.")
-                        except ValidationError as e:
-                            messages.error(request, f"Error creating user {email}: {e}")
+                file_data = csv_file.read().decode('utf-8-sig').splitlines()
+                for row in csv.reader(file_data):
+                    email = row[0]
+                    if email == 'Email':
+                        print (f"Row is email: {row}")
+                        continue
+                    if email:
+                        print("inside the if email statement")
+                        password = generate_random_string()
+                        name_parts = email.split('@')[0].split('_')
+                        fullname = ' '.join(name_parts).title()
+                        if not User.objects.filter(email=email).exists():
+                            try:
+                                user = User.objects.create_user(username=email, email=email, password=password)
+                                added_user_notif(email, email, password)
+                                user.first_name = fullname
+                                user.user_type = user_profile
+                                user.save()
+                                print("Inside the user creation, user is created and emailed")
+                                # user_profile = UserProfile.objects.create(user = user, user_type = user_profile)
+                                messages.success(request, f"User {fullname} ({email}) created successfully.")
+                            except ValidationError as e:
+                                messages.error(request, f"Error creating user {email}: {e}")
+                        else:
+                            messages.info(request, f"User with email {email} already exists.")
                     else:
-                        messages.info(request, f"User with email {email} already exists.")
-            except Exception as e:
+                        print("Skipping row due to missing email.")
+            except Exception as e: 
                 messages.error(request, f"Error processing file: {e}")
 
         # Handle manual input if no CSV file is provided
@@ -348,6 +353,7 @@ def reset_password (request, user_id):
     generated_password = generate_random_string()
     user.set_password(generated_password)
     user.save()
-
+    
     #TODO: Send an email to the affected user. 
+    reset_password_email(user.email, generated_password)
     return redirect('users:user_management')

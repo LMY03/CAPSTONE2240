@@ -22,6 +22,7 @@ def Create_Service(client_secret_file, api_name, api_version, *scopes):
             cred = pickle.load(token)
 
     if not cred or not cred.valid:
+        print(f'Cred: ${cred}')
         if cred and cred.expired and cred.refresh_token:
             cred.refresh(Request())
         else:
