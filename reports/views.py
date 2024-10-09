@@ -1302,7 +1302,7 @@ def process_resource_data(results, query_type, start_date, end_date):
         for resource in results:
             if results[resource]:
                 for table in results[resource]:
-                    print(f"record: {record.values}")
+                    print(f"table.records: {table.records}")
                     all_entities.update(record.values.get('nodename' if query_type == "per-node" else 'class') for record in table.records)
         
         print(f"all_entities: {all_entities}")
