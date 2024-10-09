@@ -968,7 +968,7 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
             |> filter(fn: (r) => r["_measurement"] == "cpustat")
             |> filter(fn: (r) => r["_field"] == "cpus")
             |> last()
-            |> map(fn: (r) => ({{ nodename: r.host }}))
+            |> keep(columns: ["_value", "host"]) 
             |> yield(name: "cpus_per_node")
         '''
         queries["cpus"] = cpus_query
@@ -982,7 +982,7 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
             |> group(columns: ["host"])
             |> mean()
             |> map(fn: (r) => ({{ r with _value: r._value * 100.0 }}))
-            |> map(fn: (r) => ({{ nodename: r.host }})) 
+            |> keep(columns: ["_value", "host"])  
             |> yield(name: "cpu_per_node")
         '''
         queries["cpu"] = cpu_query
@@ -996,7 +996,7 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
             |> group(columns: ["_field", "host"])
             |> pivot(rowKey: ["host"], columnKey: ["_field"], valueColumn: "_value")
             |> map(fn: (r) => ({{ r with _value: (r.memused / r.memtotal) * 100.0 }}))
-            |> map(fn: (r) => ({{ nodename: r.host }}))
+            |> keep(columns: ["host", "_value"])
             |> yield(name: "mem_per_node")
         '''
         queries["mem"] = mem_query
@@ -1008,7 +1008,7 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
             |> filter(fn: (r) => r["_measurement"] == "memory")
             |> filter(fn: (r) => r["_field"] == "memtotal")
             |> last()
-            |> map(fn: (r) => ({{ nodename: r.host }}))
+            |> keep(columns: ["_value", "host"])  
             |> yield(name: "maxmem_per_node")
         '''
         queries["maxmem"] = maxmem_query
@@ -1302,7 +1302,7 @@ def process_resource_data(results, query_type, start_date, end_date):
         for resource in results:
             if results[resource]:
                 for table in results[resource]:
-                    all_entities.update(record.values.get('nodename' if query_type == "per-node" else 'class') for record in table.records)
+                    all_entities.update(record.values.get('host' if query_type == "per-node" else 'class') for record in table.records)
         
         print(f"all_entities: {all_entities}")
 
