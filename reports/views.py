@@ -675,8 +675,9 @@ def process_vm_resource_data(results, start_date, end_date):
                     identifier = (record.values.get('vmid'), record.values.get('host'), record.values.get('nodename'))
                     if all(identifier):
                         all_identifiers.add(identifier)
+                        print(f"resource: {resource}, length of identifiers:{len(all_identifiers)}")
 
-    print(f"length of identifiers:{len(all_identifiers)}")
+    
 
 
     # print(f"all_identifiers: {all_identifiers}")
