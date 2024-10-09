@@ -43,10 +43,11 @@ class RequestEntry(models.Model):
     cores = models.IntegerField(default=1)
     # security options
     request_date = models.DateTimeField(default=timezone.localtime)
-
     date_needed = models.DateField(default=expiration_date_default)
     expired_date = models.DateField(null=True, default=None)
     expiration_date = models.DateField(null=True)
+
+    ongoing_date = models.DateTimeField(null=True, default=None)
 
     vm_date_tested = models.DateTimeField(null=True, default=None)
 
@@ -75,15 +76,20 @@ class RequestEntry(models.Model):
 
     def get_request_type(self):
         request_use_case = RequestUseCase.objects.filter(request=self)[0].request_use_case
-        if request_use_case == 'RESEARCH' : return 'Research'
-        elif request_use_case == 'THESIS' : return 'Thesis'
-        elif request_use_case == 'TEST' : return 'Test'
-        else : return 'Class Course'
+        if request_use_case == RequestUseCase.UseCase.RESEARCH : return RequestUseCase.UseCase.RESEARCH
+        elif request_use_case == RequestUseCase.UseCase.THESIS : return RequestUseCase.UseCase.THESIS
+        elif request_use_case == RequestUseCase.UseCase.TEST : return RequestUseCase.UseCase.TEST
+        else : return RequestUseCase.UseCase.COURSE
 
-    def is_course(self) : return self.get_request_type() == 'Class Course'
-    def is_research(self) : return self.get_request_type() == 'Research'
-    def is_thesis(self) : return self.get_request_type() == 'Thesis'
-    def is_test(self) : return self.get_request_type() == 'Test'
+    def is_course(self) : return self.get_request_type() == RequestUseCase.UseCase.COURSE
+    def is_research(self) : return self.get_request_type() == RequestUseCase.UseCase.RESEARCH
+    def is_thesis(self) : return self.get_request_type() == RequestUseCase.UseCase.THESIS
+    def is_test(self) : return self.get_request_type() == RequestUseCase.UseCase.TEST
+
+    def set_ongoing(self):
+        self.status = RequestEntry.Status.ONGOING
+        self.ongoing_date = timezone.localtime()
+        self.save()
 
     def get_total_no_of_vm(self):
         request_use_cases = RequestUseCase.objects.filter(request=self).values('request_use_case', 'vm_count')
@@ -113,8 +119,17 @@ class RequestEntryAudit(models.Model):
         return json.loads(self.changes)
 
 class RequestUseCase(models.Model):
-    request = models.ForeignKey(RequestEntry, on_delete= models.CASCADE)
-    request_use_case = models.CharField(max_length=45, default='CLASS_COURSE')
+    class UseCase(models.TextChoices):
+        COURSE = 'CLASS COURSE', 'Class Course'
+        RESEARCH = 'RESEARCH', 'Research'
+        THESIS = 'THESIS', 'Thesis'
+        TEST = 'TEST', 'Test'
+
+    request_use_case = models.CharField(
+        max_length=45, 
+        choices=UseCase.choices,
+    )
+    request = models.ForeignKey(RequestEntry, on_delete=models.CASCADE)
     vm_count = models.IntegerField(default=1)
 
 # class GroupList (models.Model):
@@ -184,6 +199,7 @@ class IssueTicket(models.Model):
     category = models.CharField(
         max_length=100, 
         choices=Category.choices)
+    
     def is_resolved(self) : return self.resolve_date != None
 
     def get_status(self):
