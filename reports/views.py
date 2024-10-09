@@ -1076,6 +1076,16 @@ def process_resource_data(results, query_type, start_date, end_date):
         for resource in ['cpus', 'cpu', 'mem', 'maxmem', 'netin']:
             value = safe_get_value(results.get(resource), resource)
             if value is not None:
+                if resource == "cpus":
+                    value = str(value) + " cores"
+                if resource == "cpu":
+                    value = str(round(value, 2)) + "%"
+                if resource == "mem":
+                    value = str(round(value, 2)) + "%"
+                if resource == "maxmem":
+                    value = str(round(value, 0)) + "G"
+                if resource == "netin":
+                    value = str(round(value / 1024 / 1024 / 1000, 2)) + "G"
                 row[resource] = value
         
         if len(row) > 2:  
