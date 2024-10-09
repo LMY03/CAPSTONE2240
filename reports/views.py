@@ -676,7 +676,7 @@ def process_vm_resource_data(results, start_date, end_date):
                     if all(identifier):
                         all_identifiers.add(identifier)
 
-    print(f"length of identifiers:{all_identifiers.length}")
+    print(f"length of identifiers:{len(all_identifiers)}")
 
 
     # print(f"all_identifiers: {all_identifiers}")
