@@ -1080,7 +1080,7 @@ def process_resource_data(results, query_type, start_date, end_date):
                 if resource == "mem":
                     value = str(round(value, 2)) + "%"
                 if resource == "maxmem":
-                    value = str(value) + "G"
+                    value = str(round(value, 2)) + "G"
                 if resource == "netin":
                     value = str(round(value / 1024 / 1024 / 1000, 2)) + "G"
                 row[resource] = value
