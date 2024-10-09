@@ -589,7 +589,7 @@ def extract_detail_stat(request):
 
     influxdb_client.close()
     
-    # print(f"processed_data: {processed_data}")
+    print(f"processed_data: {processed_data}")
 
     return generate_detail_csv_response(processed_data, start_date_str, end_date_str)
 
@@ -679,7 +679,7 @@ def process_vm_resource_data(results, start_date, end_date):
                         if resource == "cpus": # so that it add only once 
                             all_identifiers.add(identifier)
     
-    print(f"all_identifiers: {all_identifiers}")
+    # print(f"all_identifiers: {all_identifiers}")
     for vmid, host, nodename, machineType, time in all_identifiers:
         identifier = (vmid, host, nodename, time)
         dt_adjusted = time + timedelta(hours=8)
@@ -705,7 +705,7 @@ def process_vm_resource_data(results, start_date, end_date):
                 row[resource] = value
         if len(row) > 5:  # Ensure we have at least one resource value
             processed_data[identifier] = row
-
+    
     return list(processed_data.values())
 
 # Generate Detail CSV Response
