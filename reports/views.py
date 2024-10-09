@@ -681,7 +681,7 @@ def process_vm_resource_data(results, start_date, end_date):
     
     # print(f"all_identifiers: {all_identifiers}")
     for vmid, host, nodename, machineType, time in all_identifiers:
-        identifier = (vmid, host, nodename, time)
+        identifier = (vmid, host, nodename, machineType, time)
         dt_adjusted = time + timedelta(hours=8)
         adjusted_time = dt_adjusted.strftime("%Y-%m-%d %H:%M:%S")
         row = {
