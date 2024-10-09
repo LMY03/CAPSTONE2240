@@ -693,7 +693,7 @@ def process_vm_resource_data(results, start_date, end_date):
                 if resource == "cpu": 
                     value = str(round(value * 100, 2)) + "%"
                 if resource == "mem":
-                    value = round(value, 2) + "%"
+                    value = str(round(value, 2)) + "%"
                 if resource == "maxmem":
                     value = round(value, 2)
                 row[resource] = value
