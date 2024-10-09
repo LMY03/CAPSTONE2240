@@ -1068,10 +1068,7 @@ def process_resource_data(results, query_type, start_date, end_date):
             return None
 
     if query_type == "all":
-        row = {
-            'startdate': start_date,
-            'enddate': end_date,
-        }
+        row = {}
 
         for resource in ['cpus', 'cpu', 'mem', 'maxmem', 'netin']:
             value = safe_get_value(results.get(resource), resource)
@@ -1083,12 +1080,12 @@ def process_resource_data(results, query_type, start_date, end_date):
                 if resource == "mem":
                     value = str(round(value, 2)) + "%"
                 if resource == "maxmem":
-                    value = str(round(value, 0)) + "G"
+                    value = str(value) + "G"
                 if resource == "netin":
                     value = str(round(value / 1024 / 1024 / 1000, 2)) + "G"
                 row[resource] = value
         
-        if len(row) > 2:  
+        if len(row) > 0:  
             processed_data.append(row)
     
     elif query_type in ["per-node", "per-class"]:
@@ -1122,7 +1119,7 @@ def process_resource_data(results, query_type, start_date, end_date):
 # Generate General CSV Response
 def generate_csv_response(data, query_type, start_date, end_date):
     if query_type == "all":
-        fieldnames = ['startdate', 'enddate', 'cpus', 'cpu', 'mem', 'maxmem', 'netin']
+        fieldnames = ['cpus', 'cpu', 'mem', 'maxmem', 'netin']
     elif query_type == "per-node":
         fieldnames = ['nodename', 'startdate', 'enddate', 'cpus', 'cpu', 'mem', 'maxmem', 'netin']
     elif query_type == "per-class":
