@@ -2,6 +2,7 @@ from django.shortcuts import render
 from datetime import datetime, timedelta
 from django.http import JsonResponse, HttpResponse
 from django.core import serializers
+from django.db.models import Sum, Count
 from proxmoxer import ProxmoxAPI
 from influxdb_client import InfluxDBClient
 from io import StringIO
@@ -10,6 +11,8 @@ from decouple import config
 
 from ticketing.models import RequestEntry, RequestUseCase
 from proxmox.models import VirtualMachines
+
+from CAPSTONE2240.utils import download_csv
 
 INFLUX_ADDRESS = config('INFLUX_ADDRESS')
 token = config('INFLUX_TOKEN')
@@ -1060,4 +1063,22 @@ def get_request_report_vms(nodes, use_cases, start_date, end_date):
         request__requestusecase__request_use_case__in=use_cases,
         request__ongoing_date__range=(start_date, end_date),
         node__name__in=nodes,
-    ).values_list('vm_id', 'ram', 'cores', 'storage')
+    )
+
+def extract_general_request(nodes, use_cases, start_date, end_date):
+
+    data = get_request_report_vms(nodes, use_cases, start_date, end_date).aggregate(
+        total_vms=Count('vm_id'),
+        total_ram=Sum('ram'),
+        total_cores=Sum('cores'),
+        total_storage=Sum('storage')
+    )
+    
+    headers = [
+        'Total VMs', 
+        'Total Memory', 
+        'Total, Cores', 
+        'Total Storage',
+    ]
+
+    return download_csv('general request report', headers, data)
