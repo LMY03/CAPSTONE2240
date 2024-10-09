@@ -615,7 +615,7 @@ def generate_vm_resource_query(start_date, end_date):
         |> filter(fn: (r) => r["_measurement"] == "system")
         |> filter(fn: (r) => r["_field"] == "cpu")
         |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
-        |> last()
+        |> mean()
         |> yield(name: "cpu")
     '''
     queries["cpu"] = cpu_query
@@ -685,9 +685,7 @@ def process_vm_resource_data(results, start_date, end_date):
             'vmid': vmid,
             'host': host,
             'nodename': nodename,
-            'until_time': adjusted_time,
-            'startdate': start_date,
-            'enddate': end_date,
+            'until_time': adjusted_time
         }
         for resource in ['cpus', 'cpu', 'mem', 'maxmem']:
             value = safe_get_value(results.get(resource), resource, identifier)
@@ -701,7 +699,7 @@ def process_vm_resource_data(results, start_date, end_date):
 # Generate Detail CSV Response
 def generate_detail_csv_response(data, start_date, end_date):
     # TODO: add uptime
-    fieldnames = ['vmid', 'host', 'nodename', 'startdate', 'enddate', 'until_time', 'cpus', 'cpu', 'mem', 'maxmem']
+    fieldnames = ['vmid', 'host', 'nodename', 'until_time', 'cpus', 'cpu', 'mem', 'maxmem']
     csv_buffer = StringIO()
     writer = csv.DictWriter(csv_buffer, fieldnames=fieldnames)
     writer.writeheader()
