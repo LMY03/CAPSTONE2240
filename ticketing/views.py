@@ -453,7 +453,7 @@ def new_form_submit(request):
             'vm_count' : gVM_count,
             'faculty_name' : requester.get_full_name()
         }
-        # new_request_notif_tsg(tsg_emails, data)
+        new_request_notif_tsg(tsg_emails, data)
     return JsonResponse({'status': 'ok'}, status=200)
 
 def log_request_entry_changes(request_entry, changed_by, new_data, user):
