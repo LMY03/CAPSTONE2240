@@ -889,7 +889,7 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
         # netin data
         netin_query = f'''
             last = from(bucket: "proxmox")
-            |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+            |> range(start: {start_date}, stop: {end_date})
             |> filter(fn: (r) => r["_measurement"] == "system")
             |> filter(fn: (r) => r["_field"] == "netin")
             |> group(columns: ["nodename", "host", "object", "vmid"])
@@ -897,7 +897,7 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
             |> keep(columns: ["_time", "_value", "nodename", "host", "object", "vmid"])
 
             first = from(bucket: "proxmox")
-            |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+            |> range(start: {start_date}, stop: {end_date})
             |> filter(fn: (r) => r["_measurement"] == "system")
             |> filter(fn: (r) => r["_field"] == "netin")
             |> group(columns: ["nodename", "host", "object", "vmid"])
