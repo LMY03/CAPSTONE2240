@@ -690,6 +690,7 @@ def process_vm_resource_data(results, start_date, end_date):
         for resource in ['cpus', 'cpu', 'mem', 'maxmem']:
             value = safe_get_value(results.get(resource), resource, identifier)
             if value is not None:
+                if resource == "cpu": value = str(value * 100) + "%"
                 row[resource] = value
         if len(row) > 5:  # Ensure we have at least one resource value
             processed_data[identifier] = row
