@@ -37,6 +37,7 @@ class Migration(migrations.Migration):
                 ('date_needed', models.DateField(default=ticketing.models.expiration_date_default)),
                 ('expired_date', models.DateField(default=None, null=True)),
                 ('expiration_date', models.DateField(null=True)),
+                ('ongoing_date', models.DateTimeField(default=None, null=True)),
                 ('vm_date_tested', models.DateTimeField(default=None, null=True)),
                 ('assigned_to', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='assigned_entries', to=settings.AUTH_USER_MODEL)),
                 ('requester', models.ForeignKey(on_delete=django.db.models.deletion.DO_NOTHING, related_name='requested_entries', to=settings.AUTH_USER_MODEL)),
@@ -46,7 +47,7 @@ class Migration(migrations.Migration):
             name='RequestUseCase',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('request_use_case', models.CharField(default='CLASS_COURSE', max_length=45)),
+                ('request_use_case', models.CharField(choices=[('CLASS COURSE', 'Course'), ('RESEARCH', 'Research'), ('THESIS', 'Thesis'), ('TEST', 'Test')], max_length=45)),
                 ('vm_count', models.IntegerField(default=1)),
                 ('request', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='ticketing.requestentry')),
             ],
