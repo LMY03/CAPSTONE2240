@@ -675,9 +675,8 @@ def request_test_vm_ready(request, id):
 def confirm_test_vm(request, request_id):
     
     request_entry = get_object_or_404(RequestEntry, pk=request_id)
-    request_entry.status = RequestEntry.Status.ONGOING
+    request_entry.set_ongoing()
     to_email = request_entry.requester.email
-    request_entry.save()
 
     processing_ticket.delay(request_id)
     

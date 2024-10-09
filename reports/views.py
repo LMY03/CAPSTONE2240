@@ -5,11 +5,10 @@ from django.core import serializers
 from proxmoxer import ProxmoxAPI
 from influxdb_client import InfluxDBClient
 from io import StringIO
-import json
-import csv
+import json, csv
 from decouple import config
-from ticketing.models import RequestUseCase
 
+from ticketing.models import RequestEntry, RequestUseCase
 from proxmox.models import VirtualMachines
 
 INFLUX_ADDRESS = config('INFLUX_ADDRESS')
@@ -1046,3 +1045,11 @@ def generate_csv_response(data, query_type, start_date, end_date):
     )
     response.write(csv_buffer.getvalue())
     return response
+
+def get_request_report_vms(nodes, use_cases, start_date, end_date):
+
+    return VirtualMachines.objects.filter(
+        request__requestusecase__request_use_case__in=use_cases,
+        request__ongoing_date__range=(start_date, end_date),
+        node__name__in=nodes,
+    ).values_list('vm_id', 'ram', 'cores', 'storage')
