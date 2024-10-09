@@ -886,6 +886,43 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
         '''
         queries["maxmem"] = maxmem_query
 
+        # netin data
+        netin_query = f'''
+            last = from(bucket: "proxmox")
+            |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["_field"] == "netin")
+            |> group(columns: ["nodename", "host", "object", "vmid"])
+            |> last()
+            |> keep(columns: ["_time", "_value", "nodename", "host", "object", "vmid"])
+
+            first = from(bucket: "proxmox")
+            |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["_field"] == "netin")
+            |> group(columns: ["nodename", "host", "object", "vmid"])
+            |> first()
+            |> keep(columns: ["_time", "_value", "nodename", "host", "object", "vmid"])
+
+            join(
+            tables: {{last: last, first: first}},
+            on: ["nodename", "host", "object", "vmid"]
+            )
+            |> map(fn: (r) => ({{
+            _time: r._time_last,
+            nodename: r.nodename,
+            host: r.host,
+            object: r.object,
+            vmid: r.vmid,
+            first_value: r._value_first,
+            last_value: r._value_last,
+            _value: r._value_last - r._value_first
+            }}))
+            |> group()
+            |> sum(column: "_value")
+        '''
+        queries["netin"] = netin_query
+
     elif query_type == "per-node":
         # cpus data
         cpus_query = f'''
@@ -1036,7 +1073,7 @@ def process_resource_data(results, query_type, start_date, end_date):
             'enddate': end_date,
         }
 
-        for resource in ['cpus', 'cpu', 'mem', 'maxmem']:
+        for resource in ['cpus', 'cpu', 'mem', 'maxmem', 'netin']:
             value = safe_get_value(results.get(resource), resource)
             if value is not None:
                 row[resource] = value
@@ -1062,7 +1099,7 @@ def process_resource_data(results, query_type, start_date, end_date):
                 'enddate': end_date,
             }
 
-            for resource in ['cpus', 'cpu', 'mem', 'maxmem']:
+            for resource in ['cpus', 'cpu', 'mem', 'maxmem', 'netin']:
                 value = safe_get_value(results.get(resource), resource, entity)
                 if value is not None:
                     row[resource] = value
