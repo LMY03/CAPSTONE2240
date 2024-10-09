@@ -1083,6 +1083,89 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
             |> yield(name: "maxmem_per_class")
         '''
         queries["maxmem"] = maxmem_query
+
+
+        # netin data
+        netin_query = f'''
+            last = from(bucket: "proxmox")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["_field"] == "netin")
+            |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+            |> filter(fn: (r) => {class_filters})
+            |> group(columns: ["nodename", "host", "object", "vmid"])
+            |> last()
+            |> keep(columns: ["_time", "_value", "nodename", "host", "object", "vmid"])
+
+            first = from(bucket: "proxmox")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["_field"] == "netin")
+            |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+            |> filter(fn: (r) => {class_filters})
+            |> group(columns: ["nodename", "host", "object", "vmid"])
+            |> first()
+            |> keep(columns: ["_time", "_value", "nodename", "host", "object", "vmid"])
+
+            join(
+            tables: {{last: last, first: first}},
+            on: ["nodename", "host", "object", "vmid"]
+            )
+            |> map(fn: (r) => ({{
+            _time: r._time_last,
+            nodename: r.nodename,
+            host: r.host,
+            object: r.object,
+            vmid: r.vmid,
+            first_value: r._value_first,
+            last_value: r._value_last,
+            _value: r._value_last - r._value_first
+            }}))
+            |> group()
+            |> sum(column: "_value")
+        '''
+        queries["netin"] = netin_query
+
+        # netout data
+        netout_query = f'''
+            last = from(bucket: "proxmox")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["_field"] == "netout")
+            |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+            |> filter(fn: (r) => {class_filters})
+            |> group(columns: ["nodename", "host", "object", "vmid"])
+            |> last()
+            |> keep(columns: ["_time", "_value", "nodename", "host", "object", "vmid"])
+
+            first = from(bucket: "proxmox")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["_field"] == "netout")
+            |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+            |> filter(fn: (r) => {class_filters})
+            |> group(columns: ["nodename", "host", "object", "vmid"])
+            |> first()
+            |> keep(columns: ["_time", "_value", "nodename", "host", "object", "vmid"])
+
+            join(
+            tables: {{last: last, first: first}},
+            on: ["nodename", "host", "object", "vmid"]
+            )
+            |> map(fn: (r) => ({{
+            _time: r._time_last,
+            nodename: r.nodename,
+            host: r.host,
+            object: r.object,
+            vmid: r.vmid,
+            first_value: r._value_first,
+            last_value: r._value_last,
+            _value: r._value_last - r._value_first
+            }}))
+            |> group()
+            |> sum(column: "_value")
+        '''
+        queries["netout"] = netout_query
     
     return queries
 
@@ -1141,16 +1224,26 @@ def process_resource_data(results, query_type, start_date, end_date):
         for entity in all_entities:
             row = {
                 key: entity,
-                'startdate': start_date,
-                'enddate': end_date,
             }
 
-            for resource in ['cpus', 'cpu', 'mem', 'maxmem', 'netin']:
+            for resource in ['cpus', 'cpu', 'mem', 'maxmem', 'netin','netout']:
                 value = safe_get_value(results.get(resource), resource, entity)
                 if value is not None:
+                    if resource == "cpus":
+                        value = str(value) + " cores"
+                    if resource == "cpu":
+                        value = str(round(value, 2)) + "%"
+                    if resource == "mem":
+                        value = str(round(value, 2)) + "%"
+                    if resource == "maxmem":
+                        value = str(round(value, 2)) + "G"
+                    if resource == "netin":
+                        value = str(round(value / 1024 / 1024 / 1000, 2)) + "G"
+                    if resource == "netout":
+                        value = str(round(value / 1024 / 1024 / 1000, 2)) + "G"
                     row[resource] = value
 
-            if len(row) > 3:
+            if len(row) > 1:
                 processed_data.append(row)
 
     return processed_data
@@ -1160,9 +1253,9 @@ def generate_csv_response(data, query_type, start_date, end_date):
     if query_type == "all":
         fieldnames = ['cpus', 'cpu', 'mem', 'maxmem', 'netin','netout']
     elif query_type == "per-node":
-        fieldnames = ['nodename', 'startdate', 'enddate', 'cpus', 'cpu', 'mem', 'maxmem', 'netin']
+        fieldnames = ['nodename', 'startdate', 'enddate', 'cpus', 'cpu', 'mem', 'maxmem', 'netin','netout']
     elif query_type == "per-class":
-        fieldnames = ['classname', 'startdate', 'enddate', 'cpus', 'cpu', 'mem', 'maxmem', 'netin']
+        fieldnames = ['classname', 'startdate', 'enddate', 'cpus', 'cpu', 'mem', 'maxmem', 'netin','netout']
     
     csv_buffer = StringIO()
     writer = csv.DictWriter(csv_buffer, fieldnames=fieldnames)
@@ -1180,29 +1273,3 @@ def generate_csv_response(data, query_type, start_date, end_date):
     )
     response.write(csv_buffer.getvalue())
     return response
-
-def get_request_report_vms(nodes, use_cases, start_date, end_date):
-
-    return VirtualMachines.objects.filter(
-        request__requestusecase__request_use_case__in=use_cases,
-        request__ongoing_date__range=(start_date, end_date),
-        node__name__in=nodes,
-    )
-
-def extract_general_request(nodes, use_cases, start_date, end_date):
-
-    data = get_request_report_vms(nodes, use_cases, start_date, end_date).aggregate(
-        total_vms=Count('vm_id'),
-        total_ram=Sum('ram'),
-        total_cores=Sum('cores'),
-        total_storage=Sum('storage')
-    )
-    
-    headers = [
-        'Total VMs', 
-        'Total Memory', 
-        'Total, Cores', 
-        'Total Storage',
-    ]
-
-    return download_csv('general request report', headers, data)
