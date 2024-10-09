@@ -650,6 +650,37 @@ def generate_vm_resource_query(start_date, end_date):
     '''
     queries["maxmem"] = maxmem_query
 
+    uptime_query = f'''
+        first = from(bucket: "proxmox")
+        |> range(start: 2024-10-07T16:00:00Z, stop: 2024-10-08T16:00:00Z)
+        |> filter(fn: (r) => r["_measurement"] == "system")
+        |> filter(fn: (r) => r["_field"] == "uptime")
+        |> first()
+
+        last = from(bucket: "proxmox")
+        |> range(start: 2024-10-07T16:00:00Z, stop: 2024-10-08T16:00:00Z)
+        |> filter(fn: (r) => r["_measurement"] == "system")
+        |> filter(fn: (r) => r["_field"] == "uptime")
+        |> last()
+
+        join(
+        tables: {{first: first, last: last}},
+        on: ["host", "nodename", "object", "vmid"]
+        )
+        |> map(fn: (r) => ({{
+        _time: r._time_last,
+        host: r.host,
+        nodename: r.nodename,
+        object: r.object,
+        vmid: r.vmid,
+        first: r._value_first,
+        last: r._value_last,
+        _value: r._value_last - r._value_first
+        }}))
+        |> yield(name: "result")
+    '''
+    queries["uptime"] = uptime_query
+
     return queries
 
 # Process Detail Query Result
@@ -691,11 +722,11 @@ def process_vm_resource_data(results, start_date, end_date):
             'machineType': machineType,
             'until_time': adjusted_time
         }
-        for resource in ['cpus', 'cpu', 'mem', 'maxmem']:
+        for resource in ['cpus', 'cpu', 'mem', 'maxmem', 'uptime']:
             value = safe_get_value(results.get(resource), resource, identifier)
             if value is not None:
                 if resource == "cpus":
-                    value = str(value) + "cores"
+                    value = str(value) + " cores"
                 if resource == "cpu": 
                     value = str(round(value * 100, 2)) + "%"
                 if resource == "mem":
@@ -711,7 +742,7 @@ def process_vm_resource_data(results, start_date, end_date):
 # Generate Detail CSV Response
 def generate_detail_csv_response(data, start_date, end_date):
     # TODO: add uptime
-    fieldnames = ['vmid', 'host', 'nodename', 'machineType', 'until_time', 'cpus', 'cpu', 'mem', 'maxmem']
+    fieldnames = ['vmid', 'host', 'nodename', 'machineType', 'until_time', 'cpus', 'cpu', 'mem', 'maxmem', 'uptime']
     csv_buffer = StringIO()
     writer = csv.DictWriter(csv_buffer, fieldnames=fieldnames)
     writer.writeheader()
