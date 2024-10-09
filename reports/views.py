@@ -695,7 +695,7 @@ def process_vm_resource_data(results, start_date, end_date):
                     value = str(value * 100) + "%"
                     print(f"new value: {value}")
                 row[resource] = value
-        if len(row) > 5:  # Ensure we have at least one resource value
+        if len(row) > 4:  # Ensure we have at least one resource value
             processed_data[identifier] = row
 
     return list(processed_data.values())
