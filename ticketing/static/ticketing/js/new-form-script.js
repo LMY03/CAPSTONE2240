@@ -162,41 +162,39 @@ document.getElementById('add_course_button').addEventListener('click', () => {
 
 // Submit the form
 document.getElementById('vm-form').addEventListener('submit', function (event) {
-    event.preventDefault();  // Prevent default form submission
-    
-    let formIsValid = true;  // Flag to track validity of the form
+    event.preventDefault();
+    const formData = new FormData(this);
     const formInputs = this.querySelectorAll('input[type="text"], select, textarea, input[type="number"], input[type="date"]');
-    const requiredFields = ['course_code1', 'vm_count1', 'date_needed'];  // Add your required fields here
     const formDataInputs = {};
-
-    // Clear previous error messages
-    document.querySelectorAll('.error-message').forEach(error => error.remove());
-
-    // Validate required fields
-    requiredFields.forEach(field => {
-        let inputElement = document.getElementById(field);
-        if (inputElement && inputElement.value.trim() === '') {
-            formIsValid = false;
-            // displayErrorMessage(inputElement, `${inputElement.name || inputElement.id} is required`);
-            displayErrorMessage(inputElement, `This is a required field`);
-        }
-    });
-
-    // If form is not valid, prevent submission and show errors
-    if (!formIsValid) {
-        return;
-    }
-
-    // If form is valid, collect form data and proceed with submission
+    let i = 1, j = 1;
     formInputs.forEach(input => {
         formDataInputs[input.id] = input.value;
+        if (input.id.startsWith('protocol')) {
+            let protocolNumber = input.id.replace('protocol', '');
+            formDataInputs[`addProtocolClicked`] = '';
+            formDataInputs[`addProtocolClicked`] = protocolNumber;
+            i++;
+        }
+        if (input.id.startsWith('course_code')) {
+            let courseCodeNumber = input.id.replace('course_code', '');
+            formDataInputs[`addCourseButtonClick`] = '';
+            formDataInputs[`addCourseButtonClick`] = courseCodeNumber;
+        }
+
     });
+    // for (let sectionCode in sectionCounts) {
+    //     const groupCount = sectionCounts[sectionCode]["GroupCounter"]
+    //     formDataInputs[`${sectionCode}_group_count`] = groupCount;
+    //     formData.append(`sections`, sectionCode)
+    //     formData.append(`${sectionCode}_group_count`, formDataInputs[`${sectionCode}_group_count`]);
+    // }
+
+
 
     for (const key in formDataInputs) {
         formData.append(key, formDataInputs[key]);
     }
-
-    // Fetch logic for form submission
+    console.log(formData);
     fetch(this.action, {
         method: this.method,
         body: formData
@@ -209,8 +207,10 @@ document.getElementById('vm-form').addEventListener('submit', function (event) {
         })
         .then(data => {
             if (data.status === 'ok') {
+                // Redirect to a different page
                 window.location.href = '/ticketing/';
             } else {
+                // Handle other statuses if needed
                 console.log('Unexpected status:', data.status);
             }
         })
@@ -218,14 +218,6 @@ document.getElementById('vm-form').addEventListener('submit', function (event) {
             console.error('There was a problem with the fetch operation:', error);
         });
 });
-
-// Helper function to display error message
-function displayErrorMessage(inputElement, message) {
-    const errorMessage = document.createElement('div');
-    errorMessage.className = 'error-message text-danger';
-    errorMessage.innerText = message;
-    inputElement.parentNode.appendChild(errorMessage);
-}
 
 // Set the min and max dates
 window.onload = function () {
