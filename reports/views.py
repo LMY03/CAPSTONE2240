@@ -733,6 +733,8 @@ def process_vm_resource_data(results, start_date, end_date):
                     value = str(round(value, 2)) + "%"
                 if resource == "maxmem":
                     value = str(round(value, 2)) + "G"
+                if resource == "uptime":
+                    print(f"uptime: {uptime}")
                 row[resource] = value
         if len(row) > 5:  # Ensure we have at least one resource value
             processed_data[identifier] = row
