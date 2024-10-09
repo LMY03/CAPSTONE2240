@@ -679,8 +679,7 @@ def process_vm_resource_data(results, start_date, end_date):
     print(f"all_identifiers: {all_identifiers}")
     for vmid, host, nodename, time in all_identifiers:
         identifier = (vmid, host, nodename, time)
-        dt = datetime.strptime(time, "%Y-%m-%dT%H:%M:%SZ") # I want to make this time +8h
-        dt_adjusted = dt + timedelta(hours=8)
+        dt_adjusted = time + timedelta(hours=8)
         adjusted_time = dt_adjusted.strftime("%Y-%m-%d %H:%M:%S")
         row = {
             'vmid': vmid,
