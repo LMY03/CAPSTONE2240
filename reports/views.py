@@ -604,7 +604,6 @@ def generate_vm_resource_query(start_date, end_date):
         |> filter(fn: (r) => r["_field"] == "cpus")
         |> filter(fn: (r) => r["_measurement"] == "system")
         |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
-        |> keep(columns: ["_value", "host", "nodename", "vmid"])
         |> last()
         |> yield(name: "cpus")
     '''
