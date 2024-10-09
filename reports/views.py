@@ -17,15 +17,15 @@ org = config('INFLUXDB_ORG')
 bucket = config('INFLUXDB_BUCKET')
 proxmox_password = config('PROXMOX_PASSWORD')
 
-# Parse date to InfluxDB compatible
+# Parse date to InfluxDB compatible, fit timezone
 def parse_form_date(date_string, is_start):
     try:
         dt = datetime.strptime(date_string, "%Y-%m-%d")
         if is_start:
-            return dt.strftime("%Y-%m-%dT00:00:00Z")
+            last_day = dt - timedelta(days=1)
+            return last_day.strftime("%Y-%m-%dT16:00:00Z")
         else:
-            next_day = dt + timedelta(days=1)
-            return next_day.strftime("%Y-%m-%dT00:00:00Z")
+            return dt.strftime("%Y-%m-%dT16:00:00Z")
     except ValueError:
         raise ValueError(f"Invalid date format: {date_string}. Expected YYYY-MM-DD")
         
