@@ -657,13 +657,13 @@ def generate_vm_resource_query(start_date, end_date):
 
     uptime_query = f'''
         first = from(bucket: "proxmox")
-        |> range(start: 2024-10-07T16:00:00Z, stop: 2024-10-08T16:00:00Z)
+        |> range(start: {start_date}, stop: {end_date})
         |> filter(fn: (r) => r["_measurement"] == "system")
         |> filter(fn: (r) => r["_field"] == "uptime")
         |> first()
 
         last = from(bucket: "proxmox")
-        |> range(start: 2024-10-07T16:00:00Z, stop: 2024-10-08T16:00:00Z)
+        |> range(start: {start_date}, stop: {end_date})
         |> filter(fn: (r) => r["_measurement"] == "system")
         |> filter(fn: (r) => r["_field"] == "uptime")
         |> last()
