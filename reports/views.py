@@ -1023,8 +1023,12 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
             |> group(columns: ["nodename", "host", "object", "vmid"])
             |> last()
             |> group(columns: ["nodename"])
-            |> sum(column: "_value")
-            |> keep(columns: ["_value", "nodename"])
+            |> pivot(rowKey: ["_time"], columnKey: ["_field"], valueColumn: "_value")
+            |> map(fn: (r) => ({{
+                nodename: r.nodename,
+                last_netin: r.netin
+                }}))
+
 
             first = from(bucket: "proxmox")
             |> range(start: {start_date}, stop: {end_date})
@@ -1033,19 +1037,22 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
             |> group(columns: ["nodename", "host", "object", "vmid"])
             |> first()
             |> group(columns: ["nodename"])
-            |> sum(column: "_value")
-            |> keep(columns: ["_value", "nodename"])
-
+            |> pivot(rowKey: ["_time"], columnKey: ["_field"], valueColumn: "_value")
+            |> map(fn: (r) => ({{
+                nodename: r.nodename,
+                first_netin: r.netin
+                }}))
+            
             join(
             tables: {{last: last, first: first}},
             on: ["nodename"]
             )
             |> map(fn: (r) => ({{
-            nodename: r.nodename,
-            first_value: r._value_first,
-            last_value: r._value_last,
-            _value: r._value_last - r._value_first
-            }}))
+                nodename: r.nodename,
+                first_netin: r.first_netin,
+                last_netin: r.last_netin,
+                _value: r.last_netin - r.first_netin
+                }}))
         '''
         queries["netin"] = netin_query
 
@@ -1058,8 +1065,12 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
             |> group(columns: ["nodename", "host", "object", "vmid"])
             |> last()
             |> group(columns: ["nodename"])
-            |> sum(column: "_value")
-            |> keep(columns: ["_value", "nodename"])
+            |> pivot(rowKey: ["_time"], columnKey: ["_field"], valueColumn: "_value")
+            |> map(fn: (r) => ({{
+                nodename: r.nodename,
+                last_netout: r.netout
+                }}))
+
 
             first = from(bucket: "proxmox")
             |> range(start: {start_date}, stop: {end_date})
@@ -1068,22 +1079,24 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
             |> group(columns: ["nodename", "host", "object", "vmid"])
             |> first()
             |> group(columns: ["nodename"])
-            |> sum(column: "_value")
-            |> keep(columns: ["_value", "nodename"])
-
+            |> pivot(rowKey: ["_time"], columnKey: ["_field"], valueColumn: "_value")
+            |> map(fn: (r) => ({{
+                nodename: r.nodename,
+                first_netout: r.netout
+                }}))
+            
             join(
             tables: {{last: last, first: first}},
             on: ["nodename"]
             )
             |> map(fn: (r) => ({{
-            nodename: r.nodename,
-            first_value: r._value_first,
-            last_value: r._value_last,
-            _value: r._value_last - r._value_first
-            }}))
+                nodename: r.nodename,
+                first_netout: r.first_netout,
+                last_netout: r.last_netout,
+                _value: r.last_netout - r.first_netout
+                }}))
         '''
         queries["netout"] = netout_query
-
        
     elif query_type == "per-class":
         if not class_list:
