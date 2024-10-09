@@ -1112,11 +1112,11 @@ def process_resource_data(results, query_type, start_date, end_date):
 # Generate General CSV Response
 def generate_csv_response(data, query_type, start_date, end_date):
     if query_type == "all":
-        fieldnames = ['startdate', 'enddate', 'cpus', 'cpu', 'mem', 'maxmem']
+        fieldnames = ['startdate', 'enddate', 'cpus', 'cpu', 'mem', 'maxmem', 'netin']
     elif query_type == "per-node":
-        fieldnames = ['nodename', 'startdate', 'enddate', 'cpus', 'cpu', 'mem', 'maxmem']
+        fieldnames = ['nodename', 'startdate', 'enddate', 'cpus', 'cpu', 'mem', 'maxmem', 'netin']
     elif query_type == "per-class":
-        fieldnames = ['classname', 'startdate', 'enddate', 'cpus', 'cpu', 'mem', 'maxmem']
+        fieldnames = ['classname', 'startdate', 'enddate', 'cpus', 'cpu', 'mem', 'maxmem', 'netin']
     
     csv_buffer = StringIO()
     writer = csv.DictWriter(csv_buffer, fieldnames=fieldnames)
