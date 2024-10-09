@@ -586,7 +586,7 @@ def extract_detail_stat(request):
 
     influxdb_client.close()
     
-    # print(f"processed_data: {processed_data}")
+    print(f"processed_data: {processed_data}")
 
     return generate_detail_csv_response(processed_data, start_date_str, end_date_str)
 
@@ -616,7 +616,6 @@ def generate_vm_resource_query(start_date, end_date):
         |> filter(fn: (r) => r["_measurement"] == "system")
         |> filter(fn: (r) => r["_field"] == "cpu")
         |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
-        |> keep(columns: ["_value", "host", "nodename"])
         |> last()
         |> yield(name: "cpu")
     '''
@@ -675,14 +674,14 @@ def process_vm_resource_data(results, start_date, end_date):
     maxmem_count = 0
     for resource, result in results.items():
         if result:
-            if resource == "cpus": cpus_count+=1
-            if resource == "cpu": cpu_count+=1
-            if resource == "mem": mem_count+=1
-            if resource == "maxmem": maxmem_count+=1
             for table in result:
                 for record in table.records:
                     identifier = (record.values.get('vmid'), record.values.get('host'), record.values.get('nodename'))
                     if all(identifier):
+                        if resource == "cpus": cpus_count+=1
+                        if resource == "cpu": cpu_count+=1
+                        if resource == "mem": mem_count+=1
+                        if resource == "maxmem": maxmem_count+=1
                         all_identifiers.add(identifier)
 
     print(f"cpus_count:{cpus_count}")
