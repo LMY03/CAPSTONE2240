@@ -659,7 +659,7 @@ def process_vm_resource_data(results, start_date, end_date):
             if result:
                 for table in result:
                     for record in table.records:
-                        if (record.values.get('vmid') == identifier[0]):
+                        if (record.values.get('vmid') == identifier[0] and record.values.get('host') == identifier[1] and record.values.get('nodename') == identifier[2] and record.values.get('object') == identifier[3] ):
                             return record.values.get('_value', 0)
             return None
         except (IndexError, AttributeError):
@@ -671,13 +671,13 @@ def process_vm_resource_data(results, start_date, end_date):
         if result:
             for table in result:
                 for record in table.records:
-                    identifier = (record.values.get('vmid'), record.values.get('host'), record.values.get('nodename'), record.values.get('_time'))
+                    identifier = (record.values.get('vmid'), record.values.get('host'), record.values.get('nodename'), record.values.get('object'), record.values.get('_time'))
                     if all(identifier):
                         if resource == "cpus": # so that it add only once 
                             all_identifiers.add(identifier)
     
     print(f"all_identifiers: {all_identifiers}")
-    for vmid, host, nodename, time in all_identifiers:
+    for vmid, host, nodename, machineType, time in all_identifiers:
         identifier = (vmid, host, nodename, time)
         dt_adjusted = time + timedelta(hours=8)
         adjusted_time = dt_adjusted.strftime("%Y-%m-%d %H:%M:%S")
@@ -685,6 +685,7 @@ def process_vm_resource_data(results, start_date, end_date):
             'vmid': vmid,
             'host': host,
             'nodename': nodename,
+            'machineType': machineType,
             'until_time': adjusted_time
         }
         for resource in ['cpus', 'cpu', 'mem', 'maxmem']:
@@ -699,7 +700,7 @@ def process_vm_resource_data(results, start_date, end_date):
                 if resource == "maxmem":
                     value = str(round(value, 2)) + "G"
                 row[resource] = value
-        if len(row) > 4:  # Ensure we have at least one resource value
+        if len(row) > 5:  # Ensure we have at least one resource value
             processed_data[identifier] = row
 
     return list(processed_data.values())
@@ -707,7 +708,7 @@ def process_vm_resource_data(results, start_date, end_date):
 # Generate Detail CSV Response
 def generate_detail_csv_response(data, start_date, end_date):
     # TODO: add uptime
-    fieldnames = ['vmid', 'host', 'nodename', 'until_time', 'cpus', 'cpu', 'mem', 'maxmem']
+    fieldnames = ['vmid', 'host', 'nodename', 'machineType', 'until_time', 'cpus', 'cpu', 'mem', 'maxmem']
     csv_buffer = StringIO()
     writer = csv.DictWriter(csv_buffer, fieldnames=fieldnames)
     writer.writeheader()
