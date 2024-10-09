@@ -672,21 +672,22 @@ def process_vm_resource_data(results, start_date, end_date):
         if result:
             for table in result:
                 for record in table.records:
-                    identifier = (record.values.get('vmid'), record.values.get('host'), record.values.get('nodename'))
+                    identifier = (record.values.get('vmid'), record.values.get('host'), record.values.get('nodename'), records.value.get('_time'))
                     if all(identifier):
-                        all_identifiers.add(identifier)
-                        print(f"resource: {resource}, identifier: {identifier}, length of identifiers:{len(all_identifiers)}")
-
+                        if resource == "cpus": # so that it add only once 
+                            all_identifiers.add(identifier)
     
-
-
-    # print(f"all_identifiers: {all_identifiers}")
-    for vmid, nodename, host in all_identifiers:
-        identifier = (vmid, host, nodename)
+    print(f"all_identifiers: {all_identifiers}")
+    for vmid, host, nodename, time in all_identifiers:
+        identifier = (vmid, host, nodename, time)
+        dt = datetime.strptime(time, "%Y-%m-%dT%H:%M:%SZ") # I want to make this time +8h
+        dt_adjusted = dt + timedelta(hours=8)
+        adjusted_time = dt_adjusted.strftime("%Y-%m-%d %H:%M:%S")
         row = {
             'vmid': vmid,
             'host': host,
             'nodename': nodename,
+            'until_time': adjusted_time,
             'startdate': start_date,
             'enddate': end_date,
         }
