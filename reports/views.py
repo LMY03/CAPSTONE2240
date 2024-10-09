@@ -31,7 +31,12 @@ def parse_form_date(date_string, is_start):
             return dt.strftime("%Y-%m-%dT16:00:00Z")
     except ValueError:
         raise ValueError(f"Invalid date format: {date_string}. Expected YYYY-MM-DD")
-        
+
+# seconds to HMS
+def seconds_to_hms(seconds):
+    hours, remainder = divmod(seconds, 3600)
+    minutes, seconds = divmod(remainder, 60)
+    return f"{int(hours):02d}:{int(minutes):02d}:{int(seconds):02d}"        
 
 # Get Report Page
 def index(request):
@@ -734,7 +739,9 @@ def process_vm_resource_data(results, start_date, end_date):
                 if resource == "maxmem":
                     value = str(round(value, 2)) + "G"
                 if resource == "uptime":
-                    print(f"uptime: {value}")
+                    if value < 0:
+                        value = 0
+                    value = seconds_to_hms(value)
                 row[resource] = value
         if len(row) > 5:  # Ensure we have at least one resource value
             processed_data[identifier] = row
