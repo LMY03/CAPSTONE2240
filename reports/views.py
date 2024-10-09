@@ -692,6 +692,10 @@ def process_vm_resource_data(results, start_date, end_date):
             if value is not None:
                 if resource == "cpu": 
                     value = str(round(value * 100, 2)) + "%"
+                if resource == "mem":
+                    value = round(value, 2) + "%"
+                if resource == "maxmem":
+                    value = round(value, 2)
                 row[resource] = value
         if len(row) > 4:  # Ensure we have at least one resource value
             processed_data[identifier] = row
