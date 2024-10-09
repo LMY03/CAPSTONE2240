@@ -1012,6 +1012,78 @@ def generate_resource_query(start_date, end_date, query_type, class_list=None):
             |> yield(name: "maxmem_per_node")
         '''
         queries["maxmem"] = maxmem_query
+
+        
+        # netin data
+        netin_query = f'''
+            last = from(bucket: "proxmox")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["_field"] == "netin")
+            |> group(columns: ["nodename", "host", "object", "vmid"])
+            |> last()
+            |> group(columns: ["nodename"])
+            |> sum(column: "_value")
+            |> keep(columns: ["_value", "nodename"])
+
+            first = from(bucket: "proxmox")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["_field"] == "netin")
+            |> group(columns: ["nodename", "host", "object", "vmid"])
+            |> first()
+            |> group(columns: ["nodename"])
+            |> sum(column: "_value")
+            |> keep(columns: ["_value", "nodename"])
+
+            join(
+            tables: {{last: last, first: first}},
+            on: ["nodename"]
+            )
+            |> map(fn: (r) => ({{
+            nodename: r.nodename,
+            first_value: r._value_first,
+            last_value: r._value_last,
+            _value: r._value_last - r._value_first
+            }}))
+        '''
+        queries["netin"] = netin_query
+
+        # netout data
+        netout_query = f'''
+            last = from(bucket: "proxmox")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["_field"] == "netout")
+            |> group(columns: ["nodename", "host", "object", "vmid"])
+            |> last()
+            |> group(columns: ["nodename"])
+            |> sum(column: "_value")
+            |> keep(columns: ["_value", "nodename"])
+
+            first = from(bucket: "proxmox")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["_field"] == "netout")
+            |> group(columns: ["nodename", "host", "object", "vmid"])
+            |> first()
+            |> group(columns: ["nodename"])
+            |> sum(column: "_value")
+            |> keep(columns: ["_value", "nodename"])
+
+            join(
+            tables: {{last: last, first: first}},
+            on: ["nodename"]
+            )
+            |> map(fn: (r) => ({{
+            nodename: r.nodename,
+            first_value: r._value_first,
+            last_value: r._value_last,
+            _value: r._value_last - r._value_first
+            }}))
+        '''
+        queries["netout"] = netout_query
+
        
     elif query_type == "per-class":
         if not class_list:
@@ -1253,9 +1325,9 @@ def generate_csv_response(data, query_type, start_date, end_date):
     if query_type == "all":
         fieldnames = ['cpus', 'cpu', 'mem', 'maxmem', 'netin','netout']
     elif query_type == "per-node":
-        fieldnames = ['nodename', 'startdate', 'enddate', 'cpus', 'cpu', 'mem', 'maxmem', 'netin','netout']
+        fieldnames = ['nodename', 'cpus', 'cpu', 'mem', 'maxmem', 'netin','netout']
     elif query_type == "per-class":
-        fieldnames = ['classname', 'startdate', 'enddate', 'cpus', 'cpu', 'mem', 'maxmem', 'netin','netout']
+        fieldnames = ['classname', 'cpus', 'cpu', 'mem', 'maxmem', 'netin','netout']
     
     csv_buffer = StringIO()
     writer = csv.DictWriter(csv_buffer, fieldnames=fieldnames)
