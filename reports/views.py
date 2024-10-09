@@ -693,7 +693,7 @@ def process_vm_resource_data(results, start_date, end_date):
                 if resource == "cpu": 
                     print(f"value: {value}")
                     value = str(value * 100) + "%"
-                row[resource] = value
+                    row[resource] = value
         if len(row) > 5:  # Ensure we have at least one resource value
             processed_data[identifier] = row
 
