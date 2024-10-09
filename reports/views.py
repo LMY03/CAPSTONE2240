@@ -669,14 +669,27 @@ def process_vm_resource_data(results, start_date, end_date):
             return None
 
     all_identifiers  = set()
+    cpus_count = 0
+    cpu_count = 0
+    mem_count = 0
+    maxmem_count = 0
     for resource, result in results.items():
         if result:
             for table in result:
                 for record in table.records:
                     identifier = (record.values.get('vmid'), record.values.get('host'), record.values.get('nodename'))
                     if all(identifier):
-                        print(resource, identifier)
+                        if resource == "cpus": cpus_count+=1
+                        if resource == "cpu": cpu_count+=1
+                        if resource == "mem": mem_count+=1
+                        if resource == "maxmem": maxmem_count+=1
                         all_identifiers.add(identifier)
+
+    print(f"cpus_count:{cpus_count}")
+    print(f"cpus_count:{cpu_count}")
+    print(f"cpus_count:{mem_count}")
+    print(f"cpus_count:{maxmem_count}")
+
 
     # print(f"all_identifiers: {all_identifiers}")
     for vmid, nodename, host in all_identifiers:
