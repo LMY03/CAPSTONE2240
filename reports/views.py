@@ -586,7 +586,7 @@ def extract_detail_stat(request):
 
     influxdb_client.close()
     
-    print(f"processed_data: {processed_data}")
+    # print(f"processed_data: {processed_data}")
 
     return generate_detail_csv_response(processed_data, start_date_str, end_date_str)
 
