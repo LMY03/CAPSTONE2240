@@ -1363,49 +1363,99 @@ def generate_csv_response(data, query_type, start_date, end_date):
 
 ############################### Ticketing ###############################
 
-def render_ticketing_report(request):
-    return render(request, 'reports/ticketing.html', { 'form' : TicketingReportForm() })
+def fetch_ticketing_report_data(form : TicketingReportForm):
 
-def fetch_ticketing_report_data(use_cases, start_date, end_date):
+    if form.is_valid():
+        start_date = form.cleaned_data['start_date']
+        end_date = form.cleaned_data['end_date']
+        use_cases = form.cleaned_data['use_case']
+        class_course_search = form.cleaned_data['class_course_search']
 
-    return VirtualMachines.objects.filter(
-        request__requestusecase__request_use_case__in=use_cases,
-        request__ongoing_date__range=(start_date, end_date),
-        # node__name__in=nodes,
+        print(use_cases)
+
+        data = VirtualMachines.objects.filter(
+            request__requestusecase__request_use_case__in=use_cases,
+            request__ongoing_date__range=(start_date, end_date),
+            # node__name__in=nodes,
+        )
+        
+        if not data : print('empty')
+        return data
+    
+    else:
+        print(form.errors)
+
+def generate_general_ticketing_report(raw_data):
+    data = raw_data.aggregate(
+        total_vms=Count('vm_id'),
+        total_ram=Sum('ram'),
+        total_cores=Sum('cores'),
+        total_storage=Sum('storage'),
     )
+    
+    headers = [
+        'Total VMs', 
+        'Total Memory', 
+        'Total Cores', 
+        'Total Storage',
+    ]
 
-def download_ticketing_report(request):
+    return headers, data
+
+def generate_detailed_ticketing_report(raw_data):
+    data = raw_data
+    
+    headers = [
+    ]
+
+    return headers, data
+
+def render_ticketing_report(request):
+
+    context = {
+        'form' : TicketingReportForm(),
+    }
 
     if request.method == 'POST':
         form = TicketingReportForm(request.POST)
-        if form.is_valid():
-            start_date = form.cleaned_data['start_date']
-            end_date = form.cleaned_data['end_date']
-            use_cases = request.POST.getlist('use_case')
-            class_course_search = form.cleaned_data['class_course_search']
 
-            data = fetch_ticketing_report_data(use_cases, start_date, end_date)
+        raw_data = fetch_ticketing_report_data(form)
+        
+        if raw_data:
 
-            if data:
-                
-                # Summary report
-                report = data.aggregate(
-                    total_vms=Count('vm_id'),
-                    total_ram=Sum('ram'),
-                    total_cores=Sum('cores'),
-                    total_storage=Sum('storage'),
-                )
-                
-                headers = [
-                    'Total VMs', 
-                    'Total Memory', 
-                    'Total Cores', 
-                    'Total Storage',
-                ]
+            headers, data = generate_general_ticketing_report(form)
+    
+    return render(request, 'reports/ticketing.html', context)
 
-                return download_csv('general request report', headers, data)
-            
-        else:
-            print(form.errors)
+    
+def download_general_ticketing_report(request):
 
+    if request.method == 'POST':
+
+        form = TicketingReportForm(request.POST)
+
+        raw_data = fetch_ticketing_report_data(form)
+
+        if raw_data:
+
+            headers, data = generate_general_ticketing_report(form)
+
+            return download_csv('general request report', headers, data)
+    
+    return redirect('reports:ticketing_report')
+
+def download_detailed_ticketing_report(request):
+
+    if request.method == 'POST':
+
+        form = TicketingReportForm(request.POST)
+
+        raw_data = fetch_ticketing_report_data(form)
+
+        if raw_data:
+
+            headers, data = generate_detailed_ticketing_report(form)
+
+            return download_csv('general request report', headers, data)
+    
     return redirect('reports:ticketing_report')

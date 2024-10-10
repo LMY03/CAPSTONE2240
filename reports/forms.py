@@ -12,6 +12,7 @@ class TicketingReportForm(forms.Form):
         }),
         required=True,
     )
+    
     end_date = forms.DateTimeField(
         label='End Date',
         widget=forms.DateTimeInput(attrs={
@@ -20,6 +21,7 @@ class TicketingReportForm(forms.Form):
         }),
         required=True,
     )
+
     use_case = forms.MultipleChoiceField(
         label='Use Case',
         choices=RequestUseCase.UseCase.choices,

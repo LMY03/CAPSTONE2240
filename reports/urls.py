@@ -15,5 +15,5 @@ urlpatterns = [
     # path('open_report_page', views.open_report_page, name="open_report_page"),
     # path('report_gen', views.report_gen, name="report_gen")
     path('ticketing_report', views.render_ticketing_report, name="ticketing_report"),
-    path('download_ticketing_report', views.download_ticketing_report, name="download_ticketing_report"),
+    path('download_general_ticketing_report', views.download_general_ticketing_report, name="download_general_ticketing_report"),
 ]
