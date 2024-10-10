@@ -61,9 +61,9 @@ def tsg_vm_details(request, vm_id):
 
 def generate_vm_ids(no_of_vm):
     
-    last_vm = VirtualMachines.objects.all().last()
-    if last_vm != None : return last_vm.vm_id + 1
-    else : return 5000
+    # last_vm = VirtualMachines.objects.all().last()
+    # if last_vm != None : return last_vm.vm_id + 1
+    # else : return 5000
     
     existing_vms = set(VirtualMachines.objects.exclude(status=VirtualMachines.Status.DESTROYED).values_list('vm_id', flat=True))
     
@@ -96,19 +96,19 @@ def shutdown_vm(vm : VirtualMachines):
         
         if not vm.is_lxc():
             
-            proxmox.shutdown_vm(vm.node.name, vm.vm_id)
+            # proxmox.shutdown_vm(vm.node.name, vm.vm_id)
 
             vm.set_shutdown()
 
-            proxmox.wait_for_vm_stop(vm.node.name, vm.vm_id)
+            # proxmox.wait_for_vm_stop(vm.node.name, vm.vm_id)
             
         else:
             
-            proxmox.shutdown_lxc(vm.node.name, vm.vm_id)
+            # proxmox.shutdown_lxc(vm.node.name, vm.vm_id)
 
             vm.set_shutdown()
 
-            proxmox.wait_for_lxc_stop(vm.node.name, vm.vm_id)
+            # proxmox.wait_for_lxc_stop(vm.node.name, vm.vm_id)
 
 def perform_shutdown(request, vm_id):
 
