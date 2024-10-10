@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from datetime import datetime, timedelta
 from django.http import JsonResponse, HttpResponse
 from django.core import serializers
@@ -13,6 +13,8 @@ from ticketing.models import RequestEntry, RequestUseCase
 from proxmox.models import VirtualMachines
 
 from CAPSTONE2240.utils import download_csv
+
+from .forms import TicketingReportForm
 
 INFLUX_ADDRESS = config('INFLUX_ADDRESS')
 token = config('INFLUX_TOKEN')
@@ -1358,3 +1360,52 @@ def generate_csv_response(data, query_type, start_date, end_date):
     )
     response.write(csv_buffer.getvalue())
     return response
+
+############################### Ticketing ###############################
+
+def render_ticketing_report(request):
+    return render(request, 'reports/ticketing.html', { 'form' : TicketingReportForm() })
+
+def fetch_ticketing_report_data(use_cases, start_date, end_date):
+
+    return VirtualMachines.objects.filter(
+        request__requestusecase__request_use_case__in=use_cases,
+        request__ongoing_date__range=(start_date, end_date),
+        # node__name__in=nodes,
+    )
+
+def download_ticketing_report(request):
+
+    if request.method == 'POST':
+        form = TicketingReportForm(request.POST)
+        if form.is_valid():
+            start_date = form.cleaned_data['start_date']
+            end_date = form.cleaned_data['end_date']
+            use_cases = request.POST.getlist('use_case')
+            class_course_search = form.cleaned_data['class_course_search']
+
+            data = fetch_ticketing_report_data(use_cases, start_date, end_date)
+
+            if data:
+                
+                # Summary report
+                report = data.aggregate(
+                    total_vms=Count('vm_id'),
+                    total_ram=Sum('ram'),
+                    total_cores=Sum('cores'),
+                    total_storage=Sum('storage'),
+                )
+                
+                headers = [
+                    'Total VMs', 
+                    'Total Memory', 
+                    'Total Cores', 
+                    'Total Storage',
+                ]
+
+                return download_csv('general request report', headers, data)
+            
+        else:
+            print(form.errors)
+
+    return redirect('reports:ticketing_report')

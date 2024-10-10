@@ -1,0 +1,103 @@
+{% extends 'users/base_tsg.html' %}
+
+{% block title %}
+System Report
+{% endblock title %}
+{% load static %}
+
+{% block css %}
+<link rel="stylesheet" href="{% static 'users/css/student_home.css' %}">
+{% endblock css %} 
+
+{% block content %}
+    <div class="col-md-10 content">
+        <h1>Ticketing Report</h1>
+        <form method="post" id="ticketing-report">
+            {% csrf_token %}
+            <div class="mb-3">
+                {{ form.start_date.label }} {{ form.start_date }}
+            </div>
+            <div class="mb-3">
+                {{ form.end_date.label }} {{ form.end_date }}
+            </div>
+            
+            <div class="form-group">
+                <!-- {{form.use_case}} -->
+                <label>Use Case:</label><br>
+                {% for choice in form.use_case %}
+                    <div class="form-check">
+                        {{ choice.tag }}
+                        <label class="form-check-label" for="{{ choice.id_for_label }}">{{ choice.choice_label }}</label>
+                    </div>
+                {% endfor %}
+            </div>            
+
+            <!-- Class Course Search bar -->
+            <div id="class-course-container" style="display:none;">
+                {{ form.class_course_search.label }}
+                {{ form.class_course_search }} 
+            </div>
+
+            <button type="submit" class="btn btn-primary">Generate Report</button>
+        </form>
+    </div>
+{% endblock content %}
+
+
+{% block script %}
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.0.2/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const useCaseCheckboxes = document.querySelectorAll('input[name="use_case"]');
+        const classCourseContainer = document.getElementById('class-course-container');
+        const classCourseSearch = document.getElementById('id_class_course_search');
+
+        useCaseCheckboxes.forEach(function(checkbox) {
+            checkbox.addEventListener('change', function() {
+                // Check if the checkbox is for 'CLASS COURSE'
+                if (checkbox.nextElementSibling.innerText.trim() === 'Class Course') {
+                    if (checkbox.checked) {
+                        classCourseContainer.style.display = 'block';
+                        classCourseSearch.required = true;
+                    }
+                    else {
+                        classCourseContainer.style.display = 'none';
+                        classCourseSearch.required = false;
+                    }
+                }
+            });
+        });
+    });
+
+$('#ticketing-report').on('submit', function(e) {
+    e.preventDefault();     // prevent the default action
+
+    var form = document.createElement('form');
+    form.method = 'POST';
+    form.action = 'download_ticketing_report';
+    
+    $(this).find('input, select').each(function() {
+      var input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = this.name;
+      input.value = this.value;
+      form.appendChild(input);
+    });
+
+    // Append CSRF token
+    var csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = 'csrfmiddlewaretoken';
+    csrfInput.value = $('input[name=csrfmiddlewaretoken]').val();
+    form.appendChild(csrfInput);
+
+    // Append form to body and submit
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
+  });
+</script>
+
+{% endblock script %}
