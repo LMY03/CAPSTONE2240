@@ -12,17 +12,16 @@ class ProxmoxConfig(AppConfig):
         from guacamole.models import GuacamoleConnection
 
         def create_initial_nodes(sender, **kwargs):
-            if not Nodes.objects.filter(name='pve').exists():
+            if not Nodes.objects.exists():
                 Nodes.objects.create(
                     name='pve',
                 )
-            elif not Nodes.objects.filter(name='jin').exists():
                 Nodes.objects.create(
                     name='jin',
                 )
 
         def create_initial_vm_templates(sender, **kwargs):
-            if not VMTemplates.objects.filter(vm_name='Ubuntu-Desktop-24 (GUI)').exists():
+            if not VMTemplates.objects.exists():
                 VMTemplates.objects.create(
                     vm_id=3000,
                     vm_name='Ubuntu-Desktop-24 (GUI)',
@@ -34,7 +33,6 @@ class ProxmoxConfig(AppConfig):
                     is_active=True,
                     node=1
                 )
-            elif not VMTemplates.objects.filter(vm_name='Ubuntu-Desktop-22 (GUI)').exists():
                 VMTemplates.objects.create(
                     vm_id=3000,
                     vm_name='Ubuntu-Desktop-22 (GUI)',
@@ -46,7 +44,6 @@ class ProxmoxConfig(AppConfig):
                     is_active=True,
                     node=1,
                 )
-            elif not VMTemplates.objects.filter(vm_name='Ubuntu-Server-24 (TUI)').exists():
                 VMTemplates.objects.create(
                     vm_id=3000,
                     vm_name='Ubuntu-Server-24 (TUI)',
@@ -58,7 +55,6 @@ class ProxmoxConfig(AppConfig):
                     is_active=True,
                     node=1,
                 )
-            elif not VMTemplates.objects.filter(vm_name='Ubuntu-Server-22 (TUI)').exists():
                 VMTemplates.objects.create(
                     vm_id=3000,
                     vm_name='Ubuntu-Server-22 (TUI)',
@@ -70,7 +66,6 @@ class ProxmoxConfig(AppConfig):
                     is_active=True,
                     node=1,
                 )
-            elif not VMTemplates.objects.filter(vm_name='Ubuntu-LXC-23').exists():
                 VMTemplates.objects.create(
                     vm_id=4000,
                     vm_name='Ubuntu-LXC-23',
