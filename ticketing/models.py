@@ -16,7 +16,7 @@ def date_needed_default():
 
 class RequestEntry(models.Model):
 
-    ram = models.IntegerField(default=2)
+    ram = models.IntegerField()
     #storage = models.FloatField(default= 0)
     has_internet = models.BooleanField(default=False)
     other_config = models.TextField(blank=True, null=True, default=None)
@@ -40,13 +40,13 @@ class RequestEntry(models.Model):
     requester = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name='requested_entries')
     assigned_to = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='assigned_entries')
     template = models.ForeignKey(VMTemplates, on_delete=models.DO_NOTHING)
-    cores = models.IntegerField(default=1)
+    cores = models.IntegerField()
     # security options
     request_date = models.DateTimeField(default=timezone.localtime)
     date_needed = models.DateField(default=expiration_date_default)
     expired_date = models.DateField(null=True, default=None)
-    expiration_date = models.DateField(null=True)
-
+    expiration_date = models.DateField(null=True, default=None)
+    rejected_date = models.DateField(null=True, default=None)
     ongoing_date = models.DateTimeField(null=True, default=None)
 
     vm_date_tested = models.DateTimeField(null=True, default=None)
@@ -54,6 +54,8 @@ class RequestEntry(models.Model):
     def is_recurring(self) : return self.expiration_date == None
     
     def is_vm_tested(self) : return self.vm_date_tested is not None
+
+    def is_rejected(self) : return self.rejected_date == None
 
     def get_requester(self):
         requester = self.requester
@@ -130,8 +132,7 @@ class RequestUseCase(models.Model):
         choices=UseCase.choices,
     )
     request = models.ForeignKey(RequestEntry, on_delete=models.CASCADE)
-    vm_count = models.IntegerField(default=1)
-
+    vm_count = models.IntegerField()
 # class GroupList (models.Model):
 #     user = models.CharField(null=False, max_length=50, default=" ")
 #     request_use_case = models.ForeignKey(RequestUseCase, on_delete=models.CASCADE)
