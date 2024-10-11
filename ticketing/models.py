@@ -138,6 +138,7 @@ class RequestUseCase(models.Model):
     )
     request = models.ForeignKey(RequestEntry, on_delete=models.CASCADE)
     vm_count = models.IntegerField()
+    
 # class GroupList (models.Model):
 #     user = models.CharField(null=False, max_length=50, default=" ")
 #     request_use_case = models.ForeignKey(RequestUseCase, on_delete=models.CASCADE)
