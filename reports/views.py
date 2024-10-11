@@ -1361,7 +1361,7 @@ def generate_csv_response(data, query_type, start_date, end_date):
     response.write(csv_buffer.getvalue())
     return response
 
-def generate_form_data(request): {
+def generate_form_data(request): 
 
     # connect to influxdb
     influxdb_client = InfluxDBClient(url=INFLUX_ADDRESS, token=token, org=org)
@@ -1556,7 +1556,6 @@ def generate_form_data(request): {
     output["data"] = data
     
     return JsonResponse(output)
-}
 
 ############################### Ticketing ###############################
 
