@@ -61,9 +61,9 @@ def tsg_vm_details(request, vm_id):
 
 def generate_vm_ids(no_of_vm):
     
-    last_vm = VirtualMachines.objects.all().last()
-    if last_vm != None : return last_vm.vm_id + 1
-    else : return 5000
+    # last_vm = VirtualMachines.objects.all().last()
+    # if last_vm != None : return last_vm.vm_id + 1
+    # else : return 5000
     
     existing_vms = set(VirtualMachines.objects.exclude(status=VirtualMachines.Status.DESTROYED).values_list('vm_id', flat=True))
     

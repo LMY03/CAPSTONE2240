@@ -639,8 +639,7 @@ def request_confirm(request, request_id):
 def request_reject(request, id):
 
     request_entry = get_object_or_404(RequestEntry, pk=id)
-    request_entry.status = RequestEntry.Status.REJECTED
-    request_entry.save()
+    request_entry.set_rejected()
     to = request_entry.requester.email
     data = {
         "faculty_name" : request_entry.requester.get_full_name(),
@@ -711,8 +710,7 @@ def accept_test_vm(request, request_id): #Where the faculty Accepts the test vm 
 
 def reject_test_vm(request, request_id):   
     request_entry = get_object_or_404(RequestEntry, pk=request_id)
-    request_entry.status = RequestEntry.Status.REJECTED
-    request_entry.save()
+    request_entry.set_rejected()
 
     vm = get_object_or_404(VirtualMachines, request=request_entry)
     guacamole_connection = get_object_or_404(GuacamoleConnection, vm=vm)
