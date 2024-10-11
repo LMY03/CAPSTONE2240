@@ -1547,11 +1547,11 @@ def generate_form_data(request):
     # subjects
 
     output = {}
-    if (len(data) > 0) {
+    if (len(data) > 0) :
         output["code"] = 0
-    } else {
+    else:
         output["code"] = -1
-    }
+
     output["count"] = len(data)
     output["data"] = data
     
