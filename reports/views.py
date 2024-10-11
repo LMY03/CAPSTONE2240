@@ -1388,6 +1388,38 @@ def generate_form_data(request):
     result["class"] = "none"
     
     # vm num
+    vm_query = f'''
+        from(bucket: "{bucket}")
+        |> range(start: {start_date}, stop: {end_date})
+        |> filter(fn: (r) => r["_measurement"] == "system")
+        |> filter(fn: (r) => r["_field"] == "cpus")
+        |> filter(fn: (r) => r["object"] == "qemu")
+        |> distinct(column: "vmid")
+        |> count()
+        |> group()
+        |> sum(column: "_value")
+    '''
+    query_result = query_api.query(query=vm_query)
+    for table in query_result:
+        for record in table.records:
+            result["vm number"] = record.values.get('_value', 0)
+
+    # lxc num
+    lxc_query = f'''
+        from(bucket: "{bucket}")
+        |> range(start: {start_date}, stop: {end_date})
+        |> filter(fn: (r) => r["_measurement"] == "system")
+        |> filter(fn: (r) => r["_field"] == "cpus")
+        |> filter(fn: (r) => r["object"] == "lxc")
+        |> distinct(column: "vmid")
+        |> count()
+        |> group()
+        |> sum(column: "_value")
+    '''
+    query_result = query_api.query(query=lxc_query)
+    for table in query_result:
+        for record in table.records:
+            result["lxc number"] = record.values.get('_value', 0)
 
     # cpus cores
     cpus_query = f'''
@@ -1539,7 +1571,7 @@ def generate_form_data(request):
             result["netout"] = record.values.get('_value', 0)
 
     # uptime
-
+    result["uptime"] = "none"
     data.append(result)
 
     # nodes
