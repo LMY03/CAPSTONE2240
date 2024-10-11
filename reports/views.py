@@ -1498,7 +1498,7 @@ def generate_form_data(request):
         |> last()
         |> group()
         |> sum(column: "_value")
-        |> map(fn: (r) => ({{ r with _value: r._value / 1024 / 1024 / 1000.0 }}))
+        |> map(fn: (r) => ({{ r with _value: r._value / 1024 / 1024 / 1000 }}))
     '''
     query_result = query_api.query(query=storage_query)
     for table in query_result:
@@ -1515,7 +1515,7 @@ def generate_form_data(request):
         |> last()
         |> group()
         |> sum(column: "_value")
-        |> map(fn: (r) => ({{ r with _value: r._value / 1024 / 1024 / 1000.0 }}))
+        |> map(fn: (r) => ({{ r with _value: r._value / 1024 / 1024 / 1000 }}))
     '''
     query_result = query_api.query(query=storage_used_query)
     for table in query_result:
