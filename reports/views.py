@@ -1489,7 +1489,38 @@ def generate_form_data(request):
             result["mem usage"] = record.values.get('_value', 0)
 
     # storage
+    storage_query = f'''
+        from(bucket: "{bucket}")
+        |> range(start: {start_date}, stop: {end_date})
+        |> filter(fn: (r) => r["_measurement"] == "system")
+        |> filter(fn: (r) => r["_field"] == "total")
+        |> filter(fn: (r) => r["host"] == "local")
+        |> last()
+        |> group()
+        |> sum(column: "_value")
+        |> map(fn: (r) => ({{ r with _value: r._value / 1024 / 1024 / 1000.0 }}))
+    '''
+    query_result = query_api.query(query=storage_query)
+    for table in query_result:
+        for record in table.records:
+            result["storage"] = record.values.get('_value', 0)
+
     # storage usage
+    storage_used_query = f'''
+        from(bucket: "{bucket}")
+        |> range(start: {start_date}, stop: {end_date})
+        |> filter(fn: (r) => r["_measurement"] == "system")
+        |> filter(fn: (r) => r["_field"] == "used")
+        |> filter(fn: (r) => r["host"] == "local")
+        |> last()
+        |> group()
+        |> sum(column: "_value")
+        |> map(fn: (r) => ({{ r with _value: r._value / 1024 / 1024 / 1000.0 }}))
+    '''
+    query_result = query_api.query(query=storage_used_query)
+    for table in query_result:
+        for record in table.records:
+            result["storage usage"] = record.values.get('_value', 0)
 
     # netin data
     netin_query = f'''
