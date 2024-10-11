@@ -8,8 +8,9 @@ urlpatterns = [
     path('', views.index, name="index"),
     # path('performance_gen', views.performance_gen, name="performance_gen"),
     path('getVmList', views.getVmList, name="getVmList"),
-    path('extract_general_stat', views.extract_general_stat, name="extract_general_stat"),
+    # path('extract_general_stat', views.extract_general_stat, name="extract_general_stat"),
     path('extract_detail_stat', views.extract_detail_stat, name="extract_detail_stat"),
+    path('extract_general_stat', views.generate_form_data, name="generate_form_data"),
     # path('extract_general_request', views., name="extract_general_request"),
 
     # path('index_csv', views.index_csv, name="index_csv"),
