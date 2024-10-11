@@ -1572,7 +1572,6 @@ def fetch_ticketing_report_data(form : TicketingReportForm):
         data = VirtualMachines.objects.filter(
             request__requestusecase__request_use_case__in=use_cases,
             request__ongoing_date__range=(start_date, end_date),
-            # node__name__in=nodes,
         )
         
         if not data : print('empty')
