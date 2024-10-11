@@ -93,6 +93,11 @@ class RequestEntry(models.Model):
         self.ongoing_date = timezone.localtime()
         self.save()
 
+    def set_rejected(self):
+        self.status = RequestEntry.Status.REJECTED
+        self.rejected_date = timezone.localtime()
+        self.save()
+
     def get_total_no_of_vm(self):
         request_use_cases = RequestUseCase.objects.filter(request=self).values('request_use_case', 'vm_count')
         total_no_of_vm = 0
