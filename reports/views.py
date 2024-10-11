@@ -1361,6 +1361,203 @@ def generate_csv_response(data, query_type, start_date, end_date):
     response.write(csv_buffer.getvalue())
     return response
 
+def generate_form_data(request): {
+
+    # connect to influxdb
+    influxdb_client = InfluxDBClient(url=INFLUX_ADDRESS, token=token, org=org)
+    query_api = influxdb_client.query_api()
+
+    # get date range
+    start_date_str = request.POST.get('startdate')
+    end_date_str = request.POST.get('enddate')
+    # TODO: change this. Now is date
+    start_date = parse_form_date(start_date_str, 1)
+    end_date = parse_form_date(end_date_str, 0)
+    
+    # get template vm
+    template_hosts_ids = get_template_hosts_ids(start_date, end_date)
+    excluded_vmids_str = '|'.join(map(str, template_hosts_ids))
+
+
+    index = 0
+    # system
+    data = []
+    result = {}
+    result["name"] = "system"
+    result["nodename"] = "none"
+    result["class"] = "none"
+    
+    # vm num
+
+    # cpus cores
+    cpus_query = f'''
+        from(bucket:"{bucket}")
+        |> range(start: {start_date}, stop: {end_date})
+        |> filter(fn: (r) => r["_field"] == "cpus")
+        |> filter(fn: (r) => r["_measurement"] == "cpustat")
+        |> last()
+        |> group()
+        |> sum()
+    '''
+    query_result = query_api.query(query=cpus_query)
+    for table in query_result:
+        for record in table.records:
+            result["cpus"] = record.values.get('_value', 0)
+
+    # cpu data
+    cpu_query = f'''
+        from(bucket:"{bucket}")
+        |> range(start: {start_date}, stop: {end_date})
+        |> filter(fn: (r) => r["_field"] == "cpu")
+        |> filter(fn: (r) => r["_measurement"] == "system")
+        |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+        |> group()
+        |> mean()
+        |> map(fn: (r) => ({{ r with _value: r._value * 100.0 }}))
+    '''
+    query_result = query_api.query(query=cpu_query)
+    for table in query_result:
+        for record in table.records:
+            result["cpu usage"] = record.values.get('_value', 0)
+
+    # maxmem data
+    maxmem_query = f'''
+        from(bucket:"{bucket}")
+        |> range(start: {start_date}, stop: {end_date})
+        |> filter(fn: (r) => r["_measurement"] == "memory")
+        |> filter(fn: (r) => r["_field"] == "memtotal")
+        |> last()
+        |> group()
+        |> sum()
+        |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 / 1024.0 / 1000.0) }}))
+        |> yield(name: "maxmem_total")
+    '''
+    query_result = query_api.query(query=maxmem_query)
+    for table in query_result:
+        for record in table.records:
+            result["mem"] = record.values.get('_value', 0)
+
+    # mem usage data
+    mem_query = f'''
+        from(bucket:"{bucket}")
+        |> range(start: {start_date}, stop: {end_date})
+        |> filter(fn: (r) => r["_field"] == "mem" or r["_field"] == "maxmem")
+        |> filter(fn: (r) => r["_measurement"] == "system")
+        |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+        |> group(columns: ["_field"])
+        |> mean()
+        |> pivot(rowKey: [], columnKey: ["_field"], valueColumn: "_value")
+        |> map(fn: (r) => ({{ r with _value: (r.mem / r.maxmem) * 100.0 }}))
+    '''
+    query_result = query_api.query(query=mem_query)
+    for table in query_result:
+        for record in table.records:
+            result["mem usage"] = record.values.get('_value', 0)
+
+    # storage
+    # storage usage
+
+    # netin data
+    netin_query = f'''
+        last = from(bucket: "proxmox")
+        |> range(start: {start_date}, stop: {end_date})
+        |> filter(fn: (r) => r["_measurement"] == "system")
+        |> filter(fn: (r) => r["_field"] == "netin")
+        |> group(columns: ["nodename", "host", "object", "vmid"])
+        |> last()
+        |> keep(columns: ["_time", "_value", "nodename", "host", "object", "vmid"])
+
+        first = from(bucket: "proxmox")
+        |> range(start: {start_date}, stop: {end_date})
+        |> filter(fn: (r) => r["_measurement"] == "system")
+        |> filter(fn: (r) => r["_field"] == "netin")
+        |> group(columns: ["nodename", "host", "object", "vmid"])
+        |> first()
+        |> keep(columns: ["_time", "_value", "nodename", "host", "object", "vmid"])
+
+        join(
+        tables: {{last: last, first: first}},
+        on: ["nodename", "host", "object", "vmid"]
+        )
+        |> map(fn: (r) => ({{
+        _time: r._time_last,
+        nodename: r.nodename,
+        host: r.host,
+        object: r.object,
+        vmid: r.vmid,
+        first_value: r._value_first,
+        last_value: r._value_last,
+        _value: r._value_last - r._value_first
+        }}))
+        |> group()
+        |> sum(column: "_value")
+    '''
+    query_result = query_api.query(query=netin_query)
+    for table in query_result:
+        for record in table.records:
+            result["netin"] = record.values.get('_value', 0)
+
+
+    # netout data
+    netout_query = f'''
+        last = from(bucket: "proxmox")
+        |> range(start: {start_date}, stop: {end_date})
+        |> filter(fn: (r) => r["_measurement"] == "system")
+        |> filter(fn: (r) => r["_field"] == "netout")
+        |> group(columns: ["nodename", "host", "object", "vmid"])
+        |> last()
+        |> keep(columns: ["_time", "_value", "nodename", "host", "object", "vmid"])
+
+        first = from(bucket: "proxmox")
+        |> range(start: {start_date}, stop: {end_date})
+        |> filter(fn: (r) => r["_measurement"] == "system")
+        |> filter(fn: (r) => r["_field"] == "netout")
+        |> group(columns: ["nodename", "host", "object", "vmid"])
+        |> first()
+        |> keep(columns: ["_time", "_value", "nodename", "host", "object", "vmid"])
+
+        join(
+        tables: {{last: last, first: first}},
+        on: ["nodename", "host", "object", "vmid"]
+        )
+        |> map(fn: (r) => ({{
+        _time: r._time_last,
+        nodename: r.nodename,
+        host: r.host,
+        object: r.object,
+        vmid: r.vmid,
+        first_value: r._value_first,
+        last_value: r._value_last,
+        _value: r._value_last - r._value_first
+        }}))
+        |> group()
+        |> sum(column: "_value")
+    '''
+    query_result = query_api.query(query=netout_query)
+    for table in query_result:
+        for record in table.records:
+            result["netout"] = record.values.get('_value', 0)
+
+    # uptime
+
+    data.append(result)
+
+    # nodes
+
+    # subjects
+
+    output = {}
+    if (len(data) > 0) {
+        output["code"] = 0
+    } else {
+        output["code"] = -1
+    }
+    output["count"] = len(data)
+    output["data"] = data
+    
+    return JsonResponse(output)
+}
+
 ############################### Ticketing ###############################
 
 def fetch_ticketing_report_data(form : TicketingReportForm):
