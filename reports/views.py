@@ -1416,6 +1416,7 @@ def generate_form_data(request):
     result["name"] = "system"
     result["nodename"] = "none"
     result["class"] = "none"
+    result["vmid"] = -1
     
     # vm num
     vm_query = f'''
@@ -1660,7 +1661,7 @@ def generate_form_data(request):
             value = record.values.get('_value', 0)
             if nodename not in nodes:    # node is not included yet in the list
                 nodes.append(nodename)
-                result = {"name": nodename, "nodename": nodename, "class": "none", 
+                result = {"name": nodename, "nodename": nodename, "class": "none", "vmid": -1
                         "vm number": value, "lxc number": 0,
                         "cpu": 0, "cpu usage": 0.0,
                         "mem": 0, "mem usage": 0.0,
@@ -1861,7 +1862,7 @@ def generate_form_data(request):
         classname = entry.split('_')[0]
         if classname not in class_list:
             class_list.append(classname)
-            result = {"name": classname, "nodename": "none", "class": classname, 
+            result = {"name": classname, "nodename": "none", "class": classname, "vmid": -1,
                 "vm number": 0, "lxc number": 0,
                 "cpu": 0, "cpu usage": 0.0,
                 "mem": 0, "mem usage": 0.0,
@@ -2131,7 +2132,7 @@ def generate_form_data(request):
             value = record.values.get('_value', 0)
             if (nodename, vm_type, vmid, vmname) not in vms:    
                 vms.append((nodename, vm_type, vmid, vmname))
-                result = {"name": vmname, "nodename": nodename, "class": classname, 
+                result = {"name": vmname, "nodename": nodename, "class": classname, "vmid": 0 
                         "vm number": 0, "lxc number": 0,
                         "cpu": value, "cpu usage": 0.0,
                         "mem": 0, "mem usage": 0.0,
