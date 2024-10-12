@@ -1718,7 +1718,30 @@ def generate_form_data(request):
     '''
     query_result = query_api.query(query=mem_usage_query)
     process_pernode_query_result(results, query_result, "mem usage")
-    
+
+    # storage
+    storage_query = f'''
+        from(bucket: "{bucket}")
+        |> range(start: {start_date}, stop: {end_date})
+        |> filter(fn: (r) => r["_measurement"] == "system")
+        |> filter(fn: (r) => r["_field"] == "total")
+        |> filter(fn: (r) => r["host"] == "local")
+        |> last()
+    '''
+    query_result = query_api.query(query=storage_query)
+    process_pernode_query_result(results, query_result, "storage")
+
+    # # storage usage
+    # storage_used_query = f'''
+    #     from(bucket: "{bucket}")
+    #     |> range(start: {start_date}, stop: {end_date})
+    #     |> filter(fn: (r) => r["_measurement"] == "system")
+    #     |> filter(fn: (r) => r["_field"] == "used")
+    #     |> filter(fn: (r) => r["host"] == "local")
+    #     |> last()
+    # '''
+    # query_result = query_api.query(query=storage_used_query)
+    # process_pernode_query_result(results, query_result, "storage usage")
 
     # add to data
     for r in results:
