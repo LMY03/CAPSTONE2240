@@ -2158,6 +2158,37 @@ def generate_form_data(request):
     query_result = query_api.query(query=cpu_query)
     process_indiv_query_result(results, query_result, "cpu usage")
 
+
+    # memory
+    mem_query = f'''
+        from(bucket: "{bucket}")
+        |> range(start: {start_date}, stop: {end_date})
+        |> filter(fn: (r) => r["_measurement"] == "system")
+        |> filter(fn: (r) => r["_field"] == "maxmem")
+        |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+        |> last()
+        |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 / 1024.0 / 1024.0) }}))
+    '''    
+    query_result = query_api.query(query=mem_query)
+    process_indiv_query_result(results, query_result, "mem")
+
+
+    # mem usage
+    mem_usage_query = f'''
+        from(bucket:"{bucket}")
+        |> range(start: {start_date}, stop: {end_date})
+        |> filter(fn: (r) => r["_measurement"] == "system")
+        |> filter(fn: (r) => r["_field"] == "mem" or r["_field"] == "maxmem")
+        |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+        |> group(columns: ["host", "_field"])
+        |> pivot(rowKey: ["host"], columnKey: ["_field"], valueColumn: "_value")
+        |> map(fn: (r) => ({{ r with _value: (r.mem / r.maxmem) * 100.0 }}))
+        |> mean()
+    '''
+    query_result = query_api.query(query=mem_usage_query)
+    process_indiv_query_result(results, query_result, "mem usage")
+
+
     # add to data
     for r in results:
         data.append(r)
