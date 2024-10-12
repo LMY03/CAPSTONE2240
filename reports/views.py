@@ -1435,7 +1435,7 @@ def generate_form_data(request):
     query_result = query_api.query(query=cpus_query)
     for table in query_result:
         for record in table.records:
-            result["cpus"] = record.values.get('_value', 0)
+            result["cpu"] = record.values.get('_value', 0)
 
     # cpu data
     cpu_query = f'''
@@ -1656,6 +1656,26 @@ def generate_form_data(request):
                 else:
                     result["lxc number"] = 0
 
+    # cpu cores
+    cpus_query = f'''
+        from(bucket:"{bucket}")
+        |> range(start: {start_date}, stop: {end_date})
+        |> filter(fn: (r) => r["_measurement"] == "cpustat")
+        |> filter(fn: (r) => r["_field"] == "cpus")
+        |> last()
+        |> rename(columns: {{host: "nodename"}})
+    '''
+    query_result = query_api.query(query=cpus_query)
+    for table in query_result:
+        for record in table.records:
+            nodename = record.values.get('nodename')
+            cpu_cores = record.values.get('_value', 0)
+            for result in results:
+                if result["nodename"] == nodename:
+                    result["cpu"] = cpu_cores
+                    break
+                else:
+                    result["cpu"] = 0
 
     # add to data
     for r in results:
