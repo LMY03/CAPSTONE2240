@@ -1518,6 +1518,7 @@ def generate_form_data(request):
         |> last()
         |> group()
         |> sum(column: "_value")
+        |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 / 1024.0 / 1024.0) }}))
     '''
     query_result = query_api.query(query=storage_query)
     for table in query_result:
@@ -1708,7 +1709,7 @@ def generate_form_data(request):
         |> filter(fn: (r) => r["_field"] == "memtotal")
         |> last()
         |> rename(columns: {{host: "nodename"}})
-        |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 / 1024.0 / 1000.0) }}))
+        |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 / 1024.0 / 1024.0) }}))
     '''
     query_result = query_api.query(query=mem_query)
     process_pernode_query_result(results, query_result, "mem")
@@ -1736,7 +1737,7 @@ def generate_form_data(request):
         |> filter(fn: (r) => r["_field"] == "total")
         |> filter(fn: (r) => r["host"] == "local")
         |> last()
-        |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 / 1024.0 / 1000.0) }}))
+        |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 / 1024.0 / 1024.0) }}))
     '''
     query_result = query_api.query(query=storage_query)
     process_pernode_query_result(results, query_result, "storage")
