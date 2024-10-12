@@ -1891,6 +1891,10 @@ def generate_form_data(request):
     '''
     query_result = query_api.query(query=mem_usage_query)
 
+    # add to data
+    for r in results:
+        data.append(r)
+
     # CONSOLIDATE RESULT 
     output = {}
     if (len(data) > 0) :
