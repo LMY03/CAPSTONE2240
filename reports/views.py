@@ -21,7 +21,6 @@ token = config('INFLUX_TOKEN')
 org = config('INFLUXDB_ORG')
 bucket = config('INFLUXDB_BUCKET')
 proxmox_password = config('PROXMOX_PASSWORD')
-results = []
 
 # Parse date to InfluxDB compatible, fit timezone
 def parse_form_date(date_string, is_start):
@@ -1362,7 +1361,7 @@ def generate_csv_response(data, query_type, start_date, end_date):
     response.write(csv_buffer.getvalue())
     return response
 
-def process_pernode_query_result(query_result, column_name):
+def process_pernode_query_result(results, query_result, column_name):
     for table in query_result:
         for record in table.records:
             nodename = record.values.get('nodename')
@@ -1619,6 +1618,7 @@ def generate_form_data(request):
 
     # nodes
     nodes = []
+    results = []
 
     # vm number
     vm_query = f'''
@@ -1663,7 +1663,7 @@ def generate_form_data(request):
         |> sum()
     '''
     query_result = query_api.query(query=lxc_query)
-    process_pernode_query_result(query_result, "lxc number")
+    process_pernode_query_result(results, query_result, "lxc number")
 
     # cpu cores
     cpus_query = f'''
@@ -1675,7 +1675,7 @@ def generate_form_data(request):
         |> rename(columns: {{host: "nodename"}})
     '''
     query_result = query_api.query(query=cpus_query)
-    process_pernode_query_result(query_result, "cpu")
+    process_pernode_query_result(results, query_result, "cpu")
 
     # cpu usage
     cpu_query = f'''
@@ -1689,7 +1689,7 @@ def generate_form_data(request):
         |> map(fn: (r) => ({{ r with _value: r._value * 100.0 }}))
     '''
     query_result = query_api.query(query=cpu_query)
-    process_pernode_query_result(query_result, "cpu usage")
+    process_pernode_query_result(results, query_result, "cpu usage")
 
     # total mem
     mem_query = f'''
@@ -1702,7 +1702,7 @@ def generate_form_data(request):
         |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 / 1024.0 / 1000.0) }}))
     '''
     query_result = query_api.query(query=mem_query)
-    process_pernode_query_result(query_result, "mem")
+    process_pernode_query_result(results, query_result, "mem")
     
     # mem usage
     mem_usage_query = f'''
@@ -1717,7 +1717,7 @@ def generate_form_data(request):
         |> rename(columns: {{host: "nodename"}})
     '''
     query_result = query_api.query(query=mem_usage_query)
-    process_pernode_query_result(query_result, "mem usage")
+    process_pernode_query_result(results, query_result, "mem usage")
     
 
     # add to data
