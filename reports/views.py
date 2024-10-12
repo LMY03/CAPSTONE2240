@@ -1622,7 +1622,7 @@ def generate_form_data(request):
     for table in query_result:
         for record in table.records:
             nodename = record.values.get('nodename')
-            if nodename not in node:    # node is not included yet in the list
+            if nodename not in results.keys():    # node is not included yet in the list
                 result["nodename"] = nodename
                 results.append(result)
             else:
