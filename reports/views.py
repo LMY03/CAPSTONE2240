@@ -2026,7 +2026,7 @@ def generate_form_data(request):
         |> map(fn: (r) => ({{
         _time: r._time_last,
         nodename: r.nodename,
-        class: r.class_first
+        class: r.class_first,
         host: r.host,
         object: r.object,
         vmid: r.vmid,
