@@ -1379,7 +1379,6 @@ def generate_form_data(request):
     excluded_vmids_str = '|'.join(map(str, template_hosts_ids))
 
 
-    index = 0
     # system
     data = []
     result = {}
@@ -1606,7 +1605,32 @@ def generate_form_data(request):
     data.append(result)
 
     # nodes
+    results = []
+    vm_query = f'''
+        from(bucket: "{bucket}")
+        |> range(start: {start_date}, stop: {end_date})
+        |> filter(fn: (r) => r["_measurement"] == "system")
+        |> filter(fn: (r) => r["_field"] == "cpus")
+        |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+        |> filter(fn: (r) => r["object"] == "qemu")
+        |> distinct(column: "vmid")
+        |> count()
+        |> group(columns)
+        |> sum()
+    '''
+    query_result = query_api.query(query=vm_query)
+    for table in query_result:
+        for record in table.records:
+            nodename = record.values.get('nodename')
+            if nodename not in node:    # node is not included yet in the list
+                result["nodename"] = nodename
+                results.append(result)
+            else:
+                for result in results:
+                    if record.values.get('nodename') == result["nodename"]:
+                        result["vm number"] = record.values.get('_value', 0)
 
+    data.append(results)
     # subjects
 
     output = {}
