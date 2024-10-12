@@ -1873,14 +1873,20 @@ def generate_form_data(request):
         |> range(start: {start_date}, stop: {end_date})
         |> filter(fn: (r) => r["_measurement"] == "system")
         |> filter(fn: (r) => r["_field"] == "cpus")
-        |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
         |> filter(fn: (r) => r["object"] == "qemu")
+        |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+        |> filter(fn: (r) => {class_filters})
         |> distinct(column: "vmid")
         |> count()
-        |> group(columns: ["nodename"])
+        |> pivot(rowKey: ["host"], columnKey: ["_field"], valueColumn: "_value")
+        |> map(fn: (r) => ({{ r with class: {class_map} }}))
+        |> map(fn: (r) => ({ _value: r.cpus, class: r.class }))
+        |> group(columns: ["class"])
         |> sum()
     '''
     query_result = query_api.query(query=vm_query)
+    process_perclass_query_result(results, query_result, "vm number")
+
 
 
     # mem usage
