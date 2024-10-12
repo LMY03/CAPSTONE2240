@@ -1880,7 +1880,7 @@ def generate_form_data(request):
         |> count()
         |> pivot(rowKey: ["host"], columnKey: ["_field"], valueColumn: "_value")
         |> map(fn: (r) => ({{ r with class: {class_map} }}))
-        |> map(fn: (r) => ({ _value: r.cpus, class: r.class }))
+        |> map(fn: (r) => ({{ _value: r.cpus, class: r.class }}))
         |> group(columns: ["class"])
         |> sum()
     '''
