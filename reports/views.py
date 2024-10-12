@@ -1644,7 +1644,18 @@ def generate_form_data(request):
         |> group(columns: ["nodename"])
         |> sum()
     '''
+    query_result = query_api.query(query=lxc_query)
+    for table in query_result:
+        for record in table.records:
+            nodename = record.values.get('nodename')
+            lxc_number = record.values.get('_value', 0)
+            for result in results:
+                if result["nodename"] == nodename:
+                    result["lxc number"] = lxc_number
+                    break
 
+
+    # add to data
     for r in results:
         data.append(r)
     # subjects
