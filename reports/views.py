@@ -1679,6 +1679,26 @@ def generate_form_data(request):
                     result["cpu"] = cpu_cores
                     break
 
+    # cpu usage
+    cpu_query = f'''
+        from(bucket:"{bucket}")
+        |> range(start: {start_date}, stop: {end_date})
+        |> filter(fn: (r) => r["_measurement"] == "cpustat")
+        |> filter(fn: (r) => r["_field"] == "cpu")
+        |> group(columns: ["host"])
+        |> mean()
+        |> rename(columns: {{host: "nodename"}})
+    '''
+    query_result = query_api.query(query=cpu_query)
+    for table in query_result:
+        for record in table.records:
+            nodename = record.values.get('nodename')
+            cpu_usage = record.values.get('_value', 0)
+            for result in results:
+                if result["nodename"] == nodename:
+                    result["cpu usage"] = cpu_usage
+                    break
+
     # add to data
     for r in results:
         data.append(r)
