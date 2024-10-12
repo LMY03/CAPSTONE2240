@@ -2271,6 +2271,43 @@ def generate_form_data(request):
     query_result = query_api.query(query=netout_query)
     process_indiv_query_result(results, query_result, "netout")  
 
+    # uptime
+    uptime_query = f'''
+        last = from(bucket: "proxmox")
+        |> range(start: {start_date}, stop: {end_date})
+        |> filter(fn: (r) => r["_measurement"] == "system")
+        |> filter(fn: (r) => r["_field"] == "uptime")
+        |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+        |> last()
+        |> keep(columns: ["_value", "nodename", "host", "object", "vmid"])
+
+        first = from(bucket: "proxmox")
+        |> range(start: {start_date}, stop: {end_date})
+        |> filter(fn: (r) => r["_measurement"] == "system")
+        |> filter(fn: (r) => r["_field"] == "uptime")
+        |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+        |> first()
+        |> keep(columns: ["_value", "nodename", "host", "object", "vmid"])
+
+        join(
+        tables: {{last: last, first: first}},
+        on: ["nodename", "host", "object", "vmid"]
+        )
+        |> map(fn: (r) => ({{
+        _time: r._time_last,
+        nodename: r.nodename,
+        host: r.host,
+        object: r.object,
+        vmid: r.vmid,
+        first_value: r._value_first,
+        last_value: r._value_last,
+        _value: r._value_last - r._value_first
+        }}))
+    ''' 
+    query_result = query_api.query(query=uptime_query)
+    process_indiv_query_result(results, query_result, "uptime")  
+
+
     # add to data
     for r in results:
         data.append(r)
