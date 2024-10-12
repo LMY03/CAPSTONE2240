@@ -2040,6 +2040,51 @@ def generate_form_data(request):
     query_result = query_api.query(query=netin_query)
     process_perclass_query_result(results, query_result, "netin")  
 
+    # netout data
+    netout_query = f'''
+        last = from(bucket: "proxmox")
+        |> range(start: {start_date}, stop: {end_date})
+        |> filter(fn: (r) => r["_measurement"] == "system")
+        |> filter(fn: (r) => r["_field"] == "netout")
+        |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+        |> filter(fn: (r) => {class_filters})
+        |> group(columns: ["nodename", "host", "object", "vmid"])
+        |> last()
+        |> map(fn: (r) => ({{ r with class: {class_map} }}))
+        |> keep(columns: ["_value", "class", "nodename", "host", "object", "vmid"])
+
+        first = from(bucket: "proxmox")
+        |> range(start: {start_date}, stop: {end_date})
+        |> filter(fn: (r) => r["_measurement"] == "system")
+        |> filter(fn: (r) => r["_field"] == "netout")
+        |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+        |> filter(fn: (r) => {class_filters})
+        |> group(columns: ["nodename", "host", "object", "vmid"])
+        |> first()
+        |> map(fn: (r) => ({{ r with class: {class_map} }}))
+        |> keep(columns: ["_value", "class", "nodename", "host", "object", "vmid"])
+
+        join(
+        tables: {{last: last, first: first}},
+        on: ["nodename", "host", "object", "vmid"]
+        )
+        |> map(fn: (r) => ({{
+        _time: r._time_last,
+        nodename: r.nodename,
+        class: r.class_first,
+        host: r.host,
+        object: r.object,
+        vmid: r.vmid,
+        first_value: r._value_first,
+        last_value: r._value_last,
+        _value: r._value_last - r._value_first
+        }}))
+        |> group(columns: ["class"])
+        |> sum()
+    ''' 
+    query_result = query_api.query(query=netout_query)
+    process_perclass_query_result(results, query_result, "netout")  
+
     # add to data
     for r in results:
         data.append(r)
