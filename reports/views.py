@@ -1699,6 +1699,27 @@ def generate_form_data(request):
                 if result["nodename"] == nodename:
                     result["cpu usage"] = cpu_usage
                     break
+    
+    # total mem
+    mem_query = f'''
+        from(bucket:"{bucket}")
+        |> range(start: {start_date}, stop: {end_date})
+        |> filter(fn: (r) => r["_measurement"] == "memory")
+        |> filter(fn: (r) => r["_field"] == "memtotal")
+        |> last()
+        |> rename(columns: {{host: "nodename"}})
+        |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 / 1024.0 / 1000.0) }}))
+    '''
+    query_result = query_api.query(query=mem_query)
+    for table in query_result:
+        for record in table.records:
+            nodename = record.values.get('nodename')
+            total_mem = record.values.get('_value', 0)
+            for result in results:
+                if result["nodename"] == nodename:
+                    result["mem"] = total_mem
+                    break
+    
 
     # add to data
     for r in results:
