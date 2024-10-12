@@ -1624,13 +1624,16 @@ def generate_form_data(request):
     for table in query_result:
         for record in table.records:
             nodename = record.values.get('nodename')
+            print(f"nodename: {nodename}")
             if nodename not in nodes:    # node is not included yet in the list
                 nodes.append(nodename)
                 result["nodename"] = nodename
                 results.append(result)
-            for result in results:
-                if record.values.get('nodename') == result["nodename"]:
-                    result["vm number"] = record.values.get('_value', 0)
+            print(f"nodes: {nodes}")
+            print(f"results: {results}")
+            for r in results:
+                if record.values.get('nodename') == r["nodename"]:
+                    r["vm number"] = record.values.get('_value', 0)
 
     data.append(results)
     # subjects
