@@ -1,5 +1,6 @@
 from django import forms
 # from django.contrib.auth.models import User
+from proxmox.models import VMTemplates
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
 from .models import IssueTicket, IssueComment
 
@@ -47,23 +48,45 @@ from .models import IssueTicket, IssueComment
 #             user.save()
 #         return user
 
-# class AddVMTemplates(forms.ModelForm):
+class AddVMTemplates(forms.ModelForm):
+    is_lxc = forms.ChoiceField(
+        choices=((True, 'Yes'), (False, 'No')),
+        widget=forms.RadioSelect(attrs={'class': 'form-check-input'}),
+        initial=False
+    )
 
-#     class Meta:
-#         model = VMTemplates
-#         fields = ('vm_id', 'vm_name', 'node', 'storage', 'is_lxc', 'guacamole_protocol')
+    class Meta:
+        model = VMTemplates
+        fields = ('vm_id', 'vm_name', 'node', 'storage', 'is_lxc', 'guacamole_protocol')
+        widgets = {
+            'vm_id': forms.TextInput(attrs={'class': 'form-control'}),
+            'vm_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'node': forms.TextInput(attrs={'class': 'form-control'}),
+            'storage': forms.NumberInput(attrs={'class': 'form-control'}),
+            'is_lxc': forms.RadioSelect(attrs={'class': 'form-check-input'}),
+            'guacamole_protocol': forms.Select(attrs={'class': 'form-control'}),
+        }
 
-#     def save(self, commit=True):
-#         vmtemplate = super().save(commit=False)
-#         # This is where the API call starts
-#         # Where it ends
+    def clean_is_lxc(self):
+        return self.cleaned_data['is_lxc'] == 'True'
 
-#         # Setting of the core ram and storage
-#         vmtemplate.cores = 1
-#         vmtemplate.ram = 2048
-#         if commit:
-#             vmtemplate.save()
-#         return vmtemplate
+    def save(self, commit=True):
+        vmtemplate = super().save(commit=False)
+        # This is where the API call starts
+        # Where it ends
+
+        # Setting of the core ram and storage
+        vmtemplate.cores = 1
+        vmtemplate.ram = 2048
+        if commit:
+            vmtemplate.save()
+        return vmtemplate
+    
+
+class EditVMTemplates(AddVMTemplates):
+    class Meta(AddVMTemplates.Meta):
+        model = VMTemplates
+        
     
 class IssueTicketForm(forms.ModelForm):
     class Meta:

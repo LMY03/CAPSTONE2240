@@ -174,14 +174,15 @@ def confirm_notif_faculty(to_email):
     service = Create_Service(CLIENT_SECRET_FILE, API_NAME, API_VERSION, SCOPES)
     mimeMessage = MIMEMultipart()
     mimeMessage["to"] = f'{to_email}'
-    mimeMessage['subject'] = 'You have have a newly created account in Proxmon.'
+    mimeMessage['subject'] = 'Your request has been provisioned.'
     base_dir = os.path.dirname(os.path.abspath(__file__))
     template_path = os.path.join(base_dir, 'templates', 'notifications', 'confirm_notif_faculty.hbs')
     with open(template_path, 'r') as f:
         source = f.read()
     compiler = pybars.Compiler()
     template = compiler.compile(source)
-    html_body = template()
+    email_data = {}
+    html_body = template(email_data)
     mimeMessage.attach(MIMEText(html_body, 'html'))
     raw_string = base64.urlsafe_b64encode(mimeMessage.as_bytes()).decode()
     
@@ -227,6 +228,30 @@ def reset_password_email (to_email, password):
     }
     base_dir = os.path.dirname(os.path.abspath(__file__))
     template_path = os.path.join(base_dir, 'templates', 'notifications', 'reset_password.hbs')
+    with open(template_path, 'r') as f:
+        source = f.read()
+    compiler = pybars.Compiler()
+    template = compiler.compile(source)
+    html_body = template(email_data)
+    mimeMessage.attach(MIMEText(html_body, 'html'))
+    raw_string = base64.urlsafe_b64encode(mimeMessage.as_bytes()).decode()
+    
+    message = service.users().messages().send(userId='me', body={'raw': raw_string}).execute()
+    print(message)
+    
+    return message
+
+def reject_test_vm_notif (to_email, data):
+    service = Create_Service(CLIENT_SECRET_FILE, API_NAME, API_VERSION, SCOPES)
+    mimeMessage = MIMEMultipart()
+    mimeMessage["to"] = f'{to_email}'
+    mimeMessage['subject'] = 'The test VM created has been rejected by the faculty'
+    email_data = {
+        "faculty_name": data['full_name'],
+        "request_use_case " : data['use_case']
+    }
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    template_path = os.path.join(base_dir, 'templates', 'notifications', 'reject_test_vm.hbs')
     with open(template_path, 'r') as f:
         source = f.read()
     compiler = pybars.Compiler()

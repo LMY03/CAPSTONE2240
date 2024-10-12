@@ -26,12 +26,13 @@ from .models import RequestEntry, Comment, RequestUseCase, PortRules, RequestEnt
 from proxmox.models import VirtualMachines, Nodes, VMTemplates
 from guacamole.models import GuacamoleConnection, GuacamoleUser
 from pfsense.models import DestinationPorts
-from notifications.views import comment_notif_faculty, new_request_notif_tsg, testVM_notif_faculty, reject_notif_faculty, accept_notif_tsg, confirm_notif_faculty
-from .forms import IssueTicketForm, IssueCommentForm
+from notifications.views import comment_notif_faculty, new_request_notif_tsg, testVM_notif_faculty, reject_notif_faculty, accept_notif_tsg, confirm_notif_faculty, reject_test_vm_notif
+from .forms import IssueTicketForm, IssueCommentForm, AddVMTemplates, EditVMTemplates
 from django.core.exceptions import ValidationError
 from django.contrib import messages
 
 from CAPSTONE2240.utils import download_files
+import csv
 
 # Create your views here.
 
@@ -299,32 +300,32 @@ def add_comment(request, pk):
         if request_entry.status == RequestEntry.Status.PENDING:
             new_data['status'] = RequestEntry.Status.FOR_REVISION
 
-        # if user.is_tsg():
-        #     data = {
-        #         'comment' : comment_text, 
-        #         'request_entry_id' : request_entry.id
-        #     }
-        #     print(requester_user.email, data)
-        #     comment_notif_faculty(requester_user.email, data) # Admin comments to the request ticket
-        # elif user.is_faculty():
-        #     data = {
-        #         'comment' : comment_text, 
-        #         'request_entry_id' : request_entry.id, 
-        #         'faculty_name': requester_user.get_full_name()
-        #     }
-        #     if request_entry.assigned_to and request_entry.assigned_to.email: #Checks if there is an assigned TSG
-        #         comment_notif_faculty(request_entry.assigned_to.email, data, user.user_type) # Faculty replies back to the comment
-        #     else: # This is for the situation where there is no assigned to yet, and the faculty comments
-        #         # admin_user_profiles = UserProfile.objects.filter(user_type='admin')
-        #         # admin_user_ids = admin_user_profiles.values_list('user_id', flat=True)
+        if user.is_tsg():
+            data = {
+                'comment' : comment_text, 
+                'request_entry_id' : request_entry.id
+            }
+            print(requester_user.email, data)
+            comment_notif_faculty(requester_user.email, data) # Admin comments to the request ticket
+        elif user.is_faculty():
+            data = {
+                'comment' : comment_text, 
+                'request_entry_id' : request_entry.id, 
+                'faculty_name': requester_user.get_full_name()
+            }
+            if request_entry.assigned_to and request_entry.assigned_to.email: #Checks if there is an assigned TSG
+                comment_notif_faculty(request_entry.assigned_to.email, data, user.user_type) # Faculty replies back to the comment
+            else: # This is for the situation where there is no assigned to yet, and the faculty comments
+                # admin_user_profiles = UserProfile.objects.filter(user_type='admin')
+                # admin_user_ids = admin_user_profiles.values_list('user_id', flat=True)
 
-        #         admin_user_ids = User.objects.filter(user_type=User.UserType.TSG).values_list('user_id', flat=True)
+                admin_user_ids = User.objects.filter(user_type=User.UserType.TSG).values_list('user_id', flat=True)
 
-        #         tsgUsers = User.objects.filter(id__in = admin_user_ids)
-        #         tsgEmails = []
-        #         for tsg in tsgUsers:
-        #             tsgEmails.append(tsg.email)
-        #         comment_notif_faculty(tsgEmails, data, 'TSG') 
+                tsgUsers = User.objects.filter(id__in = admin_user_ids)
+                tsgEmails = []
+                for tsg in tsgUsers:
+                    tsgEmails.append(tsg.email)
+                comment_notif_faculty(tsgEmails, data, 'TSG')
         Comment.objects.create(
             request_entry=request_entry,
             comment=comment_text,
@@ -627,13 +628,9 @@ def request_confirm(request, request_id):
 
     request_entry = get_object_or_404(RequestEntry, id = request_id)
     request_entry.assigned_to = request.user
-    to = request_entry.requester.email
-    data = {
-        "faculty_name" : request_entry.requester.get_full_name(),
-        "id" : request_id
-    }
-    create_test_vm.delay(request.user.pk, request_id)
-    # testVM_notif_faculty (to, data)
+
+    create_test_vm.delay(request.user.pk, request_id)    
+
     return redirect('ticketing:request_details', request_id)
 
 def request_reject(request, id):
@@ -670,6 +667,13 @@ def request_test_vm_ready(request, id):
     guacamole_connection.user = get_object_or_404(GuacamoleUser, system_user=request_entry.requester)
     guacamole_connection.save()
 
+    to = request_entry.requester.email
+    data = {
+        "faculty_name" : request_entry.requester.get_full_name(),
+        "id" : id
+    }
+    testVM_notif_faculty (to, data)
+
     return redirect(f"/ticketing/{id}/details")
     
 def confirm_test_vm(request, request_id):
@@ -681,7 +685,7 @@ def confirm_test_vm(request, request_id):
 
     processing_ticket.delay(request_id)
     
-    # confirm_notif_faculty(to_email)
+    confirm_notif_faculty(to_email)
     return redirect('ticketing:request_details', request_id)
     # return redirect(f'/ticketing/{request_id}/details')
 
@@ -693,7 +697,7 @@ def accept_test_vm(request, request_id): #Where the faculty Accepts the test vm 
     
     request_use_case = RequestUseCase.objects.filter(request=request_entry)
     to  = request_entry.assigned_to.email
-    use_case = "Class Course" if request_use_case[0].request not in ['Thesis', 'Research', 'Test'] else request_use_case[0].request
+    use_case = "Class Course" if request_use_case[0].request_use_case not in ['Thesis', 'Research', 'Test'] else request_use_case[0].request_use_case
     vmCount = 0
     if use_case == "Class Course":
         for use_case in request_use_case:
@@ -707,7 +711,7 @@ def accept_test_vm(request, request_id): #Where the faculty Accepts the test vm 
         "vm_count" : vmCount,
     }
 
-    # accept_notif_tsg(to, data)
+    accept_notif_tsg(to, data)
     return redirect('ticketing:request_details', request_id)
 
 def reject_test_vm(request, request_id):   
@@ -719,11 +723,17 @@ def reject_test_vm(request, request_id):
     guacamole_connection = get_object_or_404(GuacamoleConnection, vm=vm)
     guacamole.delete_connection_group(guacamole_connection.connection_group_id)
 
+    request_use_case = RequestUseCase.objects.filter(request=request_entry)
+    use_case = "Class Course" if request_use_case[0].request_use_case not in ['Thesis', 'Research', 'Test'] else request_use_case[0].request_use_case
     # shutdown vm if active
     views.shutdown_vm(vm)
-    
+    to_email = request_entry.requester.email
+    data = {
+        'full_name' : request_entry.requester.get_full_name(),
+        'use_case' : use_case
+    }
     proxmox.delete_vm(vm.node.name, vm.vm_id)
-
+    reject_test_vm_notif(to_email, data)
     vm.set_destroyed()
 
     return HttpResponseRedirect(reverse("ticketing:index"))
@@ -806,27 +816,74 @@ def new_form_container(request):
 #         return JsonResponse({'status': 'invalid method'}, status=405)
 
 
-def add_vm_template (request):
-    if request.method == 'POST':
-        data = request.POST
-        
-        vm_id = data.get('vm_id')
-        vm_name = data.get('vm_id_name')
-        cores = data.get('cores')
-        ram = data.get('ram')
-        storage = data.get('storage')  
-        guacamole_protocol = data.get('guacamole_protocol')
-        node = data.get('node')
+def vm_template_management (request):
+    vm_templates = VMTemplates.objects.all()
+    data = []
+    for vm_template in vm_templates:
+        # user_profile = UserProfile.objects.filter(user=user).first()
+        # print (user_profile)
+        data.append({
+            'id': vm_template.id,
+            'vm_id': vm_template.vm_id,
+            'vm_name': vm_template.vm_name,
+            'cores' : vm_template.cores,
+            'ram' : vm_template.ram,
+            'storage': vm_template.storage,
+            'container' : "True" if vm_template.is_lxc else "False",
+            'active' : "True" if vm_template.is_active else "False",
+            'protocol' : vm_template.guacamole_protocol,
+            'node': vm_template.node
+        })
+        form = AddVMTemplates()
+        editForm = EditVMTemplates()
+    return render (request, 'ticketing/vm_template_management.html', {"vm_templates" : data, 'form': form, 'editForm': editForm})
 
-        if vm_id and vm_name and cores and ram and storage:
-            if not VMTemplates.objects.filter(vm_id = vm_id).exists():
-                try:
-                    VMTemplates.objects.create(vm_id = vm_id, vm_name = vm_name, cores = cores, ram = ram, storage = storage, node = node, guacamole_protocol = guacamole_protocol)
-                except ValidationError as e:
-                    messages.error (request, f"Error creating VM template")
-            else:  
-                messages.info(request, "VM template exists")
+def deactivate_vm_template (request, template_id):
+    vm_template = VMTemplates.objects.get(id = template_id)
+    vm_template.is_active = False
+    vm_template.save()
+    return redirect('ticketing:vm_template_management')
+
+def activate_vm_template (request, template_id):
+    vm_template = VMTemplates.objects.get(id = template_id)
+    vm_template.is_active = True
+    vm_template.save()
+    return redirect('ticketing:vm_template_management')
+
+def add_vm_template(request):
+    if request.method == 'POST':
+        form = AddVMTemplates(request.POST)
+        if form.is_valid():
+            if 'csv_file' in request.FILES:
+                csv_file = request.FILES['csv_file']
+                file_data = csv_file.read().decode('utf-8-sig').splitlines()
+                csv_reader = csv.DictReader(file_data)
+                for row in csv_reader:
+                    # Create VM template for each row in CSV
+                    # You'll need to adjust this based on your CSV structure
+                    VMTemplates.objects.create(
+                        vm_id=row['vm_id'],
+                        vm_name=row['vm_name'],
+                        node=row['node'],
+                        storage=row['storage'],
+                        is_lxc=row.get('is_lxc') == 'True' or 'true',
+                        guacamole_protocol=row['guacamole_protocol']
+                    )
+            else:
+                form.save()
+            messages.success(request, 'VM Template(s) added successfully.')
+            return redirect('ticketing:vm_template_management')  # Replace with your success URL
         else:
-            messages.error(request, 'Please fill out all the details required.')
-            
-    return render (request, 'ticketings/add_vm_template.html')
+            messages.error(request, 'There was an error processing your request.')
+    return redirect('ticketing:vm_template_management')
+
+def edit_vm_template(request):
+    if request.method == 'POST':
+        form = EditVMTemplates(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'VM Template(s) added successfully.')
+            return redirect('ticketing:vm_template_management')  # Replace with your success URL
+        else:
+            messages.error(request, 'There was an error processing your request.')
+    return redirect('ticketing:vm_template_management') 
