@@ -1924,6 +1924,41 @@ def generate_form_data(request):
     query_result = query_api.query(query=cpu_query)
     process_perclass_query_result(results, query_result, "cpu")
 
+    # cpu usage
+    cpu_usage_query = f'''
+        from(bucket: "{bucket}")
+        |> range(start: {start_date}, stop: {end_date})
+        |> filter(fn: (r) => r["_measurement"] == "system")
+        |> filter(fn: (r) => r["_field"] == "cpu")
+        |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+        |> filter(fn: (r) => {class_filters})
+        |> mean()
+        |> map(fn: (r) => ({{ r with class: {class_map} }}))
+        |> group(columns: ["class"])
+        |> sum()
+        |> map(fn: (r) => ({{ r with _value: r._value * 100.0 }}))
+    '''    
+    query_result = query_api.query(query=cpu_usage_query)
+    process_perclass_query_result(results, query_result, "cpu usage")
+
+    # memory
+    mem_query = f'''
+        from(bucket: "{bucket}")
+        |> range(start: {start_date}, stop: {end_date})
+        |> filter(fn: (r) => r["_measurement"] == "system")
+        |> filter(fn: (r) => r["_field"] == "maxmem")
+        |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+        |> filter(fn: (r) => {class_filters})
+        |> last()
+        |> map(fn: (r) => ({{ r with class: {class_map} }}))
+        |> group(columns: ["class"])
+        |> sum()
+        |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 / 1024.0 / 1000.0) }}))
+    '''    
+    query_result = query_api.query(query=mem_query)
+    process_perclass_query_result(results, query_result, "mem")
+
+
     # mem usage
     mem_usage_query = f'''
         from(bucket:"{bucket}")
