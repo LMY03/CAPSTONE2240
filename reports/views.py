@@ -1615,7 +1615,7 @@ def generate_form_data(request):
         |> filter(fn: (r) => r["object"] == "qemu")
         |> distinct(column: "vmid")
         |> count()
-        |> group(columns)
+        |> group(columns: ["nodename"])
         |> sum()
     '''
     query_result = query_api.query(query=vm_query)
