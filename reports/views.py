@@ -1688,7 +1688,7 @@ def generate_form_data(request):
         |> rename(columns: {{host: "nodename"}})
         |> map(fn: (r) => ({{ r with _value: r._value * 100.0 }}))
     '''
-    query_result = query_api.query(query=cpu_query)\
+    query_result = query_api.query(query=cpu_query)
     process_pernode_query_result(query_result, "cpu usage")
 
     # total mem
