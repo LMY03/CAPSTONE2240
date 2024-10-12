@@ -1866,6 +1866,7 @@ def generate_form_data(request):
     # get template
     template_hosts_ids = get_template_hosts_ids(start_date, end_date)
     excluded_vmids_str = '|'.join(map(str, template_hosts_ids))
+    print(f"excluded_vmids_str: {excluded_vmids_str}")
 
     # vm number
     vm_query = f'''
