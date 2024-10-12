@@ -2180,8 +2180,8 @@ def generate_form_data(request):
         |> filter(fn: (r) => r["_measurement"] == "system")
         |> filter(fn: (r) => r["_field"] == "mem" or r["_field"] == "maxmem")
         |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
-        |> group(columns: ["host", "_field"])
-        |> pivot(rowKey: ["host"], columnKey: ["_field"], valueColumn: "_value")
+        |> group(columns: ["host", "vmid", "_field"])
+        |> pivot(rowKey: [], columnKey: ["_field"], valueColumn: "_value")
         |> map(fn: (r) => ({{ r with _value: (r.mem / r.maxmem) * 100.0 }}))
         |> mean()
     '''
