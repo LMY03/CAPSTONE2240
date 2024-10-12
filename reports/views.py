@@ -1990,6 +1990,7 @@ def generate_form_data(request):
         |> map(fn: (r) => ({{ r with class: {class_map} }}))
         |> group(columns: ["class"])
         |> sum()
+        |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 / 1024.0 / 1024.0) }}))
     '''
     query_result = query_api.query(query=storage_query)
     process_perclass_query_result(results, query_result, "storage")    
