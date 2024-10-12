@@ -1391,7 +1391,7 @@ def generate_form_data(request):
     excluded_vmids_str = '|'.join(map(str, template_hosts_ids))
 
 
-    # system
+    ################################ SYSTEM ###############################
     data = []
     result = {}
     result["name"] = "system"
@@ -1616,7 +1616,7 @@ def generate_form_data(request):
     result["uptime"] = "none"
     data.append(result)
 
-    # nodes
+    ################################ NODES ###############################
     nodes = []
     results = []
 
@@ -1825,8 +1825,73 @@ def generate_form_data(request):
     # add to data
     for r in results:
         data.append(r)
-    # subjects
 
+    ################################ SUBJECTS ###############################
+    results = []
+    raw_class_list = RequestUseCase.objects.all().exclude(
+        request_use_case__icontains="Research"
+    ).exclude(
+        request_use_case__icontains="Test"
+    ).exclude(
+        request_use_case__icontains="Thesis"
+    ).values_list('request_use_case', flat=True)
+
+    class_list = []
+    for entry in raw_class_list:
+        classname = entry.split('_')[0]
+        if classname not in class_list:
+            class_list.append(classname)
+            result = {"name": classname, "nodename": "none", "class": classname, 
+                "vm number": 0, "lxc number": 0,
+                "cpu": 0, "cpu usage": 0.0,
+                "mem": 0, "mem usage": 0.0,
+                "storage": 0.0, "storage usage": 0.0,
+                "netin": 0.0, "netout": 0.0,
+                "uptime": "none"}
+            results.append(result)
+            
+            
+    class_filters = ' or '.join([f'r["host"] =~ /{class_name}/' for class_name in class_list])
+    class_map = ' '.join([f'if r["host"] =~ /{class_name}/ then "{class_name}" else' for class_name in class_list]) + ' "Unknown"'
+        
+    # get template
+    template_hosts_ids = get_template_hosts_ids(start_date, end_date)
+    excluded_vmids_str = '|'.join(map(str, template_hosts_ids))
+
+    # vm number
+    vm_query = f'''
+        from(bucket: "{bucket}")
+        |> range(start: {start_date}, stop: {end_date})
+        |> filter(fn: (r) => r["_measurement"] == "system")
+        |> filter(fn: (r) => r["_field"] == "cpus")
+        |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+        |> filter(fn: (r) => r["object"] == "qemu")
+        |> distinct(column: "vmid")
+        |> count()
+        |> group(columns: ["nodename"])
+        |> sum()
+    '''
+    query_result = query_api.query(query=vm_query)
+
+
+    # mem usage
+    mem_usage_query = f'''
+        from(bucket:"{bucket}")
+        |> range(start: {start_date}, stop: {end_date})
+        |> filter(fn: (r) => r["_measurement"] == "system")
+        |> filter(fn: (r) => r["_field"] == "mem" or r["_field"] == "maxmem")
+        |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+        |> filter(fn: (r) => {class_filters})
+        |> group(columns: ["host", "_field"])
+        |> pivot(rowKey: ["host"], columnKey: ["_field"], valueColumn: "_value")
+        |> map(fn: (r) => ({{ r with _value: (r.mem / r.maxmem) * 100.0 }}))
+        |> map(fn: (r) => ({{ r with class: {class_map} }}))
+        |> group(columns: ["class", "_field"])
+        |> mean()
+    '''
+    query_result = query_api.query(query=mem_usage_query)
+
+    # CONSOLIDATE RESULT 
     output = {}
     if (len(data) > 0) :
         output["code"] = 0
