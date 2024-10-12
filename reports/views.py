@@ -1855,7 +1855,7 @@ def generate_form_data(request):
                 "vm number": 0, "lxc number": 0,
                 "cpu": 0, "cpu usage": 0.0,
                 "mem": 0, "mem usage": 0.0,
-                "storage": 0.0, "storage usage": 0.0,
+                "storage": 0.0, "storage usage": -1,
                 "netin": 0.0, "netout": 0.0,
                 "uptime": "none"}
             results.append(result)
@@ -1977,6 +1977,22 @@ def generate_form_data(request):
     '''
     query_result = query_api.query(query=mem_usage_query)
     process_perclass_query_result(results, query_result, "mem usage")
+
+    # storage 
+    storage_query = f'''
+        from(bucket:"{bucket}")
+        |> range(start: {start_date}, stop: {end_date})
+        |> filter(fn: (r) => r["_measurement"] == "system")
+        |> filter(fn: (r) => r["_field"] == "maxdisk")
+        |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+        |> filter(fn: (r) => {class_filters})
+        |> last()
+        |> map(fn: (r) => ({{ r with class: {class_map} }}))
+        |> group(columns: ["class"])
+        |> sum()
+    '''
+    query_result = query_api.query(query=storage_query)
+    process_perclass_query_result(results, query_result, "storage")    
 
     # add to data
     for r in results:
