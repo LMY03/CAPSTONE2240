@@ -1628,10 +1628,9 @@ def generate_form_data(request):
                 nodes.append(nodename)
                 result["nodename"] = nodename
                 results.append(result)
-            else:
-                for result in results:
-                    if record.values.get('nodename') == result["nodename"]:
-                        result["vm number"] = record.values.get('_value', 0)
+            for result in results:
+                if record.values.get('nodename') == result["nodename"]:
+                    result["vm number"] = record.values.get('_value', 0)
 
     data.append(results)
     # subjects
