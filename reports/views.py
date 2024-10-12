@@ -1381,6 +1381,16 @@ def process_perclass_query_result(results, query_result, column_name):
                     result[column_name] = value
                     break
 
+def process_indiv_query_result(results, query_result, column_name):
+    for table in query_result:
+        for record in table.records:
+            vmid = record.values.get('vmid')
+            value = record.values.get('_value', 0)
+            for result in results:
+                if result["vmid"] == vmid:
+                    result[column_name] = value
+                    break
+
 
 def generate_form_data(request): 
 
@@ -2133,6 +2143,19 @@ def generate_form_data(request):
                 elif vm_type == "lxc":
                     result["lxc number"] = 1
                 results.append(result)
+
+    # cpu data
+    cpu_query = f'''
+        from(bucket:"{bucket}")
+        |> range(start: {start_date}, stop: {end_date})
+        |> filter(fn: (r) => r["_measurement"] == "system")
+        |> filter(fn: (r) => r["_field"] == "cpu")
+        |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+        |> mean()
+        |> map(fn: (r) => ({{ r with _value: r._value * 100.0 }}))
+    '''
+    query_result = query_api.query(query=cpu_query)
+    process_indiv_query_result(results, query_result, "cpu usage")
 
     # add to data
     for r in results:
