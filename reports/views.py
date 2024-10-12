@@ -2129,10 +2129,13 @@ def generate_form_data(request):
                         "uptime": "none"}
                 if vm_type == "qemu":
                     result["vm number"] = 1
-                else if vm_type == "lxc":
+                elif vm_type == "lxc":
                     result["lxc number"] = 1
                 results.append(result)
 
+    # add to data
+    for r in results:
+        data.append(r)
 
     # CONSOLIDATE RESULT 
     output = {}
