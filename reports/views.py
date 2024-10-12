@@ -1887,6 +1887,26 @@ def generate_form_data(request):
     query_result = query_api.query(query=vm_query)
     process_perclass_query_result(results, query_result, "vm number")
 
+    # lxc number
+    lxc_query = f'''
+        from(bucket: "{bucket}")
+        |> range(start: {start_date}, stop: {end_date})
+        |> filter(fn: (r) => r["_measurement"] == "system")
+        |> filter(fn: (r) => r["_field"] == "cpus")
+        |> filter(fn: (r) => r["object"] == "lxc")
+        |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+        |> filter(fn: (r) => {class_filters})
+        |> distinct(column: "vmid")
+        |> count()
+        |> pivot(rowKey: ["host"], columnKey: ["_field"], valueColumn: "_value")
+        |> map(fn: (r) => ({{ r with class: {class_map} }}))
+        |> map(fn: (r) => ({{ _value: r.cpus, class: r.class }}))
+        |> group(columns: ["class"])
+        |> sum()
+    '''
+    query_result = query_api.query(query=lxc_query)
+    process_perclass_query_result(results, query_result, "lxc number")
+
 
 
     # mem usage
