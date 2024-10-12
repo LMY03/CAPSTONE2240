@@ -1625,11 +1625,11 @@ def generate_form_data(request):
     for table in query_result:
         for record in table.records:
             nodename = record.values.get('nodename')
-            vm_number = record.values.get('_value', 0)
+            value = record.values.get('_value', 0)
             if nodename not in nodes:    # node is not included yet in the list
                 nodes.append(nodename)
                 result = {"name": nodename, "nodename": nodename, "class": "none", 
-                        "vm number": vm_number, "lxc number": 0,
+                        "vm number": value, "lxc number": 0,
                         "cpu": 0, "cpu usage": 0.0,
                         "mem": 0, "mem usage": 0.0,
                         "storage": 0.0, "storage usage": 0.0,
@@ -1654,10 +1654,10 @@ def generate_form_data(request):
     for table in query_result:
         for record in table.records:
             nodename = record.values.get('nodename')
-            lxc_number = record.values.get('_value', 0)
+            value = record.values.get('_value', 0)
             for result in results:
                 if result["nodename"] == nodename:
-                    result["lxc number"] = lxc_number
+                    result["lxc number"] = value
                     break
 
     # cpu cores
@@ -1673,10 +1673,10 @@ def generate_form_data(request):
     for table in query_result:
         for record in table.records:
             nodename = record.values.get('nodename')
-            cpu_cores = record.values.get('_value', 0)
+            value = record.values.get('_value', 0)
             for result in results:
                 if result["nodename"] == nodename:
-                    result["cpu"] = cpu_cores
+                    result["cpu"] = value
                     break
 
     # cpu usage
@@ -1694,10 +1694,10 @@ def generate_form_data(request):
     for table in query_result:
         for record in table.records:
             nodename = record.values.get('nodename')
-            cpu_usage = record.values.get('_value', 0)
+            value = record.values.get('_value', 0)
             for result in results:
                 if result["nodename"] == nodename:
-                    result["cpu usage"] = cpu_usage
+                    result["cpu usage"] = value
                     break
     
     # total mem
@@ -1714,10 +1714,32 @@ def generate_form_data(request):
     for table in query_result:
         for record in table.records:
             nodename = record.values.get('nodename')
-            total_mem = record.values.get('_value', 0)
+            value = record.values.get('_value', 0)
             for result in results:
                 if result["nodename"] == nodename:
-                    result["mem"] = total_mem
+                    result["mem"] = value
+                    break
+    
+    # mem usage
+    mem_usage_query = f'''
+        from(bucket:"{bucket}")
+        |> range(start: {start_date}, stop: {end_date})
+        |> filter(fn: (r) => r["_measurement"] == "memory")
+        |> filter(fn: (r) => r["_field"] == "memused" or r["_field"] == "memtotal")
+        |> group(columns: ["_field", "host"])
+        |> pivot(rowKey: ["host"], columnKey: ["_field"], valueColumn: "_value")
+        |> map(fn: (r) => ({{ r with _value: (r.memused / r.memtotal) * 100.0 }}))
+        |> keep(columns: ["host", "_value"])
+        |> rename(columns: {{host: "nodename"}})
+    '''
+    query_result = query_api.query(query=mem_usage_query)
+    for table in query_result:
+        for record in table.records:
+            nodename = record.values.get('nodename')
+            value = record.values.get('_value', 0)
+            for result in results:
+                if result["nodename"] == nodename:
+                    result["mem usage"] = value
                     break
     
 
