@@ -21,6 +21,7 @@ token = config('INFLUX_TOKEN')
 org = config('INFLUXDB_ORG')
 bucket = config('INFLUXDB_BUCKET')
 proxmox_password = config('PROXMOX_PASSWORD')
+results = []
 
 # Parse date to InfluxDB compatible, fit timezone
 def parse_form_date(date_string, is_start):
@@ -1618,7 +1619,6 @@ def generate_form_data(request):
 
     # nodes
     nodes = []
-    results = []
 
     # vm number
     vm_query = f'''
