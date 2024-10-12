@@ -1361,6 +1361,18 @@ def generate_csv_response(data, query_type, start_date, end_date):
     response.write(csv_buffer.getvalue())
     return response
 
+def process_pernode_query_result(query_result, column_name):
+    for table in query_result:
+        for record in table.records:
+            nodename = record.values.get('nodename')
+            value = record.values.get('_value', 0)
+            for result in results:
+                if result["nodename"] == nodename:
+                    result[column_name] = value
+                    break
+
+
+
 def generate_form_data(request): 
 
     # connect to influxdb
@@ -1651,14 +1663,7 @@ def generate_form_data(request):
         |> sum()
     '''
     query_result = query_api.query(query=lxc_query)
-    for table in query_result:
-        for record in table.records:
-            nodename = record.values.get('nodename')
-            value = record.values.get('_value', 0)
-            for result in results:
-                if result["nodename"] == nodename:
-                    result["lxc number"] = value
-                    break
+    process_pernode_query_result(query_result, "lxc number")
 
     # cpu cores
     cpus_query = f'''
@@ -1670,14 +1675,7 @@ def generate_form_data(request):
         |> rename(columns: {{host: "nodename"}})
     '''
     query_result = query_api.query(query=cpus_query)
-    for table in query_result:
-        for record in table.records:
-            nodename = record.values.get('nodename')
-            value = record.values.get('_value', 0)
-            for result in results:
-                if result["nodename"] == nodename:
-                    result["cpu"] = value
-                    break
+    process_pernode_query_result(query_result, "cpu")
 
     # cpu usage
     cpu_query = f'''
@@ -1690,16 +1688,9 @@ def generate_form_data(request):
         |> rename(columns: {{host: "nodename"}})
         |> map(fn: (r) => ({{ r with _value: r._value * 100.0 }}))
     '''
-    query_result = query_api.query(query=cpu_query)
-    for table in query_result:
-        for record in table.records:
-            nodename = record.values.get('nodename')
-            value = record.values.get('_value', 0)
-            for result in results:
-                if result["nodename"] == nodename:
-                    result["cpu usage"] = value
-                    break
-    
+    query_result = query_api.query(query=cpu_query)\
+    process_pernode_query_result(query_result, "cpu usage")
+
     # total mem
     mem_query = f'''
         from(bucket:"{bucket}")
@@ -1711,14 +1702,7 @@ def generate_form_data(request):
         |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 / 1024.0 / 1000.0) }}))
     '''
     query_result = query_api.query(query=mem_query)
-    for table in query_result:
-        for record in table.records:
-            nodename = record.values.get('nodename')
-            value = record.values.get('_value', 0)
-            for result in results:
-                if result["nodename"] == nodename:
-                    result["mem"] = value
-                    break
+    process_pernode_query_result(query_result, "mem")
     
     # mem usage
     mem_usage_query = f'''
@@ -1733,14 +1717,7 @@ def generate_form_data(request):
         |> rename(columns: {{host: "nodename"}})
     '''
     query_result = query_api.query(query=mem_usage_query)
-    for table in query_result:
-        for record in table.records:
-            nodename = record.values.get('nodename')
-            value = record.values.get('_value', 0)
-            for result in results:
-                if result["nodename"] == nodename:
-                    result["mem usage"] = value
-                    break
+    process_pernode_query_result(query_result, "mem usage")
     
 
     # add to data
