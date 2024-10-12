@@ -2117,6 +2117,7 @@ def generate_form_data(request):
             # if vmname 中有包含 class_list 里面
             classname = check_vmname_class(vmname, class_list)
             vm_type = record.values.get('object')
+            vmid = record.values.get('vmid')
             value = record.values.get('_value', 0)
             if (nodename, vm_type, vmid, vmname) not in vms:    
                 vms.append((nodename, vm_type, vmid, vmname))
