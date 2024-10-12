@@ -1908,7 +1908,21 @@ def generate_form_data(request):
     query_result = query_api.query(query=lxc_query)
     process_perclass_query_result(results, query_result, "lxc number")
 
-
+    # cpu cores
+    cpu_query = f'''
+        from(bucket: "{bucket}")
+        |> range(start: {start_date}, stop: {end_date})
+        |> filter(fn: (r) => r["_measurement"] == "system")
+        |> filter(fn: (r) => r["_field"] == "cpus")
+        |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+        |> filter(fn: (r) => {class_filters})
+        |> last()
+        |> map(fn: (r) => ({{ r with class: {class_map} }}))
+        |> group(columns: ["class"])
+        |> sum()
+    '''    
+    query_result = query_api.query(query=cpu_query)
+    process_perclass_query_result(results, query_result, "cpu")
 
     # mem usage
     mem_usage_query = f'''
