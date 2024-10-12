@@ -2136,7 +2136,7 @@ def generate_form_data(request):
                         "vm number": 0, "lxc number": 0,
                         "cpu": value, "cpu usage": 0.0,
                         "mem": 0, "mem usage": 0.0,
-                        "storage": 0.0, "storage usage": 0.0,
+                        "storage": 0.0, "storage usage": -1,
                         "netin": 0.0, "netout": 0.0,
                         "uptime": "none"}
                 if vm_type == "qemu":
@@ -2158,7 +2158,6 @@ def generate_form_data(request):
     query_result = query_api.query(query=cpu_query)
     process_indiv_query_result(results, query_result, "cpu usage")
 
-
     # memory
     mem_query = f'''
         from(bucket: "{bucket}")
@@ -2171,7 +2170,6 @@ def generate_form_data(request):
     '''    
     query_result = query_api.query(query=mem_query)
     process_indiv_query_result(results, query_result, "mem")
-
 
     # mem usage
     mem_usage_query = f'''
@@ -2188,6 +2186,18 @@ def generate_form_data(request):
     query_result = query_api.query(query=mem_usage_query)
     process_indiv_query_result(results, query_result, "mem usage")
 
+    # storage 
+    storage_query = f'''
+        from(bucket:"{bucket}")
+        |> range(start: {start_date}, stop: {end_date})
+        |> filter(fn: (r) => r["_measurement"] == "system")
+        |> filter(fn: (r) => r["_field"] == "maxdisk")
+        |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+        |> last()
+        |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 / 1024.0 / 1024.0) }}))
+    '''
+    query_result = query_api.query(query=storage_query)
+    process_indiv_query_result(results, query_result, "storage")  
 
     # add to data
     for r in results:
