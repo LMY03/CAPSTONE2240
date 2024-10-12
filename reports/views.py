@@ -1628,7 +1628,13 @@ def generate_form_data(request):
             vm_number = record.values.get('_value', 0)
             if nodename not in nodes:    # node is not included yet in the list
                 nodes.append(nodename)
-                result = {"name": nodename, "nodename": nodename, "class": "none", "vm number": vm_number}
+                result = {"name": nodename, "nodename": nodename, "class": "none", 
+                        "vm number": vm_number, "lxc number": 0,
+                        "cpu": 0, "cpu usage": 0.0,
+                        "mem": 0, "mem usage": 0.0,
+                        "storage": 0.0, "storage usage": 0.0,
+                        "netin": 0.0, "netout": 0.0,
+                        "uptime": "none"}
                 results.append(result)
 
     # lxc num
@@ -1653,8 +1659,6 @@ def generate_form_data(request):
                 if result["nodename"] == nodename:
                     result["lxc number"] = lxc_number
                     break
-                else:
-                    result["lxc number"] = 0
 
     # cpu cores
     cpus_query = f'''
@@ -1674,8 +1678,6 @@ def generate_form_data(request):
                 if result["nodename"] == nodename:
                     result["cpu"] = cpu_cores
                     break
-                else:
-                    result["cpu"] = 0
 
     # add to data
     for r in results:
