@@ -1727,6 +1727,7 @@ def generate_form_data(request):
         |> filter(fn: (r) => r["_field"] == "total")
         |> filter(fn: (r) => r["host"] == "local")
         |> last()
+        |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 / 1024.0 / 1000.0) }}))
     '''
     query_result = query_api.query(query=storage_query)
     process_pernode_query_result(results, query_result, "storage")
