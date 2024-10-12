@@ -1371,6 +1371,15 @@ def process_pernode_query_result(results, query_result, column_name):
                     result[column_name] = value
                     break
 
+def process_perclass_query_result(results, query_result, column_name):
+    for table in query_result:
+        for record in table.records:
+            classname = record.values.get('class')
+            value = record.values.get('_value', 0)
+            for result in results:
+                if result["class"] == classname:
+                    result[column_name] = value
+                    break
 
 
 def generate_form_data(request): 
@@ -1890,6 +1899,7 @@ def generate_form_data(request):
         |> mean()
     '''
     query_result = query_api.query(query=mem_usage_query)
+    process_perclass_query_result(results, query_result, "mem usage")
 
     # add to data
     for r in results:
