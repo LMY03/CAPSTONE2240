@@ -1661,7 +1661,7 @@ def generate_form_data(request):
             value = record.values.get('_value', 0)
             if nodename not in nodes:    # node is not included yet in the list
                 nodes.append(nodename)
-                result = {"name": nodename, "nodename": nodename, "class": "none", "vmid": -1
+                result = {"name": nodename, "nodename": nodename, "class": "none", "vmid": -1,
                         "vm number": value, "lxc number": 0,
                         "cpu": 0, "cpu usage": 0.0,
                         "mem": 0, "mem usage": 0.0,
