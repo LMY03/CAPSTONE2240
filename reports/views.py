@@ -1645,7 +1645,8 @@ def generate_form_data(request):
         |> sum()
     '''
 
-    data.append(results)
+    for r in results:
+        data.append(r)
     # subjects
 
     output = {}
