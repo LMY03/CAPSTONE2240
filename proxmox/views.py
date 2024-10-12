@@ -1,16 +1,11 @@
 from django.shortcuts import get_object_or_404, redirect, render
 from django.contrib.auth.decorators import login_required
-from decouple import config
 
-from guacamole import guacamole
 from . import proxmox
 
-from . models import VirtualMachines, VMTemplates
+from . models import VirtualMachines
 from ticketing.models import RequestEntry, RequestUseCase
-from guacamole.models import GuacamoleConnection, GuacamoleUser
 from pfsense.models import DestinationPorts
-
-from django.contrib.auth.models import User
 
 # Create your views here.
 
@@ -66,8 +61,12 @@ def tsg_vm_details(request, vm_id):
 
 def generate_vm_ids(no_of_vm):
     
+    # last_vm = VirtualMachines.objects.all().last()
+    # if last_vm != None : return last_vm.vm_id + 1
+    # else : return 5000
+    
     existing_vms = set(VirtualMachines.objects.exclude(status=VirtualMachines.Status.DESTROYED).values_list('vm_id', flat=True))
-
+    
     new_ids = []
     new_id = 5000  # Starting point for new VM IDs
     while len(new_ids) < no_of_vm:

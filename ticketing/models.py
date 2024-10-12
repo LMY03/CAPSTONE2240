@@ -16,7 +16,7 @@ def date_needed_default():
 
 class RequestEntry(models.Model):
 
-    ram = models.IntegerField(default=2)
+    ram = models.IntegerField()
     #storage = models.FloatField(default= 0)
     has_internet = models.BooleanField(default=False)
     other_config = models.TextField(blank=True, null=True, default=None)
@@ -40,19 +40,22 @@ class RequestEntry(models.Model):
     requester = models.ForeignKey(User, on_delete=models.DO_NOTHING, related_name='requested_entries')
     assigned_to = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='assigned_entries')
     template = models.ForeignKey(VMTemplates, on_delete=models.DO_NOTHING)
-    cores = models.IntegerField(default=1)
+    cores = models.IntegerField()
     # security options
     request_date = models.DateTimeField(default=timezone.localtime)
-
     date_needed = models.DateField(default=expiration_date_default)
     expired_date = models.DateField(null=True, default=None)
-    expiration_date = models.DateField(null=True)
+    expiration_date = models.DateField(null=True, default=None)
+    rejected_date = models.DateField(null=True, default=None)
+    ongoing_date = models.DateTimeField(null=True, default=None)
 
     vm_date_tested = models.DateTimeField(null=True, default=None)
 
     def is_recurring(self) : return self.expiration_date == None
     
     def is_vm_tested(self) : return self.vm_date_tested is not None
+
+    def is_rejected(self) : return self.rejected_date == None
 
     def get_requester(self):
         requester = self.requester
@@ -75,15 +78,25 @@ class RequestEntry(models.Model):
 
     def get_request_type(self):
         request_use_case = RequestUseCase.objects.filter(request=self)[0].request_use_case
-        if request_use_case == 'RESEARCH' : return 'Research'
-        elif request_use_case == 'THESIS' : return 'Thesis'
-        elif request_use_case == 'TEST' : return 'Test'
-        else : return 'Class Course'
+        if request_use_case == RequestUseCase.UseCase.RESEARCH : return RequestUseCase.UseCase.RESEARCH
+        elif request_use_case == RequestUseCase.UseCase.THESIS : return RequestUseCase.UseCase.THESIS
+        elif request_use_case == RequestUseCase.UseCase.TEST : return RequestUseCase.UseCase.TEST
+        else : return RequestUseCase.UseCase.COURSE
 
-    def is_course(self) : return self.get_request_type() == 'Class Course'
-    def is_research(self) : return self.get_request_type() == 'Research'
-    def is_thesis(self) : return self.get_request_type() == 'Thesis'
-    def is_test(self) : return self.get_request_type() == 'Test'
+    def is_course(self) : return self.get_request_type() == RequestUseCase.UseCase.COURSE
+    def is_research(self) : return self.get_request_type() == RequestUseCase.UseCase.RESEARCH
+    def is_thesis(self) : return self.get_request_type() == RequestUseCase.UseCase.THESIS
+    def is_test(self) : return self.get_request_type() == RequestUseCase.UseCase.TEST
+
+    def set_ongoing(self):
+        self.status = RequestEntry.Status.ONGOING
+        self.ongoing_date = timezone.localtime()
+        self.save()
+
+    def set_rejected(self):
+        self.status = RequestEntry.Status.REJECTED
+        self.rejected_date = timezone.localtime()
+        self.save()
 
     def get_total_no_of_vm(self):
         request_use_cases = RequestUseCase.objects.filter(request=self).values('request_use_case', 'vm_count')
@@ -113,10 +126,19 @@ class RequestEntryAudit(models.Model):
         return json.loads(self.changes)
 
 class RequestUseCase(models.Model):
-    request = models.ForeignKey(RequestEntry, on_delete= models.CASCADE)
-    request_use_case = models.CharField(max_length=45, default='CLASS_COURSE')
-    vm_count = models.IntegerField(default=1)
+    class UseCase(models.TextChoices):
+        COURSE = 'CLASS COURSE', 'Class Course'
+        RESEARCH = 'RESEARCH', 'Research'
+        THESIS = 'THESIS', 'Thesis'
+        TEST = 'TEST', 'Test'
 
+    request_use_case = models.CharField(
+        max_length=45, 
+        choices=UseCase.choices,
+    )
+    request = models.ForeignKey(RequestEntry, on_delete=models.CASCADE)
+    vm_count = models.IntegerField()
+    
 # class GroupList (models.Model):
 #     user = models.CharField(null=False, max_length=50, default=" ")
 #     request_use_case = models.ForeignKey(RequestUseCase, on_delete=models.CASCADE)
@@ -184,6 +206,7 @@ class IssueTicket(models.Model):
     category = models.CharField(
         max_length=100, 
         choices=Category.choices)
+    
     def is_resolved(self) : return self.resolve_date != None
 
     def get_status(self):

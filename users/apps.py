@@ -14,7 +14,7 @@ class UsersConfig(AppConfig):
         from .models import User
 
         def create_initial_users(sender, **kwargs):
-            if not User.objects.filter(username='admin').exists():
+            if not User.objects.exists():
                 User.objects.create(
                     username='admin',
                     password=make_password('123456'),
@@ -24,7 +24,6 @@ class UsersConfig(AppConfig):
                     is_active=True,
                     user_type=User.UserType.TSG
                 )
-            if not User.objects.filter(username='john.doe').exists():
                 User.objects.create(
                     username='john.doe',
                     password=make_password('123456'),
@@ -35,7 +34,6 @@ class UsersConfig(AppConfig):
                     is_active=True,
                     user_type=User.UserType.TSG
                 )
-            if not User.objects.filter(username='josephine.cruz').exists():
                 User.objects.create(
                     username='josephine.cruz',
                     password=make_password('123456'),
@@ -46,5 +44,4 @@ class UsersConfig(AppConfig):
                     is_active=True,
                     user_type=User.UserType.FACULTY
                 )
-
         post_migrate.connect(create_initial_users)
