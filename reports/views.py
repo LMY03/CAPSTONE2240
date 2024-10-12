@@ -2089,6 +2089,51 @@ def generate_form_data(request):
     for r in results:
         data.append(r)
 
+    ################################ INDIVIDUAL VMS/CONTAINERS ####################################
+    
+    results = []
+    vms = []
+
+    def check_vmname_class(vmname, class_list):
+        for class_name in class_list:
+            if class_name in vmname:
+                return class_name
+        return "unknown"
+
+    # cpu cores
+    cpu_query = f'''
+        from(bucket: "{bucket}")
+        |> range(start: {start_date}, stop: {end_date})
+        |> filter(fn: (r) => r["_measurement"] == "system")
+        |> filter(fn: (r) => r["_field"] == "cpus")
+        |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+        |> last()
+    '''    
+    query_result = query_api.query(query=cpu_query)
+    for table in query_result:
+        for record in table.records:
+            vmname = record.values.get('host')
+            nodename = record.values.get('nodename')
+            # if vmname 中有包含 class_list 里面
+            classname = check_vmname_class(vmname, class_list)
+            vm_type = record.values.get('object')
+            value = record.values.get('_value', 0)
+            if (nodename, vm_type, vmid, vmname) not in vms:    
+                vms.append((nodename, vm_type, vmid, vmname))
+                result = {"name": vmname, "nodename": nodename, "class": classname, 
+                        "vm number": 0, "lxc number": 0,
+                        "cpu": value, "cpu usage": 0.0,
+                        "mem": 0, "mem usage": 0.0,
+                        "storage": 0.0, "storage usage": 0.0,
+                        "netin": 0.0, "netout": 0.0,
+                        "uptime": "none"}
+                if vm_type == "qemu":
+                    result["vm number"] = 1
+                else if vm_type == "lxc":
+                    result["lxc number"] = 1
+                results.append(result)
+
+
     # CONSOLIDATE RESULT 
     output = {}
     if (len(data) > 0) :
