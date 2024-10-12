@@ -2132,7 +2132,7 @@ def generate_form_data(request):
             value = record.values.get('_value', 0)
             if (nodename, vm_type, vmid, vmname) not in vms:    
                 vms.append((nodename, vm_type, vmid, vmname))
-                result = {"name": vmname, "nodename": nodename, "class": classname, "vmid": 0 
+                result = {"name": vmname, "nodename": nodename, "class": classname, "vmid": 0, 
                         "vm number": 0, "lxc number": 0,
                         "cpu": value, "cpu usage": 0.0,
                         "mem": 0, "mem usage": 0.0,
