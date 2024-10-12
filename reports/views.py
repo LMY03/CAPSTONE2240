@@ -1607,7 +1607,8 @@ def generate_form_data(request):
     # nodes
     nodes = []
     results = []
-    result = {}
+
+    # vm number
     vm_query = f'''
         from(bucket: "{bucket}")
         |> range(start: {start_date}, stop: {end_date})
@@ -1624,16 +1625,25 @@ def generate_form_data(request):
     for table in query_result:
         for record in table.records:
             nodename = record.values.get('nodename')
-            print(f"nodename: {nodename}")
+            vm_number = record.values.get('_value', 0)
             if nodename not in nodes:    # node is not included yet in the list
                 nodes.append(nodename)
-                result["nodename"] = nodename
+                result = {"nodename": nodename, "vm number": vm_number}
                 results.append(result)
-            print(f"nodes: {nodes}")
-            print(f"results: {results}")
-            for r in results:
-                if record.values.get('nodename') == r["nodename"]:
-                    r["vm number"] = record.values.get('_value', 0)
+
+    # lxc num
+    lxc_query = f'''
+        from(bucket: "{bucket}")
+        |> range(start: {start_date}, stop: {end_date})
+        |> filter(fn: (r) => r["_measurement"] == "system")
+        |> filter(fn: (r) => r["_field"] == "cpus")
+        |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+        |> filter(fn: (r) => r["object"] == "lxc")
+        |> distinct(column: "vmid")
+        |> count()
+        |> group(columns: ["nodename"])
+        |> sum()
+    '''
 
     data.append(results)
     # subjects
