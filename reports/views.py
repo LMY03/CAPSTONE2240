@@ -1628,7 +1628,7 @@ def generate_form_data(request):
             vm_number = record.values.get('_value', 0)
             if nodename not in nodes:    # node is not included yet in the list
                 nodes.append(nodename)
-                result = {"nodename": nodename, "vm number": vm_number}
+                result = {"name": nodename, "nodename": nodename, "class": "none", "vm number": vm_number}
                 results.append(result)
 
     # lxc num
@@ -1653,6 +1653,8 @@ def generate_form_data(request):
                 if result["nodename"] == nodename:
                     result["lxc number"] = lxc_number
                     break
+                else:
+                    result["lxc number"] = 0
 
 
     # add to data
