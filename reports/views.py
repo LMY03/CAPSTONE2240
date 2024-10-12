@@ -1605,7 +1605,9 @@ def generate_form_data(request):
     data.append(result)
 
     # nodes
+    nodes = []
     results = []
+    result = {}
     vm_query = f'''
         from(bucket: "{bucket}")
         |> range(start: {start_date}, stop: {end_date})
@@ -1622,7 +1624,8 @@ def generate_form_data(request):
     for table in query_result:
         for record in table.records:
             nodename = record.values.get('nodename')
-            if nodename not in results.keys():    # node is not included yet in the list
+            if nodename not in nodes:    # node is not included yet in the list
+                nodes.append(nodename)
                 result["nodename"] = nodename
                 results.append(result)
             else:
