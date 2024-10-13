@@ -2364,7 +2364,7 @@ def graphdata(request):
 
     # get type, name, nodename, class, vmid, startdate and enddate
     type_received = request.POST.get('type', "system")
-    type_received = "node"
+    type_received = "class"
     name = request.POST.get('name', "system")
     nodename = request.POST.get('nodename', "none")
     subject = request.POST.get('class', "none")
@@ -2587,8 +2587,7 @@ def graphdata(request):
         data = list(result.values())
         data.sort(key=lambda x: x['time'])
     elif type_received == "node":
-        # do something
-        nodename = "pve"
+        # nodename = "pve"
         
         # cpu cores
         cpus_query = f'''
@@ -2798,8 +2797,33 @@ def graphdata(request):
         data.sort(key=lambda x: x['time'])
 
     elif type_received == "class":
-        # do something
-        pass
+        subject = "CCINFOM"
+
+        # get template
+        template_hosts_ids = get_template_hosts_ids(start_date, end_date)
+        excluded_vmids_str = '|'.join(map(str, template_hosts_ids))
+
+        # cpu cores
+        cpu_query = f'''
+            from(bucket: "{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["_field"] == "cpus")
+            |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+            |> filter(fn: (r) => r["host"] =~ /{subject}/)
+            |> aggregateWindow(every: {window}, fn: last, createEmpty: false)
+        '''    
+        query_result = query_api.query(query=cpu_query)
+        for table in query_result:
+        for record in table.records:
+            time = record.values.get('_time')
+            value = record.values.get('_value')
+            
+            if time not in result:
+                result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0, 
+                                "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}
+            result[time]["cpu"] += value
+
     elif type_received == "vm":
         # do something
         pass
