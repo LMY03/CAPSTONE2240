@@ -3060,11 +3060,6 @@ def graphdata(request):
                                     "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}
                 result[time]["mem"] += value
 
-        # Calculate average memory usage
-        for time in result:
-            if mem_usage_count.get(time, 0) > 0:
-                result[time]["mem usage"] /= mem_usage_count[time]
-
         # mem usage
         mem_usage_query = f'''
             from(bucket:"{bucket}")
@@ -3092,6 +3087,11 @@ def graphdata(request):
                     mem_usage_count[time] = 0
                 result[time]["mem usage"] += value
                 mem_usage_count[time] += 1
+                
+        # Calculate average memory usage
+        for time in result:
+            if mem_usage_count.get(time, 0) > 0:
+                result[time]["mem usage"] /= mem_usage_count[time]
 
         # storage
         storage_query = f'''
