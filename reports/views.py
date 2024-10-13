@@ -1416,9 +1416,14 @@ def get_time_window(start_datetime, end_datetime):
         return "5d"
 
 def convert_time_format(time_str):
-    # 将 ISO 格式的时间字符串解析为 datetime 对象
-    dt = datetime.fromisoformat(time_str.replace('Z', '+00:00'))
-    # 将 datetime 对象格式化为所需的字符串格式
+    try:
+        dt = datetime.fromisoformat(time_str.replace('Z', '+00:00'))
+    except ValueError:
+        try:
+            dt = datetime.strptime(time_str, "%Y-%m-%dT%H:%M:%S.%fZ")
+        except ValueError:
+            dt = datetime.strptime(time_str, "%Y-%m-%dT%H:%M:%SZ")
+    
     return dt.strftime("%Y-%m-%d %H:%M:%S")
 
 def formdata(request): 
