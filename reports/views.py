@@ -2356,7 +2356,7 @@ def graphdata(request):
     influxdb_client = InfluxDBClient(url=INFLUX_ADDRESS, token=token, org=org)
     query_api = influxdb_client.query_api()
 
-    
+
     output = {}
     data = []
 
@@ -2397,7 +2397,7 @@ def graphdata(request):
                 value = record.values.get('_value')
                 
                 if time not in result:
-                    result[time] = {"time": time, "cpu": 0, "cpu_usage": 0, "mem": 0, "mem_usage": 0}
+                    result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0}
                 result[time]["cpu"] += value
 
 
@@ -2418,7 +2418,7 @@ def graphdata(request):
                 value = record.values.get('_value')
                 
                 if time not in result:
-                    result[time] = {"time": time, "cpu": 0, "cpu_usage": 0, "mem": 0, "mem_usage": 0}
+                    result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0}
                 if time not in cpu_usage_count:
                     cpu_usage_count[time] = 0
                 result[time]["cpu usage"] += value
