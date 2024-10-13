@@ -1401,7 +1401,8 @@ def get_time_window(start_datetime, end_datetime):
     start, end = min(start, end), max(start, end)
     
     time_diff = end - start
-    print(f"time_diff: {time_diff}")
+    print(f"start: {start}")
+    print(f"end: {end}")
 
     if time_diff < timedelta(minutes=30):
         return "5m"
