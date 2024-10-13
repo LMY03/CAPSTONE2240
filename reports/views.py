@@ -1416,18 +1416,19 @@ def get_time_window(start_datetime, end_datetime):
         return "5d"
 
 def convert_time_format(time_value):
-    if isinstance(time_value, (int, float)):
-        seconds = time_value / 1e9
-        dt = datetime.fromtimestamp(seconds, tz=timezone.utc)
+    if isinstance(time_value, datetime):
+        return time_value.strftime("%Y-%m-%d %H:%M:%S")
+    elif isinstance(time_value, (int, float)):
+        return datetime.fromtimestamp(time_value / 1e9).strftime("%Y-%m-%d %H:%M:%S")
     elif isinstance(time_value, str):
         try:
             dt = datetime.fromisoformat(time_value.replace('Z', '+00:00'))
+            return dt.strftime("%Y-%m-%d %H:%M:%S")
         except ValueError:
-            raise ValueError(f"Unsupported time format: {time_value}")
+            return time_value
     else:
-        raise TypeError(f"Unsupported time type: {type(time_value)}")
+        return str(time_value)
 
-    return dt.strftime("%Y-%m-%d %H:%M:%S")
 
 def formdata(request): 
 
@@ -3182,7 +3183,8 @@ def graphdata(request):
         return JsonResponse(output) 
     
     for item in data:
-        item['time'] = convert_time_format(item['time'])
+        if 'time' in item:
+            item['time'] = convert_time_format(item['time'])
 
     output["code"] = 0
     output["count"] = len(data)
