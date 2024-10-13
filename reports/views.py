@@ -5,6 +5,7 @@ from django.core import serializers
 from django.db.models import Sum, Count
 from proxmoxer import ProxmoxAPI
 from influxdb_client import InfluxDBClient
+from collections import defaultdict
 from io import StringIO
 import json, csv
 from decouple import config
@@ -1391,6 +1392,25 @@ def process_indiv_query_result(results, query_result, column_name):
                     result[column_name] = value
                     break
 
+def get_time_window(start_datetime, end_datetime):
+    start = datetime.strptime(start_datetime, "%Y-%m-%d %H:%M:%S")
+    end = datetime.strptime(end_datetime, "%Y-%m-%d %H:%M:%S")
+    
+    start, end = min(start, end), max(start, end)
+    
+    time_diff = end - start
+    
+    if time_diff < timedelta(minutes=30):
+        return "5m"
+    elif time_diff <= timedelta(days=1):
+        return "30m"
+    elif timedelta(days=1) < time_diff <= timedelta(days=5):
+        return "3h"
+    elif timedelta(days=5) < time_diff <= timedelta(days=60):
+        return "1d"
+    else:
+        return "5d"
+
 
 def formdata(request): 
 
@@ -2114,7 +2134,7 @@ def formdata(request):
         return "unknown"
 
     # cpu cores
-    cpu_query = f'''
+    cpus_query = f'''
         from(bucket: "{bucket}")
         |> range(start: {start_date}, stop: {end_date})
         |> filter(fn: (r) => r["_measurement"] == "system")
@@ -2122,7 +2142,7 @@ def formdata(request):
         |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
         |> last()
     '''    
-    query_result = query_api.query(query=cpu_query)
+    query_result = query_api.query(query=cpus_query)
     for table in query_result:
         for record in table.records:
             vmname = record.values.get('host')
@@ -2326,8 +2346,10 @@ def formdata(request):
     
     return JsonResponse(output)
 
+
+
 def graphdata(request):
-    
+
     output = {}
     data = []
 
@@ -2346,20 +2368,73 @@ def graphdata(request):
     start_date = parse_form_date(start_date_str, 1)
     end_date = parse_form_date(end_date_str, 0)
 
-
+    window = get_time_window(start_datetime, end_datetime)
 
     # determine the type -> system? node? class? indiv?
     if type_received == "system":
-        # do something
-        # cpu
+        result = defaultdict(dict)
+        
+        # cpu cores
+        cpus_query = f'''
+            from(bucket: "{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "cpustat")
+            |> filter(fn: (r) => r["_field"] == "cpus")
+            |> aggregateWindow(every: {window}, fn: last, createEmpty: false)
+        '''   
+        query_result = query_api.query(query=cpus_query)
+
+        for table in query_result:
+            for record in table.records:
+                time = record.values.get('_time')
+                value = record.values.get('_value')
+                
+                if time not in result:
+                    result[time] = {"time": time, "cpu": 0, "cpu_usage": 0, "mem": 0, "mem_usage": 0}
+                result[time]["cpu"] += value
+
+
         # cpu usage
+        cpu_usage_query = f'''
+            from(bucket: "{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "cpustat")
+            |> filter(fn: (r) => r["_field"] == "cpu")
+            |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
+        '''
+        query_result = query_api.query(query=cpu_usage_query)
+        
+        cpu_usage_count = {}
+        for table in query_result:
+            for record in table.records:
+                time = record.values.get('_time')
+                value = record.values.get('_value')
+                
+                if time not in result:
+                    result[time] = {"time": time, "cpu": 0, "cpu_usage": 0, "mem": 0, "mem_usage": 0}
+                if time not in cpu_usage_count:
+                    cpu_usage_count[time] = 0
+                result[time]["cpu usage"] += value
+                cpu_usage_count[time] += 1
+
+        # Calculate average CPU usage
+        for time in result:
+            if cpu_usage_count.get(time, 0) > 0:
+                result[time]["cpu usage"] /= cpu_usage_count[time]
+
+
+
+    
         # mem
         # mem usage
         # storage
         # storage usage
         # netin
         # netout
-        pass
+
+        # Convert result to list and sort by time
+        data = list(result.values())
+        data.sort(key=lambda x: x['time'])
     elif type_received == "node":
         # do something
         pass
