@@ -2368,7 +2368,7 @@ def graphdata(request):
     start_date = parse_form_date(start_date_str, 1)
     end_date = parse_form_date(end_date_str, 0)
 
-    window = get_time_window(start_datetime, end_datetime)
+    window = get_time_window(start_date_str, end_date_str)
 
     # determine the type -> system? node? class? indiv?
     if type_received == "system":
