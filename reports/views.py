@@ -2815,18 +2815,18 @@ def graphdata(request):
         '''    
         query_result = query_api.query(query=cpu_query)
         for table in query_result:
-        for record in table.records:
-            time = record.values.get('_time')
-            value = record.values.get('_value')
-            
-            if time not in result:
-                result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0, 
-                                "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}
-            result[time]["cpu"] += value
+            for record in table.records:
+                time = record.values.get('_time')
+                value = record.values.get('_value')
+                
+                if time not in result:
+                    result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0, 
+                                    "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}
+                result[time]["cpu"] += value
 
         data = list(result.values())
         data.sort(key=lambda x: x['time'])
-        
+
     elif type_received == "vm":
         # do something
         pass
