@@ -2359,15 +2359,19 @@ def graphdata(request):
         # storage usage
         # netin
         # netout
-
+        pass
     elif type_received == "node":
         # do something
+        pass
     elif type_received == "class":
         # do something
+        pass
     elif type_received == "vm":
         # do something
+        pass
     else:
         # do something
+        pass
     
     output["code"] = 0
     output["count"] = len(data)
