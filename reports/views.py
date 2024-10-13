@@ -2455,7 +2455,7 @@ def graphdata(request):
             |> range(start: {start_date}, stop: {end_date})
             |> filter(fn: (r) => r["_measurement"] == "memory")
             |> filter(fn: (r) => r["_field"] == "memused" or r["_field"] == "memtotal")
-            |> aggregateWindow(every: {window}, fn: last, createEmpty: false)
+            |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
             |> group(columns: ["_field", "host", "_time"])
             |> pivot(rowKey: ["host"], columnKey: ["_field"], valueColumn: "_value")
             |> map(fn: (r) => ({{ r with _value: (r.memused / r.memtotal) * 100.0 }}))
