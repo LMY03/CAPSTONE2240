@@ -1393,12 +1393,10 @@ def process_indiv_query_result(results, query_result, column_name):
                     break
 
 def get_time_window(start_datetime, end_datetime):
-    start_datetime = "2024-10-12 07:00:00"
-    end_datetime = "2024-10-13 07:00:00"
-    start = datetime.strptime(start_datetime, "%Y-%m-%d %H:%M:%S")
-    end = datetime.strptime(end_datetime, "%Y-%m-%d %H:%M:%S")
-    # start = datetime.strptime(start_datetime, "%Y-%m-%d")
-    # end = datetime.strptime(end_datetime, "%Y-%m-%d")
+    # start = datetime.strptime(start_datetime, "%Y-%m-%d %H:%M:%S")
+    # end = datetime.strptime(end_datetime, "%Y-%m-%d %H:%M:%S")
+    start = datetime.strptime(start_datetime, "%Y-%m-%d")
+    end = datetime.strptime(end_datetime, "%Y-%m-%d")
     
     start, end = min(start, end), max(start, end)
     
@@ -2402,7 +2400,8 @@ def graphdata(request):
                 value = record.values.get('_value')
                 
                 if time not in result:
-                    result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0}
+                    result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0, 
+                                    "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}
                 result[time]["cpu"] += value
 
 
@@ -2423,8 +2422,8 @@ def graphdata(request):
                 value = record.values.get('_value')
                 
                 if time not in result:
-                    result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0}
-                if time not in cpu_usage_count:
+                    result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0, 
+                                    "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}                if time not in cpu_usage_count:
                     cpu_usage_count[time] = 0
                 result[time]["cpu usage"] += value
                 cpu_usage_count[time] += 1
@@ -2451,7 +2450,8 @@ def graphdata(request):
                 value = record.values.get('_value')
                 
                 if time not in result:
-                    result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0}
+                    result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0, 
+                                    "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}
                 result[time]["mem"] += value
 
         # mem usage
@@ -2474,7 +2474,8 @@ def graphdata(request):
                 value = record.values.get('_value')
                 
                 if time not in result:
-                    result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0}
+                    result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0, 
+                                    "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}
                 if time not in mem_usage_count:
                     mem_usage_count[time] = 0
                 result[time]["mem usage"] += value
@@ -2486,6 +2487,26 @@ def graphdata(request):
                 result[time]["mem usage"] /= mem_usage_count[time]
 
         # storage
+        storage_query = f'''
+            from(bucket: "{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["_field"] == "total")
+            |> filter(fn: (r) => r["host"] == "local")
+            |> aggregateWindow(every: {window}, fn: last, createEmpty: false)
+        '''
+        query_result = query_api.query(query=storage_query)
+        
+        for table in query_result:
+            for record in table.records:
+                time = record.values.get('_time')
+                value = record.values.get('_value')
+                
+                if time not in result:
+                    result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0, 
+                                    "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}
+                result[time]["storage"] += value
+
         # storage usage
         # netin
         # netout
