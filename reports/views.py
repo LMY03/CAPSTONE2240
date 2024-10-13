@@ -2364,7 +2364,7 @@ def graphdata(request):
 
     # get type, name, nodename, class, vmid, startdate and enddate
     type_received = request.POST.get('type', "system")
-    type_received = "class"
+    type_received = "vm"
     name = request.POST.get('name', "system")
     nodename = request.POST.get('nodename', "none")
     subject = request.POST.get('class', "none")
@@ -3033,6 +3033,12 @@ def graphdata(request):
                 result[time]["cpu usage"] += value
                 cpu_usage_count[time] += 1
         
+        # Calculate average CPU usage
+        for time in result:
+            if cpu_usage_count.get(time, 0) > 0:
+                result[time]["cpu usage"] /= cpu_usage_count[time] 
+
+
         # mem
         mem_query = f'''
             from(bucket: "{bucket}")
@@ -3053,6 +3059,11 @@ def graphdata(request):
                     result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0, 
                                     "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}
                 result[time]["mem"] += value
+
+        # Calculate average memory usage
+        for time in result:
+            if mem_usage_count.get(time, 0) > 0:
+                result[time]["mem usage"] /= mem_usage_count[time]
 
         # mem usage
         mem_usage_query = f'''
