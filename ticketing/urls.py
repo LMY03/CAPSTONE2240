@@ -27,6 +27,12 @@ urlpatterns = [
     
     path('<int:ticket_id>/download_issue_files', views.download_issue_files, name='download_issue_files'),
     path('<int:issue_comment_id>/download_issue_comment_files', views.download_issue_comment_files, name='download_issue_comment_files'),
+    path('vm_template_management/', views.vm_template_management, name = 'vm_template_management'), 
+    path('add_vm_template/', views.add_vm_template, name = 'add_vm_template'),
+    path('edit_vm_template/', views.edit_vm_template, name = 'edit_vm_template'),
+    path('deactivate_vm_template/<int:template_id>', views.deactivate_vm_template, name ='deactivate_vm_template'),
+    path('activate_template/<int:template_id>', views.activate_vm_template, name = "activate_vm_template")
+
     # path('clear_credential', views.clear_credential, name = 'clear_credential'),
     # path('download_credentials', views.download_credentials, name='download_credentials'),
 ]
