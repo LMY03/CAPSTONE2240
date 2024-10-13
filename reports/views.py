@@ -2509,6 +2509,38 @@ def graphdata(request):
                 result[time]["storage"] += value
 
         # storage usage
+        storage_usage_query = f'''
+            from(bucket: "{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["_field"] == "used" or r["_field"] == "total")
+            |> filter(fn: (r) => r["host"] == "local")
+            |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
+            |> group(columns: ["_field", "nodename", "_time"])
+            |> pivot(rowKey: ["nodename"], columnKey: ["_field"], valueColumn: "_value")
+            |> map(fn: (r) => ({{ r with _value: (r.used / r.total) * 100.0 }}))
+        '''
+        query_result = query_api.query(query=storage_usage_query)
+
+        storage_usage_count = {}
+        for table in query_result:
+            for record in table.records:
+                time = record.values.get('_time')
+                value = record.values.get('_value')
+                
+                if time not in result:
+                    result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0, 
+                                    "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}
+                if time not in storage_usage_count:
+                    storage_usage_count[time] = 0
+                result[time]["storage usage"] += value
+                storage_usage_count[time] += 1
+
+        # Calculate average storage usage
+        for time in result:
+            if storage_usage_count.get(time, 0) > 0:
+                result[time]["storage usage"] /= storage_usage_count[time]
+
         # netin
         # netout
 
