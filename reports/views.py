@@ -1415,15 +1415,18 @@ def get_time_window(start_datetime, end_datetime):
     else:
         return "5d"
 
-def convert_time_format(time_str):
-    try:
-        dt = datetime.fromisoformat(time_str.replace('Z', '+00:00'))
-    except ValueError:
+def convert_time_format(time_value):
+    if isinstance(time_value, (int, float)):
+        seconds = time_value / 1e9
+        dt = datetime.fromtimestamp(seconds, tz=timezone.utc)
+    elif isinstance(time_value, str):
         try:
-            dt = datetime.strptime(time_str, "%Y-%m-%dT%H:%M:%S.%fZ")
+            dt = datetime.fromisoformat(time_value.replace('Z', '+00:00'))
         except ValueError:
-            dt = datetime.strptime(time_str, "%Y-%m-%dT%H:%M:%SZ")
-    
+            raise ValueError(f"Unsupported time format: {time_value}")
+    else:
+        raise TypeError(f"Unsupported time type: {type(time_value)}")
+
     return dt.strftime("%Y-%m-%d %H:%M:%S")
 
 def formdata(request): 
