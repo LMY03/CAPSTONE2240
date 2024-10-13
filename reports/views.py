@@ -1392,13 +1392,14 @@ def process_indiv_query_result(results, query_result, column_name):
                     break
 
 
-def generate_form_data(request): 
+def formdata(request): 
 
     # connect to influxdb
     influxdb_client = InfluxDBClient(url=INFLUX_ADDRESS, token=token, org=org)
     query_api = influxdb_client.query_api()
 
-    # get date range
+    # TODO: change this. The received start_date format is YYYY-MM-DD HH:MM:SS
+    # TODO: also change parse_form_date function
     start_date_str = request.POST.get('startdate')
     end_date_str = request.POST.get('enddate')
     # TODO: change this. Now is date
@@ -1413,6 +1414,7 @@ def generate_form_data(request):
     ################################ SYSTEM ###############################
     data = []
     result = {}
+    result["type"] = "system"
     result["name"] = "system"
     result["nodename"] = "none"
     result["class"] = "none"
@@ -1661,7 +1663,7 @@ def generate_form_data(request):
             value = record.values.get('_value', 0)
             if nodename not in nodes:    # node is not included yet in the list
                 nodes.append(nodename)
-                result = {"name": nodename, "nodename": nodename, "class": "none", "vmid": -1,
+                result = {"type": "node", "name": nodename, "nodename": nodename, "class": "none", "vmid": -1,
                         "vm number": value, "lxc number": 0,
                         "cpu": 0, "cpu usage": 0.0,
                         "mem": 0, "mem usage": 0.0,
@@ -1862,7 +1864,7 @@ def generate_form_data(request):
         classname = entry.split('_')[0]
         if classname not in class_list:
             class_list.append(classname)
-            result = {"name": classname, "nodename": "none", "class": classname, "vmid": -1,
+            result = {"type": "subject", "name": classname, "nodename": "none", "class": classname, "vmid": -1,
                 "vm number": 0, "lxc number": 0,
                 "cpu": 0, "cpu usage": 0.0,
                 "mem": 0, "mem usage": 0.0,
@@ -2132,7 +2134,7 @@ def generate_form_data(request):
             value = record.values.get('_value', 0)
             if (nodename, vm_type, vmid, vmname) not in vms:    
                 vms.append((nodename, vm_type, vmid, vmname))
-                result = {"name": vmname, "nodename": nodename, "class": classname, "vmid": vmid, 
+                result = {"type": "vm", "name": vmname, "nodename": nodename, "class": classname, "vmid": vmid, 
                         "vm number": 0, "lxc number": 0,
                         "cpu": value, "cpu usage": 0.0,
                         "mem": 0, "mem usage": 0.0,
@@ -2324,6 +2326,54 @@ def generate_form_data(request):
     
     return JsonResponse(output)
 
+def graphdata(request):
+    
+    output = {}
+    data = []
+
+    # get type, name, nodename, class, vmid, startdate and enddate
+    type_received = request.POST.get('type', "system")
+    name = request.POST.get('name', "system")
+    nodename = request.POST.get('nodename', "none")
+    subject = request.POST.get('class', "none")
+    vmid = request.POST.get('vmid', "-1")
+
+    # start_date_str = request.POST.get('start_date')
+    # end_date_str = request.POST.get('end_date')
+    start_date_str = request.POST.get('startdate')
+    end_date_str = request.POST.get('enddate')
+
+    start_date = parse_form_date(start_date_str, 1)
+    end_date = parse_form_date(end_date_str, 0)
+
+
+
+    # determine the type -> system? node? class? indiv?
+    if type_received == "system":
+        # do something
+        # cpu
+        # cpu usage
+        # mem
+        # mem usage
+        # storage
+        # storage usage
+        # netin
+        # netout
+
+    elif type_received == "node":
+        # do something
+    elif type_received == "class":
+        # do something
+    elif type_received == "vm":
+        # do something
+    else:
+        # do something
+    
+    output["code"] = 0
+    output["count"] = len(data)
+    output["data"] = data
+
+    return JsonResponse(output)
 ############################### Ticketing ###############################
 
 def fetch_ticketing_report_data(form : TicketingReportForm):
