@@ -2804,8 +2804,10 @@ def graphdata(request):
         # do something
         pass
     else:
-        # do something
-        pass
+        output["code"] = -1
+        output["count"] = 0
+        output["data"] = []
+        return JsonResponse(output) 
     
     output["code"] = 0
     output["count"] = len(data)
