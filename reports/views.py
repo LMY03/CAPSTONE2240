@@ -1415,6 +1415,11 @@ def get_time_window(start_datetime, end_datetime):
     else:
         return "5d"
 
+def convert_time_format(time_str):
+    # 将 ISO 格式的时间字符串解析为 datetime 对象
+    dt = datetime.fromisoformat(time_str.replace('Z', '+00:00'))
+    # 将 datetime 对象格式化为所需的字符串格式
+    return dt.strftime("%Y-%m-%d %H:%M:%S")
 
 def formdata(request): 
 
@@ -3087,7 +3092,7 @@ def graphdata(request):
                     mem_usage_count[time] = 0
                 result[time]["mem usage"] += value
                 mem_usage_count[time] += 1
-                
+
         # Calculate average memory usage
         for time in result:
             if mem_usage_count.get(time, 0) > 0:
@@ -3168,6 +3173,9 @@ def graphdata(request):
         output["data"] = []
         return JsonResponse(output) 
     
+    for item in data:
+    item['time'] = convert_time_format(item['time'])
+
     output["code"] = 0
     output["count"] = len(data)
     output["data"] = data
