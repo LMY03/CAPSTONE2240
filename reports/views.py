@@ -3188,6 +3188,7 @@ def graphdata(request):
 
     output["code"] = 0
     output["count"] = len(data)
+    output["name"] = name
     output["data"] = data
 
     return JsonResponse(output)
