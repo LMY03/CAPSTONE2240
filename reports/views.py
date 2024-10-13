@@ -2884,7 +2884,7 @@ def graphdata(request):
             from(bucket:"{bucket}")
             |> range(start: {start_date}, stop: {end_date})
             |> filter(fn: (r) => r["_measurement"] == "system")
-            |> filter(fn: (r) => r["_field"] == "maxmem")
+            |> filter(fn: (r) => r["_field"] == "mem" or r["_field"] == "maxmem")
             |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
             |> filter(fn: (r) => r["host"] =~ /{subject}/)
             |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
