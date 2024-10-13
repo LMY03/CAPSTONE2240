@@ -2596,7 +2596,7 @@ def graphdata(request):
             |> range(start: {start_date}, stop: {end_date})
             |> filter(fn: (r) => r["_measurement"] == "cpustat")
             |> filter(fn: (r) => r["_field"] == "cpus")
-            |> filter(fn: (r) => r["host"] == {nodename})
+            |> filter(fn: (r) => r["host"] == "{nodename}")
             |> aggregateWindow(every: {window}, fn: last, createEmpty: false)
         '''   
         query_result = query_api.query(query=cpus_query)
