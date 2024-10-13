@@ -3174,7 +3174,7 @@ def graphdata(request):
         return JsonResponse(output) 
     
     for item in data:
-    item['time'] = convert_time_format(item['time'])
+        item['time'] = convert_time_format(item['time'])
 
     output["code"] = 0
     output["count"] = len(data)
