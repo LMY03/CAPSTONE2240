@@ -2746,50 +2746,52 @@ def graphdata(request):
                 result[time]["storage usage"] += value
                 storage_usage_count[time] += 1
 
-        # # Calculate average storage usage
-        # for time in result:
-        #     if storage_usage_count.get(time, 0) > 0:
-        #         result[time]["storage usage"] /= storage_usage_count[time]
+        # Calculate average storage usage
+        for time in result:
+            if storage_usage_count.get(time, 0) > 0:
+                result[time]["storage usage"] /= storage_usage_count[time]
 
-        # # netin
-        # netin_query = f'''
-        #     from(bucket: "{bucket}")
-        #     |> range(start: {start_date}, stop: {end_date})
-        #     |> filter(fn: (r) => r["_measurement"] == "system")
-        #     |> filter(fn: (r) => r["_field"] == "netin")
-        #     |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
-        # '''
-        # query_result = query_api.query(query=netin_query)
+        # netin
+        netin_query = f'''
+            from(bucket: "{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["_field"] == "netin")
+            |> filter(fn: (r) => r["nodename"] == "{nodename}")
+            |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
+        '''
+        query_result = query_api.query(query=netin_query)
         
-        # for table in query_result:
-        #     for record in table.records:
-        #         time = record.values.get('_time')
-        #         value = record.values.get('_value')
+        for table in query_result:
+            for record in table.records:
+                time = record.values.get('_time')
+                value = record.values.get('_value')
                 
-        #         if time not in result:
-        #             result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0, 
-        #                             "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}
-        #         result[time]["netin"] += value
+                if time not in result:
+                    result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0, 
+                                    "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}
+                result[time]["netin"] += value
 
-        # # netout
-        # netout_query = f'''
-        #     from(bucket: "{bucket}")
-        #     |> range(start: {start_date}, stop: {end_date})
-        #     |> filter(fn: (r) => r["_measurement"] == "system")
-        #     |> filter(fn: (r) => r["_field"] == "netout")
-        #     |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
-        # '''
-        # query_result = query_api.query(query=netout_query)
+        # netout
+        netout_query = f'''
+            from(bucket: "{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["_field"] == "netout")
+            |> filter(fn: (r) => r["nodename"] == "{nodename}")
+            |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
+        '''
+        query_result = query_api.query(query=netout_query)
         
-        # for table in query_result:
-        #     for record in table.records:
-        #         time = record.values.get('_time')
-        #         value = record.values.get('_value')
+        for table in query_result:
+            for record in table.records:
+                time = record.values.get('_time')
+                value = record.values.get('_value')
                 
-        #         if time not in result:
-        #             result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0, 
-        #                             "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}
-        #         result[time]["netout"] += value
+                if time not in result:
+                    result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0, 
+                                    "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}
+                result[time]["netout"] += value
 
         # Convert result to list and sort by time
         data = list(result.values())
