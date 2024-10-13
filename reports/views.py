@@ -2478,7 +2478,7 @@ def graphdata(request):
         # Calculate average memory usage
         for time in result:
             if mem_usage_count.get(time, 0) > 0:
-                result[time]["mem_usage"] /= mem_usage_count[time]
+                result[time]["mem usage"] /= mem_usage_count[time]
 
         # storage
         # storage usage
