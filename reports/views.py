@@ -2890,7 +2890,7 @@ def graphdata(request):
             |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
             |> group(columns: ["_field", "host", "_time"])
             |> pivot(rowKey: ["host"], columnKey: ["_field"], valueColumn: "_value")
-            |> map(fn: (r) => ({{ r with _value: (r.memused / r.memtotal) * 100.0 }}))
+            |> map(fn: (r) => ({{ r with _value: (r.mem / r.memused) * 100.0 }}))
         '''
         query_result = query_api.query(query=mem_usage_query)
         
