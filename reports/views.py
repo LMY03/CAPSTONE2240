@@ -2559,7 +2559,7 @@ def graphdata(request):
                 if time not in result:
                     result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0, 
                                     "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}
-                result[time]["net in"] += value
+                result[time]["netin"] += value
 
         # netout
         netout_query = f'''
@@ -2579,7 +2579,7 @@ def graphdata(request):
                 if time not in result:
                     result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0, 
                                     "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}
-                result[time]["net out"] += value
+                result[time]["netout"] += value
 
 
         # Convert result to list and sort by time
