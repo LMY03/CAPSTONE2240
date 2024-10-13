@@ -2824,6 +2824,9 @@ def graphdata(request):
                                 "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}
             result[time]["cpu"] += value
 
+        data = list(result.values())
+        data.sort(key=lambda x: x['time'])
+        
     elif type_received == "vm":
         # do something
         pass
