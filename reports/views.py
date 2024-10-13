@@ -1401,7 +1401,8 @@ def get_time_window(start_datetime, end_datetime):
     start, end = min(start, end), max(start, end)
     
     time_diff = end - start
-    
+    print(f"time_diff: {time_diff}")
+
     if time_diff < timedelta(minutes=30):
         return "5m"
     elif time_diff <= timedelta(days=1):
@@ -2376,6 +2377,7 @@ def graphdata(request):
     end_date = parse_form_date(end_date_str, 0)
 
     window = get_time_window(start_date_str, end_date_str)
+    print(f"window: {window}")
 
     # determine the type -> system? node? class? indiv?
     if type_received == "system":
