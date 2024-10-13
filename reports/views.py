@@ -2423,7 +2423,8 @@ def graphdata(request):
                 
                 if time not in result:
                     result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0, 
-                                    "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}                if time not in cpu_usage_count:
+                                    "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}                
+                if time not in cpu_usage_count:
                     cpu_usage_count[time] = 0
                 result[time]["cpu usage"] += value
                 cpu_usage_count[time] += 1
