@@ -2352,6 +2352,11 @@ def formdata(request):
 
 def graphdata(request):
 
+    # connect to influxdb
+    influxdb_client = InfluxDBClient(url=INFLUX_ADDRESS, token=token, org=org)
+    query_api = influxdb_client.query_api()
+
+    
     output = {}
     data = []
 
