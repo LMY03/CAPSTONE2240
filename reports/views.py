@@ -2364,6 +2364,7 @@ def graphdata(request):
 
     # get type, name, nodename, class, vmid, startdate and enddate
     type_received = request.POST.get('type', "system")
+    type_received = "node"
     name = request.POST.get('name', "system")
     nodename = request.POST.get('nodename', "none")
     subject = request.POST.get('class', "none")
