@@ -125,6 +125,7 @@ def get_template_hosts_ids(start_date, end_date):
         |> yield(name: "template_hosts")
 
     '''
+    print(f"query statement: {query}")
 
     result = query_api.query(query=query)
 
