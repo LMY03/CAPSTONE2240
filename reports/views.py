@@ -141,8 +141,8 @@ def extract_detail_stat(request):
     influxdb_client = InfluxDBClient(url=INFLUX_ADDRESS, token=token, org=org)
     query_api = influxdb_client.query_api()
 
-    start_date_str = request.POST.get('startdate')
-    end_date_str = request.POST.get('enddate')
+    start_date_str = request.GET.get('startdate')
+    end_date_str = request.GET.get('enddate')
     
     start_date = parse_form_date(start_date_str)
     end_date = parse_form_date(end_date_str)
@@ -1007,8 +1007,8 @@ def formdata(request):
 
     # TODO: change this. The received start_date format is YYYY-MM-DD HH:MM:SS
     # TODO: also change parse_form_date function
-    start_time_str = request.POST.get('start_time')
-    end_time_str = request.POST.get('end_time')
+    start_time_str = request.GET.get('start_time')
+    end_time_str = request.GET.get('end_time')
     # TODO: change this. Now is date
     start_date = parse_form_date(start_time_str)
     end_date = parse_form_date(end_time_str)
@@ -1946,17 +1946,17 @@ def graphdata(request):
     data = []
 
     # get type, name, nodename, class, vmid, startdate and enddate
-    type_received = request.POST.get('type', "system")
+    type_received = request.GET.get('type', "system")
     type_received = "vm"
-    name = request.POST.get('name', "system")
-    nodename = request.POST.get('nodename', "none")
-    subject = request.POST.get('class', "none")
-    vmid = request.POST.get('vmid', "-1")
+    name = request.GET.get('name', "system")
+    nodename = request.GET.get('nodename', "none")
+    subject = request.GET.get('class', "none")
+    vmid = request.GET.get('vmid', "-1")
 
-    # start_date_str = request.POST.get('start_date')
-    # end_date_str = request.POST.get('end_date')
-    start_date_str = request.POST.get('startdate')
-    end_date_str = request.POST.get('enddate')
+    # start_date_str = request.GET.get('start_date')
+    # end_date_str = request.GET.get('end_date')
+    start_date_str = request.GET.get('start_time')
+    end_date_str = request.GET.get('start_time')
 
     start_date = parse_form_date(start_date_str)
     end_date = parse_form_date(end_date_str)
