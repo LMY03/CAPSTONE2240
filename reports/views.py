@@ -29,7 +29,7 @@ def parse_form_date(date_string):
     try:
         dt = datetime.strptime(date_string, "%Y-%m-%d %H:%M:%S")
         adjusted_dt = dt - timedelta(hours=8)
-        return adjusted_dt.strftime("%Y-%m-%dT16:00:00Z")
+        return adjusted_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
     except ValueError:
         raise ValueError(f"Invalid date format: {date_string}. Expected YYYY-MM-DD")
 
@@ -1012,6 +1012,8 @@ def formdata(request):
     # TODO: change this. Now is date
     start_date = parse_form_date(start_time_str)
     end_date = parse_form_date(end_time_str)
+    print(f"start_date:{start_date}")
+    print(f"end_date:{end_date}")
     
     # get template vm
     template_hosts_ids = get_template_hosts_ids(start_date, end_date)
