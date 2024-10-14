@@ -1294,6 +1294,12 @@ def formdata(request):
     for r in results:
         data.append(r)
 
+    # process data
+    for item in data:
+        if 'cpu usage' in item:
+            item['cpu usage'] = round(item['time'],2)
+
+
     # CONSOLIDATE RESULT 
     output = {}
     if (len(data) > 0) :
