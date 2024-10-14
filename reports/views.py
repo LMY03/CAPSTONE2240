@@ -45,6 +45,9 @@ def seconds_to_hms(seconds):
 def index(request):
     return render(request, 'reports/reports.html')
 
+def reports(request):
+    return render(request, 'reports/reports_new.html')
+
 # Get VM Info
 def getVmList(request):
     #Connection between Proxmox API and application
