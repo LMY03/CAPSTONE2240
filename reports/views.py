@@ -337,7 +337,7 @@ def process_indiv_query_result(results, query_result, column_name):
 def get_time_window(start_datetime, end_datetime):
     start = datetime.strptime(start_datetime, "%Y-%m-%d %H:%M:%S")
     end = datetime.strptime(end_datetime, "%Y-%m-%d %H:%M:%S")
-    
+
     start, end = min(start, end), max(start, end)
     
     time_diff = end - start
@@ -1329,12 +1329,13 @@ def graphdata(request):
     # start_date_str = request.GET.get('start_date')
     # end_date_str = request.GET.get('end_date')
     start_date_str = request.GET.get('start_time')
-    end_date_str = request.GET.get('start_time')
-
-    start_date = parse_form_date(start_date_str, 0)
-    end_date = parse_form_date(end_date_str, 1)
-
+    end_date_str = request.GET.get('end_time')
     window = get_time_window(start_date_str, end_date_str)
+
+    start_date = parse_form_date(start_date_str, 1)
+    end_date = parse_form_date(end_date_str, 0)
+
+    
     print(f"window: {window}")
     
     result = defaultdict(dict)
