@@ -24,11 +24,13 @@ bucket = config('INFLUXDB_BUCKET')
 proxmox_password = config('PROXMOX_PASSWORD')
 
 # Parse date to InfluxDB compatible, fit timezone
-def parse_form_date(date_string):
+def parse_form_date(date_string, is_start):
     print(f"date_string: {date_string}")
     try:
         dt = datetime.strptime(date_string, "%Y-%m-%d %H:%M:%S")
         adjusted_dt = dt - timedelta(hours=8)
+        if is_start:
+            adjusted_dt = dt - timedelta(hours=8)
         return adjusted_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
     except ValueError:
         raise ValueError(f"Invalid date format: {date_string}. Expected YYYY-MM-DD")
@@ -1010,8 +1012,8 @@ def formdata(request):
     start_time_str = request.GET.get('start_time')
     end_time_str = request.GET.get('end_time')
     # TODO: change this. Now is date
-    start_date = parse_form_date(start_time_str)
-    end_date = parse_form_date(end_time_str)
+    start_date = parse_form_date(start_time_str, 0)
+    end_date = parse_form_date(end_time_str, 1)
     print(f"start_date:{start_date}")
     print(f"end_date:{end_date}")
     
@@ -1960,8 +1962,8 @@ def graphdata(request):
     start_date_str = request.GET.get('start_time')
     end_date_str = request.GET.get('start_time')
 
-    start_date = parse_form_date(start_date_str)
-    end_date = parse_form_date(end_date_str)
+    start_date = parse_form_date(start_date_str, 0)
+    end_date = parse_form_date(end_date_str, 1)
 
     window = get_time_window(start_date_str, end_date_str)
     print(f"window: {window}")
