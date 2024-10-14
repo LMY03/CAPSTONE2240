@@ -13,7 +13,6 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
       - ./guacdb.sql:/docker-entrypoint-initdb.d/guacdb.sql
-      # - ./cap2240.sql:/docker-entrypoint-initdb.d/cap2240.sql
     healthcheck:
       test: ["CMD", "mysql", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}", "-e", "SELECT 1"]
       timeout: 20s
