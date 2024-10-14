@@ -335,10 +335,8 @@ def process_indiv_query_result(results, query_result, column_name):
                     break
 
 def get_time_window(start_datetime, end_datetime):
-    # start = datetime.strptime(start_datetime, "%Y-%m-%d %H:%M:%S")
-    # end = datetime.strptime(end_datetime, "%Y-%m-%d %H:%M:%S")
-    start = datetime.strptime(start_datetime, "%Y-%m-%d")
-    end = datetime.strptime(end_datetime, "%Y-%m-%d")
+    start = datetime.strptime(start_datetime, "%Y-%m-%d %H:%M:%S")
+    end = datetime.strptime(end_datetime, "%Y-%m-%d %H:%M:%S")
     
     start, end = min(start, end), max(start, end)
     
