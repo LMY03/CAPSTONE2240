@@ -52,9 +52,7 @@ class RequestEntry(models.Model):
     vm_date_tested = models.DateTimeField(null=True, default=None)
 
     def is_recurring(self) : return self.expiration_date == None
-    
     def is_vm_tested(self) : return self.vm_date_tested is not None
-
     def is_rejected(self) : return self.rejected_date == None
 
     def get_requester(self):
