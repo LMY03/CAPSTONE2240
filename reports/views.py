@@ -5,6 +5,7 @@ from django.core import serializers
 from django.db.models import Sum, Count
 from proxmoxer import ProxmoxAPI
 from influxdb_client import InfluxDBClient
+from collections import defaultdict
 from io import StringIO
 import json, csv
 from decouple import config
@@ -1391,14 +1392,52 @@ def process_indiv_query_result(results, query_result, column_name):
                     result[column_name] = value
                     break
 
+def get_time_window(start_datetime, end_datetime):
+    # start = datetime.strptime(start_datetime, "%Y-%m-%d %H:%M:%S")
+    # end = datetime.strptime(end_datetime, "%Y-%m-%d %H:%M:%S")
+    start = datetime.strptime(start_datetime, "%Y-%m-%d")
+    end = datetime.strptime(end_datetime, "%Y-%m-%d")
+    
+    start, end = min(start, end), max(start, end)
+    
+    time_diff = end - start
+    print(f"start: {start}")
+    print(f"end: {end}")
 
-def generate_form_data(request): 
+    if time_diff < timedelta(minutes=30):
+        return "5m"
+    elif time_diff <= timedelta(days=1):
+        return "30m"
+    elif timedelta(days=1) < time_diff <= timedelta(days=5):
+        return "3h"
+    elif timedelta(days=5) < time_diff <= timedelta(days=60):
+        return "1d"
+    else:
+        return "5d"
+
+def convert_time_format(time_value):
+    if isinstance(time_value, datetime):
+        return time_value.strftime("%Y-%m-%d %H:%M:%S")
+    elif isinstance(time_value, (int, float)):
+        return datetime.fromtimestamp(time_value / 1e9).strftime("%Y-%m-%d %H:%M:%S")
+    elif isinstance(time_value, str):
+        try:
+            dt = datetime.fromisoformat(time_value.replace('Z', '+00:00'))
+            return dt.strftime("%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            return time_value
+    else:
+        return str(time_value)
+
+
+def formdata(request): 
 
     # connect to influxdb
     influxdb_client = InfluxDBClient(url=INFLUX_ADDRESS, token=token, org=org)
     query_api = influxdb_client.query_api()
 
-    # get date range
+    # TODO: change this. The received start_date format is YYYY-MM-DD HH:MM:SS
+    # TODO: also change parse_form_date function
     start_date_str = request.POST.get('startdate')
     end_date_str = request.POST.get('enddate')
     # TODO: change this. Now is date
@@ -1413,6 +1452,7 @@ def generate_form_data(request):
     ################################ SYSTEM ###############################
     data = []
     result = {}
+    result["type"] = "system"
     result["name"] = "system"
     result["nodename"] = "none"
     result["class"] = "none"
@@ -1661,7 +1701,7 @@ def generate_form_data(request):
             value = record.values.get('_value', 0)
             if nodename not in nodes:    # node is not included yet in the list
                 nodes.append(nodename)
-                result = {"name": nodename, "nodename": nodename, "class": "none", "vmid": -1,
+                result = {"type": "node", "name": nodename, "nodename": nodename, "class": "none", "vmid": -1,
                         "vm number": value, "lxc number": 0,
                         "cpu": 0, "cpu usage": 0.0,
                         "mem": 0, "mem usage": 0.0,
@@ -1862,7 +1902,7 @@ def generate_form_data(request):
         classname = entry.split('_')[0]
         if classname not in class_list:
             class_list.append(classname)
-            result = {"name": classname, "nodename": "none", "class": classname, "vmid": -1,
+            result = {"type": "subject", "name": classname, "nodename": "none", "class": classname, "vmid": -1,
                 "vm number": 0, "lxc number": 0,
                 "cpu": 0, "cpu usage": 0.0,
                 "mem": 0, "mem usage": 0.0,
@@ -2112,7 +2152,7 @@ def generate_form_data(request):
         return "unknown"
 
     # cpu cores
-    cpu_query = f'''
+    cpus_query = f'''
         from(bucket: "{bucket}")
         |> range(start: {start_date}, stop: {end_date})
         |> filter(fn: (r) => r["_measurement"] == "system")
@@ -2120,7 +2160,7 @@ def generate_form_data(request):
         |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
         |> last()
     '''    
-    query_result = query_api.query(query=cpu_query)
+    query_result = query_api.query(query=cpus_query)
     for table in query_result:
         for record in table.records:
             vmname = record.values.get('host')
@@ -2132,7 +2172,7 @@ def generate_form_data(request):
             value = record.values.get('_value', 0)
             if (nodename, vm_type, vmid, vmname) not in vms:    
                 vms.append((nodename, vm_type, vmid, vmname))
-                result = {"name": vmname, "nodename": nodename, "class": classname, "vmid": vmid, 
+                result = {"type": "vm", "name": vmname, "nodename": nodename, "class": classname, "vmid": vmid, 
                         "vm number": 0, "lxc number": 0,
                         "cpu": value, "cpu usage": 0.0,
                         "mem": 0, "mem usage": 0.0,
@@ -2324,6 +2364,834 @@ def generate_form_data(request):
     
     return JsonResponse(output)
 
+
+
+def graphdata(request):
+
+    # connect to influxdb
+    influxdb_client = InfluxDBClient(url=INFLUX_ADDRESS, token=token, org=org)
+    query_api = influxdb_client.query_api()
+
+
+    output = {}
+    data = []
+
+    # get type, name, nodename, class, vmid, startdate and enddate
+    type_received = request.POST.get('type', "system")
+    type_received = "vm"
+    name = request.POST.get('name', "system")
+    nodename = request.POST.get('nodename', "none")
+    subject = request.POST.get('class', "none")
+    vmid = request.POST.get('vmid', "-1")
+
+    # start_date_str = request.POST.get('start_date')
+    # end_date_str = request.POST.get('end_date')
+    start_date_str = request.POST.get('startdate')
+    end_date_str = request.POST.get('enddate')
+
+    start_date = parse_form_date(start_date_str, 1)
+    end_date = parse_form_date(end_date_str, 0)
+
+    window = get_time_window(start_date_str, end_date_str)
+    print(f"window: {window}")
+    
+    result = defaultdict(dict)
+    # determine the type -> system? node? class? indiv?
+    if type_received == "system":
+        
+        
+        # cpu cores
+        cpus_query = f'''
+            from(bucket: "{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "cpustat")
+            |> filter(fn: (r) => r["_field"] == "cpus")
+            |> aggregateWindow(every: {window}, fn: last, createEmpty: false)
+        '''   
+        query_result = query_api.query(query=cpus_query)
+
+        for table in query_result:
+            for record in table.records:
+                time = record.values.get('_time')
+                value = record.values.get('_value')
+                
+                if time not in result:
+                    result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0, 
+                                    "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}
+                result[time]["cpu"] += value
+
+
+        # cpu usage
+        cpu_usage_query = f'''
+            from(bucket: "{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "cpustat")
+            |> filter(fn: (r) => r["_field"] == "cpu")
+            |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
+        '''
+        query_result = query_api.query(query=cpu_usage_query)
+        
+        cpu_usage_count = {}
+        for table in query_result:
+            for record in table.records:
+                time = record.values.get('_time')
+                value = record.values.get('_value')
+                
+                if time not in result:
+                    result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0, 
+                                    "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}                
+                if time not in cpu_usage_count:
+                    cpu_usage_count[time] = 0
+                result[time]["cpu usage"] += value
+                cpu_usage_count[time] += 1
+
+        # Calculate average CPU usage
+        for time in result:
+            if cpu_usage_count.get(time, 0) > 0:
+                result[time]["cpu usage"] /= cpu_usage_count[time] 
+
+        
+        # mem
+        mem_query = f'''
+            from(bucket: "{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "memory")
+            |> filter(fn: (r) => r["_field"] == "memtotal")
+            |> aggregateWindow(every: {window}, fn: last, createEmpty: false)
+        '''
+        query_result = query_api.query(query=mem_query)
+        
+        for table in query_result:
+            for record in table.records:
+                time = record.values.get('_time')
+                value = record.values.get('_value')
+                
+                if time not in result:
+                    result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0, 
+                                    "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}
+                result[time]["mem"] += value
+
+        # mem usage
+        mem_usage_query = f'''
+            from(bucket:"{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "memory")
+            |> filter(fn: (r) => r["_field"] == "memused" or r["_field"] == "memtotal")
+            |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
+            |> group(columns: ["_field", "host", "_time"])
+            |> pivot(rowKey: ["host"], columnKey: ["_field"], valueColumn: "_value")
+            |> map(fn: (r) => ({{ r with _value: (r.memused / r.memtotal) * 100.0 }}))
+        '''
+        query_result = query_api.query(query=mem_usage_query)
+        
+        mem_usage_count = {}
+        for table in query_result:
+            for record in table.records:
+                time = record.values.get('_time')
+                value = record.values.get('_value')
+                
+                if time not in result:
+                    result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0, 
+                                    "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}
+                if time not in mem_usage_count:
+                    mem_usage_count[time] = 0
+                result[time]["mem usage"] += value
+                mem_usage_count[time] += 1
+
+        # Calculate average memory usage
+        for time in result:
+            if mem_usage_count.get(time, 0) > 0:
+                result[time]["mem usage"] /= mem_usage_count[time]
+
+        # storage
+        storage_query = f'''
+            from(bucket: "{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["_field"] == "total")
+            |> filter(fn: (r) => r["host"] == "local")
+            |> aggregateWindow(every: {window}, fn: last, createEmpty: false)
+        '''
+        query_result = query_api.query(query=storage_query)
+        
+        for table in query_result:
+            for record in table.records:
+                time = record.values.get('_time')
+                value = record.values.get('_value')
+                
+                if time not in result:
+                    result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0, 
+                                    "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}
+                result[time]["storage"] += value
+
+        # storage usage
+        storage_usage_query = f'''
+            from(bucket: "{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["_field"] == "used" or r["_field"] == "total")
+            |> filter(fn: (r) => r["host"] == "local")
+            |> aggregateWindow(every: {window}, fn: last, createEmpty: false)
+            |> group(columns: ["_field", "nodename", "_time"])
+            |> pivot(rowKey: ["nodename"], columnKey: ["_field"], valueColumn: "_value")
+            |> map(fn: (r) => ({{ r with _value: (r.used / r.total) * 100.0 }}))
+        '''
+        query_result = query_api.query(query=storage_usage_query)
+
+        storage_usage_count = {}
+        for table in query_result:
+            for record in table.records:
+                time = record.values.get('_time')
+                value = record.values.get('_value')
+                
+                if time not in result:
+                    result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0, 
+                                    "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}
+                if time not in storage_usage_count:
+                    storage_usage_count[time] = 0
+                result[time]["storage usage"] += value
+                storage_usage_count[time] += 1
+
+        # Calculate average storage usage
+        for time in result:
+            if storage_usage_count.get(time, 0) > 0:
+                result[time]["storage usage"] /= storage_usage_count[time]
+
+        # netin
+        netin_query = f'''
+            from(bucket: "{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["_field"] == "netin")
+            |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
+        '''
+        query_result = query_api.query(query=netin_query)
+        
+        for table in query_result:
+            for record in table.records:
+                time = record.values.get('_time')
+                value = record.values.get('_value')
+                
+                if time not in result:
+                    result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0, 
+                                    "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}
+                result[time]["netin"] += value
+
+        # netout
+        netout_query = f'''
+            from(bucket: "{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["_field"] == "netout")
+            |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
+        '''
+        query_result = query_api.query(query=netout_query)
+        
+        for table in query_result:
+            for record in table.records:
+                time = record.values.get('_time')
+                value = record.values.get('_value')
+                
+                if time not in result:
+                    result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0, 
+                                    "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}
+                result[time]["netout"] += value
+
+        # Convert result to list and sort by time
+        data = list(result.values())
+        data.sort(key=lambda x: x['time'])
+    elif type_received == "node":
+        # nodename = "pve"
+        
+        # cpu cores
+        cpus_query = f'''
+            from(bucket: "{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "cpustat")
+            |> filter(fn: (r) => r["_field"] == "cpus")
+            |> filter(fn: (r) => r["host"] == "{nodename}")
+            |> aggregateWindow(every: {window}, fn: last, createEmpty: false)
+        '''   
+        query_result = query_api.query(query=cpus_query)
+
+        for table in query_result:
+            for record in table.records:
+                time = record.values.get('_time')
+                value = record.values.get('_value')
+                
+                if time not in result:
+                    result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0, 
+                                    "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}
+                result[time]["cpu"] += value
+        # cpu usage
+        cpu_usage_query = f'''
+            from(bucket: "{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "cpustat")
+            |> filter(fn: (r) => r["_field"] == "cpu")
+            |> filter(fn: (r) => r["host"] == "{nodename}")
+            |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
+        '''
+        query_result = query_api.query(query=cpu_usage_query)
+        
+        cpu_usage_count = {}
+        for table in query_result:
+            for record in table.records:
+                time = record.values.get('_time')
+                value = record.values.get('_value')
+                
+                if time not in result:
+                    result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0, 
+                                    "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}                
+                if time not in cpu_usage_count:
+                    cpu_usage_count[time] = 0
+                result[time]["cpu usage"] += value
+                cpu_usage_count[time] += 1
+
+        # Calculate average CPU usage
+        for time in result:
+            if cpu_usage_count.get(time, 0) > 0:
+                result[time]["cpu usage"] /= cpu_usage_count[time] 
+
+        
+        # mem
+        mem_query = f'''
+            from(bucket: "{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "memory")
+            |> filter(fn: (r) => r["_field"] == "memtotal")
+            |> filter(fn: (r) => r["host"] == "{nodename}")
+            |> aggregateWindow(every: {window}, fn: last, createEmpty: false)
+        '''
+        query_result = query_api.query(query=mem_query)
+        
+        for table in query_result:
+            for record in table.records:
+                time = record.values.get('_time')
+                value = record.values.get('_value')
+                
+                if time not in result:
+                    result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0, 
+                                    "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}
+                result[time]["mem"] += value
+
+        # mem usage
+        mem_usage_query = f'''
+            from(bucket:"{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "memory")
+            |> filter(fn: (r) => r["_field"] == "memused" or r["_field"] == "memtotal")
+            |> filter(fn: (r) => r["host"] == "{nodename}")
+            |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
+            |> group(columns: ["_field", "host", "_time"])
+            |> pivot(rowKey: ["host"], columnKey: ["_field"], valueColumn: "_value")
+            |> map(fn: (r) => ({{ r with _value: (r.memused / r.memtotal) * 100.0 }}))
+        '''
+        query_result = query_api.query(query=mem_usage_query)
+        
+        mem_usage_count = {}
+        for table in query_result:
+            for record in table.records:
+                time = record.values.get('_time')
+                value = record.values.get('_value')
+                
+                if time not in result:
+                    result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0, 
+                                    "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}
+                if time not in mem_usage_count:
+                    mem_usage_count[time] = 0
+                result[time]["mem usage"] += value
+                mem_usage_count[time] += 1
+
+        # Calculate average memory usage
+        for time in result:
+            if mem_usage_count.get(time, 0) > 0:
+                result[time]["mem usage"] /= mem_usage_count[time]
+
+        # storage
+        storage_query = f'''
+            from(bucket: "{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["_field"] == "total")
+            |> filter(fn: (r) => r["host"] == "local")
+            |> filter(fn: (r) => r["nodename"] == "{nodename}")
+            |> aggregateWindow(every: {window}, fn: last, createEmpty: false)
+        '''
+        query_result = query_api.query(query=storage_query)
+        
+        for table in query_result:
+            for record in table.records:
+                time = record.values.get('_time')
+                value = record.values.get('_value')
+                
+                if time not in result:
+                    result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0, 
+                                    "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}
+                result[time]["storage"] += value
+
+        # storage usage
+        storage_usage_query = f'''
+            from(bucket: "{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["_field"] == "used" or r["_field"] == "total")
+            |> filter(fn: (r) => r["host"] == "local")
+            |> filter(fn: (r) => r["nodename"] == "{nodename}")
+            |> aggregateWindow(every: {window}, fn: last, createEmpty: false)
+            |> group(columns: ["_field", "nodename", "_time"])
+            |> pivot(rowKey: ["nodename"], columnKey: ["_field"], valueColumn: "_value")
+            |> map(fn: (r) => ({{ r with _value: (r.used / r.total) * 100.0 }}))
+        '''
+        query_result = query_api.query(query=storage_usage_query)
+
+        storage_usage_count = {}
+        for table in query_result:
+            for record in table.records:
+                time = record.values.get('_time')
+                value = record.values.get('_value')
+                
+                if time not in result:
+                    result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0, 
+                                    "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}
+                if time not in storage_usage_count:
+                    storage_usage_count[time] = 0
+                result[time]["storage usage"] += value
+                storage_usage_count[time] += 1
+
+        # Calculate average storage usage
+        for time in result:
+            if storage_usage_count.get(time, 0) > 0:
+                result[time]["storage usage"] /= storage_usage_count[time]
+
+        # netin
+        netin_query = f'''
+            from(bucket: "{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["_field"] == "netin")
+            |> filter(fn: (r) => r["nodename"] == "{nodename}")
+            |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
+        '''
+        query_result = query_api.query(query=netin_query)
+        
+        for table in query_result:
+            for record in table.records:
+                time = record.values.get('_time')
+                value = record.values.get('_value')
+                
+                if time not in result:
+                    result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0, 
+                                    "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}
+                result[time]["netin"] += value
+
+        # netout
+        netout_query = f'''
+            from(bucket: "{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["_field"] == "netout")
+            |> filter(fn: (r) => r["nodename"] == "{nodename}")
+            |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
+        '''
+        query_result = query_api.query(query=netout_query)
+        
+        for table in query_result:
+            for record in table.records:
+                time = record.values.get('_time')
+                value = record.values.get('_value')
+                
+                if time not in result:
+                    result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0, 
+                                    "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}
+                result[time]["netout"] += value
+
+        # Convert result to list and sort by time
+        data = list(result.values())
+        data.sort(key=lambda x: x['time'])
+
+    elif type_received == "class":
+        # subject = "CCINFOM"
+
+        # get template
+        template_hosts_ids = get_template_hosts_ids(start_date, end_date)
+        excluded_vmids_str = '|'.join(map(str, template_hosts_ids))
+
+        # cpu cores
+        cpu_query = f'''
+            from(bucket: "{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["_field"] == "cpus")
+            |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+            |> filter(fn: (r) => r["host"] =~ /{subject}/)
+            |> aggregateWindow(every: {window}, fn: last, createEmpty: false)
+        '''    
+        query_result = query_api.query(query=cpu_query)
+        for table in query_result:
+            for record in table.records:
+                time = record.values.get('_time')
+                value = record.values.get('_value')
+                
+                if time not in result:
+                    result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0, 
+                                    "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}
+                result[time]["cpu"] += value
+
+
+        # cpu usage
+        cpu_usage_query = f'''
+            from(bucket: "{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["_field"] == "cpu")
+            |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+            |> filter(fn: (r) => r["host"] =~ /{subject}/)
+            |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
+        '''
+        query_result = query_api.query(query=cpu_usage_query)
+        
+        cpu_usage_count = {}
+        for table in query_result:
+            for record in table.records:
+                time = record.values.get('_time')
+                value = record.values.get('_value')
+                
+                if time not in result:
+                    result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0, 
+                                    "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}                
+                if time not in cpu_usage_count:
+                    cpu_usage_count[time] = 0
+                result[time]["cpu usage"] += value
+                cpu_usage_count[time] += 1
+
+        # Calculate average CPU usage
+        for time in result:
+            if cpu_usage_count.get(time, 0) > 0:
+                result[time]["cpu usage"] /= cpu_usage_count[time] 
+
+        
+        # mem
+        mem_query = f'''
+            from(bucket: "{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["_field"] == "maxmem")
+            |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+            |> filter(fn: (r) => r["host"] =~ /{subject}/)
+            |> aggregateWindow(every: {window}, fn: last, createEmpty: false)
+        '''
+        query_result = query_api.query(query=mem_query)
+        
+        for table in query_result:
+            for record in table.records:
+                time = record.values.get('_time')
+                value = record.values.get('_value')
+                
+                if time not in result:
+                    result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0, 
+                                    "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}
+                result[time]["mem"] += value
+
+        # mem usage
+        mem_usage_query = f'''
+            from(bucket:"{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["_field"] == "mem" or r["_field"] == "maxmem")
+            |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+            |> filter(fn: (r) => r["host"] =~ /{subject}/)
+            |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
+            |> group(columns: ["_field", "host", "_time"])
+            |> pivot(rowKey: ["host"], columnKey: ["_field"], valueColumn: "_value")
+            |> map(fn: (r) => ({{ r with _value: (r.mem / r.maxmem) * 100.0 }}))
+        '''
+        query_result = query_api.query(query=mem_usage_query)
+        
+        mem_usage_count = {}
+        for table in query_result:
+            for record in table.records:
+                time = record.values.get('_time')
+                value = record.values.get('_value')
+                
+                if time not in result:
+                    result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0, 
+                                    "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}
+                if time not in mem_usage_count:
+                    mem_usage_count[time] = 0
+                result[time]["mem usage"] += value
+                mem_usage_count[time] += 1
+
+        # Calculate average memory usage
+        for time in result:
+            if mem_usage_count.get(time, 0) > 0:
+                result[time]["mem usage"] /= mem_usage_count[time]
+
+        # storage
+        storage_query = f'''
+            from(bucket: "{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["_field"] == "maxdisk")
+            |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+            |> filter(fn: (r) => r["host"] =~ /{subject}/)
+            |> aggregateWindow(every: {window}, fn: last, createEmpty: false)
+            |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 / 1024.0 / 1024.0) }}))
+        '''
+        query_result = query_api.query(query=storage_query)
+        
+        for table in query_result:
+            for record in table.records:
+                time = record.values.get('_time')
+                value = record.values.get('_value')
+                
+                if time not in result:
+                    result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0, 
+                                    "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}
+                result[time]["storage"] += value
+                result[time]["storage usage"] = 0
+
+        # netin
+        netin_query = f'''
+            from(bucket: "{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["_field"] == "netin")
+            |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+            |> filter(fn: (r) => r["host"] =~ /{subject}/)
+            |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
+        '''
+        query_result = query_api.query(query=netin_query)
+        
+        for table in query_result:
+            for record in table.records:
+                time = record.values.get('_time')
+                value = record.values.get('_value')
+                
+                if time not in result:
+                    result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0, 
+                                    "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}
+                result[time]["netin"] += value
+
+        # netout
+        netout_query = f'''
+            from(bucket: "{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["_field"] == "netout")
+            |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+            |> filter(fn: (r) => r["host"] =~ /{subject}/)
+            |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
+        '''
+        query_result = query_api.query(query=netout_query)
+        
+        for table in query_result:
+            for record in table.records:
+                time = record.values.get('_time')
+                value = record.values.get('_value')
+                
+                if time not in result:
+                    result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0, 
+                                    "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}
+                result[time]["netout"] += value
+
+
+        data = list(result.values())
+        data.sort(key=lambda x: x['time'])
+
+    elif type_received == "vm":
+        name = "Jade"
+        # cpu cores
+        cpu_query = f'''
+            from(bucket: "{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["_field"] == "cpus")
+            |> filter(fn: (r) => r["host"] == "{name}")
+            |> aggregateWindow(every: {window}, fn: last, createEmpty: false)
+        '''    
+        query_result = query_api.query(query=cpu_query)
+        for table in query_result:
+            for record in table.records:
+                time = record.values.get('_time')
+                value = record.values.get('_value')
+                
+                if time not in result:
+                    result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0, 
+                                    "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}
+                result[time]["cpu"] += value
+
+
+        # cpu usage
+        cpu_usage_query = f'''
+            from(bucket: "{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["_field"] == "cpu")
+            |> filter(fn: (r) => r["host"] == "{name}")
+            |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
+        '''
+        query_result = query_api.query(query=cpu_usage_query)
+        
+        cpu_usage_count = {}
+        for table in query_result:
+            for record in table.records:
+                time = record.values.get('_time')
+                value = record.values.get('_value')
+                
+                if time not in result:
+                    result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0, 
+                                    "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}                
+                if time not in cpu_usage_count:
+                    cpu_usage_count[time] = 0
+                result[time]["cpu usage"] += value
+                cpu_usage_count[time] += 1
+        
+        # Calculate average CPU usage
+        for time in result:
+            if cpu_usage_count.get(time, 0) > 0:
+                result[time]["cpu usage"] /= cpu_usage_count[time] 
+
+
+        # mem
+        mem_query = f'''
+            from(bucket: "{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["_field"] == "maxmem")
+            |> filter(fn: (r) => r["host"] == "{name}")
+            |> aggregateWindow(every: {window}, fn: last, createEmpty: false)
+        '''
+        query_result = query_api.query(query=mem_query)
+        
+        for table in query_result:
+            for record in table.records:
+                time = record.values.get('_time')
+                value = record.values.get('_value')
+                
+                if time not in result:
+                    result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0, 
+                                    "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}
+                result[time]["mem"] += value
+
+        # mem usage
+        mem_usage_query = f'''
+            from(bucket:"{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["_field"] == "mem" or r["_field"] == "maxmem")
+            |> filter(fn: (r) => r["host"] == "{name}")
+            |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
+            |> group(columns: ["_field", "host", "_time"])
+            |> pivot(rowKey: ["host"], columnKey: ["_field"], valueColumn: "_value")
+            |> map(fn: (r) => ({{ r with _value: (r.mem / r.maxmem) * 100.0 }}))
+        '''
+        query_result = query_api.query(query=mem_usage_query)
+        
+        mem_usage_count = {}
+        for table in query_result:
+            for record in table.records:
+                time = record.values.get('_time')
+                value = record.values.get('_value')
+                
+                if time not in result:
+                    result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0, 
+                                    "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}
+                if time not in mem_usage_count:
+                    mem_usage_count[time] = 0
+                result[time]["mem usage"] += value
+                mem_usage_count[time] += 1
+
+        # Calculate average memory usage
+        for time in result:
+            if mem_usage_count.get(time, 0) > 0:
+                result[time]["mem usage"] /= mem_usage_count[time]
+
+        # storage
+        storage_query = f'''
+            from(bucket: "{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["_field"] == "maxdisk")
+            |> filter(fn: (r) => r["host"] == "{name}")
+            |> aggregateWindow(every: {window}, fn: last, createEmpty: false)
+            |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 / 1024.0 / 1024.0) }}))
+        '''
+        query_result = query_api.query(query=storage_query)
+        
+        for table in query_result:
+            for record in table.records:
+                time = record.values.get('_time')
+                value = record.values.get('_value')
+                
+                if time not in result:
+                    result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0, 
+                                    "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}
+                result[time]["storage"] += value
+                result[time]["storage usage"] = 0
+
+        # netin
+        netin_query = f'''
+            from(bucket: "{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["_field"] == "netin")
+            |> filter(fn: (r) => r["host"] == "{name}")
+            |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
+        '''
+        query_result = query_api.query(query=netin_query)
+        
+        for table in query_result:
+            for record in table.records:
+                time = record.values.get('_time')
+                value = record.values.get('_value')
+                
+                if time not in result:
+                    result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0, 
+                                    "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}
+                result[time]["netin"] += value
+
+        # netout
+        netout_query = f'''
+            from(bucket: "{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["_field"] == "netout")
+            |> filter(fn: (r) => r["host"] == "{name}")
+            |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
+        '''
+        query_result = query_api.query(query=netout_query)
+        
+        for table in query_result:
+            for record in table.records:
+                time = record.values.get('_time')
+                value = record.values.get('_value')
+                
+                if time not in result:
+                    result[time] = {"time": time, "cpu": 0, "cpu usage": 0, "mem": 0, "mem usage": 0, 
+                                    "storage": 0, "storage usage": 0, "netin": 0, "netout": 0}
+                result[time]["netout"] += value
+
+
+        data = list(result.values())
+        data.sort(key=lambda x: x['time'])
+
+    else:
+        output["code"] = -1
+        output["count"] = 0
+        output["data"] = []
+        return JsonResponse(output) 
+    
+    for item in data:
+        if 'time' in item:
+            item['time'] = convert_time_format(item['time'])
+
+    output["code"] = 0
+    output["count"] = len(data)
+    output["name"] = name
+    output["data"] = data
+
+    return JsonResponse(output)
 ############################### Ticketing ###############################
 
 def fetch_ticketing_report_data(form : TicketingReportForm):
