@@ -1298,7 +1298,18 @@ def formdata(request):
     for item in data:
         if 'cpu usage' in item:
             item['cpu usage'] = round(item['cpu usage'],2)
-
+        elif 'mem' in item:
+            item['mem'] = round(item['mem'],2)
+        elif 'mem usage' in item:
+            item['mem usage'] = round(item['mem usage'],2)
+        elif 'storage' in item:
+            item['storage'] = round(item['storage'],2)
+        elif 'storage usage' in item:
+            item['storage usage'] = round(item['storage usage'],2)
+        elif 'netin' in item:
+            item['netin'] = round(item['netin'] / 1024, 2)
+        elif 'netout' in item:
+            item['netout'] = round(item['netout'] / 1024, 2)
 
     # CONSOLIDATE RESULT 
     output = {}
