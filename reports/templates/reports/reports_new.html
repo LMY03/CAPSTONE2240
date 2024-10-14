@@ -466,13 +466,13 @@
                                 x: {
                                     title: {
                                         display: true,
-                                        text: '时间',
+                                        text: 'time',
                                     }
                                 },
                                 y: {
                                     title: {
                                         display: true,
-                                        text: '值',
+                                        text: 'value',
                                     }
                                 }
                             }
@@ -609,7 +609,7 @@
             console.log(Object.keys(dataset));
             labels.forEach((element,index)=>{
                 chart_data.push({
-                    "时间" : element,
+                    "time" : element,
                     "cpu" :  dataset.cpu[index],
                     "cpu usage" : dataset["cpu usage"][index],
                     "mem" : dataset["mem"][index],
