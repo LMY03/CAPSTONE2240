@@ -1960,7 +1960,7 @@ def graphdata(request):
         data.sort(key=lambda x: x['time'])
 
     elif type_received == "vm":
-        name = "Jade"
+        # name = "Jade"
         # cpu cores
         cpu_query = f'''
             from(bucket: "{bucket}")
