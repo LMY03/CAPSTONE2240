@@ -310,7 +310,8 @@
                 var queryString = Object.keys(params)
                     .map(key => encodeURIComponent(key) + '=' + encodeURIComponent(params[key]))
                     .join('&');
-                var fullUrl = base_url + '/reports/formdata?' + queryString;
+                // var fullUrl = base_url + '/reports/formdata?' + queryString;
+                var fullUrl = 'formdata?' + queryString;
 
                 xhr.open('GET', fullUrl, true);
                 xhr.responseType = 'json';
