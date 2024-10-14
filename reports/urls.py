@@ -11,8 +11,8 @@ urlpatterns = [
     path('getVmList', views.getVmList, name="getVmList"),
     # path('extract_general_stat', views.extract_general_stat, name="extract_general_stat"),
     # path('extract_detail_stat', views.extract_detail_stat, name="extract_detail_stat"),
-    path('formdata?', views.formdata, name="formdata"),
-    path('graphdata?', views.graphdata, name="graphdata"),
+    path('formdata', views.formdata, name="formdata"),
+    path('graphdata', views.graphdata, name="graphdata"),
 
 
     # path('index_csv', views.index_csv, name="index_csv"),
