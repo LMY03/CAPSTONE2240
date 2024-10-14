@@ -383,7 +383,8 @@
                 var queryString = Object.keys(params)
                     .map(key => encodeURIComponent(key) + '=' + encodeURIComponent(params[key]))
                     .join('&');
-                var fullUrl = base_url + '/reports/graphdata?' + queryString;
+                // var fullUrl = base_url + '/reports/graphdata?' + queryString;
+                var fullUrl = 'reports/graphdata?' + queryString;
 
                 xhr.open('GET', fullUrl, true);
                 xhr.responseType = 'json';
