@@ -1297,7 +1297,7 @@ def formdata(request):
     # process data
     for item in data:
         if 'cpu usage' in item:
-            item['cpu usage'] = round(item['time'],2)
+            item['cpu usage'] = round(item['cpu usage'],2)
 
 
     # CONSOLIDATE RESULT 
