@@ -25,6 +25,7 @@ proxmox_password = config('PROXMOX_PASSWORD')
 
 # Parse date to InfluxDB compatible, fit timezone
 def parse_form_date(date_string):
+    print(f"date_string: {date_string}")
     try:
         dt = datetime.strptime(date_string, "%Y-%m-%d %H:%M:%S")
         adjusted_dt = dt - timedelta(hours=8)
