@@ -1006,11 +1006,11 @@ def formdata(request):
 
     # TODO: change this. The received start_date format is YYYY-MM-DD HH:MM:SS
     # TODO: also change parse_form_date function
-    start_date_str = request.POST.get('startdate')
-    end_date_str = request.POST.get('enddate')
+    start_time_str = request.POST.get('start_time')
+    end_time_str = request.POST.get('end_time')
     # TODO: change this. Now is date
-    start_date = parse_form_date(start_date_str)
-    end_date = parse_form_date(end_date_str)
+    start_date = parse_form_date(start_time_str)
+    end_date = parse_form_date(end_time_str)
     
     # get template vm
     template_hosts_ids = get_template_hosts_ids(start_date, end_date)
