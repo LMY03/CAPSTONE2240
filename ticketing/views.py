@@ -814,7 +814,7 @@ def new_form_container(request):
 
 
 def vm_template_management (request):
-    vm_templates = VMTemplates.objects.all()
+    vm_templates = VMTemplates.objects.filter(is_active = True)
     data = []
     for vm_template in vm_templates:
         # user_profile = UserProfile.objects.filter(user=user).first()
@@ -867,6 +867,7 @@ def add_vm_template(request):
                         guacamole_protocol=row['guacamole_protocol']
                     )
             else:
+                print("pag call ng save")
                 form.save()
             messages.success(request, 'VM Template(s) added successfully.')
             return redirect('ticketing:vm_template_management')  # Replace with your success URL
@@ -875,12 +876,15 @@ def add_vm_template(request):
     return redirect('ticketing:vm_template_management')
 
 def edit_vm_template(request):
+    template_id = request.POST.get('vm_template_id')
+    print(f"{template_id}, nasa loob ng edit_vm_template fcuntion")
+    vmtemplate = get_object_or_404(VMTemplates, id=template_id)
     if request.method == 'POST':
-        form = EditVMTemplates(request.POST)
+        form = EditVMTemplates(request.POST, instance=vmtemplate)
         if form.is_valid():
             form.save()
-            messages.success(request, 'VM Template(s) added successfully.')
-            return redirect('ticketing:vm_template_management')  # Replace with your success URL
+            messages.success(request, 'VM Template updated successfully.')
+            return redirect('ticketing:vm_template_management')  # Adjust this to your URL name
         else:
             messages.error(request, 'There was an error processing your request.')
     return redirect('ticketing:vm_template_management') 

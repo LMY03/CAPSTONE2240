@@ -64,12 +64,8 @@ VM template management
                 <td>{{ vm_template.protocol }}</td>
                 <td>
                   <div class = "d-flex justify-content-evenly">
-                    <a data-bs-toggle="modal" data-bs-target="#edit_vm_template_modal" class="btn btn-sm btn-warning" id="edit_vm_template_{{vm_template.id}}" onclick="edit_vm_template({{vm_template.vm_id}}, '{{vm_template.vm_name}}', '{{vm_template.cores}}', '{{vm_template.ram}}', '{{vm_template.storage}}', '{{vm_template.container}}', '{{vm_template.active}}', '{{vm_template.protocol}}', '{{vm_template.node}}')">Edit</a>
-                    {% if vm_template.active == 'True' %}
-                    <a href="{% url 'ticketing:deactivate_vm_template' vm_template.id %}" class="btn btn-sm btn-danger">Deactivate</a>
-                    {% else %}
-                    <a href="{% url 'ticketing:activate_vm_template' vm_template.id %}" class="btn btn-sm btn-success">Activate</a>
-                    {% endif %}
+                    <a data-bs-toggle="modal" data-bs-target="#edit_vm_template_modal" class="btn btn-sm btn-warning" id="edit_vm_template_{{vm_template.id}}" onclick="edit_vm_template('{{vm_template.vm_id}}', '{{vm_template.vm_name}}', '{{vm_template.cores}}', '{{vm_template.ram}}', '{{vm_template.storage}}', '{{vm_template.container}}', '{{vm_template.active}}', '{{vm_template.protocol}}', '{{vm_template.node}}', '{{vm_template.id}}')">Edit</a>
+                    <a href="{% url 'ticketing:deactivate_vm_template' vm_template.id %}" class="btn btn-sm btn-danger">Delete</a>
                   </div>
                 </td>
             </tr>
@@ -87,27 +83,13 @@ VM template management
                 <div class="modal-body">
                     <form method="POST" enctype="multipart/form-data" action="{% url 'ticketing:edit_vm_template' %}">
                         {% csrf_token %}
-                        {% for field in form %}
+                        {% for field in editForm %}
                           <div class="mb-3">
-                              {% if field.name != 'is_lxc' %}
                                   {{ field.label_tag }}
                                   {{ field }}
                                   {% if field.help_text %}
                                       <small class="form-text text-muted">{{ field.help_text }}</small>
                                   {% endif %}
-                              {% else %}
-                                  <label>{{ field.label }}</label>
-                                  <div class="form-check">
-                                      {% for radio in field %}
-                                          <div class="form-check">
-                                              {{ radio.tag }}
-                                              <label class="form-check-label" for="{{ radio.id_for_label }}">
-                                                  {{ radio.choice_label }}
-                                              </label>
-                                          </div>
-                                      {% endfor %}
-                                  </div>
-                              {% endif %}
                               {% for error in field.errors %}
                                   <div class="invalid-feedback d-block">{{ error }}</div>
                               {% endfor %}
@@ -137,25 +119,11 @@ VM template management
                         
                         {% for field in form %}
                             <div class="mb-3">
-                                {% if field.name != 'is_lxc' %}
                                     {{ field.label_tag }}
                                     {{ field }}
                                     {% if field.help_text %}
                                         <small class="form-text text-muted">{{ field.help_text }}</small>
                                     {% endif %}
-                                {% else %}
-                                    <label>{{ field.label }}</label>
-                                    <div class="form-check">
-                                        {% for radio in field %}
-                                            <div class="form-check">
-                                                {{ radio.tag }}
-                                                <label class="form-check-label" for="{{ radio.id_for_label }}">
-                                                    {{ radio.choice_label }}
-                                                </label>
-                                            </div>
-                                        {% endfor %}
-                                    </div>
-                                {% endif %}
                                 {% for error in field.errors %}
                                     <div class="invalid-feedback d-block">{{ error }}</div>
                                 {% endfor %}
@@ -183,16 +151,11 @@ VM template management
 
 {% block script %}
 <script>
-    function edit_vm_template(vm_id, vm_name, cores, ram, storage, container, active, protocol, node) {
-        document.querySelector('[name="vm_id"]').value = vm_id;
+    function edit_vm_template(vm_id, vm_name, cores, ram, storage, container, active, protocol, node, id) {
         document.querySelector('[name="vm_name"]').value = vm_name;
-        document.querySelector('[name="storage"]').value = parseInt(storage, 10);
         document.querySelector('[name="guacamole_protocol"]').value = protocol;
-        document.querySelector('[name="node"]').value = node
-        // Set the 'is_lxc' radio button value based on the 'container' value
-    
-        const containerValue = container === 'True';
-        document.querySelector(`[name="is_lxc"][value="${container}"]`).checked = true;
+
+        document.getElementById('vm_template_id').value = id
         
     }
 </script>

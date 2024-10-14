@@ -49,44 +49,60 @@ from .models import IssueTicket, IssueComment
 #         return user
 
 class AddVMTemplates(forms.ModelForm):
-    is_lxc = forms.ChoiceField(
-        choices=((True, 'Yes'), (False, 'No')),
-        widget=forms.RadioSelect(attrs={'class': 'form-check-input'}),
-        initial=False
-    )
 
     class Meta:
         model = VMTemplates
-        fields = ('vm_id', 'vm_name', 'node', 'storage', 'is_lxc', 'guacamole_protocol')
+        fields = ('vm_id','guacamole_protocol')
         widgets = {
             'vm_id': forms.TextInput(attrs={'class': 'form-control'}),
-            'vm_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'node': forms.TextInput(attrs={'class': 'form-control'}),
-            'storage': forms.NumberInput(attrs={'class': 'form-control'}),
-            'is_lxc': forms.RadioSelect(attrs={'class': 'form-check-input'}),
             'guacamole_protocol': forms.Select(attrs={'class': 'form-control'}),
         }
 
-    def clean_is_lxc(self):
-        return self.cleaned_data['is_lxc'] == 'True'
-
     def save(self, commit=True):
         vmtemplate = super().save(commit=False)
+        
+        vmtemplate.vm_id = self.cleaned_data['vm_id']
+        vmtemplate.guacamole_protocol = self.cleaned_data['guacamole_protocol']
         # This is where the API call starts
-        # Where it ends
-
-        # Setting of the core ram and storage
         vmtemplate.cores = 1
         vmtemplate.ram = 2048
+        vmtemplate.node = 'Mayari'
+        vmtemplate.vm_name = 'VMTEMPLATE NAME 30gb'
+        vmtemplate.storage = '30'
+        # Where it ends
         if commit:
             vmtemplate.save()
         return vmtemplate
     
 
-class EditVMTemplates(AddVMTemplates):
-    class Meta(AddVMTemplates.Meta):
+class EditVMTemplates(forms.ModelForm):
+
+    class Meta:
         model = VMTemplates
+        fields = ('vm_name', 'guacamole_protocol')
+        widgets = {
+            'vm_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'guacamole_protocol': forms.Select(attrs={'class': 'form-control'}),
+        }
+
+
+    def save(self, commit=True):
+        vmtemplate = self.instance  # This is the existing instance
+        # Update the fields based on the form data
+        vmtemplate.vm_name = self.cleaned_data['vm_name']
+        vmtemplate.guacamole_protocol = self.cleaned_data['guacamole_protocol']
+        # This is where the API call starts
+        vmtemplate.cores = 1
+        vmtemplate.ram = 2048
+        vmtemplate.vm_id = '3001'
+        vmtemplate.node = 'Mayari'
+        vmtemplate.storage = '30'
         
+    
+        # Where it ends
+        if commit:
+            vmtemplate.save()
+        return vmtemplate
     
 class IssueTicketForm(forms.ModelForm):
     class Meta:
