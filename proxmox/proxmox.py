@@ -480,8 +480,8 @@ def get_node(vm_id):
     data = get_resources().get('data', [])
 
     for item in data:
+        print(item.get('vmid'))
         if item.get('vmid') == vm_id:
-            print(item)
             return item.get('node')
         
 def is_lxc(vm_id):
