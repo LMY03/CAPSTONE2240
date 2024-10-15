@@ -874,7 +874,7 @@ def add_vm_template(request):
                     vm_name = config_data.get('name')
                     cores = config_data.get('cores')
                     memory = config_data.get('memory')
-                    storage = config_data.get('scsih0').split(',')
+                    storage = config_data.get('scsi0').split(',')
                     storage = ''.join(filter(str.isdigit, [detail for detail in storage if 'size' in detail][0].split('=')[1]))
 
                     vm_template.vm_id = vm_id
