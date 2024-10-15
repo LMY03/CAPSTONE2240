@@ -96,9 +96,6 @@ def get_vm_status(node, vmid):
 
     return status
 
-def is_template(node, vmid):
-    return get_vm_status(node, vmid)['data']
-
 def get_resources():
     token = get_ticket()
     url = f"{PROXMOX_HOST}/api2/json/cluster/resources"
