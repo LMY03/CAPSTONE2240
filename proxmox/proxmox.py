@@ -483,9 +483,9 @@ def get_node(vm_id):
         print("===============")
         print(item.get('vmid'))
         print(vm_id)
-        print(item.get('vmid') == vm_id)
+        print(str(item.get('vmid')) == str(vm_id))
         print("===============")
-        if item.get('vmid') == vm_id:
+        if str(item.get('vmid')) == str(vm_id):
             return item.get('node')
         
 def is_lxc(vm_id):
