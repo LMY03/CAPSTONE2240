@@ -12,6 +12,8 @@ New VM Request Form
 
 {% block content %}
 <div class="col-md-10 content">
+    <div id = "alert-container">
+    </div>
     <form method="post" action="{% url 'ticketing:new-form-submit' %}" id="vm-form">
         {% csrf_token %}
 

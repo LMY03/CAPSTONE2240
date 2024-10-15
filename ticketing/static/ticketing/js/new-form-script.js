@@ -167,6 +167,67 @@ document.getElementById('vm-form').addEventListener('submit', function (event) {
     const formInputs = this.querySelectorAll('input[type="text"], select, textarea, input[type="number"], input[type="date"]');
     const formDataInputs = {};
     let i = 1, j = 1;
+
+    const vm_count_value = document.getElementById('vm_count1').value
+    const use_case = document.getElementById('use_case').value
+
+    if (use_case == 'CLASS_COURSE') {
+        formInputs.forEach(input => {
+            if (input.id.startsWith('course_code') && (!input.value || input.value == '')) {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-warning alert-dismissible fade show';
+                alertDiv.role = 'alert';
+                alertDiv.innerHTML = `
+                    <strong>Warning!</strong> Please fill in the course code name and follow the example.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                `;
+
+                // Add alert to the top of the form or wherever suitable
+                const alertContainer = document.getElementById('alert-container');
+                alertContainer.innerHTML = ''; // Clear any previous alerts
+                alertContainer.appendChild(alertDiv);
+
+                // End function if vm_count_value is invalid
+                return;
+            }
+            if (input.id.startsWith('vm_count') && (!input.value || input.value == 0)) {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-warning alert-dismissible fade show';
+                alertDiv.role = 'alert';
+                alertDiv.innerHTML = `
+                    <strong>Warning!</strong> Please add the vm count that is needed for the class course.
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                `;
+
+                // Add alert to the top of the form or wherever suitable
+                const alertContainer = document.getElementById('alert-container');
+                alertContainer.innerHTML = ''; // Clear any previous alerts
+                alertContainer.appendChild(alertDiv);
+
+                // End function if vm_count_value is invalid
+                return;
+            }
+        })
+    }
+    if (!vm_count_value || vm_count_value == 0) {
+        // Create alert element
+        const alertDiv = document.createElement('div');
+        alertDiv.className = 'alert alert-warning alert-dismissible fade show';
+        alertDiv.role = 'alert';
+        alertDiv.innerHTML = `
+                <strong>Warning!</strong> Please specify the number of VMs needed.
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            `;
+
+        // Add alert to the top of the form or wherever suitable
+        const alertContainer = document.getElementById('alert-container');
+        alertContainer.innerHTML = ''; // Clear any previous alerts
+        alertContainer.appendChild(alertDiv);
+
+        // End function if vm_count_value is invalid
+        return;
+    }
+
     formInputs.forEach(input => {
         formDataInputs[input.id] = input.value;
         if (input.id.startsWith('protocol')) {

@@ -12,12 +12,16 @@ VM template management
 
 {% block content %}
 <div class="col-md-10 content">
-    <!-- Add User Button -->
-    <div class="d-flex justify-content-between mb-3">
-        <h1>VM template management</h1>
-        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#add_vm_template_modal">
-            Add VM template
-        </button>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h1 class="mb-0">VM Template Management</h1>
+        <div class="d-flex">
+            <button type="button" class="btn btn-primary me-4" data-bs-toggle="modal" data-bs-target="#add_vm_template_modal">
+                Add single VM Template
+            </button>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#upload_vm_template_modal">
+                Upload CSV for Multiple VM Templates
+            </button>
+        </div>
     </div>
     {% if messages %}
             {% for message in messages %}
@@ -106,11 +110,11 @@ VM template management
         </div>
       </div>
     <!-- Add User Modal -->
-    <div class="modal fade" id="add_vm_template_modal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+    <div class="modal fade" id="add_vm_template_modal" tabindex="-1" aria-labelledby="addVMTemplateModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="addUserModalLabel">Add VM template</h5>
+                    <h5 class="modal-title" id="addVMTemplateModalLabel">Add single VM template</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -129,13 +133,32 @@ VM template management
                                 {% endfor %}
                             </div>
                         {% endfor %}
-                
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            <button type="submit" class="btn btn-primary">Submit</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% comment %} Upload CSV modal {% endcomment %}
+    <div class="modal fade" id="upload_vm_template_modal" tabindex="-1" aria-labelledby="uploadVMTemplateModal" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="uploadVMTemplateModal">Upload a csv for VM template</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="POST" enctype="multipart/form-data" action="{% url 'ticketing:add_vm_template' %}">
+                        {% csrf_token %}
                         <div class="mb-3">
                             <label for="csv_file" class="form-label">Upload CSV File (Optional)</label>
                             <input type="file" class="form-control" id="csv_file" name="csv_file" accept=".csv">
-                            <small class="form-text text-muted">Add a header on every field that is needed for the VM template.</small>
+                            <small class="form-text text-muted">Add a header on A1 and B2 named as ("VM ID", "Guacamole Protocol") that is needed for the VM template.</small>
                         </div>
-                
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                             <button type="submit" class="btn btn-primary">Submit</button>

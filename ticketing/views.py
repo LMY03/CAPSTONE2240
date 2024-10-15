@@ -852,8 +852,7 @@ def activate_vm_template (request, template_id):
 def add_vm_template(request):
     if request.method == 'POST':
         form = AddVMTemplates(request.POST)
-        if form.is_valid():
-            if 'csv_file' in request.FILES:
+        if 'csv_file' in request.FILES:
                 csv_file = request.FILES['csv_file']
                 file_data = csv_file.read().decode('utf-8-sig').splitlines()
                 csv_reader = csv.DictReader(file_data)
@@ -861,20 +860,18 @@ def add_vm_template(request):
                     # Create VM template for each row in CSV
                     # You'll need to adjust this based on your CSV structure
                     VMTemplates.objects.create(
-                        vm_id=row['vm_id'],
-                        vm_name=row['vm_name'],
-                        node=row['node'],
-                        storage=row['storage'],
-                        is_lxc=row.get('is_lxc') == 'True' or 'true',
-                        guacamole_protocol=row['guacamole_protocol']
+                        vm_id=row['VM ID'],
+                        guacamole_protocol=row['Guacamole Protocol']
                     )
-            else:
+        else:
+            if form.is_valid():
                 print("pag call ng save")
                 form.save()
-            messages.success(request, 'VM Template(s) added successfully.')
-            return redirect('ticketing:vm_template_management')  # Replace with your success URL
-        else:
-            messages.error(request, 'There was an error processing your request.')
+                messages.success(request, 'VM Template(s) added successfully.')
+                return redirect('ticketing:vm_template_management')  # Replace with your success URL
+            else:
+                print(form.errors)
+                messages.error(request, 'There was an error processing your request.')
     return redirect('ticketing:vm_template_management')
 
 def edit_vm_template(request):
