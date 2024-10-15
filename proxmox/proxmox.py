@@ -480,7 +480,10 @@ def get_node(vm_id):
     data = get_resources().get('data', [])
 
     for item in data:
+        print("===============")
         print(item.get('vmid'))
+        print(vm_id)
+        print("===============")
         if item.get('vmid') == vm_id:
             return item.get('node')
         
