@@ -867,13 +867,13 @@ def add_vm_template(request):
                     print("is lxc")
                     config_data = proxmox.get_lxc_config(node, vm_id).get('data', {})
                     storage = config_data.get('rootfs').split(',')
-                    vm_name = config_data.get('name')
+                    vm_name = config_data.get('hostname')
                     is_lxc = True
                 elif type == 'qemu':
                     print("is qemu")
                     config_data = proxmox.get_vm_config(node, vm_id).get('data', {})
                     storage = config_data.get('scsi0').split(',')
-                    vm_name = config_data.get('hostname')
+                    vm_name = config_data.get('name')
                     is_lxc = False
 
                 print(config_data)
