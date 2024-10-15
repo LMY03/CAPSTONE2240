@@ -878,6 +878,7 @@ def add_vm_template(request):
                     vm_template.node = Nodes.objects.get(name=node)
                     vm_template.vm_name = vm_name
                     vm_template.is_lxc = is_lxc
+                    vm_template.save()
 
                     # if 'csv_file' in request.FILES:
                     #     csv_file = request.FILES['csv_file']
