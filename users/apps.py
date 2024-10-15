@@ -29,7 +29,7 @@ class UsersConfig(AppConfig):
                     password=make_password('123456'),
                     first_name='John',
                     last_name='Doe',
-                    email='',
+                    email='jonathan_lin@dlsu.edu.ph',
                     is_staff=False,
                     is_active=True,
                     user_type=User.UserType.TSG
@@ -39,7 +39,7 @@ class UsersConfig(AppConfig):
                     password=make_password('123456'),
                     first_name='Josephine',
                     last_name='Cruz',
-                    email='',
+                    email='rafael_sanchez@dlsu.edu.ph',
                     is_staff=False,
                     is_active=True,
                     user_type=User.UserType.FACULTY
