@@ -595,7 +595,7 @@
                 String(date_str.getHours()).padStart(2, '0') + ':' +
                 String(date_str.getMinutes()).padStart(2, '0') + ':' +
                 String(date_str.getSeconds()).padStart(2, '0');
-            return startDate,endDate
+            return {startDate, endDate}
         };
 
         // export data
@@ -667,7 +667,9 @@
                 String(date_str.getHours()).padStart(2, '0') + ':' +
                 String(date_str.getMinutes()).padStart(2, '0') + ':' +
                 String(date_str.getSeconds()).padStart(2, '0');
-
+            
+            console.log("start date: ", startDate)
+            console.log("endDate: ", endDate)
             getTableData(startDate,endDate).then(tb_data=>{
                 console.log("【show】",tb_data);
                 showtable(tb_data);
