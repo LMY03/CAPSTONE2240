@@ -34,7 +34,7 @@ class ProxmoxConfig(AppConfig):
                     node=1
                 )
                 VMTemplates.objects.create(
-                    vm_id=3000,
+                    vm_id=3001,
                     vm_name='Ubuntu-Desktop-22 (GUI)',
                     cores=1,
                     ram=1024,
@@ -56,7 +56,7 @@ class ProxmoxConfig(AppConfig):
                     node=1,
                 )
                 VMTemplates.objects.create(
-                    vm_id=3000,
+                    vm_id=3001,
                     vm_name='Ubuntu-Server-22 (TUI)',
                     cores=1,
                     ram=1024,
