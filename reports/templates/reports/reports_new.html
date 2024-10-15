@@ -590,11 +590,11 @@
 
             const date_str = new Date(endDate_input.value);
             const endDate = date_str.getFullYear() + '-' +
-                String(date_str.getMonth() + 1).padStart(2, '0') + '-' +
-                String(date_str.getDate()).padStart(2, '0') + ' ' +
-                String(date_str.getHours()).padStart(2, '0') + ':' +
-                String(date_str.getMinutes()).padStart(2, '0') + ':' +
-                String(date_str.getSeconds()).padStart(2, '0');
+                String(date.getMonth() + 1).padStart(2, '0') + '-' +
+                String(date.getDate()).padStart(2, '0') + ' ' +
+                String(date.getHours()).padStart(2, '0') + ':' +
+                String(date.getMinutes()).padStart(2, '0') + ':' +
+                String(date.getSeconds()).padStart(2, '0');
             return startDate,endDate
         };
 
