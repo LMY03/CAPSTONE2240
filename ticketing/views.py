@@ -862,14 +862,18 @@ def add_vm_template(request):
             node = proxmox.get_node(vm_id)
             if node:
                 print(node)
-                if proxmox.is_template(node, vm_id):
-                    print("is template")
-                    if proxmox.is_lxc(vm_id):
-                        config_data = proxmox.get_lxc_config(node, vm_id).get('data', {})
-                        is_lxc = True
-                    else:
-                        config_data = proxmox.get_vm_config(node, vm_id).get('data', {})
-                        is_lxc = False
+                if proxmox.is_lxc(vm_id):
+                    print("is lxc")
+                    config_data = proxmox.get_lxc_config(node, vm_id).get('data', {})
+                    is_lxc = True
+                else:
+                    print("is qemu")
+                    config_data = proxmox.get_vm_config(node, vm_id).get('data', {})
+                    is_lxc = False
+
+                    print(config_data.get('tempalate'))
+                    if config_data.get('tempalate') == 1:
+                        pass
 
                     vm_name = config_data.get('name')
                     cores = config_data.get('cores')
