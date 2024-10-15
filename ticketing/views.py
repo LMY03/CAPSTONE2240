@@ -872,46 +872,46 @@ def add_vm_template(request):
                     config_data = proxmox.get_vm_config(node, vm_id).get('data', {})
                     is_lxc = False
 
-                    print(config_data.get('template'))
-                    if config_data.get('template') == 1:
-                        pass
+                print(config_data.get('template'))
+                if config_data.get('template') == 1:
+                    pass
 
-                    vm_name = config_data.get('name')
-                    cores = config_data.get('cores')
-                    memory = config_data.get('memory')
-                    storage = config_data.get('scsi0').split(',')
-                    storage = ''.join(filter(str.isdigit, [detail for detail in storage if 'size' in detail][0].split('=')[1]))
+                vm_name = config_data.get('name')
+                cores = config_data.get('cores')
+                memory = config_data.get('memory')
+                storage = config_data.get('scsi0').split(',')
+                storage = ''.join(filter(str.isdigit, [detail for detail in storage if 'size' in detail][0].split('=')[1]))
 
-                    vm_template.vm_id = vm_id
-                    vm_template.guacamole_protocol = form.cleaned_data['guacamole_protocol']
-                    vm_template.storage = storage
-                    vm_template.cores = cores
-                    vm_template.ram = memory
-                    vm_template.node = Nodes.objects.get(name=node).pk
-                    vm_template.vm_name = vm_name
-                    vm_template.is_lxc = is_lxc
-                    vm_template.save()
+                vm_template.vm_id = vm_id
+                vm_template.guacamole_protocol = form.cleaned_data['guacamole_protocol']
+                vm_template.storage = storage
+                vm_template.cores = cores
+                vm_template.ram = memory
+                vm_template.node = Nodes.objects.get(name=node).pk
+                vm_template.vm_name = vm_name
+                vm_template.is_lxc = is_lxc
+                vm_template.save()
 
-                    # if 'csv_file' in request.FILES:
-                    #     csv_file = request.FILES['csv_file']
-                    #     file_data = csv_file.read().decode('utf-8-sig').splitlines()
-                    #     csv_reader = csv.DictReader(file_data)
-                    #     for row in csv_reader:
-                    #         # Create VM template for each row in CSV
-                    #         # You'll need to adjust this based on your CSV structure
-                    #         VMTemplates.objects.create(
-                    #             vm_id=row['vm_id'],
-                    #             vm_name=row['vm_name'],
-                    #             node=row['node'],
-                    #             storage=row['storage'],
-                    #             is_lxc=row.get('is_lxc') == 'True' or 'true',
-                    #             guacamole_protocol=row['guacamole_protocol']
-                    #         )
-                    # else:
-                    #     print("pag call ng save")
-                    #     form.save()
-                    messages.success(request, 'VM Template(s) added successfully.')
-                    return redirect('ticketing:vm_template_management')  # Replace with your success URL
+                # if 'csv_file' in request.FILES:
+                #     csv_file = request.FILES['csv_file']
+                #     file_data = csv_file.read().decode('utf-8-sig').splitlines()
+                #     csv_reader = csv.DictReader(file_data)
+                #     for row in csv_reader:
+                #         # Create VM template for each row in CSV
+                #         # You'll need to adjust this based on your CSV structure
+                #         VMTemplates.objects.create(
+                #             vm_id=row['vm_id'],
+                #             vm_name=row['vm_name'],
+                #             node=row['node'],
+                #             storage=row['storage'],
+                #             is_lxc=row.get('is_lxc') == 'True' or 'true',
+                #             guacamole_protocol=row['guacamole_protocol']
+                #         )
+                # else:
+                #     print("pag call ng save")
+                #     form.save()
+                messages.success(request, 'VM Template(s) added successfully.')
+                return redirect('ticketing:vm_template_management')  # Replace with your success URL
         else:
             messages.error(request, 'There was an error processing your request.')
     return redirect('ticketing:vm_template_management')
