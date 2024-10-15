@@ -866,10 +866,12 @@ def add_vm_template(request):
                 if type == 'lxc':
                     print("is lxc")
                     config_data = proxmox.get_lxc_config(node, vm_id).get('data', {})
+                    storage = config_data.get('rootrf').split(',')
                     is_lxc = True
                 elif type == 'qemu':
                     print("is qemu")
                     config_data = proxmox.get_vm_config(node, vm_id).get('data', {})
+                    storage = config_data.get('scsi0').split(',')
                     is_lxc = False
 
                 print(config_data)
@@ -880,7 +882,6 @@ def add_vm_template(request):
                 vm_name = config_data.get('name')
                 cores = config_data.get('cores')
                 memory = config_data.get('memory')
-                storage = config_data.get('scsi0').split(',')
                 storage = ''.join(filter(str.isdigit, [detail for detail in storage if 'size' in detail][0].split('=')[1]))
 
                 vm_template.vm_id = vm_id
