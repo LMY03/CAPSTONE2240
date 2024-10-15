@@ -872,6 +872,7 @@ def add_vm_template(request):
                     config_data = proxmox.get_vm_config(node, vm_id).get('data', {})
                     is_lxc = False
 
+                print(config_data)
                 print(config_data.get('template'))
                 if config_data.get('template') == 1:
                     pass
