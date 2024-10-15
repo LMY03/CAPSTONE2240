@@ -478,10 +478,10 @@ def wait_and_fetch_lxc_ip(node, vm_id):
 
 def get_node(vm_id):
     data = get_resources().get('data', [])
-    print(data)
 
     for item in data:
         if item.get('vmid') == vm_id:
+            print(item)
             return item.get('node')
         
 def is_lxc(vm_id):
