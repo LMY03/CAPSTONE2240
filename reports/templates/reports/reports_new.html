@@ -644,12 +644,10 @@
             if (!startDate_input.value || !endDate_input.value) {
                 const now = new Date();
                 const currentDateTime = now.toISOString().slice(0, 16);
-                endDate_input.value = currentDateTime;
-                // startDate_input.value = currentDateTime;
+                startDate_input.value = currentDateTime;
                 now.setMinutes(now.getMinutes() - 1440);
                 const pastOneday = now.toISOString().slice(0, 16);
-                startDate_input.value = pastOneday;
-                // endDate_input.value = pastOneday
+                endDate_input.value = pastOneday
             };
 
             const date = new Date(startDate_input.value);
