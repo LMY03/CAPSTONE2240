@@ -853,26 +853,52 @@ def add_vm_template(request):
     if request.method == 'POST':
         form = AddVMTemplates(request.POST)
         if form.is_valid():
-            if 'csv_file' in request.FILES:
-                csv_file = request.FILES['csv_file']
-                file_data = csv_file.read().decode('utf-8-sig').splitlines()
-                csv_reader = csv.DictReader(file_data)
-                for row in csv_reader:
-                    # Create VM template for each row in CSV
-                    # You'll need to adjust this based on your CSV structure
-                    VMTemplates.objects.create(
-                        vm_id=row['vm_id'],
-                        vm_name=row['vm_name'],
-                        node=row['node'],
-                        storage=row['storage'],
-                        is_lxc=row.get('is_lxc') == 'True' or 'true',
-                        guacamole_protocol=row['guacamole_protocol']
-                    )
-            else:
-                print("pag call ng save")
-                form.save()
-            messages.success(request, 'VM Template(s) added successfully.')
-            return redirect('ticketing:vm_template_management')  # Replace with your success URL
+            vm_template = form.save(commit=False)
+            vm_id = form.cleaned_data['vm_id']
+            node = proxmox.get_node(vm_id)
+            if node:
+                if proxmox.is_template(node, vm_id):
+                    if proxmox.is_lxc(vm_id):
+                        config_data = proxmox.get_lxc_config().get('data', {})
+                        is_lxc = True
+                    else:
+                        config_data = proxmox.get_vm_config().get('data', {})
+                        is_lxc = False
+
+                    vm_name = config_data.get('name')
+                    cores = config_data.get('cores')
+                    memory = config_data.get('memory')
+                    storage = config_data.get('rootfs', {}).get('size') / (1024 ** 3)
+
+                    vm_template.vm_id = vm_id
+                    vm_template.guacamole_protocol = form.cleaned_data['guacamole_protocol']
+                    vm_template.storage = storage
+                    vm_template.cores = cores
+                    vm_template.ram = memory
+                    vm_template.node = Nodes.objects.get(name=node)
+                    vm_template.vm_name = vm_name
+                    vm_template.is_lxc = is_lxc
+
+                    # if 'csv_file' in request.FILES:
+                    #     csv_file = request.FILES['csv_file']
+                    #     file_data = csv_file.read().decode('utf-8-sig').splitlines()
+                    #     csv_reader = csv.DictReader(file_data)
+                    #     for row in csv_reader:
+                    #         # Create VM template for each row in CSV
+                    #         # You'll need to adjust this based on your CSV structure
+                    #         VMTemplates.objects.create(
+                    #             vm_id=row['vm_id'],
+                    #             vm_name=row['vm_name'],
+                    #             node=row['node'],
+                    #             storage=row['storage'],
+                    #             is_lxc=row.get('is_lxc') == 'True' or 'true',
+                    #             guacamole_protocol=row['guacamole_protocol']
+                    #         )
+                    # else:
+                    #     print("pag call ng save")
+                    #     form.save()
+                    messages.success(request, 'VM Template(s) added successfully.')
+                    return redirect('ticketing:vm_template_management')  # Replace with your success URL
         else:
             messages.error(request, 'There was an error processing your request.')
     return redirect('ticketing:vm_template_management')
