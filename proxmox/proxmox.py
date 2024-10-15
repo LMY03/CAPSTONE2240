@@ -484,7 +484,5 @@ def get_vm_type(vm_id):
     data = get_resources().get('data', [])
 
     for item in data:
-        if item.get('vmid') == vm_id:
-            print("item.get('type')")
-            print(item.get('type'))
-            return item.get('type') == 'lxc'
+        if str(item.get('vmid')) == str(vm_id):
+            return item.get('type')
