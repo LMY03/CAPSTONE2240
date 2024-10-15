@@ -320,7 +320,7 @@ def stop_lxc(node, vm_id):
 def delete_lxc(node, vm_id):
     get_proxmox_client().nodes(node).lxc(vm_id).delete()
 
-# # configure VM PUT 
+# # configure VM PUT
 def get_lxc_config(node, vm_id):
     return get_proxmox_client().nodes(node).lxc(vm_id).config.get()
 
