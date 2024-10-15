@@ -871,8 +871,8 @@ def add_vm_template(request):
                     config_data = proxmox.get_vm_config(node, vm_id).get('data', {})
                     is_lxc = False
 
-                    print(config_data.get('tempalate'))
-                    if config_data.get('tempalate') == 1:
+                    print(config_data.get('template'))
+                    if config_data.get('template') == 1:
                         pass
 
                     vm_name = config_data.get('name')
