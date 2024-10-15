@@ -865,10 +865,10 @@ def add_vm_template(request):
                 if proxmox.is_template(node, vm_id):
                     print("is template")
                     if proxmox.is_lxc(vm_id):
-                        config_data = proxmox.get_lxc_config().get('data', {})
+                        config_data = proxmox.get_lxc_config(node, vm_id).get('data', {})
                         is_lxc = True
                     else:
-                        config_data = proxmox.get_vm_config().get('data', {})
+                        config_data = proxmox.get_vm_config(node, vm_id).get('data', {})
                         is_lxc = False
 
                     vm_name = config_data.get('name')
