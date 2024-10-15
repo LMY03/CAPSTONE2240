@@ -850,14 +850,20 @@ def activate_vm_template (request, template_id):
     return redirect('ticketing:vm_template_management')
 
 def add_vm_template(request):
+    print("add_vm_template")
     if request.method == 'POST':
+        print("POST")
         form = AddVMTemplates(request.POST)
         if form.is_valid():
+            print("form is valid")
             vm_template = form.save(commit=False)
             vm_id = form.cleaned_data['vm_id']
+            print(vm_id)
             node = proxmox.get_node(vm_id)
             if node:
+                print(node)
                 if proxmox.is_template(node, vm_id):
+                    print("is template")
                     if proxmox.is_lxc(vm_id):
                         config_data = proxmox.get_lxc_config().get('data', {})
                         is_lxc = True
