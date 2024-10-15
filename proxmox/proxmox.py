@@ -324,7 +324,7 @@ def delete_lxc(node, vm_id):
     get_proxmox_client().nodes(node).lxc(vm_id).delete()
 
 # # configure VM PUT 
-def get_lxc_config(node, vm_id, cpu_cores, memory_mb):
+def get_lxc_config(node, vm_id):
     return get_proxmox_client().nodes(node).lxc(vm_id).config.get()
 
 # # configure VM PUT 
@@ -480,11 +480,6 @@ def get_node(vm_id):
     data = get_resources().get('data', [])
 
     for item in data:
-        print("===============")
-        print(item.get('vmid'))
-        print(vm_id)
-        print(str(item.get('vmid')) == str(vm_id))
-        print("===============")
         if str(item.get('vmid')) == str(vm_id):
             return item.get('node')
         
