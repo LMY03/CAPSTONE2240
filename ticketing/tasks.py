@@ -21,7 +21,8 @@ def delete_expired_requests():
 @shared_task
 def delete_request(request_id):
     request_entry = get_object_or_404(RequestEntry, pk=request_id)
-    request_entry.status = RequestEntry.Status.DELETED
+    if request_entry.is_recurring() : request_entry.status = RequestEntry.Status.DELETED
+    else : request_entry.status = RequestEntry.Status.COMPLETED
     request_entry.save()
 
     vms = VirtualMachines.objects.filter(request=request_entry)
