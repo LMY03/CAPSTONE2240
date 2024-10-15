@@ -132,7 +132,6 @@
             width: 100%;
             overflow-x: auto;
             margin-top: 10px;
-            /* position: relative; 允许绝对定位按钮 */
         }
 
         table {
@@ -198,11 +197,11 @@
         }
 
         .disable {
-            background-color: gray; /* 灰色背景 */
-            color: white; /* 白色文字 */
-            cursor: not-allowed; /* 禁用手势 */
-            pointer-events: none; /* 禁止点击 */
-            opacity: 0.6; /* 半透明 */
+            background-color: gray; 
+            color: white; 
+            cursor: not-allowed; 
+            pointer-events: none; 
+            opacity: 0.6;
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -211,7 +210,6 @@
 
 <body>
     <div class="header">
-        <!-- <h4 style="text-align: center;">条件筛选</h4> -->
         <div class="time_filter">
             <div class="controls">
                 <div class="date-inputs">
@@ -236,36 +234,37 @@
                 <h3>Metrics</h3>
 
                 <div class="checkbox-row">
-                    <label><input type="checkbox" value="选项1" onchange="updateChart()">time</label>
-                    <label><input type="checkbox" value="选项2" onchange="updateChart()">cpu</label>
-                    <label><input type="checkbox" value="选项3" onchange="updateChart()">cpu-us</label>
-                    <label><input type="checkbox" value="选项4" onchange="updateChart()">mem</label>
+                    <!-- <label><input type="checkbox" value="选项1" onchange="updateChart()">time</label> -->
+                    <label><input type="checkbox" value="cpu" onchange="updateChart()">cpu</label>
+                    <label><input type="checkbox" value="cpu-us" onchange="updateChart()">cpu-us</label>
+                    <label><input type="checkbox" value="mem" onchange="updateChart()">mem</label>
 
                 </div>
                 <div class="checkbox-row">
-                    <label><input type="checkbox" value="选项5" onchange="updateChart()">mem-us</label>
-                    <label><input type="checkbox" value="选项6" onchange="updateChart()">storage</label>
-                    <label><input type="checkbox" value="选项7" onchange="updateChart()">storage-us</label>
-                    <label><input type="checkbox" value="选项8" onchange="updateChart()">netin</label>
+                    <label><input type="checkbox" value="mem-us" onchange="updateChart()">mem-us</label>
+                    <label><input type="checkbox" value="storage" onchange="updateChart()">storage</label>
+                    <label><input type="checkbox" value="storage-us" onchange="updateChart()">storage-us</label>
+                    <label><input type="checkbox" value="netin" onchange="updateChart()">netin</label>
 
                 </div>
                 <div class="checkbox-row">
-                    <label><input type="checkbox" value="选项9" onchange="updateChart()"> netout</label>
+                    <label><input type="checkbox" value="netout" onchange="updateChart()"> netout</label>
                 </div>
             </div>
         </div>
     </div>
     <div class="echat_img">
-        <button class="chart-button" onclick="exporeDataChart()">CSV</button>
+        <button class="chart-button" onclick="exportDataChart()">CSV</button>
 
         <canvas id="myChart"></canvas>
     </div>
-    <div class="expore"><button class="table-button" onclick="exporeData()">CSV</button></div>
+    <div class="expore"><button class="table-button" onclick="exportData()">CSV</button></div>
     <div class="table-container">
         <!-- <button class="table-button" onclick="handleTableButtonClick()">CSV</button> -->
         <table>
             <thead>
                 <tr>
+                    <!-- vmid? -->
                     <th>TYPE</th>
                     <th>cpu</th>
                     <th>cpu usage</th>
@@ -280,16 +279,16 @@
             </thead>
             <tbody>
                 <tr>
-                    <!-- <td>数据1.7</td> -->
+                    <!-- <td>data 1.7</td> -->
                 </tr>
             </tbody>
         </table>
 
-        <!-- 分页按钮 -->
+        <!-- pagination -->
         <div class="pagination">
-            <button id="prePage" onclick="prevPage()">上一页</button>
-            <div>当前第&ensp;<span id="current_page"></span>&ensp;页/总共&ensp;<span id="page_count">&ensp;</span>&ensp;页</div>
-            <button id="nextPage" onclick="nextPage()">下一页</button>
+            <button id="prePage" onclick="prevPage()">Previous</button>
+            <div>&ensp;<span id="current_page"></span>&ensp;/&ensp;<span id="page_count">&ensp;</span>&ensp;page(s)</div>
+            <button id="nextPage" onclick="nextPage()">Next</button>
         </div>
     </div>
     <script>
@@ -337,12 +336,12 @@
                         resolve(data.data);
 
                     } else {
-                        reject(new Error("数据接口异常"));
+                        reject(new Error("Data interface exception"));
                     }
                 };
 
                 xhr.onerror = function () {
-                    reject(new Error("请求失败"));
+                    reject(new Error("Request Failure"));
                 };
 
                 xhr.send();
@@ -395,20 +394,23 @@
                         let label_data = {};
                         let data = xhr.response.data;
                         let x_labels = [];
+                        let title = xhr.response.name
 
                         data.forEach((element, index) => {
-                            x_labels.push(data[index].time); // 获取每个时间戳
+                            x_labels.push(data[index].time); // timestamp
                             let keys = Object.keys(element);
                             keys.forEach(e => {
-                                if (e in label_data) {
-                                    label_data[e].push(element[e]); // 如果已存在则推入数据
-                                } else {
-                                    label_data[e] = [element[e]]; // 如果不存在则初始化数组
+                                if (e != "time") {
+                                    if (e in label_data) {
+                                        label_data[e].push(element[e]); // add if exist
+                                    } else {
+                                        label_data[e] = [element[e]]; // initialize if not exist
+                                    }
                                 }
                             });
                         });
 
-                        let result_data = []; // 这里需要在循环外定义
+                        let result_data = []; 
                         let keys = Object.keys(label_data);
                         keys.forEach(e => {
                             result_data.push({
@@ -422,29 +424,30 @@
 
                         resolve({
                             x_labels,
-                            result_data
-                        }); // 使用 resolve 返回结果
+                            result_data,
+                            title
+                        }); 
                     } else {
-                        reject(new Error("数据接口异常")); // 请求错误时拒绝 Promise
+                        reject(new Error("Data interface exception"));
                     }
                 };
 
                 xhr.onerror = function () {
-                    reject(new Error("请求失败")); // 网络错误处理
+                    reject(new Error("Request Failure")); // Network Failure
                 };
 
-                xhr.send(); // 发送请求
+                xhr.send(); 
             });
         }
 
 
-        // 图表-start
+        // graph-start
 
-        // 深拷贝一个
         var copy_data = {};
         
         var myChart = undefined;
-        function showchart(labels,datasets){
+        function showchart(labels,datasets, title="system"){
+            console.log("[title]", title)
             if (myChart === undefined){
                 const data = {
                     labels: labels,
@@ -457,6 +460,17 @@
                         options: {
                             responsive: true,
                             plugins: {
+                                title: {
+                                    display: true,
+                                    text: title,
+                                    font: {
+                                        size: 20
+                                    },
+                                    padding: {
+                                        top: 10,
+                                        bottom: 30
+                                    }
+                                },
                                 legend: {
                                     display: true,
                                     position: 'top',
@@ -487,68 +501,64 @@
         };
 
 
-        // 更新图表显示-筛选
+        // update graph-filter
         function updateChart() {
             const checkboxes = document.querySelectorAll('.checkbox-group input[type="checkbox"]');
             const datasetsToShow = [];
 
             checkboxes.forEach((checkbox, index) => {
                 const dataset = copy_data.datasets[index];
-                console.log(index, dataset && checkbox.checked)
 
-                // 确保数据集存在并且复选框被选中
+                // Ensure the dataset exists and the checkbox is selected
                 if (dataset && checkbox.checked) {
                     datasetsToShow.push(dataset);
                 }
             });
 
-            // 处理没有选中复选框的情况
+            // Handle the case when no checkbox is selected
             if (datasetsToShow.length === 0) {
-                // 如果没有复选框选中，给出默认的数据集（选择第一个数据集作为默认）
+                // If no checkbox is selected, use the first dataset as default.
                 if (data.datasets.length > 0) {
                     datasetsToShow.push(data.datasets[0]);
                 }
             }
 
-            // 清空现有的数据集并添加选中的数据集
+            // Clear existing datasets and add the selected ones
             myChart.data.datasets = datasetsToShow.map(dataset => {
                 return {
-                    ...dataset, // 浅拷贝现有数据集
-                    data: [...dataset.data] // 确保数据是一个新的数组
+                    ...dataset, // Shallow copy of the existing dataset
+                    data: [...dataset.data] // Ensure data is a new array
                 };
             });
 
-            // 更新图表
+            // Update Chart
             myChart.update();
         }
 
         // 默认显示所有折线
         document.querySelectorAll('.checkbox-group input[type="checkbox"]').forEach((checkbox) => {
-            checkbox.checked = true; // 默认勾选所有复选框
+            checkbox.checked = true; 
         });
         
-        // 图表-end
+        // graph-end
 
         
 
 
-        // 表格 - start
+        // form - start
 
         
         function showtable(tb_data) {
-            // todo ajax请求获取数据
+            // todo ajax request data
             let td_ls = Object.keys(tb_data[0]);
             let tr = document.querySelector("thead tr");
             tr.innerHTML = "";
-            // let newCell1 = document.createElement("th");
-            //             newCell1.textContent = "TYPE";
-            //             tr.appendChild(newCell1);
             td_ls.forEach(td => {
                 let newCell1 = document.createElement("th");
                 newCell1.textContent = td;
                 tr.appendChild(newCell1);
             });
-            // 数据展示
+            // show data
             let tbody = document.querySelector("tbody");
             tbody.innerHTML = "";
             tb_data.forEach((element, index) => {
@@ -588,16 +598,15 @@
             return startDate,endDate
         };
 
-        // 数据导出
-        function exporeData() {
+        // export data
+        function exportData() {
             const ws = XLSX.utils.json_to_sheet(table_data);
-            // 创建工作簿
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
             XLSX.writeFile(wb, "data.xlsx");
         }
 
-        function exporeDataChart(){
+        function exportDataChart(){
             let chart_data = [];
             let labels = myChart.data.labels;
             console.log(labels);
@@ -621,14 +630,13 @@
                 })
             })
             const ws = XLSX.utils.json_to_sheet(chart_data);
-            // 创建工作簿
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
             XLSX.writeFile(wb, "data.xlsx");
 
         }
 
-        // 表格 -end
+        // form -end
         function show(){
             const startDate_input = document.getElementById('startDate');
             const endDate_input = document.getElementById('endDate');
@@ -637,9 +645,9 @@
                 const now = new Date();
                 const currentDateTime = now.toISOString().slice(0, 16);
                 startDate_input.value = currentDateTime;
-                now.setMinutes(now.getMinutes() - 30);
-                const pastHalfHour = now.toISOString().slice(0, 16);
-                endDate_input.value = pastHalfHour
+                now.setMinutes(now.getMinutes() - 1440);
+                const pastOneday = now.toISOString().slice(0, 16);
+                endDate_input.value = pastOneday
             };
 
             const date = new Date(startDate_input.value);
@@ -667,7 +675,12 @@
                 ({x_labels,result_data}) =>{
                     var labels,dataset;
                     console.log("【show】",x_labels,result_data)
-                    showchart(x_labels,result_data);
+                    showchart(x_labels,result_data,title);
+                    document.querySelectorAll('.checkbox-group input[type="checkbox"]').forEach(e=>{
+                        e.checked = false;
+                    })
+                    document.querySelectorAll('.checkbox-group input[type="checkbox"]')[0].checked = true;
+                    updateChart();                    
                 }
             );
         };
@@ -676,16 +689,13 @@
         function createClickHandler(index) {
             return function () {
                 let row_data = table_data[index];
-                let startDate,endDate;
-                startDate,endDate = getDateRange();
-                // start_time, end_time, _type = "system", name = "system", nodename = "none", _class =
-            // "none", vmid = -1
-                getChartData(startDate,endDate,row_data.type,
+                datarange = getDateRange();
+                getChartData(datarange.startDate,datarange.endDate,row_data.type,
                     row_data.name,row_data.nodename,row_data.class,row_data.vmid)
                 .then(({x_labels,result_data}) =>{
                     var labels,dataset;
                     console.log("【show】",x_labels,result_data)
-                    showchart(x_labels,result_data);
+                    showchart(x_labels,result_data,title);
                 }
             );
             };
