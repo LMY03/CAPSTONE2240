@@ -862,11 +862,12 @@ def add_vm_template(request):
             node = proxmox.get_node(vm_id)
             if node:
                 print(node)
-                if proxmox.is_lxc(vm_id):
+                type = proxmox.get_vm_type(vm_id)
+                if type == 'lxc':
                     print("is lxc")
                     config_data = proxmox.get_lxc_config(node, vm_id).get('data', {})
                     is_lxc = True
-                else:
+                elif type == 'qemu':
                     print("is qemu")
                     config_data = proxmox.get_vm_config(node, vm_id).get('data', {})
                     is_lxc = False
