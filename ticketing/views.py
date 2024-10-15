@@ -882,7 +882,7 @@ def add_vm_template(request):
                     vm_template.storage = storage
                     vm_template.cores = cores
                     vm_template.ram = memory
-                    vm_template.node = Nodes.objects.get(name=node)
+                    vm_template.node = Nodes.objects.get(name=node).pk
                     vm_template.vm_name = vm_name
                     vm_template.is_lxc = is_lxc
                     vm_template.save()
