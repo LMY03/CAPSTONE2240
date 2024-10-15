@@ -485,4 +485,6 @@ def is_lxc(vm_id):
 
     for item in data:
         if item.get('vmid') == vm_id:
+            print("item.get('type')")
+            print(item.get('type'))
             return item.get('type') == 'lxc'
