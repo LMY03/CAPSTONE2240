@@ -866,7 +866,7 @@ def add_vm_template(request):
                 if type == 'lxc':
                     print("is lxc")
                     config_data = proxmox.get_lxc_config(node, vm_id).get('data', {})
-                    storage = config_data.get('rootrf').split(',')
+                    storage = config_data.get('rootfs').split(',')
                     is_lxc = True
                 elif type == 'qemu':
                     print("is qemu")
