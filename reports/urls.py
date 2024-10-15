@@ -6,12 +6,13 @@ app_name = "reports"
 
 urlpatterns = [
     path('', views.index, name="index"),
+    path('reports', views.reports, name="reports"),
     # path('performance_gen', views.performance_gen, name="performance_gen"),
     path('getVmList', views.getVmList, name="getVmList"),
     # path('extract_general_stat', views.extract_general_stat, name="extract_general_stat"),
     # path('extract_detail_stat', views.extract_detail_stat, name="extract_detail_stat"),
-    path('extract_general_stat', views.formdata, name="formdata"),
-    path('extract_detail_stat', views.graphdata, name="graphdata"),
+    path('formdata', views.formdata, name="formdata"),
+    path('graphdata', views.graphdata, name="graphdata"),
 
 
     # path('index_csv', views.index_csv, name="index_csv"),

@@ -68,7 +68,7 @@ def generate_vm_ids(no_of_vm):
     existing_vms = set(VirtualMachines.objects.exclude(status=VirtualMachines.Status.DESTROYED).values_list('vm_id', flat=True))
     
     new_ids = []
-    new_id = 5000  # Starting point for new VM IDs
+    new_id = 10000  # Starting point for new VM IDs
     while len(new_ids) < no_of_vm:
         if new_id not in existing_vms : new_ids.append(new_id)
         new_id += 1

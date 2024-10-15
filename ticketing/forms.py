@@ -58,21 +58,21 @@ class AddVMTemplates(forms.ModelForm):
             'guacamole_protocol': forms.Select(attrs={'class': 'form-control'}),
         }
 
-    def save(self, commit=True):
-        vmtemplate = super().save(commit=False)
+    # def save(self, commit=True):
+    #     vmtemplate = super().save(commit=False)
         
-        vmtemplate.vm_id = self.cleaned_data['vm_id']
-        vmtemplate.guacamole_protocol = self.cleaned_data['guacamole_protocol']
-        # This is where the API call starts
-        vmtemplate.cores = 1
-        vmtemplate.ram = 2048
-        vmtemplate.node = 'Mayari'
-        vmtemplate.vm_name = 'VMTEMPLATE NAME 30gb'
-        vmtemplate.storage = '30'
-        # Where it ends
-        if commit:
-            vmtemplate.save()
-        return vmtemplate
+    #     vmtemplate.vm_id = self.cleaned_data['vm_id']
+    #     vmtemplate.guacamole_protocol = self.cleaned_data['guacamole_protocol']
+    #     # This is where the API call starts
+    #     vmtemplate.cores = 1
+    #     vmtemplate.ram = 2048
+    #     vmtemplate.node = 'Mayari'
+    #     vmtemplate.vm_name = 'VMTEMPLATE NAME 30gb'
+    #     vmtemplate.storage = '30'
+    #     # Where it ends
+    #     if commit:
+    #         vmtemplate.save()
+    #     return vmtemplate
     
 
 class EditVMTemplates(forms.ModelForm):

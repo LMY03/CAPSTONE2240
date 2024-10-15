@@ -850,28 +850,73 @@ def activate_vm_template (request, template_id):
     return redirect('ticketing:vm_template_management')
 
 def add_vm_template(request):
+    print("add_vm_template")
     if request.method == 'POST':
+        print("POST")
         form = AddVMTemplates(request.POST)
-        if 'csv_file' in request.FILES:
-                csv_file = request.FILES['csv_file']
-                file_data = csv_file.read().decode('utf-8-sig').splitlines()
-                csv_reader = csv.DictReader(file_data)
-                for row in csv_reader:
-                    # Create VM template for each row in CSV
-                    # You'll need to adjust this based on your CSV structure
-                    VMTemplates.objects.create(
-                        vm_id=row['VM ID'],
-                        guacamole_protocol=row['Guacamole Protocol']
-                    )
-        else:
-            if form.is_valid():
-                print("pag call ng save")
-                form.save()
+        if form.is_valid():
+            print("form is valid")
+            vm_template = form.save(commit=False)
+            vm_id = form.cleaned_data['vm_id']
+            print(vm_id)
+            node = proxmox.get_node(vm_id)
+            if node:
+                print(node)
+                type = proxmox.get_vm_type(vm_id)
+                if type == 'lxc':
+                    print("is lxc")
+                    config_data = proxmox.get_lxc_config(node, vm_id).get('data', {})
+                    storage = config_data.get('rootfs').split(',')
+                    vm_name = config_data.get('hostname')
+                    is_lxc = True
+                elif type == 'qemu':
+                    print("is qemu")
+                    config_data = proxmox.get_vm_config(node, vm_id).get('data', {})
+                    storage = config_data.get('scsi0').split(',')
+                    vm_name = config_data.get('name')
+                    is_lxc = False
+
+                print(config_data)
+                print(config_data.get('template'))
+                if config_data.get('template') == 1:
+                    pass
+
+                cores = config_data.get('cores')
+                memory = config_data.get('memory')
+                storage = ''.join(filter(str.isdigit, [detail for detail in storage if 'size' in detail][0].split('=')[1]))
+
+                vm_template.vm_id = vm_id
+                vm_template.guacamole_protocol = form.cleaned_data['guacamole_protocol']
+                vm_template.storage = storage
+                vm_template.cores = cores
+                vm_template.ram = memory
+                vm_template.node = Nodes.objects.get(name=node).pk
+                vm_template.vm_name = vm_name
+                vm_template.is_lxc = is_lxc
+                vm_template.save()
+
+                # if 'csv_file' in request.FILES:
+                #     csv_file = request.FILES['csv_file']
+                #     file_data = csv_file.read().decode('utf-8-sig').splitlines()
+                #     csv_reader = csv.DictReader(file_data)
+                #     for row in csv_reader:
+                #         # Create VM template for each row in CSV
+                #         # You'll need to adjust this based on your CSV structure
+                #         VMTemplates.objects.create(
+                #             vm_id=row['vm_id'],
+                #             vm_name=row['vm_name'],
+                #             node=row['node'],
+                #             storage=row['storage'],
+                #             is_lxc=row.get('is_lxc') == 'True' or 'true',
+                #             guacamole_protocol=row['guacamole_protocol']
+                #         )
+                # else:
+                #     print("pag call ng save")
+                #     form.save()
                 messages.success(request, 'VM Template(s) added successfully.')
                 return redirect('ticketing:vm_template_management')  # Replace with your success URL
-            else:
-                print(form.errors)
-                messages.error(request, 'There was an error processing your request.')
+        else:
+            messages.error(request, 'There was an error processing your request.')
     return redirect('ticketing:vm_template_management')
 
 def edit_vm_template(request):

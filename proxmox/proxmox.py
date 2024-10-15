@@ -92,12 +92,21 @@ def get_vm_status(node, vmid):
     }
     response = requests.get(url, headers=headers, verify=CA_CRT)
 
-    status = response.json()['data']['qmpstatus']
+    status = response.json()
 
     return status
 
-def get_token_sync():
-    return get_ticket()
+def get_resources():
+    token = get_ticket()
+    url = f"{PROXMOX_HOST}/api2/json/cluster/resources"
+    headers = {
+        'CSRFPreventionToken': token['CSRFPreventionToken'],
+        'Cookie': f"PVEAuthCookie={ token['ticket'] }",
+    }
+
+    response = requests.get(url, headers=headers, verify=CA_CRT)
+
+    return response.json()
 
 def clone_vm(node, vmid, newid, name):
     token = get_ticket()
@@ -172,6 +181,18 @@ def config_vm_core_memory(node, vm_id, cpu_cores, memory_mb):
         'memory': memory_mb,
     })
 
+def get_vm_config(node, vmid):
+    token = get_ticket()
+    url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/qemu/{vmid}/config"
+    headers = {
+        'CSRFPreventionToken': token['CSRFPreventionToken'],
+        'Cookie': f"PVEAuthCookie={ token['ticket'] }",
+    }
+
+    response = requests.get(url, headers=headers, verify=CA_CRT)
+
+    return response.json()
+
 # configure VM PUT 
 def config_vm(node, vmid, config):
     token = get_ticket()
@@ -206,13 +227,13 @@ def wait_for_task(node, upid):
 
 def wait_for_vm_start(node, vmid):
     while True:
-        status = get_vm_status(node, vmid)
+        status = get_vm_status(node, vmid)['data']['qmpstatus']
         if status == "running" : return status
         time.sleep(5)
 
 def wait_for_vm_stop(node, vmid):
     while True:
-        status = get_vm_status(node, vmid)
+        status = get_vm_status(node, vmid)['data']['qmpstatus']
         if status == "stopped" : return status
         time.sleep(5)
 
@@ -299,7 +320,20 @@ def stop_lxc(node, vm_id):
 def delete_lxc(node, vm_id):
     get_proxmox_client().nodes(node).lxc(vm_id).delete()
 
-# # configure VM PUT 
+def get_lxc_config(node, vm_id):
+    
+    token = get_ticket()
+    url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/lxc/{vm_id}/config"
+    headers = {
+        'CSRFPreventionToken': token['CSRFPreventionToken'],
+        'Cookie': f"PVEAuthCookie={ token['ticket'] }",
+    }
+
+    response = requests.get(url, headers=headers, verify=CA_CRT)
+
+    return response.json()
+
+# configure VM PUT 
 def config_lxc(node, vm_id, cpu_cores, memory_mb):
     get_proxmox_client().nodes(node).lxc(vm_id).config.put(
         cores=cpu_cores,
@@ -446,3 +480,18 @@ def wait_and_fetch_lxc_ip(node, vm_id):
         ip_add = fetch_lxc_ip(node, vm_id)
         if ip_add : return ip_add
         time.sleep(5)
+
+
+def get_node(vm_id):
+    data = get_resources().get('data', [])
+
+    for item in data:
+        if str(item.get('vmid')) == str(vm_id):
+            return item.get('node')
+        
+def get_vm_type(vm_id):
+    data = get_resources().get('data', [])
+
+    for item in data:
+        if str(item.get('vmid')) == str(vm_id):
+            return item.get('type')
