@@ -321,7 +321,17 @@ def delete_lxc(node, vm_id):
     get_proxmox_client().nodes(node).lxc(vm_id).delete()
 
 def get_lxc_config(node, vm_id):
-    return get_proxmox_client().nodes(node).lxc(vm_id).config.get()
+    
+    token = get_ticket()
+    url = f"{PROXMOX_HOST}/api2/json/nodes/{node}/lxc/{vm_id}/config"
+    headers = {
+        'CSRFPreventionToken': token['CSRFPreventionToken'],
+        'Cookie': f"PVEAuthCookie={ token['ticket'] }",
+    }
+
+    response = requests.get(url, headers=headers, verify=CA_CRT)
+
+    return response.json()
 
 # configure VM PUT 
 def config_lxc(node, vm_id, cpu_cores, memory_mb):
