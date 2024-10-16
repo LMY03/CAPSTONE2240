@@ -585,7 +585,7 @@
                 String(date_str.getHours()).padStart(2, '0') + ':' +
                 String(date_str.getMinutes()).padStart(2, '0') + ':' +
                 String(date_str.getSeconds()).padStart(2, '0');
-            return startDate,endDate
+            return {startDate, endDate}
         };
 
         // 数据导出
@@ -677,7 +677,7 @@
         function createClickHandler(index) {
             return function () {
                 let row_data = table_data[index];
-                let startDate,endDate;
+                let startDate, endDate;
                 startDate, endDate = getDateRange();
                 console.log("startDate: ", startDate)
                 console.log("endDate: ", endDate)
