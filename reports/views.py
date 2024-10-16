@@ -31,7 +31,7 @@ def parse_form_date(date_string):
         # adjusted_dt = dt - timedelta(hours=8)
         # if is_start:
         #     adjusted_dt = adjusted_dt - timedelta(hours=8)
-        return adjusted_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
+        return dt.strftime("%Y-%m-%dT%H:%M:%SZ")
     except ValueError:
         raise ValueError(f"Invalid date format: {date_string}. Expected YYYY-MM-DD")
 
