@@ -535,7 +535,7 @@
                 vmInfo.push(rowData);
             });        
             // Now vmInfo contains the data in the correct order
-            console.log(vmInfo);
+            vmTable.row.add(vmInfo).draw();
         }
 
         function getDateRange(){
