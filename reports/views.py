@@ -618,7 +618,7 @@ def formdata(request):
         }}))
         |> group()
         |> sum(column: "_value")
-        |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0) }})) # unit - K
+        |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0) }}))
     '''
     query_result = query_api.query(query=netout_query)
     for table in query_result:
