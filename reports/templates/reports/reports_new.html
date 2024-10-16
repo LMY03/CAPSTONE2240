@@ -636,10 +636,11 @@
             if (!startDate_input.value || !endDate_input.value) {
                 const now = new Date();
                 const currentDateTime = now.toISOString().slice(0, 16);
+                now.setMinutes(now.getMinutes() + 480);
                 startDate_input.value = currentDateTime;
-                now.setMinutes(now.getMinutes() - 30);
-                const pastHalfHour = now.toISOString().slice(0, 16);
-                endDate_input.value = pastHalfHour
+                now.setMinutes(now.getMinutes() - 1440);
+                const pastOneDay = now.toISOString().slice(0, 16);
+                endDate_input.value = pastOneDay
             };
 
             const date = new Date(startDate_input.value);
@@ -652,11 +653,11 @@
 
             const date_str = new Date(endDate_input.value);
             const endDate = date_str.getFullYear() + '-' +
-                String(date.getMonth() + 1).padStart(2, '0') + '-' +
-                String(date.getDate()).padStart(2, '0') + ' ' +
-                String(date.getHours()).padStart(2, '0') + ':' +
-                String(date.getMinutes()).padStart(2, '0') + ':' +
-                String(date.getSeconds()).padStart(2, '0');
+                String(date_str.getMonth() + 1).padStart(2, '0') + '-' +
+                String(date_str.getDate()).padStart(2, '0') + ' ' +
+                String(date_str.getHours()).padStart(2, '0') + ':' +
+                String(date_str.getMinutes()).padStart(2, '0') + ':' +
+                String(date_str.getSeconds()).padStart(2, '0');
 
             getTableData(startDate,endDate).then(tb_data=>{
                 console.log("【show】",tb_data);
