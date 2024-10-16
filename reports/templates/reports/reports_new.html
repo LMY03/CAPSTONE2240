@@ -586,8 +586,6 @@
                 String(date_str.getMinutes()).padStart(2, '0') + ':' +
                 String(date_str.getSeconds()).padStart(2, '0');
 
-            console.log("startDate in getDateRange: ", startDate)
-            console.log("endDate in getDateRange: ", endDate)
             return {startDate, endDate}
         };
 
@@ -667,9 +665,9 @@
                 showtable(tb_data);
                 table_data = tb_data;
             })
-            getChartData(startDate,endDate).then(
-                ({x_labels,result_data}) =>{
-                    var labels,dataset;
+            getChartData(startDate, endDate).then(
+                ({x_labels, result_data}) =>{
+                    var labels, dataset;
                     console.log("【show】",x_labels,result_data)
                     showchart(x_labels,result_data);
                 }
@@ -681,10 +679,6 @@
             return function () {
                 let row_data = table_data[index];
                 let {startDate, endDate} = getDateRange();
-                console.log("startDate: ", startDate)
-                console.log("endDate: ", endDate)
-                // start_time, end_time, _type = "system", name = "system", nodename = "none", _class =
-            // "none", vmid = -1
                 getChartData(startDate, endDate, row_data.type,
                     row_data.name, row_data.nodename, row_data.class, row_data.vmid)
                 .then(({x_labels,result_data}) =>{

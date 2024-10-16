@@ -341,8 +341,8 @@ def get_time_window(start_datetime, end_datetime):
     start, end = min(start, end), max(start, end)
     
     time_diff = end - start
-    print(f"start: {start}")
-    print(f"end: {end}")
+    print(f"start in window: {start}")
+    print(f"end in window: {end}")
 
     if time_diff < timedelta(minutes=30):
         return "5m"
@@ -1326,7 +1326,7 @@ def formdata(request):
 
 
 def graphdata(request):
-
+    print(" ================== into graph data ================== ")
     # connect to influxdb
     influxdb_client = InfluxDBClient(url=INFLUX_ADDRESS, token=token, org=org)
     query_api = influxdb_client.query_api()
@@ -1337,17 +1337,18 @@ def graphdata(request):
 
     # get type, name, nodename, class, vmid, startdate and enddate
     type_received = request.GET.get('type', "system")
-    type_received = "vm"
     name = request.GET.get('name', "system")
     nodename = request.GET.get('nodename', "none")
     subject = request.GET.get('class', "none")
     vmid = request.GET.get('vmid', "-1")
-
-    # start_date_str = request.GET.get('start_date')
-    # end_date_str = request.GET.get('end_date')
     start_date_str = request.GET.get('start_time')
     end_date_str = request.GET.get('end_time')
+
+    print(f"type_received: {type_received}, name: {name}, nodename: {nodename}, 
+    subject: {subject}, vmid:{vmid}, start_date_str:{start_date_str}, end_date_str: {end_date_str}")
+
     window = get_time_window(start_date_str, end_date_str)
+    print(f"window: {window}")
 
     start_date = parse_form_date(start_date_str, 1)
     end_date = parse_form_date(end_date_str, 0)
