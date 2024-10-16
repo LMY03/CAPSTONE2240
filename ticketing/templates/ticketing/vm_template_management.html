@@ -143,32 +143,6 @@ VM template management
         </div>
     </div>
 
-    {% comment %} Upload CSV modal {% endcomment %}
-    <div class="modal fade" id="upload_vm_template_modal" tabindex="-1" aria-labelledby="uploadVMTemplateModal" aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="uploadVMTemplateModal">Upload a csv for VM template</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form method="POST" enctype="multipart/form-data" action="{% url 'ticketing:add_vm_template' %}">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label for="csv_file" class="form-label">Upload CSV File (Optional)</label>
-                            <input type="file" class="form-control" id="csv_file" name="csv_file" accept=".csv">
-                            <small class="form-text text-muted">Add a header on A1 and B2 named as ("VM ID", "Guacamole Protocol") that is needed for the VM template.</small>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                            <button type="submit" class="btn btn-primary">Submit</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-    
 </div>
 {% endblock content %}
 
