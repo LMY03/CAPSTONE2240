@@ -492,21 +492,23 @@
                 'columnDefs': [
                     { "type": "numeric", "targets": [5, 6, 7, 9, 11, 12, 14, 15] },
                     { "type": "percent", "targets": [8, 10, 12] },
-                    { "width": "100px", "targets": 0 },
-                    {
-                        "targets": columns.findIndex(col => col.data === 'name'),
-                        "render": function(data, type, row, meta) {
-                            return '<span class="clickable">' + data + '</span>';
-                        }
-                    }
+                    { "width": "100px", "targets": 0 }
                 ]
             });
 
-            // Add click event listener to the name column
-            $('#VMtable tbody').on('click', 'td:nth-child(' + (columns.findIndex(col => col.data === 'name') + 1) + ')', function() {
-                var data = vmTable.row($(this).parents('tr')).data();
-                var index = vmTable.row($(this).parents('tr')).index();
+            // Add click event listener to the entire row
+            $('#VMtable tbody').on('click', 'tr', function() {
+                var data = vmTable.row(this).data();
+                var index = vmTable.row(this).index();
                 
+                // Toggle selected class
+                if ($(this).hasClass('selected')) {
+                    $(this).removeClass('selected');
+                } else {
+                    vmTable.$('tr.selected').removeClass('selected');
+                    $(this).addClass('selected');
+                }
+
                 let {startDate, endDate} = getDateRange();
                 getChartData(startDate, endDate, data.type, data.name, data.nodename, data.class, data.vmid)
                     .then(({x_labels, result_data}) => {
@@ -515,6 +517,8 @@
                     });
             });
         }
+
+
         function getDateRange(){
             const startDate_input = document.getElementById('startDate');
             const endDate_input = document.getElementById('endDate');
