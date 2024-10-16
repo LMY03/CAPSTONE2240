@@ -529,11 +529,13 @@ def formdata(request):
         from(bucket: "{bucket}")
         |> range(start: {start_date}, stop: {end_date})
         |> filter(fn: (r) => r["_measurement"] == "system")
-        |> filter(fn: (r) => r["_field"] == "used")
+        |> filter(fn: (r) => r["_field"] == "used" or r["_field"] == "total")
         |> filter(fn: (r) => r["host"] == "local")
-        |> last()
+        |> group(columns: ["_field", "nodename"])
+        |> pivot(rowKey: ["nodename"], columnKey: ["_field"], valueColumn: "_value")
+        |> map(fn: (r) => ({{ r with _value: (r.used / r.total) * 100.0 }}))
         |> group()
-        |> sum(column: "_value")
+        |> mean(column: "_value")
     '''
     query_result = query_api.query(query=storage_used_query)
     for table in query_result:
