@@ -417,7 +417,7 @@
                 let newrow = document.createElement("tr");
                 td_ls.forEach(td => {
                     let newCell1 = document.createElement("td");
-                    if (td == "type") {
+                    if (td == "name") {
                         newCell1.addEventListener("click", createClickHandler(index));
                         newCell1.className = "clickable"
                     }
