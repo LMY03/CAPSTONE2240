@@ -680,8 +680,7 @@
         function createClickHandler(index) {
             return function () {
                 let row_data = table_data[index];
-                let startDate, endDate;
-                startDate, endDate = getDateRange();
+                let {startDate, endDate} = getDateRange();
                 console.log("startDate: ", startDate)
                 console.log("endDate: ", endDate)
                 // start_time, end_time, _type = "system", name = "system", nodename = "none", _class =
