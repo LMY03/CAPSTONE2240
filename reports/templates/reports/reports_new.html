@@ -512,18 +512,16 @@
                     { "width": "100px", "targets": 0 }
                 ],
                 "createdRow": function(row, data, dataIndex) {
-                    // 根据 type 列的值设置行的类
-                    $(row).addClass('type-' + data.type.toLowerCase());
+                    if (data._type === 'system') {
+                        $(row).addClass('system-row');
+                    } else if (data._type === 'node') {
+                        $(row).addClass('node-row');
+                    } else if (data._type === 'subject') {
+                        $(row).addClass('subject-row');
+                    }
                 },
                 "drawCallback": function(settings) {
-                    // 在每次重绘表格时应用样式
-                    $('#VMtable tbody tr').each(function() {
-                        var data = vmTable.row(this).data();
-                        if (data) {
-                            $(this).removeClass('type-system type-node type-subject')
-                                .addClass('type-' + data.type.toLowerCase());
-                        }
-                    });
+                    // Apply the cursor style to all rows after each draw
                     $('#VMtable tbody tr').css('cursor', 'pointer');
                 }
             });
