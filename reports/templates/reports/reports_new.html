@@ -685,9 +685,12 @@
                         const dataset = {
                             data: cpuUsageData.data
                         }
-                    }
 
-                    showchart(x_labels, [dataset]);
+                        showchart(x_labels, [dataset]);
+                    } else {
+                        showchart(x_labels, result_data);
+                    }
+                    
                 }
             );
         };
