@@ -474,46 +474,47 @@
         }
 
         function showtable2(tb_data) {
+            // Store the original data for later use
+            window.table_data = tb_data;
+
+            let columns = Object.keys(tb_data[0]).map(key => ({
+                data: key,
+                title: key
+            }));
 
             vmTable = $('table#VMtable').DataTable({
+                data: tb_data,
+                columns: columns,
                 "pagingType": "simple_numbers",
-                "autoWidth": "true",
-                "responsive": "true",
-                "select": "true",
+                "autoWidth": true,
+                "responsive": true,
+                "select": true,
                 'columnDefs': [
                     { "type": "numeric", "targets": [5, 6, 7, 9, 11, 12, 14, 15] },
                     { "type": "percent", "targets": [8, 10, 12] },
                     { "width": "100px", "targets": 0 },
-                    // { className: "tdDiskUsage", "targets": [4] },
-                    // { className: "tdMemoryUsage", "targets": [5] },
-                    // { className: "tdCpuUsage", "targets": [6] },
-                    // { className: "tdUptime", type: "natural", "targets": [9] }
+                    {
+                        "targets": columns.findIndex(col => col.data === 'name'),
+                        "render": function(data, type, row, meta) {
+                            return '<span class="clickable">' + data + '</span>';
+                        }
+                    }
                 ]
             });
 
-            // table content
-            let vmInfo = []
-            let metrics = Object.keys(tb_data[0]);
-            tb_data.forEach(item => {
-                let rowData = [];
-                columnOrder.forEach(column => {
-                    let value = null;
-                    for (let key of columnMapping[column]) {
-                        if (item.hasOwnProperty(key)) {
-                            value = item[key];
-                            break;
-                        }
-                    }
-                    rowData.push(value);
-                    
-                });
-                vmTable.row.add(rowData).draw(); 
-                vmInfo.push(rowData);
-            });        
-            // Now vmInfo contains the data in the correct order
-            vmTable.clear().rows.add(vmInfo).draw();            
+            // Add click event listener to the name column
+            $('#VMtable tbody').on('click', 'td:nth-child(' + (columns.findIndex(col => col.data === 'name') + 1) + ')', function() {
+                var data = vmTable.row($(this).parents('tr')).data();
+                var index = vmTable.row($(this).parents('tr')).index();
+                
+                let {startDate, endDate} = getDateRange();
+                getChartData(startDate, endDate, data.type, data.name, data.nodename, data.class, data.vmid)
+                    .then(({x_labels, result_data}) => {
+                        console.log("【show】", x_labels, result_data);
+                        showchart(x_labels, result_data, data.name);
+                    });
+            });
         }
-
         function getDateRange(){
             const startDate_input = document.getElementById('startDate');
             const endDate_input = document.getElementById('endDate');
