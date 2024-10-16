@@ -16,56 +16,9 @@
             padding: 20px;
         }
 
-        .header {
-            display: flex;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .time_filter {
-            /* background-color: #fff; */
-            padding: 20px;
-            border-radius: 5px;
-            float: left;
-            width: 48%;
-        }
-
-        .controls {
-            /* display: flex; */
-            gap: 40px;
-            align-items: center;
-        }
-
-        .date-inputs {
-            display: flex;
-            gap: 20px;
-        }
-
-        label {
-            display: flex;
-            align-items: center;
-            margin-bottom: 5px;
-        }
-
         input[type="date"] {
             padding: 5px;
             width: 100%;
-        }
-
-        button {
-            padding: 10px 15px;
-            background-color: #17a2b8;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background-color: #138496;
-        }
-
-        .result {
-            margin-top: 20px;
         }
 
         /* Charts */
@@ -77,64 +30,20 @@
         }
 
         /* Forms */
-        .table-container {
-            width: 100%;
-            overflow-x: auto;
-            margin-top: 10px;
-            /* position: relative; 允许绝对定位按钮 */
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th {
-            background-color: #343a40;
-            color: white;
-            padding: 10px;
-            text-align: left;
-        }
-
-        td {
-            padding: 10px;
-            border: 1px solid #ddd;
-        }
-
-        .pagination {
-            margin-top: 20px;
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .pagination button {
-            padding: 5px 10px;
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .pagination button:hover {
-            background-color: #0056b3;
-        }
-
         .clickable {
-            background-color: #17a2b8;
+            background-color: #d96a00;
         }
 
         .clickable:hover {
-            background-color: #138496;
+            background-color: #d96a00;
         }
 
         .disable {
-            background-color: gray; /* 灰色背景 */
-            color: white; /* 白色文字 */
-            cursor: not-allowed; /* 禁用手势 */
-            pointer-events: none; /* 禁止点击 */
-            opacity: 0.6; /* 半透明 */
+            background-color: gray; 
+            color: white;
+            cursor: not-allowed; 
+            pointer-events: none; 
+            opacity: 0.6; 
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -194,34 +103,35 @@
     <div class="position-relative mt-4"><button type="button" class="btn btn-sm position-absolute top-0 end-0 me-4" style="background-color: #d96a00;color: #fffafa;" onclick="exporeData()">CSV</button></div>
     
     <!-- Table -->
-    <div class="table-container">
-        <table>
-            <thead>
+    <div class="w-100 overflow-x-auto pt-5">
+        <table class="table display responsive">
+            <thead class="fw-bolder">
                 <tr>
-                    <th>TYPE</th>
-                    <th>cpu</th>
-                    <th>cpu usage</th>
-                    <th>mem</th>
-                    <th>mem usage</th>
-                    <th>storage</th>
-                    <th>storage usage</th>
-                    <th>netin</th>
-                    <th>netout</th>
-                    <th>uptime</th>
+                    <th scope="col">TYPE</th>
+                    <th scope="col">cpu</th>
+                    <th scope="col">cpu usage</th>
+                    <th scope="col">mem</th>
+                    <th scope="col">mem usage</th>
+                    <th scope="col">storage</th>
+                    <th scope="col">storage usage</th>
+                    <th scope="col">netin</th>
+                    <th scope="col">netout</th>
+                    <th scope="col">uptime</th>
                 </tr>
             </thead>
             <tbody>
                 <tr>
                     <!-- <td>Data 1.7</td> -->
+                     <!-- 如何美化表格中的數據 -->
                 </tr>
             </tbody>
         </table>
 
         <!-- Pagination -->
-        <div class="pagination">
-            <button id="prePage" onclick="prevPage()">Prev</button>
-            <div>&ensp;<span id="current_page"></span>&ensp; / &ensp;<span id="page_count">&ensp;</span>&ensp;</div>
-            <button id="nextPage" onclick="nextPage()">Next</button>
+        <div class="d-flex justify-content-end me-4">
+            <button type="button" class="btn btn-sm" style="background-color: #d96a00;color: #fffafa;" id="prePage" onclick="prevPage()">Prev</button>
+            <div class="d-flex align-items-center ms-2 me-2"><span id="current_page"></span>&ensp; / &ensp;<span id="page_count">&ensp;</span>&ensp;</div>
+            <button type="button" class="btn btn-sm" style="background-color: #d96a00;color: #fffafa;" id="nextPage" onclick="nextPage()">Next</button>
         </div>
     </div>
     <script>
