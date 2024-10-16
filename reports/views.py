@@ -356,19 +356,23 @@ def get_time_window(start_datetime, end_datetime):
         return "5d"
 
 def convert_time_format(time_value):
+    dt = None
     if isinstance(time_value, datetime):
-        return time_value.strftime("%Y-%m-%d %H:%M:%S")
+        dt = time_value
     elif isinstance(time_value, (int, float)):
-        return datetime.fromtimestamp(time_value / 1e9).strftime("%Y-%m-%d %H:%M:%S")
+        dt = datetime.fromtimestamp(time_value / 1e9)
     elif isinstance(time_value, str):
         try:
             dt = datetime.fromisoformat(time_value.replace('Z', '+00:00'))
-            return dt.strftime("%Y-%m-%d %H:%M:%S")
         except ValueError:
-            return time_value
+            dt = None
+    
+    if dt:
+        dt += timedelta(hours=8)
+        return dt.strftime("%Y-%m-%d %H:%M:%S")
     else:
         return str(time_value)
-
+    
 
 def formdata(request): 
 
