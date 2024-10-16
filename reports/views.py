@@ -576,6 +576,7 @@ def formdata(request):
         }}))
         |> group()
         |> sum(column: "_value")
+        |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0) }}))
     '''
     query_result = query_api.query(query=netin_query)
     for table in query_result:
@@ -617,6 +618,7 @@ def formdata(request):
         }}))
         |> group()
         |> sum(column: "_value")
+        |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0) }})) # unit - K
     '''
     query_result = query_api.query(query=netout_query)
     for table in query_result:
@@ -791,6 +793,7 @@ def formdata(request):
         }}))
         |> group(columns: ["nodename"])
         |> sum(column: "_value")
+        |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0) }}))
     '''
     query_result = query_api.query(query=netin_query)
     process_pernode_query_result(results, query_result, "netin")
@@ -829,6 +832,7 @@ def formdata(request):
         }}))
         |> group(columns: ["nodename"])
         |> sum(column: "_value")
+        |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0) }}))
     '''
     query_result = query_api.query(query=netout_query)
     process_pernode_query_result(results, query_result, "netout")
@@ -1037,6 +1041,7 @@ def formdata(request):
         }}))
         |> group(columns: ["class"])
         |> sum()
+        |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0) }}))
     ''' 
     query_result = query_api.query(query=netin_query)
     process_perclass_query_result(results, query_result, "netin")  
@@ -1082,6 +1087,7 @@ def formdata(request):
         }}))
         |> group(columns: ["class"])
         |> sum()
+        |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0) }}))
     ''' 
     query_result = query_api.query(query=netout_query)
     process_perclass_query_result(results, query_result, "netout")  
@@ -1221,6 +1227,7 @@ def formdata(request):
         last_value: r._value_last,
         _value: r._value_last - r._value_first
         }}))
+        |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0) }}))
     ''' 
     query_result = query_api.query(query=netin_query)
     process_indiv_query_result(results, query_result, "netin")  
@@ -1257,6 +1264,7 @@ def formdata(request):
         last_value: r._value_last,
         _value: r._value_last - r._value_first
         }}))
+        |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0) }}))
     ''' 
     query_result = query_api.query(query=netout_query)
     process_indiv_query_result(results, query_result, "netout")  
