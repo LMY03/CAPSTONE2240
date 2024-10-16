@@ -867,7 +867,7 @@ def formdata(request):
             
             
     class_filters = ' or '.join([f'r["host"] =~ /{class_name}/' for class_name in class_list])
-    class_map = ' '.join([f'if r["host"] =~ /{class_name}/ then "{class_name}" else' for class_name in class_list]) + ' "Unknown"'
+    class_map = ' '.join([f'if r["host"] =~ /{class_name}/ then "{class_name}" else' for class_name in class_list]) + ' "-"'
         
     # get template
     template_hosts_ids = get_template_hosts_ids(start_date, end_date)
@@ -1105,7 +1105,7 @@ def formdata(request):
         for class_name in class_list:
             if class_name in vmname:
                 return class_name
-        return "unknown"
+        return "-"
 
     # cpu cores
     cpus_query = f'''
