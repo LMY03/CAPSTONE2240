@@ -60,6 +60,14 @@
         #vmInfoTable_info {
             font-size: 1.1vw
         }
+
+        #VMtable tbody tr.selected {
+            background-color: #b0bed9 !important;
+        }
+
+        #VMtable tbody tr:hover {
+            background-color: #f5f5f5;
+        }
     </style>
 
 </head>
@@ -493,13 +501,16 @@
                     { "type": "numeric", "targets": [5, 6, 7, 9, 11, 12, 14, 15] },
                     { "type": "percent", "targets": [8, 10, 12] },
                     { "width": "100px", "targets": 0 }
-                ]
+                ],
+                "drawCallback": function(settings) {
+                    // Apply the cursor style to all rows after each draw
+                    $('#VMtable tbody tr').css('cursor', 'pointer');
+                }
             });
 
-            // Add click event listener to the entire row
+            // Add click event listener to the entire table body
             $('#VMtable tbody').on('click', 'tr', function() {
                 var data = vmTable.row(this).data();
-                var index = vmTable.row(this).index();
                 
                 // Toggle selected class
                 if ($(this).hasClass('selected')) {
@@ -509,13 +520,18 @@
                     $(this).addClass('selected');
                 }
 
-                let {startDate, endDate} = getDateRange();
-                getChartData(startDate, endDate, data.type, data.name, data.nodename, data.class, data.vmid)
-                    .then(({x_labels, result_data}) => {
-                        console.log("【show】", x_labels, result_data);
-                        showchart(x_labels, result_data, data.name);
-                    });
+                if (data) {  // Check if data exists (row is not empty)
+                    let {startDate, endDate} = getDateRange();
+                    getChartData(startDate, endDate, data.type, data.name, data.nodename, data.class, data.vmid)
+                        .then(({x_labels, result_data}) => {
+                            console.log("【show】", x_labels, result_data);
+                            showchart(x_labels, result_data, data.name);
+                        });
+                }
             });
+
+            // Apply the cursor style initially
+            $('#VMtable tbody tr').css('cursor', 'pointer');
         }
 
 
