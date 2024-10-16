@@ -440,22 +440,19 @@
         function showtable(tb_data) {
             // Select table
             let table = document.getElementById("VMtable2");
-            let thead = table.querySelector("thead");
             let tbody = table.querySelector("tbody");
-
-            // clear header
-            let headerRow  = thead.querySelector("thead tr");
-            headerRow .innerHTML = "";
-
-            // add header
             let td_ls = Object.keys(tb_data[0]);
+            let tr = table.querySelector("thead tr");
+            tr.innerHTML = "";
+            // let newCell1 = document.createElement("th");
+            //             newCell1.textContent = "TYPE";
+            //             tr.appendChild(newCell1);
             td_ls.forEach(td => {
                 let newCell1 = document.createElement("th");
                 newCell1.textContent = td;
                 tr.appendChild(newCell1);
             });
-
-            // clear body
+            // 数据展示
             tbody.innerHTML = "";
             tb_data.forEach((element, index) => {
                 let newrow = document.createElement("tr");
