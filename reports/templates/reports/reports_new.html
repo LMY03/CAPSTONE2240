@@ -637,10 +637,10 @@
                 const now = new Date();
                 const currentDateTime = now.toISOString().slice(0, 16);
                 now.setMinutes(now.getMinutes() + 480);
-                startDate_input.value = currentDateTime;
+                endDate_input.value = currentDateTime;
                 now.setMinutes(now.getMinutes() - 1440);
                 const pastOneDay = now.toISOString().slice(0, 16);
-                endDate_input.value = pastOneDay
+                startDate_input.value = pastOneDay
             };
 
             const date = new Date(startDate_input.value);
