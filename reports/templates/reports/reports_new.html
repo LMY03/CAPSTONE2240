@@ -442,7 +442,7 @@
         var copy_data = {};
         
         var myChart = undefined;
-        function showchart(labels, datasets, title="system"){
+        function showchart(labels, datasets, title = "system"){
             console.log("[title]: ", title)
             if (myChart === undefined){
                 const data = {
@@ -450,9 +450,14 @@
                     datasets : datasets
                 }
                 copy_data = JSON.parse(JSON.stringify(data))
+                const cpuDataset = datasets.find(ds => ds.label === 'cpu-us') || datasets[0];
+                const initialData = {
+                    labels: labels,
+                    datasets: [cpuDataset]
+                };
                 const config = {
                         type: 'line',
-                        data: data,
+                        data: initialData,
                         options: {
                             responsive: true,
                             plugins: {
@@ -489,12 +494,14 @@
                         }
                     };
                 myChart = new Chart(document.getElementById('myChart'),config);
-                return
-            };
-            myChart.data.datasets = datasets;
-            myChart.data.label = labels;
-            myChart.options.plugins.title.text = title;
-            myChart.update();
+            } else {
+                const cpuDataset = datasets.find(ds => ds.label === 'cpu-us') || datasets[0];
+                myChart.data.labels = labels;
+                myChart.data.datasets = [cpuDataset];
+                myChart.options.plugins.title.text = title;
+                myChart.update();
+            }
+
         };
 
 
@@ -677,20 +684,9 @@
             })
             getChartData(startDate, endDate).then(
                 ({x_labels, result_data}) =>{
+                    var labels, dataset;
                     console.log("【show】",x_labels,result_data)
-                    // filter "cpu usage" data
-                    const cpuUsageData = result_data.find(item => item.label === "cpu usage");
-
-                    if (cpuUsageData) {
-                        const dataset = {
-                            data: cpuUsageData.data
-                        }
-
-                        showchart(x_labels, [dataset]);
-                    } else {
-                        showchart(x_labels, result_data);
-                    }
-                    
+                    showchart(x_labels,result_data);
                 }
             );
         };
