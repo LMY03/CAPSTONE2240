@@ -512,11 +512,11 @@
                     { "width": "100px", "targets": 0 }
                 ],
                 "createdRow": function(row, data, dataIndex) {
-                    if (data.type === 'system') {
+                    if (data._type === 'system') {
                         $(row).addClass('system-row');
-                    } else if (data.type === 'node') {
+                    } else if (data._type === 'node') {
                         $(row).addClass('node-row');
-                    } else if (data.type === 'subject') {
+                    } else if (data._type === 'subject') {
                         $(row).addClass('subject-row');
                     }
                 },
