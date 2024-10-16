@@ -484,8 +484,6 @@
             // 数据展示
             tbody.innerHTML = "";
             tb_data.forEach((element, index) => {
-                console.log("element: ", element)
-                console.log("index: ", index)
                 let newrow = document.createElement("tr");
                 td_ls.forEach(td => {
                     let newCell1 = document.createElement("td");
@@ -535,9 +533,9 @@
                     rowData.push(value);
                 });
                 vmInfo.push(rowData);
-                // Now vmInfo contains the data in the correct order
-                console.log(vmInfo);
             });        
+            // Now vmInfo contains the data in the correct order
+            console.log(vmInfo);
         }
 
         function getDateRange(){
