@@ -57,6 +57,10 @@
             margin-right: auto;
         }
 
+        .system-row { background-color: rgba(0, 0, 128, 0.2); }  
+        .node-row { background-color: rgba(0, 0, 255, 0.2); }   
+        .subject-row { background-color: rgba(173, 216, 230, 0.2); } 
+
         #VMtable_length,
         #VMtable_filter,
         #VMtable_info,
@@ -507,6 +511,15 @@
                     { "type": "percent", "targets": [8, 10, 12] },
                     { "width": "100px", "targets": 0 }
                 ],
+                "createdRow": function(row, data, dataIndex) {
+                    if (data.type === 'system') {
+                        $(row).addClass('system-row');
+                    } else if (data.type === 'node') {
+                        $(row).addClass('node-row');
+                    } else if (data.type === 'subject') {
+                        $(row).addClass('subject-row');
+                    }
+                },
                 "drawCallback": function(settings) {
                     // Apply the cursor style to all rows after each draw
                     $('#VMtable tbody tr').css('cursor', 'pointer');
