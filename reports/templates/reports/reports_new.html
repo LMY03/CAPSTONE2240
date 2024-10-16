@@ -498,7 +498,7 @@
         };
 
 
-        // 更新图表显示-筛选
+        // update chart - filter
         function updateChart() {
             const checkboxes = document.querySelectorAll('.checkbox-group input[type="checkbox"]');
             const datasetsToShow = [];
@@ -507,15 +507,15 @@
                 const dataset = copy_data.datasets[index];
                 console.log(index, dataset && checkbox.checked)
 
-                // 确保数据集存在并且复选框被选中
+                // in dataset && metric being selected
                 if (dataset && checkbox.checked) {
                     datasetsToShow.push(dataset);
                 }
             });
 
-            // 处理没有选中复选框的情况
+            // if none being selected
             if (datasetsToShow.length === 0) {
-                // 如果没有复选框选中，给出默认的数据集（选择第一个数据集作为默认）
+                // use the fisrt one in dataset as default
                 if (data.datasets.length > 0) {
                     datasetsToShow.push(data.datasets[0]);
                 }
@@ -533,19 +533,18 @@
             myChart.update();
         }
 
-        // 默认显示所有折线
+        // TODO: 默认只显示cpu-us的折线
         document.querySelectorAll('.checkbox-group input[type="checkbox"]').forEach((checkbox) => {
-            checkbox.checked = true; // 默认勾选所有复选框
+            checkbox.checked = checkbox.value === 'cpu-us';
         });
         
-        // 图表-end
+        // chart-end
 
         
 
 
-        // 表格 - start
+        // form - start
 
-        
         function showtable(tb_data) {
             // todo ajax请求获取数据
             let td_ls = Object.keys(tb_data[0]);
