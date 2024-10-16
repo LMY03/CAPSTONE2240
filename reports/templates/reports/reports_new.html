@@ -505,12 +505,13 @@
                         }
                     }
                     rowData.push(value);
-                    vmTable.row.add(rowData).draw(); 
+                    
                 });
+                vmTable.row.add(rowData).draw(); 
                 vmInfo.push(rowData);
             });        
             // Now vmInfo contains the data in the correct order
-            // vmTable.clear().rows.add(vmInfo).draw();            
+            vmTable.clear().rows.add(vmInfo).draw();            
         }
 
         function getDateRange(){
