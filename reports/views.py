@@ -1373,7 +1373,6 @@ def graphdata(request):
             |> filter(fn: (r) => r["_measurement"] == "cpustat")
             |> filter(fn: (r) => r["_field"] == "cpus")
             |> aggregateWindow(every: {window}, fn: last, createEmpty: false)
-            |> map(fn: (r) => ({{ r with _value: (r._value * 100) }}))
         '''   
         query_result = query_api.query(query=cpus_query)
 
@@ -1395,6 +1394,7 @@ def graphdata(request):
             |> filter(fn: (r) => r["_measurement"] == "cpustat")
             |> filter(fn: (r) => r["_field"] == "cpu")
             |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
+            |> map(fn: (r) => ({{ r with _value: (r._value * 100.0 ) }}))
         '''
         query_result = query_api.query(query=cpu_usage_query)
         
