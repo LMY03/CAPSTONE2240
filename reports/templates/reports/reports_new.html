@@ -6,8 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reports</title>
 
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.3/css/dataTables.bootstrap5.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.js"></script>
+    <script src="https://cdn.datatables.net/1.11.3/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/plug-ins/1.11.3/sorting/natural.js"></script>
+    <script src="https://cdn.datatables.net/plug-ins/1.11.3/sorting/percent.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
 
     <style>
         body {
@@ -46,8 +54,7 @@
             opacity: 0.6; 
         }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+
 </head>
 
 <body>
@@ -100,8 +107,38 @@
         </div>
     </div>
     <div class="position-relative mt-4"><button type="button" class="btn btn-sm position-absolute top-0 end-0 me-4" style="background-color: #d96a00;color: #fffafa;" onclick="exporeData()">CSV</button></div>
+
+    <!-- Table 1 -->
+    <div style="overflow-y:scroll;height:auto;width:98%;margin:1rem;overflow-x:hidden">
+        <table id="VMtable" class="table display responsive" style="width:100%; margin: 1rem auto;">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Node</th>
+                    <th>Subject</th>
+                    <th>ID</th>
+                    <th>VM Number</th>
+                    <th>LXC Number</th>
+                    <th>CPU</th>
+                    <th>CPU Usage</th>
+                    <th>RAM</th>
+                    <th>RAM Usage</th>
+                    <th>Storage</th>
+                    <th>Storage Usage</th>
+                    <th>Network In </th>
+                    <th>Network Out </th>
+                    <th>Uptime</th>
+                </tr>
+            </thead>
     
-    <!-- Table -->
+            <tbody id="vmstatus">
+                
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Table 1 -->
     <div class="w-100 overflow-x-auto pt-5">
         <table class="table display responsive">
             <thead class="fw-bolder">
@@ -120,24 +157,28 @@
             </thead>
             <tbody>
                 <tr>
-                    <!-- <td>Data 1.7</td> -->
-                     <!-- 如何美化表格中的數據 -->
+
                 </tr>
             </tbody>
         </table>
 
-        <!-- Pagination -->
         <div class="d-flex justify-content-end me-4">
             <button type="button" class="btn btn-sm" style="background-color: #d96a00;color: #fffafa;" id="prePage" onclick="prevPage()">Prev</button>
             <div class="d-flex align-items-center ms-2 me-2"><span id="current_page"></span>&ensp; / &ensp;<span id="page_count">&ensp;</span>&ensp;</div>
             <button type="button" class="btn btn-sm" style="background-color: #d96a00;color: #fffafa;" id="nextPage" onclick="nextPage()">Next</button>
         </div>
     </div>
+
+
+
+    
     <script>
         const base_url = ""
 
         var table_data = []; //formdata
         var global_page = 1;
+
+        var vmTable;
 
         function getTableData(start_time, end_time, page = 1) {
             return new Promise((resolve, reject) => {
@@ -428,6 +469,54 @@
             })
 
         }
+
+        function showtable2(tb_data) {
+
+            vmTable = $('table#VMtable').DataTable({
+                "pagingType": "simple_numbers",
+                "autoWidth": "true",
+                "responsive": "true",
+                "select": "true",
+                'columnDefs': [
+                    { "type": "numeric", "targets": [5, 6, 7, 9, 11, 12, 14, 15] },
+                    { "type": "percent", "targets": [8, 10, 12] },
+                    // { className: "tdDiskUsage", "targets": [4] },
+                    // { className: "tdMemoryUsage", "targets": [5] },
+                    // { className: "tdCpuUsage", "targets": [6] },
+                    // { className: "tdUptime", type: "natural", "targets": [9] }
+                ]
+            });
+
+            // metrics
+            let td_ls = Object.keys(tb_data[0]);
+            console.log("td_ls: ", td_ls)
+            // let tr = document.querySelector("thead tr");
+            // tr.innerHTML = "";
+            // td_ls.forEach(td => {
+            //     let newCell1 = document.createElement("th");
+            //     newCell1.textContent = td;
+            //     tr.appendChild(newCell1);
+            // });
+            // // 数据展示
+            // let tbody = document.querySelector("tbody");
+            // tbody.innerHTML = "";
+            // tb_data.forEach((element, index) => {
+            //     let newrow = document.createElement("tr");
+            //     td_ls.forEach(td => {
+            //         let newCell1 = document.createElement("td");
+            //         if (td == "name") {
+            //             newCell1.addEventListener("click", createClickHandler(index));
+            //             newCell1.className = "clickable"
+            //         }
+            //         newCell1.textContent = element[td];
+            //         newrow.appendChild(newCell1);
+            //     });
+            //     tbody.appendChild(newrow);
+
+            })
+
+        }
+
         function getDateRange(){
             const startDate_input = document.getElementById('startDate');
             const endDate_input = document.getElementById('endDate');
