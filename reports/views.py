@@ -402,9 +402,9 @@ def formdata(request):
     result = {}
     result["type"] = "system"
     result["name"] = "system"
-    result["nodename"] = "none"
-    result["class"] = "none"
-    result["vmid"] = -1
+    result["nodename"] = "-"
+    result["class"] = "-"
+    result["vmid"] = 0
     
     # vm num
     vm_query = f'''
@@ -626,7 +626,7 @@ def formdata(request):
             result["netout"] = record.values.get('_value', 0)
 
     # uptime
-    result["uptime"] = "none"
+    result["uptime"] = "-"
     data.append(result)
 
     ################################ NODES ###############################
@@ -653,13 +653,13 @@ def formdata(request):
             value = record.values.get('_value', 0)
             if nodename not in nodes:    # node is not included yet in the list
                 nodes.append(nodename)
-                result = {"type": "node", "name": nodename, "nodename": nodename, "class": "none", "vmid": -1,
+                result = {"type": "node", "name": nodename, "nodename": nodename, "class": "-", "vmid": 0,
                         "vm number": value, "lxc number": 0,
                         "cpu": 0, "cpu usage": 0.0,
                         "mem": 0, "mem usage": 0.0,
                         "storage": 0.0, "storage usage": 0.0,
                         "netin": 0.0, "netout": 0.0,
-                        "uptime": "none"}
+                        "uptime": "-"}
                 results.append(result)
 
     # lxc num
@@ -856,13 +856,13 @@ def formdata(request):
         classname = entry.split('_')[0]
         if classname not in class_list:
             class_list.append(classname)
-            result = {"type": "subject", "name": classname, "nodename": "none", "class": classname, "vmid": -1,
+            result = {"type": "subject", "name": classname, "nodename": "-", "class": classname, "vmid": 0,
                 "vm number": 0, "lxc number": 0,
                 "cpu": 0, "cpu usage": 0.0,
                 "mem": 0, "mem usage": 0.0,
-                "storage": 0.0, "storage usage": -1,
+                "storage": 0.0, "storage usage": 0,
                 "netin": 0.0, "netout": 0.0,
-                "uptime": "none"}
+                "uptime": "-"}
             results.append(result)
             
             
@@ -1132,9 +1132,9 @@ def formdata(request):
                         "vm number": 0, "lxc number": 0,
                         "cpu": value, "cpu usage": 0.0,
                         "mem": 0, "mem usage": 0.0,
-                        "storage": 0.0, "storage usage": -1,
+                        "storage": 0.0, "storage usage": 0,
                         "netin": 0.0, "netout": 0.0,
-                        "uptime": "none"}
+                        "uptime": "-"}
                 if vm_type == "qemu":
                     result["vm number"] = 1
                 elif vm_type == "lxc":
@@ -1354,9 +1354,9 @@ def graphdata(request):
     # get type, name, nodename, class, vmid, startdate and enddate
     type_received = request.GET.get('type', "system")
     name = request.GET.get('name', "system")
-    nodename = request.GET.get('nodename', "none")
-    subject = request.GET.get('class', "none")
-    vmid = request.GET.get('vmid', "-1")
+    nodename = request.GET.get('nodename', "-")
+    subject = request.GET.get('class', "-")
+    vmid = request.GET.get('vmid', "0")
     start_date_str = request.GET.get('start_time')
     end_date_str = request.GET.get('end_time')
 
