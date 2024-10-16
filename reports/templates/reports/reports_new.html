@@ -196,21 +196,21 @@
                 xhr.onload = function () {
                     if (xhr.status === 200) {
                         let data = xhr.response;
-                        var current_page_sp = document.querySelector('#current_page');
-                        current_page_sp.textContent = data.current_page;
-                        global_page = data.current_page;
-                        var page_count_sp = document.querySelector('#page_count');
-                        page_count_sp.textContent = data.page_count;
-                        if (data.current_page === data.page_count){
-                            var next_page = document.querySelector("#nextPage");
-                            next_page.classList.add("disable");
-                            next_page.disable = true;
-                        }
-                        if (data.current_page === 1){
-                            var pre_page = document.querySelector("#prePage");
-                            pre_page.classList.add("disable");
-                            pre_page.disable = true;
-                        }
+                        // var current_page_sp = document.querySelector('#current_page');
+                        // current_page_sp.textContent = data.current_page;
+                        // global_page = data.current_page;
+                        // var page_count_sp = document.querySelector('#page_count');
+                        // page_count_sp.textContent = data.page_count;
+                        // if (data.current_page === data.page_count){
+                        //     var next_page = document.querySelector("#nextPage");
+                        //     next_page.classList.add("disable");
+                        //     next_page.disable = true;
+                        // }
+                        // if (data.current_page === 1){
+                        //     var pre_page = document.querySelector("#prePage");
+                        //     pre_page.classList.add("disable");
+                        //     pre_page.disable = true;
+                        // }
                         resolve(data.data);
 
                     } else {
