@@ -23,14 +23,14 @@ org = config('INFLUXDB_ORG')
 bucket = config('INFLUXDB_BUCKET')
 proxmox_password = config('PROXMOX_PASSWORD')
 
-# Parse date to InfluxDB compatible, fit timezone
-def parse_form_date(date_string, is_start):
+# Parse date to InfluxDB compatible
+def parse_form_date(date_string):
     print(f"date_string: {date_string}")
     try:
         dt = datetime.strptime(date_string, "%Y-%m-%d %H:%M:%S")
         adjusted_dt = dt - timedelta(hours=8)
-        if is_start:
-            adjusted_dt = adjusted_dt - timedelta(hours=8)
+        # if is_start:
+        #     adjusted_dt = adjusted_dt - timedelta(hours=8)
         return adjusted_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
     except ValueError:
         raise ValueError(f"Invalid date format: {date_string}. Expected YYYY-MM-DD")
@@ -341,11 +341,13 @@ def get_time_window(start_datetime, end_datetime):
     start, end = min(start, end), max(start, end)
     
     time_diff = end - start
-    print(f"start: {start}")
-    print(f"end: {end}")
+    print(f"start in window: {start}")
+    print(f"end in window: {end}")
 
     if time_diff < timedelta(minutes=30):
         return "5m"
+    elif time_diff <= timedelta(minutes=120):
+        return "15m"
     elif time_diff <= timedelta(days=1):
         return "30m"
     elif timedelta(days=1) < time_diff <= timedelta(days=5):
@@ -356,19 +358,23 @@ def get_time_window(start_datetime, end_datetime):
         return "5d"
 
 def convert_time_format(time_value):
+    dt = None
     if isinstance(time_value, datetime):
-        return time_value.strftime("%Y-%m-%d %H:%M:%S")
+        dt = time_value
     elif isinstance(time_value, (int, float)):
-        return datetime.fromtimestamp(time_value / 1e9).strftime("%Y-%m-%d %H:%M:%S")
+        dt = datetime.fromtimestamp(time_value / 1e9)
     elif isinstance(time_value, str):
         try:
             dt = datetime.fromisoformat(time_value.replace('Z', '+00:00'))
-            return dt.strftime("%Y-%m-%d %H:%M:%S")
         except ValueError:
-            return time_value
+            dt = None
+    
+    if dt:
+        dt += timedelta(hours=8)
+        return dt.strftime("%Y-%m-%d %H:%M:%S")
     else:
         return str(time_value)
-
+    
 
 def formdata(request): 
 
@@ -381,10 +387,10 @@ def formdata(request):
     start_time_str = request.GET.get('start_time')
     end_time_str = request.GET.get('end_time')
     # TODO: change this. Now is date
-    start_date = parse_form_date(start_time_str, 1)
-    end_date = parse_form_date(end_time_str, 0)
-    print(f"start_date:{start_date}")
-    print(f"end_date:{end_date}")
+    start_date = parse_form_date(start_time_str)
+    end_date = parse_form_date(end_time_str)
+    print(f"start_date in form data:{start_date}")
+    print(f"end_date in form data:{end_date}")
     
     # get template vm
     template_hosts_ids = get_template_hosts_ids(start_date, end_date)
@@ -396,9 +402,9 @@ def formdata(request):
     result = {}
     result["type"] = "system"
     result["name"] = "system"
-    result["nodename"] = "none"
-    result["class"] = "none"
-    result["vmid"] = -1
+    result["nodename"] = "-"
+    result["class"] = "-"
+    result["vmid"] = 0
     
     # vm num
     vm_query = f'''
@@ -523,11 +529,13 @@ def formdata(request):
         from(bucket: "{bucket}")
         |> range(start: {start_date}, stop: {end_date})
         |> filter(fn: (r) => r["_measurement"] == "system")
-        |> filter(fn: (r) => r["_field"] == "used")
+        |> filter(fn: (r) => r["_field"] == "used" or r["_field"] == "total")
         |> filter(fn: (r) => r["host"] == "local")
-        |> last()
+        |> group(columns: ["_field", "nodename"])
+        |> pivot(rowKey: ["nodename"], columnKey: ["_field"], valueColumn: "_value")
+        |> map(fn: (r) => ({{ r with _value: (r.used / r.total) * 100.0 }}))
         |> group()
-        |> sum(column: "_value")
+        |> mean(column: "_value")
     '''
     query_result = query_api.query(query=storage_used_query)
     for table in query_result:
@@ -568,6 +576,7 @@ def formdata(request):
         }}))
         |> group()
         |> sum(column: "_value")
+        |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0) }}))
     '''
     query_result = query_api.query(query=netin_query)
     for table in query_result:
@@ -609,6 +618,7 @@ def formdata(request):
         }}))
         |> group()
         |> sum(column: "_value")
+        |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0) }}))
     '''
     query_result = query_api.query(query=netout_query)
     for table in query_result:
@@ -616,7 +626,7 @@ def formdata(request):
             result["netout"] = record.values.get('_value', 0)
 
     # uptime
-    result["uptime"] = "none"
+    result["uptime"] = "-"
     data.append(result)
 
     ################################ NODES ###############################
@@ -643,13 +653,13 @@ def formdata(request):
             value = record.values.get('_value', 0)
             if nodename not in nodes:    # node is not included yet in the list
                 nodes.append(nodename)
-                result = {"type": "node", "name": nodename, "nodename": nodename, "class": "none", "vmid": -1,
+                result = {"type": "node", "name": nodename, "nodename": nodename, "class": "-", "vmid": 0,
                         "vm number": value, "lxc number": 0,
                         "cpu": 0, "cpu usage": 0.0,
                         "mem": 0, "mem usage": 0.0,
                         "storage": 0.0, "storage usage": 0.0,
                         "netin": 0.0, "netout": 0.0,
-                        "uptime": "none"}
+                        "uptime": "-"}
                 results.append(result)
 
     # lxc num
@@ -783,6 +793,7 @@ def formdata(request):
         }}))
         |> group(columns: ["nodename"])
         |> sum(column: "_value")
+        |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0) }}))
     '''
     query_result = query_api.query(query=netin_query)
     process_pernode_query_result(results, query_result, "netin")
@@ -821,6 +832,7 @@ def formdata(request):
         }}))
         |> group(columns: ["nodename"])
         |> sum(column: "_value")
+        |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0) }}))
     '''
     query_result = query_api.query(query=netout_query)
     process_pernode_query_result(results, query_result, "netout")
@@ -844,18 +856,18 @@ def formdata(request):
         classname = entry.split('_')[0]
         if classname not in class_list:
             class_list.append(classname)
-            result = {"type": "subject", "name": classname, "nodename": "none", "class": classname, "vmid": -1,
+            result = {"type": "subject", "name": classname, "nodename": "-", "class": classname, "vmid": 0,
                 "vm number": 0, "lxc number": 0,
                 "cpu": 0, "cpu usage": 0.0,
                 "mem": 0, "mem usage": 0.0,
-                "storage": 0.0, "storage usage": -1,
+                "storage": 0.0, "storage usage": 0,
                 "netin": 0.0, "netout": 0.0,
-                "uptime": "none"}
+                "uptime": "-"}
             results.append(result)
             
             
     class_filters = ' or '.join([f'r["host"] =~ /{class_name}/' for class_name in class_list])
-    class_map = ' '.join([f'if r["host"] =~ /{class_name}/ then "{class_name}" else' for class_name in class_list]) + ' "Unknown"'
+    class_map = ' '.join([f'if r["host"] =~ /{class_name}/ then "{class_name}" else' for class_name in class_list]) + ' "-"'
         
     # get template
     template_hosts_ids = get_template_hosts_ids(start_date, end_date)
@@ -1029,6 +1041,7 @@ def formdata(request):
         }}))
         |> group(columns: ["class"])
         |> sum()
+        |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0) }}))
     ''' 
     query_result = query_api.query(query=netin_query)
     process_perclass_query_result(results, query_result, "netin")  
@@ -1074,6 +1087,7 @@ def formdata(request):
         }}))
         |> group(columns: ["class"])
         |> sum()
+        |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0) }}))
     ''' 
     query_result = query_api.query(query=netout_query)
     process_perclass_query_result(results, query_result, "netout")  
@@ -1091,7 +1105,7 @@ def formdata(request):
         for class_name in class_list:
             if class_name in vmname:
                 return class_name
-        return "unknown"
+        return "-"
 
     # cpu cores
     cpus_query = f'''
@@ -1118,9 +1132,9 @@ def formdata(request):
                         "vm number": 0, "lxc number": 0,
                         "cpu": value, "cpu usage": 0.0,
                         "mem": 0, "mem usage": 0.0,
-                        "storage": 0.0, "storage usage": -1,
+                        "storage": 0.0, "storage usage": 0,
                         "netin": 0.0, "netout": 0.0,
-                        "uptime": "none"}
+                        "uptime": "-"}
                 if vm_type == "qemu":
                     result["vm number"] = 1
                 elif vm_type == "lxc":
@@ -1213,6 +1227,7 @@ def formdata(request):
         last_value: r._value_last,
         _value: r._value_last - r._value_first
         }}))
+        |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0) }}))
     ''' 
     query_result = query_api.query(query=netin_query)
     process_indiv_query_result(results, query_result, "netin")  
@@ -1249,6 +1264,7 @@ def formdata(request):
         last_value: r._value_last,
         _value: r._value_last - r._value_first
         }}))
+        |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0) }}))
     ''' 
     query_result = query_api.query(query=netout_query)
     process_indiv_query_result(results, query_result, "netout")  
@@ -1326,7 +1342,7 @@ def formdata(request):
 
 
 def graphdata(request):
-
+    print(" ================== into graph data ================== ")
     # connect to influxdb
     influxdb_client = InfluxDBClient(url=INFLUX_ADDRESS, token=token, org=org)
     query_api = influxdb_client.query_api()
@@ -1337,20 +1353,20 @@ def graphdata(request):
 
     # get type, name, nodename, class, vmid, startdate and enddate
     type_received = request.GET.get('type', "system")
-    type_received = "vm"
     name = request.GET.get('name', "system")
-    nodename = request.GET.get('nodename', "none")
-    subject = request.GET.get('class', "none")
-    vmid = request.GET.get('vmid', "-1")
-
-    # start_date_str = request.GET.get('start_date')
-    # end_date_str = request.GET.get('end_date')
+    nodename = request.GET.get('nodename', "-")
+    subject = request.GET.get('class', "-")
+    vmid = request.GET.get('vmid', "0")
     start_date_str = request.GET.get('start_time')
     end_date_str = request.GET.get('end_time')
-    window = get_time_window(start_date_str, end_date_str)
 
-    start_date = parse_form_date(start_date_str, 1)
-    end_date = parse_form_date(end_date_str, 0)
+    print(f"type_received: {type_received}, name: {name}, nodename: {nodename}, subject: {subject}, vmid:{vmid}, start_date_str:{start_date_str}, end_date_str: {end_date_str}")
+
+    window = get_time_window(start_date_str, end_date_str)
+    print(f"window: {window}")
+
+    start_date = parse_form_date(start_date_str)
+    end_date = parse_form_date(end_date_str)
 
     
     print(f"window: {window}")
@@ -1388,6 +1404,7 @@ def graphdata(request):
             |> filter(fn: (r) => r["_measurement"] == "cpustat")
             |> filter(fn: (r) => r["_field"] == "cpu")
             |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
+            |> map(fn: (r) => ({{ r with _value: (r._value * 100.0 ) }}))
         '''
         query_result = query_api.query(query=cpu_usage_query)
         
@@ -1418,6 +1435,7 @@ def graphdata(request):
             |> filter(fn: (r) => r["_measurement"] == "memory")
             |> filter(fn: (r) => r["_field"] == "memtotal")
             |> aggregateWindow(every: {window}, fn: last, createEmpty: false)
+            |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 /1024.0 / 1024.0 ) }}))
         '''
         query_result = query_api.query(query=mem_query)
         
@@ -1471,6 +1489,7 @@ def graphdata(request):
             |> filter(fn: (r) => r["_field"] == "total")
             |> filter(fn: (r) => r["host"] == "local")
             |> aggregateWindow(every: {window}, fn: last, createEmpty: false)
+            |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 /1024.0 / 1024.0 ) }}))
         '''
         query_result = query_api.query(query=storage_query)
         
@@ -1524,6 +1543,7 @@ def graphdata(request):
             |> filter(fn: (r) => r["_measurement"] == "system")
             |> filter(fn: (r) => r["_field"] == "netin")
             |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
+            |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 ) }}))
         '''
         query_result = query_api.query(query=netin_query)
         
@@ -1544,6 +1564,7 @@ def graphdata(request):
             |> filter(fn: (r) => r["_measurement"] == "system")
             |> filter(fn: (r) => r["_field"] == "netout")
             |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
+            |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 ) }}))
         '''
         query_result = query_api.query(query=netout_query)
         

@@ -5,303 +5,186 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reports</title>
+
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.11.3/css/dataTables.bootstrap5.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.datatables.net/1.11.3/js/jquery.dataTables.js"></script>
+    <script src="https://cdn.datatables.net/1.11.3/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/plug-ins/1.11.3/sorting/natural.js"></script>
+    <script src="https://cdn.datatables.net/plug-ins/1.11.3/sorting/percent.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+
     <style>
         body {
             font-family: Arial, sans-serif;
-            margin: 20px;
-            padding: 20px;
-            background-color: #e1deded7;
-        }
-
-        .header {
-            display: flex;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-        }
-
-        .time_filter {
-            /* background-color: #fff; */
-            padding: 20px;
-            border-radius: 5px;
-            float: left;
-            width: 48%;
-        }
-
-        .term_filter {
-            /* background-color: #fff; */
-            padding: 20px;
-            border-radius: 5px;
-            /* box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1); */
-            float: right;
-            width: 48%;
-            text-align: center;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .controls {
-            /* display: flex; */
-            gap: 40px;
-            align-items: center;
-        }
-
-        .date-inputs {
-            display: flex;
-            gap: 20px;
-        }
-
-        label {
-            display: flex;
-            align-items: center;
-            margin-bottom: 5px;
+            padding: 5px;
         }
 
         input[type="date"] {
             padding: 5px;
-            width: 100%;
-        }
-
-        button {
-            padding: 10px 15px;
-            background-color: #17a2b8;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background-color: #138496;
-        }
-
-        .result {
-            margin-top: 20px;
-        }
-
-        .checkbox-group {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .checkbox-row {
-            display: flex;
-            gap: 20px;
-        }
-
-        .checkbox-group h3 {
-            margin: 0;
-            text-align: left;
+            width: 90%;
         }
 
         /* Charts */
         #myChart {
-            margin-top: 20px;
-            max-width: 95%;
-            max-height: 400px;
+            max-width: 100%;
+            max-height: 300px;
             position: relative;
-        }
-
-        .echat_img {
-            position: relative;
-        }
-
-        .chart-button {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            padding: 5px 10px;
-            background-color: #17a2b8;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .chart-button:hover {
-            background-color: #138496;
         }
 
         /* Forms */
-        .expore {
-            position: relative;
-            margin-top: 40px;
-        }
-
-        .table-container {
-            width: 100%;
-            overflow-x: auto;
-            margin-top: 10px;
-            /* position: relative; 允许绝对定位按钮 */
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th {
-            background-color: #343a40;
-            color: white;
-            padding: 10px;
-            text-align: left;
-        }
-
-        td {
-            padding: 10px;
-            border: 1px solid #ddd;
-        }
-
-        .table-button {
-            position: absolute;
-            top: -20px;
-            right: 10px;
-            padding: 5px 10px;
-            background-color: #17a2b8;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            z-index: 100;
-        }
-
-        .table-button:hover {
-            background-color: #138496;
-        }
-
-        .pagination {
-            margin-top: 20px;
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .pagination button {
-            padding: 5px 10px;
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .pagination button:hover {
-            background-color: #0056b3;
-        }
-
         .clickable {
-            background-color: #17a2b8;
+            background-color: #d96a00;
         }
 
         .clickable:hover {
-            background-color: #138496;
+            background-color: #d96a00;
         }
 
         .disable {
-            background-color: gray; /* 灰色背景 */
-            color: white; /* 白色文字 */
-            cursor: not-allowed; /* 禁用手势 */
-            pointer-events: none; /* 禁止点击 */
-            opacity: 0.6; /* 半透明 */
+            background-color: gray; 
+            color: white;
+            cursor: not-allowed; 
+            pointer-events: none; 
+            opacity: 0.6; 
+        }
+
+        #VMtable_length,
+        #VMtable_filter,
+        #VMtable_info,
+        #vmInfoTable_length,
+        #vmInfoTable_filter,
+        #vmInfoTable_info {
+            font-size: 1.1vw
         }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+
 </head>
 
 <body>
-    <div class="header">
-        <!-- <h4 style="text-align: center;">条件筛选</h4> -->
-        <div class="time_filter">
-            <div class="controls">
-                <div class="date-inputs">
-                    <div style="width:50%">
-                        <label for="startDate">Start Date:</label>
-                        <input type="datetime-local" id="startDate">
-                    </div>
-                    <div style="width:50%">
-                        <label for="endDate">End Date:</label>
-                        <input type="datetime-local" id="endDate">
-                    </div>
+    <!-- Filter Conditions -->
+    <div class="d-flex">
+        
+        <!-- Select Datetime -->
+        <div class="w-50 px-2 py-2 m-2 border">
+            <div class="d-flex justify-content-between">
+                <div class="w-50">
+                    <label class="d-flex fw-bolder" for="startDate">Start Date:</label>
+                    <input class="form-control w-70" type="datetime-local" id="startDate">
+                </div>
+                <div class="w-50">
+                    <label class="d-flex fw-bolder" for="endDate">End Date:</label>
+                    <input class="form-control w-70" type="datetime-local" id="endDate">
                 </div>
                 <br>
-                <button onclick="show()">Filter</button>
-
-
+                <div class="d-flex justify-content-end ms-2">
+                    <button type="button" class="btn btn-sm" style="background-color: #d96a00;color: #fffafa; font-size: 0.8rem;" onclick="show()">Filter</button>
+                </div>
             </div>
-
         </div>
-        <div class="term_filter">
-            <div class="checkbox-group">
-                <h3>Metrics</h3>
 
-                <div class="checkbox-row">
-                    <label><input type="checkbox" value="选项1" onchange="updateChart()">time</label>
-                    <label><input type="checkbox" value="选项2" onchange="updateChart()">cpu</label>
-                    <label><input type="checkbox" value="选项3" onchange="updateChart()">cpu-us</label>
-                    <label><input type="checkbox" value="选项4" onchange="updateChart()">mem</label>
-
+        <div class="w-50 p-2 m-2 d-flex justify-content-center align-items-center border">
+            <div class="checkbox-group d-flex flex-column gap-2">
+                <div class="d-flex gap-4">
+                    <label class="form-check-label"><input class="form-check-input me-1" type="checkbox" value="cpu" onchange="updateChart()">cpu</label>
+                    <label class="form-check-label"><input class="form-check-input me-1" type="checkbox" value="cpu-us" onchange="updateChart()">cpu-us</label>
+                    <label class="form-check-label"><input class="form-check-input me-1" type="checkbox" value="mem" onchange="updateChart()">mem</label>
+                    <label class="form-check-label"><input class="form-check-input me-1" type="checkbox" value="mem-us" onchange="updateChart()">mem-us</label>
                 </div>
-                <div class="checkbox-row">
-                    <label><input type="checkbox" value="选项5" onchange="updateChart()">mem-us</label>
-                    <label><input type="checkbox" value="选项6" onchange="updateChart()">storage</label>
-                    <label><input type="checkbox" value="选项7" onchange="updateChart()">storage-us</label>
-                    <label><input type="checkbox" value="选项8" onchange="updateChart()">netin</label>
-
-                </div>
-                <div class="checkbox-row">
-                    <label><input type="checkbox" value="选项9" onchange="updateChart()"> netout</label>
+                <div class="d-flex gap-4">
+                    <label class="form-check-label"><input class="form-check-input me-1" type="checkbox" value="netin" onchange="updateChart()">netin</label>
+                    <label class="form-check-label"><input class="form-check-input me-1" type="checkbox" value="netout" onchange="updateChart()"> netout</label>  
+                    <label class="form-check-label"><input class="form-check-input me-1" type="checkbox" value="storage" onchange="updateChart()">storage</label>
+                    <label class="form-check-label"><input class="form-check-input me-1" type="checkbox" value="storage-us" onchange="updateChart()">storage-us</label>
                 </div>
             </div>
         </div>
     </div>
-    <div class="echat_img">
-        <button class="chart-button" onclick="exporeDataChart()">CSV</button>
 
-        <canvas id="myChart"></canvas>
+    <!-- Graph -->
+    <div class="position-relative">
+        <button type="button" class="btn btn-sm position-absolute top-0 end-0 mt-4 me-4" style="background-color: #d96a00;color: #fffafa;" onclick="exporeDataChart()">CSV</button>
+
+        <div class="m-2 d-flex justify-content-center align-items-center">
+            <canvas class="border" id="myChart"></canvas>
+        </div>
     </div>
-    <div class="expore"><button class="table-button" onclick="exporeData()">CSV</button></div>
-    <div class="table-container">
-        <!-- <button class="table-button" onclick="handleTableButtonClick()">CSV</button> -->
-        <table>
+    
+    <!-- <div class="position-relative mt-4"><button type="button" class="btn btn-sm position-absolute top-0 end-0 me-4" style="background-color: #d96a00;color: #fffafa;" onclick="exporeData()">CSV</button></div> -->
+    <!-- Table 1 -->
+    <div style="overflow-y:scroll;height:auto;width:100%;overflow-x:auto">
+        <table id="VMtable" class="table display responsive" style="width:100%; margin: 1rem auto;">
             <thead>
                 <tr>
-                    <th>TYPE</th>
-                    <th>cpu</th>
-                    <th>cpu usage</th>
-                    <th>mem</th>
-                    <th>mem usage</th>
-                    <th>storage</th>
-                    <th>storage usage</th>
-                    <th>netin</th>
-                    <th>netout</th>
-                    <th>uptime</th>
+                    <th>Name</th>
+                    <th>Type</th>
+                    <th>Node</th>
+                    <th>Subject</th>
+                    <th>ID</th>
+                    <th>VM Number</th>
+                    <th>LXC Number</th>
+                    <th>CPU</th>
+                    <th>CPU Usage</th>
+                    <th>RAM</th>
+                    <th>RAM Usage</th>
+                    <th>Storage</th>
+                    <th>Storage Usage</th>
+                    <th>Network In </th>
+                    <th>Network Out </th>
+                    <th>Uptime</th>
                 </tr>
             </thead>
-            <tbody>
-                <tr>
-                    <!-- <td>数据1.7</td> -->
-                </tr>
+    
+            <tbody id="vmstatus">
+                
             </tbody>
         </table>
-
-        <!-- 分页按钮 -->
-        <div class="pagination">
-            <button id="prePage" onclick="prevPage()">上一页</button>
-            <div>当前第&ensp;<span id="current_page"></span>&ensp;页/总共&ensp;<span id="page_count">&ensp;</span>&ensp;页</div>
-            <button id="nextPage" onclick="nextPage()">下一页</button>
-        </div>
     </div>
+
+    
     <script>
         const base_url = ""
 
         var table_data = []; //formdata
         var global_page = 1;
 
-        function getTableData(startDate, end_time,page=1) {
+        var vmTable;
+
+        // Define the order of columns as they appear in the table
+        const columnOrder = [
+            "Name", "Type", "Node", "Subject", "ID", "VM Number", "LXC Number", "CPU", 
+            "CPU Usage", "RAM", "RAM Usage", "Storage", "Storage Usage", "Network In", 
+            "Network Out", "Uptime"
+        ];
+
+        // Create a mapping between the table column names and the possible keys in tb_data
+        const columnMapping = {
+            "Name": ["name", "Name"],
+            "Type": ["type", "Type"],
+            "Node": ["nodename", "Node"],
+            "Subject": ["class", "Subject"],
+            "ID": ["vmid", "ID"],
+            "VM Number": ["vm number", "VM Number"],
+            "LXC Number": ["lxc number", "LXC Number"],
+            "CPU": ["cpu", "CPU"],
+            "CPU Usage": ["cpu usage", "CPU Usage"],
+            "RAM": ["mem", "RAM"],
+            "RAM Usage": ["mem usage", "RAM Usage"],
+            "Storage": ["storage", "Storage"],
+            "Storage Usage": ["storage usage", "Storage Usage"],
+            "Network In": ["netin", "Network In"],
+            "Network Out": ["netout", "Network Out"],
+            "Uptime": ["uptime", "Uptime"]
+        };
+            
+
+        function getTableData(start_time, end_time, page = 1) {
             return new Promise((resolve, reject) => {
                 var params = {
-                    "start_time": startDate,
+                    "start_time": start_time,
                     "end_time": end_time,
                     "page" : page
                 };
@@ -319,21 +202,21 @@
                 xhr.onload = function () {
                     if (xhr.status === 200) {
                         let data = xhr.response;
-                        var current_page_sp = document.querySelector('#current_page');
-                        current_page_sp.textContent = data.current_page;
-                        global_page = data.current_page;
-                        var page_count_sp = document.querySelector('#page_count');
-                        page_count_sp.textContent = data.page_count;
-                        if (data.current_page === data.page_count){
-                            var next_page = document.querySelector("#nextPage");
-                            next_page.classList.add("disable");
-                            next_page.disable = true;
-                        }
-                        if (data.current_page === 1){
-                            var pre_page = document.querySelector("#prePage");
-                            pre_page.classList.add("disable");
-                            pre_page.disable = true;
-                        }
+                        // var current_page_sp = document.querySelector('#current_page');
+                        // current_page_sp.textContent = data.current_page;
+                        // global_page = data.current_page;
+                        // var page_count_sp = document.querySelector('#page_count');
+                        // page_count_sp.textContent = data.page_count;
+                        // if (data.current_page === data.page_count){
+                        //     var next_page = document.querySelector("#nextPage");
+                        //     next_page.classList.add("disable");
+                        //     next_page.disable = true;
+                        // }
+                        // if (data.current_page === 1){
+                        //     var pre_page = document.querySelector("#prePage");
+                        //     pre_page.classList.add("disable");
+                        //     pre_page.disable = true;
+                        // }
                         resolve(data.data);
 
                     } else {
@@ -350,8 +233,7 @@
         }
 
         function prevPage(){
-            let startDate,endDate;
-            startDate,endDate = getDateRange();
+            let {startDate, endDate} = getDateRange();
             getTableData(startDate,endDate,global_page-1).then(tb_data=>{
                 showtable(tb_data);
                 table_data = tb_data;
@@ -359,8 +241,7 @@
         };
 
         function nextPage(){
-            let startDate,endDate;
-            startDate,endDate = getDateRange();
+            let {startDate, endDate} = getDateRange();
             getTableData(startDate,endDate,global_page+1).then(tb_data=>{
                 showtable(tb_data);
                 table_data = tb_data;
@@ -376,7 +257,7 @@
                     "nodename": nodename,
                     "class": _class,
                     "vmid": vmid,
-                    "start_time": start_time, // 确保这里使用 start_time 参数
+                    "start_time": start_time, 
                     "end_time": end_time
                 };
 
@@ -397,18 +278,21 @@
                         let x_labels = [];
 
                         data.forEach((element, index) => {
-                            x_labels.push(data[index].time); // 获取每个时间戳
+                            x_labels.push(data[index].time); // timestamp
                             let keys = Object.keys(element);
                             keys.forEach(e => {
-                                if (e in label_data) {
-                                    label_data[e].push(element[e]); // 如果已存在则推入数据
+                                if (e !== "time") {
+                                    if (e in label_data) {
+                                    label_data[e].push(element[e]); 
                                 } else {
-                                    label_data[e] = [element[e]]; // 如果不存在则初始化数组
+                                    label_data[e] = [element[e]]; 
+                                }
                                 }
                             });
                         });
 
-                        let result_data = []; // 这里需要在循环外定义
+                        let result_data = []; 
+                        console.log("result_data in get chart data: ", result_data)
                         let keys = Object.keys(label_data);
                         keys.forEach(e => {
                             result_data.push({
@@ -423,17 +307,17 @@
                         resolve({
                             x_labels,
                             result_data
-                        }); // 使用 resolve 返回结果
+                        }); 
                     } else {
-                        reject(new Error("数据接口异常")); // 请求错误时拒绝 Promise
+                        reject(new Error("数据接口异常")); 
                     }
                 };
 
                 xhr.onerror = function () {
-                    reject(new Error("请求失败")); // 网络错误处理
+                    reject(new Error("请求失败")); 
                 };
 
-                xhr.send(); // 发送请求
+                xhr.send(); 
             });
         }
 
@@ -444,19 +328,36 @@
         var copy_data = {};
         
         var myChart = undefined;
-        function showchart(labels,datasets){
+        function showchart(labels, datasets, title = "system"){
+            console.log("[title]: ", title)
             if (myChart === undefined){
                 const data = {
                     labels: labels,
                     datasets : datasets
                 }
                 copy_data = JSON.parse(JSON.stringify(data))
+                const cpuDataset = datasets.find(ds => ds.label === 'cpu usage') || datasets[0];
+                const initialData = {
+                    labels: labels,
+                    datasets: [cpuDataset]
+                };
                 const config = {
                         type: 'line',
-                        data: data,
+                        data: initialData,
                         options: {
                             responsive: true,
                             plugins: {
+                                title: {
+                                    display: true,
+                                    text: title,
+                                    font: {
+                                        size: 20
+                                    },
+                                    padding: {
+                                        top: 10,
+                                        bottom: 30
+                                    }
+                                },
                                 legend: {
                                     display: true,
                                     position: 'top',
@@ -479,15 +380,18 @@
                         }
                     };
                 myChart = new Chart(document.getElementById('myChart'),config);
-                return
-            };
-            myChart.data.datasets = datasets;
-            myChart.data.label = labels;
-            myChart.update();
+            } else {
+                const cpuDataset = datasets.find(ds => ds.label === 'cpu usage') || datasets[0];
+                myChart.data.labels = labels;
+                myChart.data.datasets = [cpuDataset];
+                myChart.options.plugins.title.text = title;
+                myChart.update();
+            }
+
         };
 
 
-        // 更新图表显示-筛选
+        // update chart - filter
         function updateChart() {
             const checkboxes = document.querySelectorAll('.checkbox-group input[type="checkbox"]');
             const datasetsToShow = [];
@@ -496,15 +400,15 @@
                 const dataset = copy_data.datasets[index];
                 console.log(index, dataset && checkbox.checked)
 
-                // 确保数据集存在并且复选框被选中
+                // in dataset && metric being selected
                 if (dataset && checkbox.checked) {
                     datasetsToShow.push(dataset);
                 }
             });
 
-            // 处理没有选中复选框的情况
+            // if none being selected
             if (datasetsToShow.length === 0) {
-                // 如果没有复选框选中，给出默认的数据集（选择第一个数据集作为默认）
+                // use the fisrt one in dataset as default
                 if (data.datasets.length > 0) {
                     datasetsToShow.push(data.datasets[0]);
                 }
@@ -522,23 +426,25 @@
             myChart.update();
         }
 
-        // 默认显示所有折线
+        // TODO: 默认只显示cpu-us的折线
         document.querySelectorAll('.checkbox-group input[type="checkbox"]').forEach((checkbox) => {
-            checkbox.checked = true; // 默认勾选所有复选框
+            checkbox.checked = checkbox.value === 'cpu-us';
         });
         
-        // 图表-end
+        // chart-end
 
         
 
 
-        // 表格 - start
+        // form - start
 
-        
         function showtable(tb_data) {
-            // todo ajax请求获取数据
+            // Select table
+            let table = document.getElementById("VMtable2");
+            let tbody = table.querySelector("tbody");
             let td_ls = Object.keys(tb_data[0]);
-            let tr = document.querySelector("thead tr");
+            console.log("td_ls: ", td_ls)
+            let tr = table.querySelector("thead tr");
             tr.innerHTML = "";
             // let newCell1 = document.createElement("th");
             //             newCell1.textContent = "TYPE";
@@ -549,13 +455,12 @@
                 tr.appendChild(newCell1);
             });
             // 数据展示
-            let tbody = document.querySelector("tbody");
             tbody.innerHTML = "";
             tb_data.forEach((element, index) => {
                 let newrow = document.createElement("tr");
                 td_ls.forEach(td => {
                     let newCell1 = document.createElement("td");
-                    if (td == "type") {
+                    if (td == "name") {
                         newCell1.addEventListener("click", createClickHandler(index));
                         newCell1.className = "clickable"
                     }
@@ -567,6 +472,47 @@
             })
 
         }
+
+        function showtable2(tb_data) {
+
+            vmTable = $('table#VMtable').DataTable({
+                "pagingType": "simple_numbers",
+                "autoWidth": "true",
+                "responsive": "true",
+                "select": "true",
+                'columnDefs': [
+                    { "type": "numeric", "targets": [5, 6, 7, 9, 11, 12, 14, 15] },
+                    { "type": "percent", "targets": [8, 10, 12] },
+                    { "width": "100px", "targets": 0 },
+                    // { className: "tdDiskUsage", "targets": [4] },
+                    // { className: "tdMemoryUsage", "targets": [5] },
+                    // { className: "tdCpuUsage", "targets": [6] },
+                    // { className: "tdUptime", type: "natural", "targets": [9] }
+                ]
+            });
+
+            // table content
+            let vmInfo = []
+            let metrics = Object.keys(tb_data[0]);
+            tb_data.forEach(item => {
+                let rowData = [];
+                columnOrder.forEach(column => {
+                    let value = null;
+                    for (let key of columnMapping[column]) {
+                        if (item.hasOwnProperty(key)) {
+                            value = item[key];
+                            break;
+                        }
+                    }
+                    rowData.push(value);
+                    vmTable.row.add(rowData).draw(); 
+                });
+                vmInfo.push(rowData);
+            });        
+            // Now vmInfo contains the data in the correct order
+            // vmTable.clear().rows.add(vmInfo).draw();            
+        }
+
         function getDateRange(){
             const startDate_input = document.getElementById('startDate');
             const endDate_input = document.getElementById('endDate');
@@ -580,12 +526,13 @@
 
             const date_str = new Date(endDate_input.value);
             const endDate = date_str.getFullYear() + '-' +
-                String(date.getMonth() + 1).padStart(2, '0') + '-' +
-                String(date.getDate()).padStart(2, '0') + ' ' +
-                String(date.getHours()).padStart(2, '0') + ':' +
-                String(date.getMinutes()).padStart(2, '0') + ':' +
-                String(date.getSeconds()).padStart(2, '0');
-            return startDate,endDate
+                String(date_str.getMonth() + 1).padStart(2, '0') + '-' +
+                String(date_str.getDate()).padStart(2, '0') + ' ' +
+                String(date_str.getHours()).padStart(2, '0') + ':' +
+                String(date_str.getMinutes()).padStart(2, '0') + ':' +
+                String(date_str.getSeconds()).padStart(2, '0');
+
+            return {startDate, endDate}
         };
 
         // 数据导出
@@ -635,11 +582,12 @@
 
             if (!startDate_input.value || !endDate_input.value) {
                 const now = new Date();
+                now.setMinutes(now.getMinutes() + 480);
                 const currentDateTime = now.toISOString().slice(0, 16);
-                startDate_input.value = currentDateTime;
-                now.setMinutes(now.getMinutes() - 30);
-                const pastHalfHour = now.toISOString().slice(0, 16);
-                endDate_input.value = pastHalfHour
+                endDate_input.value = currentDateTime;
+                now.setMinutes(now.getMinutes() - 1440);
+                const pastOneDay = now.toISOString().slice(0, 16);
+                startDate_input.value = pastOneDay
             };
 
             const date = new Date(startDate_input.value);
@@ -652,21 +600,22 @@
 
             const date_str = new Date(endDate_input.value);
             const endDate = date_str.getFullYear() + '-' +
-                String(date.getMonth() + 1).padStart(2, '0') + '-' +
-                String(date.getDate()).padStart(2, '0') + ' ' +
-                String(date.getHours()).padStart(2, '0') + ':' +
-                String(date.getMinutes()).padStart(2, '0') + ':' +
-                String(date.getSeconds()).padStart(2, '0');
+                String(date_str.getMonth() + 1).padStart(2, '0') + '-' +
+                String(date_str.getDate()).padStart(2, '0') + ' ' +
+                String(date_str.getHours()).padStart(2, '0') + ':' +
+                String(date_str.getMinutes()).padStart(2, '0') + ':' +
+                String(date_str.getSeconds()).padStart(2, '0');
 
-            getTableData(startDate,endDate).then(tb_data=>{
-                console.log("【show】",tb_data);
-                showtable(tb_data);
+            getTableData(startDate, endDate).then(tb_data=>{
+                console.log("tb_table【show】",tb_data);
+                // showtable(tb_data);
+                showtable2(tb_data);
                 table_data = tb_data;
             })
-            getChartData(startDate,endDate).then(
-                ({x_labels,result_data}) =>{
-                    var labels,dataset;
-                    console.log("【show】",x_labels,result_data)
+            getChartData(startDate, endDate).then(
+                ({x_labels, result_data}) =>{
+                    var labels, dataset;
+                    console.log("chart_data【show】",x_labels,result_data)
                     showchart(x_labels,result_data);
                 }
             );
@@ -676,16 +625,13 @@
         function createClickHandler(index) {
             return function () {
                 let row_data = table_data[index];
-                let startDate,endDate;
-                startDate,endDate = getDateRange();
-                // start_time, end_time, _type = "system", name = "system", nodename = "none", _class =
-            // "none", vmid = -1
-                getChartData(startDate,endDate,row_data.type,
-                    row_data.name,row_data.nodename,row_data.class,row_data.vmid)
+                let {startDate, endDate} = getDateRange();
+                getChartData(startDate, endDate, row_data.type,
+                    row_data.name, row_data.nodename, row_data.class, row_data.vmid)
                 .then(({x_labels,result_data}) =>{
                     var labels,dataset;
                     console.log("【show】",x_labels,result_data)
-                    showchart(x_labels,result_data);
+                    showchart(x_labels,result_data, row_data.name);
                 }
             );
             };

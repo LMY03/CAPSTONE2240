@@ -92,13 +92,7 @@ class EditVMTemplates(forms.ModelForm):
         vmtemplate.vm_name = self.cleaned_data['vm_name']
         vmtemplate.guacamole_protocol = self.cleaned_data['guacamole_protocol']
         # This is where the API call starts
-        vmtemplate.cores = 1
-        vmtemplate.ram = 2048
-        vmtemplate.vm_id = '3001'
-        vmtemplate.node = 'Mayari'
-        vmtemplate.storage = '30'
         
-    
         # Where it ends
         if commit:
             vmtemplate.save()
