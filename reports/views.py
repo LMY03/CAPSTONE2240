@@ -23,7 +23,7 @@ org = config('INFLUXDB_ORG')
 bucket = config('INFLUXDB_BUCKET')
 proxmox_password = config('PROXMOX_PASSWORD')
 
-# Parse date to InfluxDB compatible, fit timezone
+# Parse date to InfluxDB compatible
 def parse_form_date(date_string):
     print(f"date_string: {date_string}")
     try:
