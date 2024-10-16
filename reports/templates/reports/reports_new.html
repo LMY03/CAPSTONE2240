@@ -347,8 +347,7 @@
         }
 
         function prevPage(){
-            let startDate, endDate;
-            startDate, endDate = getDateRange();
+            let {startDate, endDate} = getDateRange();
             getTableData(startDate,endDate,global_page-1).then(tb_data=>{
                 showtable(tb_data);
                 table_data = tb_data;
@@ -356,8 +355,7 @@
         };
 
         function nextPage(){
-            let startDate,endDate;
-            startDate,endDate = getDateRange();
+            let {startDate, endDate} = getDateRange();
             getTableData(startDate,endDate,global_page+1).then(tb_data=>{
                 showtable(tb_data);
                 table_data = tb_data;
@@ -373,7 +371,7 @@
                     "nodename": nodename,
                     "class": _class,
                     "vmid": vmid,
-                    "start_time": start_time, // 确保这里使用 start_time 参数
+                    "start_time": start_time, 
                     "end_time": end_time
                 };
 
@@ -394,13 +392,15 @@
                         let x_labels = [];
 
                         data.forEach((element, index) => {
-                            x_labels.push(data[index].time); // 获取每个时间戳
+                            x_labels.push(data[index].time); // timestamp
                             let keys = Object.keys(element);
                             keys.forEach(e => {
-                                if (e in label_data) {
-                                    label_data[e].push(element[e]); // 如果已存在则推入数据
+                                if (e !== "time") {
+                                    if (e in label_data) {
+                                    label_data[e].push(element[e]); 
                                 } else {
-                                    label_data[e] = [element[e]]; // 如果不存在则初始化数组
+                                    label_data[e] = [element[e]]; 
+                                }
                                 }
                             });
                         });
