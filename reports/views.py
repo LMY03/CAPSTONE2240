@@ -346,6 +346,8 @@ def get_time_window(start_datetime, end_datetime):
 
     if time_diff < timedelta(minutes=30):
         return "5m"
+    elif time_diff <= timedelta(minutes=120):
+        return "15m"
     elif time_diff <= timedelta(days=1):
         return "30m"
     elif timedelta(days=1) < time_diff <= timedelta(days=5):
