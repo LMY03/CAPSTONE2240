@@ -161,10 +161,17 @@ Edit request {{ vm_id }}
                                     <option value="CLASS_COURSE" {% if use_case == 'CLASS_COURSE' %} selected {% endif %}>Class Course</option>
                                 </select>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="vm_count1" class="form-label">VM Count: <i class="bi bi-layers"></i></label>
-                                <input type="number" id="vm_count1" name="vm_count1" class="form-control" min="1" max="40" value="{{ vm_count }}">
-                            </div>
+                            {% if Sections %}
+                                <div class="col-md-6 mb-3">
+                                    <label for="vm_count1" class="form-label">VM Count: <i class="bi bi-layers"></i></label>
+                                    <input type="number" id="vm_count1" name="vm_count1" class="form-control" min="1" max="40" value="{{ Sections.0.vm_count }}">
+                                </div>
+                            {% else %}
+                                <div class="col-md-6 mb-3">
+                                    <label for="vm_count1" class="form-label">VM Count: <i class="bi bi-layers"></i></label>
+                                    <input type="number" id="vm_count1" name="vm_count1" class="form-control" min="1" max="40" value="{{ vm_count }}">
+                                </div>
+                            {% endif %}
                         </div>
                         <div id='vm_and_coursecode'>
                             <div id="class_course_input" {% if use_case == 'CLASS_COURSE' %} style="display: block;" {% else %} style="display: none;" {% endif %}>
@@ -181,9 +188,13 @@ Edit request {{ vm_id }}
                                         {% else %}
                                             <div id="section_vm_count_{{ forloop.counter }}">
                                                 <div class="mb-3">
-                                                    <label>Course Code {{ forloop.counter }}:</label>
-                                                    <button type="button" class="btn btn-danger" id="remove_section_button{{ forloop.counter }}">Remove</button>
-                                                    <input type="text" class="form-control w-25" id="course_code{{ forloop.counter }}" name="course_code{{ forloop.counter }}" value="{{ section.request_use_case }}">
+                                                    <div class = "d-flex justify-content-between mb-3">
+                                                        <label>Course Code {{ forloop.counter }}:</label>
+                                                        <button type="button" class="btn btn-outline-danger" id="remove_section_button{{ forloop.counter }}">Remove Course</button>
+                                                    </div>
+                                                    <input type="text" class="form-control w-25 mb-3" id="course_code{{ forloop.counter }}" name="course_code{{ forloop.counter }}" value="{{ section.request_use_case }}">
+                                                    <label class = >VM Count for section {{forloop.counter}}: </label>
+                                                    <input type="text" class="form-control w-25" id="vm_count{{ forloop.counter }}" name="vm_count{{ forloop.counter }}" value="{{ section.vm_count }}">
                                                 </div>
                                             </div>
                                         {% endif %}
@@ -195,16 +206,18 @@ Edit request {{ vm_id }}
                                 {% endif %}
                             </div>
                         </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="date_needed" class="form-label">Date Needed: <i class="bi bi-calendar-event"></i></label>
-                            <input type="date" id="date_needed" name="date_needed" class="form-control" value="{{ request_entry.date_needed |date:'Y-m-d' }}">
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <label for="expiration_date" class="form-label">Expiration Date: <i class="bi bi-calendar-x"></i></label>
-                            <input type="date" id="expiration_date" name="expiration_date" class="form-control" value="{{ request_entry.expiration_date |date:'Y-m-d' }}">
+                        <label for="recurring">Recurring: </label>
+                        <input type="checkbox" id="recurring" name="recurring" 
+                        {% if recurring %}checked{% endif %}>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="date_needed" class="form-label">Date Needed: <i class="bi bi-calendar-event"></i></label>
+                                <input type="date" id="date_needed" name="date_needed" class="form-control" value="{{ request_entry.date_needed |date:'Y-m-d' }}">
+                            </div>
+                            <div class="col-md-6 mb-3"  {% if recurring %} style = "display:none" {% endif %} id = "expirationDateDiv">
+                                <label for="expiration_date" class="form-label">Expiration Date: <i class="bi bi-calendar-x"></i></label>
+                                <input type="date" id="expiration_date" name="expiration_date" class="form-control" value="{{ request_entry.expiration_date |date:'Y-m-d' }}">
+                            </div>
                         </div>
                     </div>
                 </div>

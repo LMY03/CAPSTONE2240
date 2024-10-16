@@ -123,7 +123,8 @@ document.getElementById('add_course_button').addEventListener('click', () => {
         const newVMLabel = document.createElement('label');
         const newVMInput = document.createElement('input');
 
-        newVMLabel.innerHTML = `VM Count for section ${addCourseSectionClicked}: `
+        newVMLabel.innerHTML = `VM Count for section ${addCourseSectionClicked}: &nbsp`
+        newVMInput.classList = 'form-control w-25'
         newVMInput.type = 'number'
         newVMInput.id = `vm_count${addCourseSectionClicked}`
 
@@ -338,3 +339,12 @@ document.getElementById('addProtocolButton').addEventListener('click', function 
     accordion.appendChild(newDivProtocol);
     accordion.appendChild(newDivDestination);
 });
+
+document.getElementById('recurring').addEventListener('click', function () {
+    console.log(this.checked)
+    if (this.checked) {
+        document.getElementById('expirationDateDiv').style.display = "none";
+    } else {
+        document.getElementById('expirationDateDiv').style.display = "block";
+    }
+})

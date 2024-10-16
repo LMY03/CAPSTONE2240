@@ -19,6 +19,7 @@ from notifications.views import added_user_notif, reset_password_email
 from django.core.exceptions import ValidationError
 from django.contrib import messages
 import csv, random, string
+from datetime import datetime
 
 # Create your views here.
 def login_view(request):
@@ -325,8 +326,11 @@ def generate_random_string():
     return random_string
 
 def delete_user(request, user_id):
+    current_datetime = datetime.now().strftime("%Y%m%d_%H%M%S")
     user = get_object_or_404(User, id = user_id )
     user.is_active = False
+    user.username = user.username + current_datetime
+    user.email = user.email + current_datetime
     user.save()
 
     return redirect('users:user_management')

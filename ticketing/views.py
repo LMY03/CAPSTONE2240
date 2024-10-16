@@ -508,12 +508,15 @@ def edit_form_submit(request):
             'ram': data.get("ram"),
             'has_internet': data.get("external_access") == 'true',
             'date_needed': data.get('date_needed'),
-            'expiration_date': data.get('expiration_date'),
+            'expiration_date': None if data.get('recurring') is True else (data.get('expiration_date') or None),
             'other_config': data.get("other_configs"),
         }
     newUseCase = data.get('use_case')
     addCourseButtonClicked = int(data.get("addCourseButtonClick"))
 
+    if data.get('recurring'):
+        newData['expiration_date'] = None
+    
     print(newData)
 
     # TODO: Fix the protocol front end for the edit_request_html first and do the backend
@@ -783,6 +786,8 @@ def edit_request(request, request_id):
 
     comments = get_comments(request_entry)
 
+    if request_entry.expiration_date is None:
+        context['recurring'] = True
     if comments.exists():
         context['comments'] = comments
 
@@ -895,25 +900,7 @@ def add_vm_template(request):
                 vm_template.is_lxc = is_lxc
                 vm_template.save()
 
-                # if 'csv_file' in request.FILES:
-                #     csv_file = request.FILES['csv_file']
-                #     file_data = csv_file.read().decode('utf-8-sig').splitlines()
-                #     csv_reader = csv.DictReader(file_data)
-                #     for row in csv_reader:
-                #         # Create VM template for each row in CSV
-                #         # You'll need to adjust this based on your CSV structure
-                #         VMTemplates.objects.create(
-                #             vm_id=row['vm_id'],
-                #             vm_name=row['vm_name'],
-                #             node=row['node'],
-                #             storage=row['storage'],
-                #             is_lxc=row.get('is_lxc') == 'True' or 'true',
-                #             guacamole_protocol=row['guacamole_protocol']
-                #         )
-                # else:
-                #     print("pag call ng save")
-                #     form.save()
-                messages.success(request, 'VM Template(s) added successfully.')
+                messages.success(request, 'VM Template added successfully.')
                 return redirect('ticketing:vm_template_management')  # Replace with your success URL
         else:
             messages.error(request, 'There was an error processing your request.')
