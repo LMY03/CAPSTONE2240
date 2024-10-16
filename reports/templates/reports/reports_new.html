@@ -635,8 +635,8 @@
 
             if (!startDate_input.value || !endDate_input.value) {
                 const now = new Date();
-                const currentDateTime = now.toISOString().slice(0, 16);
                 now.setMinutes(now.getMinutes() + 480);
+                const currentDateTime = now.toISOString().slice(0, 16);
                 endDate_input.value = currentDateTime;
                 now.setMinutes(now.getMinutes() - 1440);
                 const pastOneDay = now.toISOString().slice(0, 16);
