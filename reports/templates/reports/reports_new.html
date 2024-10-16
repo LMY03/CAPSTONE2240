@@ -405,7 +405,8 @@
                             });
                         });
 
-                        let result_data = []; // 这里需要在循环外定义
+                        let result_data = []; 
+                        console.log("result_data in get chart data: ", result_data)
                         let keys = Object.keys(label_data);
                         keys.forEach(e => {
                             result_data.push({
@@ -420,17 +421,17 @@
                         resolve({
                             x_labels,
                             result_data
-                        }); // 使用 resolve 返回结果
+                        }); 
                     } else {
-                        reject(new Error("数据接口异常")); // 请求错误时拒绝 Promise
+                        reject(new Error("数据接口异常")); 
                     }
                 };
 
                 xhr.onerror = function () {
-                    reject(new Error("请求失败")); // 网络错误处理
+                    reject(new Error("请求失败")); 
                 };
 
-                xhr.send(); // 发送请求
+                xhr.send(); 
             });
         }
 
@@ -441,7 +442,8 @@
         var copy_data = {};
         
         var myChart = undefined;
-        function showchart(labels,datasets){
+        function showchart(labels, datasets, title="system"){
+            console.log("[title]: ", title)
             if (myChart === undefined){
                 const data = {
                     labels: labels,
@@ -454,6 +456,17 @@
                         options: {
                             responsive: true,
                             plugins: {
+                                title: {
+                                    display: true,
+                                    text: title,
+                                    font: {
+                                        size: 20
+                                    },
+                                    padding: {
+                                        top: 10,
+                                        bottom: 30
+                                    }
+                                },
                                 legend: {
                                     display: true,
                                     position: 'top',
@@ -480,6 +493,7 @@
             };
             myChart.data.datasets = datasets;
             myChart.data.label = labels;
+            myChart.options.plugins.title.text = title;
             myChart.update();
         };
 
