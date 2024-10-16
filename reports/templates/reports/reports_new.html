@@ -615,14 +615,14 @@
                 String(date_str.getSeconds()).padStart(2, '0');
 
             getTableData(startDate, endDate).then(tb_data=>{
-                console.log("【show】",tb_data);
+                console.log("tb_table【show】",tb_data);
                 showtable(tb_data);
                 table_data = tb_data;
             })
             getChartData(startDate, endDate).then(
                 ({x_labels, result_data}) =>{
                     var labels, dataset;
-                    console.log("【show】",x_labels,result_data)
+                    console.log("chasr_data【show】",x_labels,result_data)
                     showchart(x_labels,result_data);
                 }
             );
