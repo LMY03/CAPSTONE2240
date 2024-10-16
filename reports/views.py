@@ -1344,8 +1344,7 @@ def graphdata(request):
     start_date_str = request.GET.get('start_time')
     end_date_str = request.GET.get('end_time')
 
-    print(f"type_received: {type_received}, name: {name}, nodename: {nodename}, 
-    subject: {subject}, vmid:{vmid}, start_date_str:{start_date_str}, end_date_str: {end_date_str}")
+    print(f"type_received: {type_received}, name: {name}, nodename: {nodename}, subject: {subject}, vmid:{vmid}, start_date_str:{start_date_str}, end_date_str: {end_date_str}")
 
     window = get_time_window(start_date_str, end_date_str)
     print(f"window: {window}")
