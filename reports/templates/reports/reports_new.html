@@ -140,7 +140,7 @@
     
     <!-- Table 1 -->
     <div class="w-100 overflow-x-auto pt-5">
-        <table class="table display responsive">
+        <table id="VMtable2" class="table display responsive">
             <thead class="fw-bolder">
                 <tr>
                     <th scope="col">TYPE</th>
@@ -438,20 +438,24 @@
         // form - start
 
         function showtable(tb_data) {
-            // todo ajax请求获取数据
+            // Select table
+            let table = document.getElementById("VMtable2");
+            let thead = table.querySelector("thead");
+            let tbody = table.querySelector("tbody");
+
+            // clear header
+            let headerRow  = thead.querySelector("thead tr");
+            headerRow .innerHTML = "";
+
+            // add header
             let td_ls = Object.keys(tb_data[0]);
-            let tr = document.querySelector("thead tr");
-            tr.innerHTML = "";
-            // let newCell1 = document.createElement("th");
-            //             newCell1.textContent = "TYPE";
-            //             tr.appendChild(newCell1);
             td_ls.forEach(td => {
                 let newCell1 = document.createElement("th");
                 newCell1.textContent = td;
                 tr.appendChild(newCell1);
             });
-            // 数据展示
-            let tbody = document.querySelector("tbody");
+
+            // clear body
             tbody.innerHTML = "";
             tb_data.forEach((element, index) => {
                 let newrow = document.createElement("tr");
