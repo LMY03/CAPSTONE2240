@@ -238,18 +238,21 @@
                 <div class="checkbox-row">
                     <label><input type="checkbox" value="cpu" onchange="updateChart()">cpu</label>
                     <label><input type="checkbox" value="cpu-us" onchange="updateChart()">cpu-us</label>
-                    <label><input type="checkbox" value="mem" onchange="updateChart()">mem</label>
+                    
 
                 </div>
                 <div class="checkbox-row">
+                    <label><input type="checkbox" value="mem" onchange="updateChart()">mem</label>
                     <label><input type="checkbox" value="mem-us" onchange="updateChart()">mem-us</label>
+                </div>
+                <div class="checkbox-row">
                     <label><input type="checkbox" value="storage" onchange="updateChart()">storage</label>
                     <label><input type="checkbox" value="storage-us" onchange="updateChart()">storage-us</label>
-                    <label><input type="checkbox" value="netin" onchange="updateChart()">netin</label>
-
                 </div>
                 <div class="checkbox-row">
-                    <label><input type="checkbox" value="netout" onchange="updateChart()"> netout</label>                </div>
+                    <label><input type="checkbox" value="netin" onchange="updateChart()">netin</label>
+                    <label><input type="checkbox" value="netout" onchange="updateChart()"> netout</label>                
+                </div>
             </div>
         </div>
     </div>
@@ -450,7 +453,7 @@
                     datasets : datasets
                 }
                 copy_data = JSON.parse(JSON.stringify(data))
-                const cpuDataset = datasets.find(ds => ds.label === 'cpu-us') || datasets[0];
+                const cpuDataset = datasets.find(ds => ds.label === 'cpu usage') || datasets[0];
                 const initialData = {
                     labels: labels,
                     datasets: [cpuDataset]
@@ -495,7 +498,7 @@
                     };
                 myChart = new Chart(document.getElementById('myChart'),config);
             } else {
-                const cpuDataset = datasets.find(ds => ds.label === 'cpu-us') || datasets[0];
+                const cpuDataset = datasets.find(ds => ds.label === 'cpu usage') || datasets[0];
                 myChart.data.labels = labels;
                 myChart.data.datasets = [cpuDataset];
                 myChart.options.plugins.title.text = title;
