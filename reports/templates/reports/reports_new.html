@@ -180,6 +180,34 @@
 
         var vmTable;
 
+        // Define the order of columns as they appear in the table
+        const columnOrder = [
+            "Name", "Type", "Node", "Subject", "ID", "VM Number", "LXC Number", "CPU", 
+            "CPU Usage", "RAM", "RAM Usage", "Storage", "Storage Usage", "Network In", 
+            "Network Out", "Uptime"
+        ];
+
+        // Create a mapping between the table column names and the possible keys in tb_data
+        const columnMapping = {
+            "Name": ["name", "Name"],
+            "Type": ["type", "Type"],
+            "Node": ["node", "Node"],
+            "Subject": ["subject", "Subject"],
+            "ID": ["id", "ID"],
+            "VM Number": ["vm_number", "VM Number"],
+            "LXC Number": ["lxc_number", "LXC Number"],
+            "CPU": ["cpu", "CPU"],
+            "CPU Usage": ["cpu_usage", "CPU Usage"],
+            "RAM": ["ram", "RAM"],
+            "RAM Usage": ["ram_usage", "RAM Usage"],
+            "Storage": ["storage", "Storage"],
+            "Storage Usage": ["storage_usage", "Storage Usage"],
+            "Network In": ["network_in", "Network In"],
+            "Network Out": ["network_out", "Network Out"],
+            "Uptime": ["uptime", "Uptime"]
+        };
+            
+
         function getTableData(start_time, end_time, page = 1) {
             return new Promise((resolve, reject) => {
                 var params = {
@@ -456,6 +484,8 @@
             // 数据展示
             tbody.innerHTML = "";
             tb_data.forEach((element, index) => {
+                console.log("element: ", element)
+                console.log("index: ", index)
                 let newrow = document.createElement("tr");
                 td_ls.forEach(td => {
                     let newCell1 = document.createElement("td");
@@ -489,37 +519,25 @@
                 ]
             });
 
-            // metrics
-            let td_ls = Object.keys(tb_data[0]);
-
-            // let tr = document.querySelector("thead tr");
-            // tr.innerHTML = "";
-            // // let newCell1 = document.createElement("th");
-            // //             newCell1.textContent = "TYPE";
-            // //             tr.appendChild(newCell1);
-            // td_ls.forEach(td => {
-            //     let newCell1 = document.createElement("th");
-            //     newCell1.textContent = td;
-            //     tr.appendChild(newCell1);
-            // });
-            // // 数据展示
-            // let tbody = document.querySelector("tbody");
-            // tbody.innerHTML = "";
-            // tb_data.forEach((element, index) => {
-            //     let newrow = document.createElement("tr");
-            //     td_ls.forEach(td => {
-            //         let newCell1 = document.createElement("td");
-            //         if (td == "name") {
-            //             newCell1.addEventListener("click", createClickHandler(index));
-            //             newCell1.className = "clickable"
-            //         }
-            //         newCell1.textContent = element[td];
-            //         newrow.appendChild(newCell1);
-            //     });
-            //     tbody.appendChild(newrow);
-
-            // })
-
+            // table content
+            let vmInfo = []
+            let metrics = Object.keys(tb_data[0]);
+            tb_data.forEach(item => {
+                let rowData = [];
+                columnOrder.forEach(column => {
+                    let value = null;
+                    for (let key of columnMapping[column]) {
+                        if (item.hasOwnProperty(key)) {
+                            value = item[key];
+                            break;
+                        }
+                    }
+                    rowData.push(value);
+                });
+                vmInfo.push(rowData);
+                // Now vmInfo contains the data in the correct order
+                console.log(vmInfo);
+            });        
         }
 
         function getDateRange(){
@@ -618,6 +636,7 @@
             getTableData(startDate, endDate).then(tb_data=>{
                 console.log("tb_table【show】",tb_data);
                 showtable(tb_data);
+                showtable2(tb_data);
                 table_data = tb_data;
             })
             getChartData(startDate, endDate).then(
