@@ -677,9 +677,17 @@
             })
             getChartData(startDate, endDate).then(
                 ({x_labels, result_data}) =>{
-                    var labels, dataset;
                     console.log("【show】",x_labels,result_data)
-                    showchart(x_labels,result_data);
+                    // filter "cpu usage" data
+                    const cpuUsageData = result_data.find(item => item.label === "cpu usage");
+
+                    if (cpuUsageData) {
+                        const dataset = {
+                            data: cpuUsageData.data
+                        }
+                    }
+
+                    showchart(x_labels, [dataset]);
                 }
             );
         };
