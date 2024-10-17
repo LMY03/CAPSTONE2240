@@ -228,6 +228,7 @@
         const base_url = ""
 
         var table_data = []; //formdata
+        var selected_metrics = [];
         var global_page = 1;
 
         var vmTable;
@@ -409,7 +410,8 @@
         var myChart = undefined;
         function showchart(labels, datasets, title = "system"){
             console.log("[title]: ", title)
-            if (myChart === undefined){
+            console.log("datasets: ", datasets)
+            if (myChart === undefined){     // no chart yet
                 const data = {
                     labels: labels,
                     datasets : datasets
@@ -505,57 +507,52 @@
                         }
                     };
                 myChart = new Chart(document.getElementById('myChart'),config);
-            } else {
-                const cpuDataset = datasets.find(ds => ds.label === 'cpu usage') || datasets[0];
+            } else {            // mychart exists
                 myChart.data.labels = labels;
-                myChart.data.datasets = [cpuDataset];
+                // get selected metrics
+                const selectedMetrics = getSelectedMetrics();
+                // filter database
+                const filteredDatasets = datasets.filter(ds => selectedMetrics.includes(ds.label));
+                // filteredDatasets can be nothing
+                myChart.data.datasets = filteredDatasets;
+
                 myChart.options.plugins.title.text = title;
                 myChart.update();
+
+                // Store the new data for later use
+                copy_data = {
+                    labels: labels,
+                    datasets: datasets
+                };
             }
 
         };
 
+        // Helper function to get selected metrics
+        function getSelectedMetrics() {
+            const checkboxes = document.querySelectorAll('.checkbox-group input[type="checkbox"]:checked');
+            return Array.from(checkboxes).map(cb => cb.value);
+        }
 
-        // update chart - filter
         function updateChart() {
             const checkboxes = document.querySelectorAll('.checkbox-group input[type="checkbox"]');
             const datasetsToShow = [];
 
-            checkboxes.forEach((checkbox, index) => {
-                const dataset = copy_data.datasets[index];
-                console.log(index, dataset && checkbox.checked)
-
-                // in dataset && metric being selected
-                if (dataset && checkbox.checked) {
-                    datasetsToShow.push({
-                        ...dataset,
-                        borderColor: getRandomColor(),
-                        backgroundColor: 'rgba(255, 255, 255, 0.1)'
-                    });
+            checkboxes.forEach((checkbox) => {
+                if (checkbox.checked) {
+                    const dataset = copy_data.datasets.find(ds => ds.label === checkbox.value);
+                    if (dataset) {
+                        datasetsToShow.push({
+                            ...dataset,
+                            borderColor: getRandomColor(),
+                            backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                        });
+                    }
                 }
             });
 
-            // if none being selected
-            if (datasetsToShow.length === 0) {
-                // use the fisrt one in dataset as default
-                if (copy_data.datasets.length > 0) {
-                    datasetsToShow.push({
-                        ...copy_data.datasets[0],
-                        borderColor: getRandomColor(),
-                        backgroundColor: 'rgba(255, 255, 255, 0.1)'
-                    });
-                }
-            }
-
-            // 清空现有的数据集并添加选中的数据集
-            myChart.data.datasets = datasetsToShow.map(dataset => {
-                return {
-                    ...dataset, // 浅拷贝现有数据集
-                    data: [...dataset.data] // 确保数据是一个新的数组
-                };
-            });
-
-            // 更新图表
+            // Update the chart with the selected datasets (may be empty)
+            myChart.data.datasets = datasetsToShow;
             myChart.update();
         }
 
@@ -580,42 +577,42 @@
 
         // form - start
 
+        // function showtable(tb_data) {
+        //     // Select table
+        //     let table = document.getElementById("VMtable2");
+        //     let tbody = table.querySelector("tbody");
+        //     let td_ls = Object.keys(tb_data[0]);
+        //     console.log("td_ls: ", td_ls)
+        //     let tr = table.querySelector("thead tr");
+        //     tr.innerHTML = "";
+        //     // let newCell1 = document.createElement("th");
+        //     //             newCell1.textContent = "TYPE";
+        //     //             tr.appendChild(newCell1);
+        //     td_ls.forEach(td => {
+        //         let newCell1 = document.createElement("th");
+        //         newCell1.textContent = td;
+        //         tr.appendChild(newCell1);
+        //     });
+        //     // 数据展示
+        //     tbody.innerHTML = "";
+        //     tb_data.forEach((element, index) => {
+        //         let newrow = document.createElement("tr");
+        //         td_ls.forEach(td => {
+        //             let newCell1 = document.createElement("td");
+        //             if (td == "name") {
+        //                 newCell1.addEventListener("click", createClickHandler(index));
+        //                 newCell1.className = "clickable"
+        //             }
+        //             newCell1.textContent = element[td];
+        //             newrow.appendChild(newCell1);
+        //         });
+        //         tbody.appendChild(newrow);
+
+        //     })
+
+        // }
+
         function showtable(tb_data) {
-            // Select table
-            let table = document.getElementById("VMtable2");
-            let tbody = table.querySelector("tbody");
-            let td_ls = Object.keys(tb_data[0]);
-            console.log("td_ls: ", td_ls)
-            let tr = table.querySelector("thead tr");
-            tr.innerHTML = "";
-            // let newCell1 = document.createElement("th");
-            //             newCell1.textContent = "TYPE";
-            //             tr.appendChild(newCell1);
-            td_ls.forEach(td => {
-                let newCell1 = document.createElement("th");
-                newCell1.textContent = td;
-                tr.appendChild(newCell1);
-            });
-            // 数据展示
-            tbody.innerHTML = "";
-            tb_data.forEach((element, index) => {
-                let newrow = document.createElement("tr");
-                td_ls.forEach(td => {
-                    let newCell1 = document.createElement("td");
-                    if (td == "name") {
-                        newCell1.addEventListener("click", createClickHandler(index));
-                        newCell1.className = "clickable"
-                    }
-                    newCell1.textContent = element[td];
-                    newrow.appendChild(newCell1);
-                });
-                tbody.appendChild(newrow);
-
-            })
-
-        }
-
-        function showtable2(tb_data) {
             // Store the original data for later use
             window.table_data = tb_data;
 
@@ -683,6 +680,7 @@
                         .then(({x_labels, result_data}) => {
                             console.log("【show】", x_labels, result_data);
                             showchart(x_labels, result_data, data.name);
+                            updateChart();
                         });
                 }
             });
@@ -754,11 +752,12 @@
 
         }
 
-        // 表格 -end
+        // table -end
         function show(){
             const startDate_input = document.getElementById('startDate');
             const endDate_input = document.getElementById('endDate');
 
+            // get start date and end date
             if (!startDate_input.value || !endDate_input.value) {
                 const now = new Date();
                 now.setMinutes(now.getMinutes() + 480);
@@ -785,12 +784,14 @@
                 String(date_str.getMinutes()).padStart(2, '0') + ':' +
                 String(date_str.getSeconds()).padStart(2, '0');
 
+            // get table data
             getTableData(startDate, endDate).then(tb_data=>{
                 console.log("tb_table【show】",tb_data);
                 // showtable(tb_data);
-                showtable2(tb_data);
+                showtable(tb_data);
                 table_data = tb_data;
             })
+            // get chart data
             getChartData(startDate, endDate).then(
                 ({x_labels, result_data}) =>{
                     var labels, dataset;
@@ -801,20 +802,20 @@
         };
         show()
 
-        function createClickHandler(index) {
-            return function () {
-                let row_data = table_data[index];
-                let {startDate, endDate} = getDateRange();
-                getChartData(startDate, endDate, row_data.type,
-                    row_data.name, row_data.nodename, row_data.subject, row_data.vmid)
-                .then(({x_labels,result_data}) =>{
-                    var labels,dataset;
-                    console.log("【show】",x_labels,result_data)
-                    showchart(x_labels,result_data, row_data.name);
-                }
-            );
-            };
-        }
+        // function createClickHandler(index) {
+        //     return function () {
+        //         let row_data = table_data[index];
+        //         let {startDate, endDate} = getDateRange();
+        //         getChartData(startDate, endDate, row_data.type,
+        //             row_data.name, row_data.nodename, row_data.subject, row_data.vmid)
+        //         .then(({x_labels,result_data}) =>{
+        //             var labels,dataset;
+        //             console.log("【show】",x_labels,result_data)
+        //             showchart(x_labels, result_data, row_data.name);
+        //         }
+        //     );
+        //     };
+        // }
 
     </script>
 
