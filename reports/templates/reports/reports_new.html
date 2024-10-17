@@ -169,13 +169,13 @@
             <div class="checkbox-group d-flex flex-column gap-2">
                 <div class="d-flex gap-4">
                     <label class="form-check-label"><input class="form-check-input me-1" type="checkbox" value="cpu" onchange="updateChart()">cpu</label>
-                    <label class="form-check-label"><input class="form-check-input me-1" type="checkbox" value="cpu-us" onchange="updateChart()">cpu-us</label>
+                    <label class="form-check-label"><input class="form-check-input me-1" type="checkbox" value="cpu usage" onchange="updateChart()">cpu usage</label>
                     <label class="form-check-label"><input class="form-check-input me-1" type="checkbox" value="mem" onchange="updateChart()">mem</label>
-                    <label class="form-check-label"><input class="form-check-input me-1" type="checkbox" value="mem-us" onchange="updateChart()">mem-us</label>
+                    <label class="form-check-label"><input class="form-check-input me-1" type="checkbox" value="mem usage" onchange="updateChart()">mem usage</label>
                 </div>
                 <div class="d-flex gap-4">
                     <label class="form-check-label"><input class="form-check-input me-1" type="checkbox" value="storage" onchange="updateChart()">storage</label>
-                    <label class="form-check-label"><input class="form-check-input me-1" type="checkbox" value="storage-us" onchange="updateChart()">storage-us</label>
+                    <label class="form-check-label"><input class="form-check-input me-1" type="checkbox" value="storage usage" onchange="updateChart()">storage usage</label>
                     <label class="form-check-label"><input class="form-check-input me-1" type="checkbox" value="netin" onchange="updateChart()">netin</label>
                     <label class="form-check-label"><input class="form-check-input me-1" type="checkbox" value="netout" onchange="updateChart()"> netout</label>  
                 </div>
@@ -565,9 +565,9 @@
             return color;
         }
 
-        // TODO: 默认只显示cpu-us的折线
+        // TODO: 默认只显示cpu usage的折线
         document.querySelectorAll('.checkbox-group input[type="checkbox"]').forEach((checkbox) => {
-            checkbox.checked = checkbox.value === 'cpu-us';
+            checkbox.checked = checkbox.value === 'cpu usage';
         });
         
         // chart-end
