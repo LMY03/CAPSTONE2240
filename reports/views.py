@@ -1835,6 +1835,7 @@ def graphdata(request):
             |> filter(fn: (r) => r["host"] =~ /{subject}/)
             |> aggregateWindow(every: {window}, fn: last, createEmpty: false)
         '''    
+        print(f"subject cpu query: {cpu_query}")
         query_result = query_api.query(query=cpu_query)
         for table in query_result:
             for record in table.records:
