@@ -236,8 +236,8 @@
         // Define the order of columns as they appear in the table
         const columnOrder = [
             "Type", "Node", "Subject", "Name", "ID", "VM Number", "LXC Number", "CPU", 
-            "CPU Usage", "RAM", "RAM Usage", "Storage", "Storage Usage", "Network In", 
-            "Network Out", "Uptime"
+            "CPU Usage(%)", "RAM(Gib)", "RAM Usage(%)", "Storage(Gib)", "Storage Usage(%)", 
+            "Network In(K)", "Network Out(K)", "Uptime"
         ];
 
         // Create a mapping between the table column names and the possible keys in tb_data
@@ -250,13 +250,13 @@
             "VM Number": ["vm number", "VM Number"],
             "LXC Number": ["lxc number", "LXC Number"],
             "CPU": ["cpu", "CPU"],
-            "CPU Usage": ["cpu usage", "CPU Usage"],
-            "RAM": ["mem", "RAM"],
-            "RAM Usage": ["mem usage", "RAM Usage"],
-            "Storage": ["storage", "Storage"],
-            "Storage Usage": ["storage usage", "Storage Usage"],
-            "Network In": ["netin", "Network In"],
-            "Network Out": ["netout", "Network Out"],
+            "CPU Usage": ["cpu usage", "CPU Usage(%)"],
+            "RAM": ["mem", "RAM(Gib)"],
+            "RAM Usage": ["mem usage", "RAM Usage(%)"],
+            "Storage": ["storage", "Storage(Gib)"],
+            "Storage Usage": ["storage usage", "Storage Usage(%)"],
+            "Network In": ["netin", "Network In(K)"],
+            "Network Out": ["netout", "Network Out(K)"],
             "Uptime": ["uptime", "Uptime"]
         };
             
@@ -823,8 +823,6 @@
             table.rows().every(function(rowIdx, tableLoop, rowLoop) {
                 var data = this.data();
 
-                console.log("data - ", data)
-                
                 // CPU Usage (index 8)
                 var cpuUsage = parseFloat(data['cpu usage']);
                 console.log("cpu usage: ", cpuUsage)
