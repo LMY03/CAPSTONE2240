@@ -1635,6 +1635,7 @@ def graphdata(request):
             |> filter(fn: (r) => r["_field"] == "cpu")
             |> filter(fn: (r) => r["host"] == "{nodename}")
             |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
+            |> map(fn: (r) => ({{ r with _value: (r._value * 100.0 ) }}))
         '''
         query_result = query_api.query(query=cpu_usage_query)
         
@@ -1666,6 +1667,7 @@ def graphdata(request):
             |> filter(fn: (r) => r["_field"] == "memtotal")
             |> filter(fn: (r) => r["host"] == "{nodename}")
             |> aggregateWindow(every: {window}, fn: last, createEmpty: false)
+            |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 / 1024.0 / 1024.0 ) }}))
         '''
         query_result = query_api.query(query=mem_query)
         
@@ -1721,6 +1723,7 @@ def graphdata(request):
             |> filter(fn: (r) => r["host"] == "local")
             |> filter(fn: (r) => r["nodename"] == "{nodename}")
             |> aggregateWindow(every: {window}, fn: last, createEmpty: false)
+            |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 / 1024.0 / 1024.0 ) }}))
         '''
         query_result = query_api.query(query=storage_query)
         
@@ -1776,6 +1779,7 @@ def graphdata(request):
             |> filter(fn: (r) => r["_field"] == "netin")
             |> filter(fn: (r) => r["nodename"] == "{nodename}")
             |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
+            |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 ) }}))
         '''
         query_result = query_api.query(query=netin_query)
         
@@ -1797,6 +1801,7 @@ def graphdata(request):
             |> filter(fn: (r) => r["_field"] == "netout")
             |> filter(fn: (r) => r["nodename"] == "{nodename}")
             |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
+            |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 ) }}))
         '''
         query_result = query_api.query(query=netout_query)
         
@@ -1851,6 +1856,7 @@ def graphdata(request):
             |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
             |> filter(fn: (r) => r["host"] =~ /{subject}/)
             |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
+            |> map(fn: (r) => ({{ r with _value: (r._value * 100.0 ) }}))
         '''
         query_result = query_api.query(query=cpu_usage_query)
         
@@ -1883,6 +1889,7 @@ def graphdata(request):
             |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
             |> filter(fn: (r) => r["host"] =~ /{subject}/)
             |> aggregateWindow(every: {window}, fn: last, createEmpty: false)
+            |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 / 1024.0 / 1024.0 ) }}))
         '''
         query_result = query_api.query(query=mem_query)
         
@@ -1963,6 +1970,7 @@ def graphdata(request):
             |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
             |> filter(fn: (r) => r["host"] =~ /{subject}/)
             |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
+            |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 ) }}))
         '''
         query_result = query_api.query(query=netin_query)
         
@@ -1985,6 +1993,7 @@ def graphdata(request):
             |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
             |> filter(fn: (r) => r["host"] =~ /{subject}/)
             |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
+            |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 ) }}))
         '''
         query_result = query_api.query(query=netout_query)
         
@@ -2033,6 +2042,7 @@ def graphdata(request):
             |> filter(fn: (r) => r["_field"] == "cpu")
             |> filter(fn: (r) => r["host"] == "{name}")
             |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
+            |> map(fn: (r) => ({{ r with _value: (r._value * 100.0 ) }}))
         '''
         query_result = query_api.query(query=cpu_usage_query)
         
@@ -2064,6 +2074,7 @@ def graphdata(request):
             |> filter(fn: (r) => r["_field"] == "maxmem")
             |> filter(fn: (r) => r["host"] == "{name}")
             |> aggregateWindow(every: {window}, fn: last, createEmpty: false)
+            |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 / 1024.0 / 1024.0) }}))
         '''
         query_result = query_api.query(query=mem_query)
         
@@ -2141,6 +2152,7 @@ def graphdata(request):
             |> filter(fn: (r) => r["_field"] == "netin")
             |> filter(fn: (r) => r["host"] == "{name}")
             |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
+            |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 ) }}))
         '''
         query_result = query_api.query(query=netin_query)
         
@@ -2162,6 +2174,7 @@ def graphdata(request):
             |> filter(fn: (r) => r["_field"] == "netout")
             |> filter(fn: (r) => r["host"] == "{name}")
             |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
+            |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 ) }}))
         '''
         query_result = query_api.query(query=netout_query)
         
