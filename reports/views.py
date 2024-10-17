@@ -399,13 +399,14 @@ def formdata(request):
 
     ################################ SYSTEM ###############################
     data = []
-    result = {}
-    result["type"] = "system"
-    result["name"] = "system"
-    result["nodename"] = "-"
-    result["subject"] = "-"
-    result["vmid"] = 0
-    
+    result = {"type": "system", "name": "system", "nodename": "-", "subject": "-", "vmid": 0,
+                        "vm number": 0, "lxc number": 0,
+                        "cpu": 0, "cpu usage": 0.0,
+                        "mem": 0, "mem usage": 0.0,
+                        "storage": 0.0, "storage usage": 0.0,
+                        "netin": 0.0, "netout": 0.0,
+                        "uptime": "-"}
+
     # vm num
     vm_query = f'''
         from(bucket: "{bucket}")
@@ -625,8 +626,6 @@ def formdata(request):
         for record in table.records:
             result["netout"] = record.values.get('_value', 0)
 
-    # uptime
-    result["uptime"] = "-"
     data.append(result)
 
     ################################ NODES ###############################
