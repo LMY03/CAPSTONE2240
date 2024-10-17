@@ -235,7 +235,7 @@
 
         // Define the order of columns as they appear in the table
         const columnOrder = [
-            "Type", "Node", "Subject", "Name", "ID", "VM Number", "LXC Number", "CPU", 
+            "Type", "Node", "Subject", "Name", "ID", "VM#", "LXC#", "CPU", 
             "CPU Usage(%)", "RAM(Gib)", "RAM Usage(%)", "Storage(Gib)", "Storage Usage(%)", 
             "Network In(K)", "Network Out(K)", "Uptime"
         ];
@@ -247,8 +247,8 @@
             "Node": ["nodename", "Node"],
             "Subject": ["subject", "Subject"],
             "ID": ["vmid", "ID"],
-            "VM Number": ["vm number", "VM Number"],
-            "LXC Number": ["lxc number", "LXC Number"],
+            "VM#": ["vm number", "VM#"],
+            "LXC#": ["lxc number", "LXC#"],
             "CPU": ["cpu", "CPU"],
             "CPU Usage(%)": ["cpu usage", "CPU Usage(%)"],
             "RAM(Gib)": ["mem", "RAM(Gib)"],
@@ -417,7 +417,7 @@
                     datasets : datasets
                 }
                 copy_data = JSON.parse(JSON.stringify(data))
-                const cpuDataset = datasets.find(ds => ds.label === 'cpu usage') || datasets[0];
+                const cpuDataset = datasets.find(ds => ds.label === 'cpu') || datasets[0];
                 const initialData = {
                     labels: labels,
                     datasets: [cpuDataset]
@@ -564,8 +564,8 @@
             return color;
         }
 
-        // default is cpu usage
-        document.querySelector('.radio-group input[type="radio"][value="cpu usage"]').checked = true;
+        // default is cpu
+        document.querySelector('.radio-group input[type="radio"][value="cpu"]').checked = true;
 
         
         // chart-end
