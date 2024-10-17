@@ -623,10 +623,25 @@
             // Store the original data for later use
             window.table_data = tb_data;
 
-            let columns = Object.keys(tb_data[0]).map(key => ({
+            // Define columns based on columnOrder and columnMapping
+            let columns2 = Object.keys(tb_data[0]).map(key => ({
                 data: key,
                 title: key
             }));
+
+            let columns = columnOrder.map(columnName => {
+                return {
+                    data: function(row, type, val, meta) {
+                        for (let key of columnMapping[columnName]) {
+                            if (row.hasOwnProperty(key)) {
+                                return row[key];
+                            }
+                        }
+                        return null;
+                    },
+                    title: columnName
+                }
+            })
 
             vmTable = $('table#VMtable').DataTable({
                 data: tb_data,
@@ -637,8 +652,7 @@
                 "select": true,
                 'columnDefs': [
                     { "type": "numeric", "targets": [5, 6, 7, 9, 11, 12, 14] },
-                    { "type": "percent", "targets": [8, 10, 12] },
-                    { "width": "400px", "targets": [0, 1, 2, 3] }
+                    { "type": "percent", "targets": [8, 10, 12] }
                 ],
                 "createdRow": function(row, data, dataIndex) {
                     if (data._type === 'system') {
