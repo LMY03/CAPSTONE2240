@@ -843,6 +843,12 @@ def formdata(request):
 
     ################################ SUBJECTS ###############################
     results = []
+    
+    # get template
+    template_hosts_ids = get_template_hosts_ids(start_date, end_date)
+    excluded_vmids_str = '|'.join(map(str, template_hosts_ids))
+    print(f"excluded_vmids_str: {excluded_vmids_str}")
+
     raw_class_list = RequestUseCase.objects.all().exclude(
         request_use_case__icontains="Research"
     ).exclude(
@@ -851,29 +857,41 @@ def formdata(request):
         request_use_case__icontains="Thesis"
     ).values_list('request_use_case', flat=True)
 
-    class_list = []
-    for entry in raw_class_list:
-        classname = entry.split('_')[0]
-        if classname not in class_list:
-            class_list.append(classname)
-            result = {"type": "subject", "name": classname, "nodename": "-", "subject": classname, "vmid": 0,
-                "vm number": 0, "lxc number": 0,
-                "cpu": 0, "cpu usage": 0.0,
-                "mem": 0, "mem usage": 0.0,
-                "storage": 0.0, "storage usage": 0,
-                "netin": 0.0, "netout": 0.0,
-                "uptime": "-"}
-            results.append(result)
-            
-            
-    class_filters = ' or '.join([f'r["host"] =~ /{class_name}/' for class_name in class_list])
-    class_map = ' '.join([f'if r["host"] =~ /{class_name}/ then "{class_name}" else' for class_name in class_list]) + ' "-"'
+    class_list = list(set(entry.split('_')[0] for entry in raw_class_list))
+    
+    valid_classes = []
+    
+    for class_name in class_list:
+        vm_lxc_query = f'''
+            from(bucket: "{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["_field"] == "cpus")
+            |> filter(fn: (r) => r["object"] == "qemu" or r["object"] == "lxc")
+            |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+            |> filter(fn: (r) => r["host"] =~ /{class_name}/)
+            |> distinct(column: "vmid")
+            |> count()
+        '''
+        result = query_api.query(query=vm_lxc_query)
         
-    # get template
-    template_hosts_ids = get_template_hosts_ids(start_date, end_date)
-    excluded_vmids_str = '|'.join(map(str, template_hosts_ids))
-    print(f"excluded_vmids_str: {excluded_vmids_str}")
+        if result and len(result) > 0 and result[0].records[0].values["_value"] > 0:
+            valid_classes.append(class_name)
 
+    for classname in valid_classes:
+        result = {"type": "subject", "name": classname, "nodename": "-", "subject": classname, "vmid": 0,
+            "vm number": 0, "lxc number": 0,
+            "cpu": 0, "cpu usage": 0.0,
+            "mem": 0, "mem usage": 0.0,
+            "storage": 0.0, "storage usage": 0,
+            "netin": 0.0, "netout": 0.0,
+            "uptime": "-"}
+        results.append(result)
+            
+            
+    class_filters = ' or '.join([f'r["host"] =~ /{class_name}/' for class_name in valid_classes])
+    class_map = ' '.join([f'if r["host"] =~ /{class_name}/ then "{class_name}" else' for class_name in valid_classes]) + ' "-"'
+        
     # vm number
     vm_query = f'''
         from(bucket: "{bucket}")
@@ -1121,7 +1139,7 @@ def formdata(request):
         for record in table.records:
             vmname = record.values.get('host')
             nodename = record.values.get('nodename')
-            classname = check_vmname_class(vmname, class_list)
+            classname = check_vmname_class(vmname, valid_classes)
             vm_type = record.values.get('object')
             vmid = record.values.get('vmid')
             value = record.values.get('_value', 0)
@@ -1791,7 +1809,6 @@ def graphdata(request):
         data.sort(key=lambda x: x['time'])
 
     elif type_received == "subject":
-        # subject = "CCINFOM"
 
         # get template
         template_hosts_ids = get_template_hosts_ids(start_date, end_date)
