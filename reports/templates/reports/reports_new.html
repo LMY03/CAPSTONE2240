@@ -656,10 +656,13 @@
                 ],
                 "createdRow": function(row, data, dataIndex) {
                     if (data._type === 'system') {
+                        console.log("data._type is system")
                         $(row).addClass('system-row');
                     } else if (data._type === 'node') {
+                        console.log("data._type is node")
                         $(row).addClass('node-row');
                     } else if (data._type === 'subject') {
+                        console.log("data._type is subject")
                         $(row).addClass('subject-row');
                     }
                 },
