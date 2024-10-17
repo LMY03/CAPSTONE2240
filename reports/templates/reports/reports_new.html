@@ -795,7 +795,7 @@
                     }
                     return row;
                 });
-                
+
                 showtable(tb_data);
                 table_data = tb_data;
             })
@@ -833,7 +833,6 @@
 
                 // CPU Usage (index 8)
                 var cpuUsage = parseFloat(data['cpu usage']);
-                console.log("cpu usage: ", cpuUsage)
                 setCellColor(table.cell(rowIdx, 8).node(), cpuUsage, 25, 50, 75);
 
                 // RAM Usage (index 10)
