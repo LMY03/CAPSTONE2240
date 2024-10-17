@@ -650,19 +650,13 @@
                     { "type": "numeric", "targets": [5, 6, 7, 9, 11, 12, 14] },
                     { "type": "percent", "targets": [8, 10, 12] }
                 ],
-                "createdRow": function(row, data, dataIndex) {
-                    console.log("row: ", row)
-                    console.log("data: ", data)
-                    console.log("dataIndex: ", dataIndex)
+                "rowCallback": function(row, data, index) {
                     if (data.type === 'system') {
-                        console.log("data._type is system")
-                        $(row).css('background-color', '#e6f7ff');
+                        $('td', row).css('background-color', '#e6f7ff');
                     } else if (data.type === 'node') {
-                        console.log("data._type is node")
-                        $(row).css('background-color', '#fff1f0');
+                        $('td', row).css('background-color', '#fff1f0');
                     } else if (data.type === 'subject') {
-                        console.log("data._type is subject")
-                        $(row).css('background-color', '#f6ffed');
+                        $('td', row).css('background-color', '#f6ffed');
                     }
                 },
                 "drawCallback": function(settings) {
