@@ -560,15 +560,11 @@
             return color;
         }
 
-        // TODO: 默认只显示cpu usage的折线
-        document.querySelectorAll('.checkbox-group input[type="checkbox"]').forEach((checkbox) => {
-            checkbox.checked = checkbox.value === 'cpu usage';
-        });
+        // default is cpu usage
+        document.querySelector('.radio-group input[type="radio"][value="cpu usage"]').checked = true;
+
         
         // chart-end
-
-        
-
 
         // form - start
 
