@@ -549,6 +549,10 @@
                     myChart.update();
                 }
             }
+            if (myChart) {
+                myChart.update();
+                updateTableHighlighting(vmTable);   
+            }
         }
 
         function getRandomColor() {
@@ -654,6 +658,7 @@
                 "drawCallback": function(settings) {
                     // Apply the cursor style to all rows after each draw
                     $('#VMtable tbody tr').css('cursor', 'pointer');
+                    updateTableHighlighting(this.api());
                 }
             });
 
@@ -798,20 +803,46 @@
         };
         show()
 
-        // function createClickHandler(index) {
-        //     return function () {
-        //         let row_data = table_data[index];
-        //         let {startDate, endDate} = getDateRange();
-        //         getChartData(startDate, endDate, row_data.type,
-        //             row_data.name, row_data.nodename, row_data.subject, row_data.vmid)
-        //         .then(({x_labels,result_data}) =>{
-        //             var labels,dataset;
-        //             console.log("【show】",x_labels,result_data)
-        //             showchart(x_labels, result_data, row_data.name);
-        //         }
-        //     );
-        //     };
-        // }
+        // Function to set cell background color based on value and thresholds
+        function setCellColor(cell, value, lowThreshold, midThreshold, highThreshold) {
+            if (value > 0 && value <= lowThreshold) {
+                $(cell).css('background-color', 'rgb(0, 155, 0, 0.35)');
+                $(cell).css('border', '2.5px solid rgb(77,192,77)');
+            } else if (value > lowThreshold && value <= midThreshold) {
+                $(cell).css('background-color', 'rgb(253, 223, 46, 0.51)');
+                $(cell).css('border', '2.5px solid rgb(232,204,39)');
+            } else if (value > midThreshold && value <= highThreshold) {
+                $(cell).css('background-color', 'rgb(259, 155, 0, 0.5)');
+                $(cell).css('border', '2.5px solid rgb(239,155,0)');
+            } else if (value > highThreshold) {
+                $(cell).css('background-color', 'rgb(204, 0, 0, 0.5)');
+                $(cell).css('border', '2.5px solid rgb(204,0,0)');
+            } else {
+                $(cell).css('background-color', '#FFFFFF');
+                $(cell).css('border', '');
+            }
+        }
+
+        // Function to update table highlighting
+        function updateTableHighlighting(table) {
+            table.rows().every(function(rowIdx, tableLoop, rowLoop) {
+                var data = this.data();
+
+                console.log("data - ", data)
+                
+                // CPU Usage (index 8)
+                var cpuUsage = parseFloat(data[8]);
+                setCellColor(table.cell(rowIdx, 8).node(), cpuUsage, 25, 50, 75);
+
+                // RAM Usage (index 10)
+                var ramUsage = parseFloat(data[10]);
+                setCellColor(table.cell(rowIdx, 10).node(), ramUsage, 25, 50, 75);
+
+                // Storage Usage (index 12)
+                var storageUsage = parseFloat(data[12]);
+                setCellColor(table.cell(rowIdx, 12).node(), storageUsage, 25, 50, 75);
+            });
+        }
 
     </script>
 
