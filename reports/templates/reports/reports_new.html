@@ -658,13 +658,13 @@
                     console.log("row: ", row)
                     console.log("data: ", data)
                     console.log("dataIndex: ", dataIndex)
-                    if (data._type === 'system') {
+                    if (data.type === 'system') {
                         console.log("data._type is system")
                         $(row).addClass('system-row');
-                    } else if (data._type === 'node') {
+                    } else if (data.type === 'node') {
                         console.log("data._type is node")
                         $(row).addClass('node-row');
-                    } else if (data._type === 'subject') {
+                    } else if (data.type === 'subject') {
                         console.log("data._type is subject")
                         $(row).addClass('subject-row');
                     }
