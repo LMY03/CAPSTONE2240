@@ -676,7 +676,7 @@
 
                 if (data) {  // Check if data exists (row is not empty)
                     let {startDate, endDate} = getDateRange();
-                    getChartData(startDate, endDate, data.type, data.name, data.nodename, data.class, data.vmid)
+                    getChartData(startDate, endDate, data.type, data.name, data.nodename, data.subject, data.vmid)
                         .then(({x_labels, result_data}) => {
                             console.log("【show】", x_labels, result_data);
                             showchart(x_labels, result_data, data.name);
