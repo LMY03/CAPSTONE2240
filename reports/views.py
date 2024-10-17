@@ -873,7 +873,8 @@ def formdata(request):
             |> distinct(column: "vmid")
             |> count()
         '''
-        result = query_api.query(query=vm_lxc_query)
+        # result = query_api.query(query=vm_lxc_query)
+        result = []
         
         if result and len(result) > 0 and result[0].records[0].values["_value"] > 0:
             valid_classes.append(class_name)
