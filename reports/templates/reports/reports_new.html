@@ -655,6 +655,9 @@
                     { "type": "percent", "targets": [8, 10, 12] }
                 ],
                 "createdRow": function(row, data, dataIndex) {
+                    console.log("row: ", row)
+                    console.log("data: ", data)
+                    console.log("dataIndex: ", dataIndex)
                     if (data._type === 'system') {
                         console.log("data._type is system")
                         $(row).addClass('system-row');
