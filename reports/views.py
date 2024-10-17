@@ -25,7 +25,6 @@ proxmox_password = config('PROXMOX_PASSWORD')
 
 # Parse date to InfluxDB compatible
 def parse_form_date(date_string):
-    print(f"date_string: {date_string}")
     try:
         dt = datetime.strptime(date_string, "%Y-%m-%d %H:%M:%S")
         adjusted_dt = dt - timedelta(hours=8)
@@ -34,12 +33,6 @@ def parse_form_date(date_string):
         return adjusted_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
     except ValueError:
         raise ValueError(f"Invalid date format: {date_string}. Expected YYYY-MM-DD")
-
-# seconds to HMS
-def seconds_to_hms(seconds):
-    hours, remainder = divmod(seconds, 3600)
-    minutes, seconds = divmod(remainder, 60)
-    return f"{int(hours):02d}:{int(minutes):02d}:{int(seconds):02d}"        
 
 # Get Report Page
 def index(request):
@@ -125,7 +118,6 @@ def get_template_hosts_ids(start_date, end_date):
         |> yield(name: "template_hosts")
 
     '''
-    print(f"query statement: {query}")
 
     result = query_api.query(query=query)
 
@@ -138,171 +130,6 @@ def get_template_hosts_ids(start_date, end_date):
     return template_hosts_ids
 
                 
-# Detail Stats
-def extract_detail_stat(request):
-
-    influxdb_client = InfluxDBClient(url=INFLUX_ADDRESS, token=token, org=org)
-    query_api = influxdb_client.query_api()
-
-    start_date_str = request.GET.get('startdate')
-    end_date_str = request.GET.get('enddate')
-    
-    start_date = parse_form_date(start_date_str)
-    end_date = parse_form_date(end_date_str)
-
-    # TODO: add uptime
-    queries = generate_vm_resource_query(start_date, end_date)
-
-    # process result, 
-    results = {}
-    if queries:
-        for resource, query in queries.items():
-            result = query_api.query(query=query)
-            # print(f"result: {result}")
-            results[resource] = result
-
-    # process result
-    processed_data = []
-    if results:
-        processed_data = process_vm_resource_data(results, start_date, end_date)
-        # print(f"processed_data: {processed_data}")
-
-    influxdb_client.close()
-    
-    print(f"processed_data: {processed_data}")
-
-    return generate_detail_csv_response(processed_data, start_date_str, end_date_str)
-
-
-# Process Detail Query Result
-def process_vm_resource_data(results, start_date, end_date):
-    processed_data = {}
-    print(f"Debug: Results keys: {results.keys()}")
-
-    def safe_get_value(result, resource, identifier):
-        try:
-            if result:
-                for table in result:
-                    for record in table.records:
-                        if (record.values.get('vmid') == identifier[0] and record.values.get('host') == identifier[1] and record.values.get('nodename') == identifier[2] and record.values.get('object') == identifier[3] ):
-                            return record.values.get('_value', 0)
-            return None
-        except (IndexError, AttributeError):
-            print(f"No data for {resource} on host {host}")
-            return None
-
-    all_identifiers  = set()
-    for resource, result in results.items():
-        if result:
-            for table in result:
-                for record in table.records:
-                    identifier = (record.values.get('vmid'), record.values.get('host'), record.values.get('nodename'), record.values.get('object'), record.values.get('_time'))
-                    if all(identifier):
-                        if resource == "cpus": # so that it add only once 
-                            all_identifiers.add(identifier)
-    
-    # print(f"all_identifiers: {all_identifiers}")
-    for vmid, host, nodename, machineType, time in all_identifiers:
-        identifier = (vmid, host, nodename, machineType, time)
-        dt_adjusted = time + timedelta(hours=8)
-        adjusted_time = dt_adjusted.strftime("%Y-%m-%d %H:%M:%S")
-        row = {
-            'vmid': vmid,
-            'host': host,
-            'nodename': nodename,
-            'machineType': machineType,
-            'until_time': adjusted_time
-        }
-        for resource in ['cpus', 'cpu', 'mem', 'maxmem', 'uptime']:
-            value = safe_get_value(results.get(resource), resource, identifier)
-            if value is not None:
-                if resource == "cpus":
-                    value = str(value) + " cores"
-                if resource == "cpu": 
-                    value = str(round(value * 100, 2)) + "%"
-                if resource == "mem":
-                    value = str(round(value, 2)) + "%"
-                if resource == "maxmem":
-                    value = str(round(value, 2)) + "G"
-                if resource == "uptime":
-                    if value < 0:
-                        value = 0
-                    value = seconds_to_hms(value)
-                row[resource] = value
-        if len(row) > 5:  # Ensure we have at least one resource value
-            processed_data[identifier] = row
-    
-    return list(processed_data.values())
-
-# Generate Detail CSV Response
-def generate_detail_csv_response(data, start_date, end_date):
-    # TODO: add uptime
-    fieldnames = ['vmid', 'host', 'nodename', 'machineType', 'until_time', 'cpus', 'cpu', 'mem', 'maxmem', 'uptime']
-    csv_buffer = StringIO()
-    writer = csv.DictWriter(csv_buffer, fieldnames=fieldnames)
-    writer.writeheader()
-
-    for row in data:
-        writer.writerow(row)
-    
-    response = HttpResponse(
-        content_type='text/csv',
-        headers={'Content-Disposition': f'attachment; filename="detail_resource_usage_{start_date}_to_{end_date}.csv"'},
-    )
-    response.write(csv_buffer.getvalue())
-    return response
-
-# General Stats
-def extract_general_stat(request):
-    influxdb_client = InfluxDBClient(url=INFLUX_ADDRESS, token=token, org=org)
-    query_api = influxdb_client.query_api()
-
-    # Process request data
-    start_date_str = request.POST.get('startdate')
-    end_date_str = request.POST.get('enddate')
-    query_type = request.POST.get('scope') # All, per-node, per-class
-
-    start_date = parse_form_date(start_date_str)
-    end_date = parse_form_date(end_date_str)
-
-
-    # Get needed metrics 
-    # (number of VMs, total CPU, CPU%, total mem, mem%, total storage, storage%, netin and netout)
-    
-    raw_class_list = RequestUseCase.objects.all().exclude(
-        request_use_case__icontains="Research"
-    ).exclude(
-        request_use_case__icontains="Test"
-    ).exclude(
-        request_use_case__icontains="Thesis"
-    ).values_list('request_use_case', flat=True)
-
-    class_list = []
-    for entry in raw_class_list:
-        processed_entry = entry.split('_')[0]
-        if processed_entry not in class_list:
-            class_list.append(processed_entry)
-
-    queries =  generate_resource_query(start_date, end_date, query_type, class_list)
-
-    results = {}
-    if queries:
-        for resource, query in queries.items():
-            print(f"query: {query}")
-            result = query_api.query(query=query)
-            results[resource] = result
-
-    print(f"result: {results}")   
-
-    # process result
-    processed_data = []
-    if results:
-        processed_data = process_resource_data(results, query_type, start_date, end_date)
-        print(f"processed_data: {processed_data}")
-
-    influxdb_client.close()
-    return generate_csv_response(processed_data, query_type, start_date_str, end_date_str)
-
 
 def process_pernode_query_result(results, query_result, column_name):
     for table in query_result:
@@ -341,8 +168,6 @@ def get_time_window(start_datetime, end_datetime):
     start, end = min(start, end), max(start, end)
     
     time_diff = end - start
-    print(f"start in window: {start}")
-    print(f"end in window: {end}")
 
     if time_diff < timedelta(minutes=30):
         return "5m"
@@ -389,9 +214,7 @@ def formdata(request):
     # TODO: change this. Now is date
     start_date = parse_form_date(start_time_str)
     end_date = parse_form_date(end_time_str)
-    print(f"start_date in form data:{start_date}")
-    print(f"end_date in form data:{end_date}")
-    
+
     # get template vm
     template_hosts_ids = get_template_hosts_ids(start_date, end_date)
     excluded_vmids_str = '|'.join(map(str, template_hosts_ids))
@@ -846,8 +669,7 @@ def formdata(request):
     # get template
     template_hosts_ids = get_template_hosts_ids(start_date, end_date)
     excluded_vmids_str = '|'.join(map(str, template_hosts_ids))
-    print(f"excluded_vmids_str: {excluded_vmids_str}")
-
+ 
     raw_class_list = RequestUseCase.objects.all().exclude(
         request_use_case__icontains="Research"
     ).exclude(
@@ -912,8 +734,6 @@ def formdata(request):
             |> group(columns: ["subject"])
             |> sum()
         '''
-
-        print(f"vm_query: {vm_query}")
 
         query_result = query_api.query(query=vm_query)
         process_perclass_query_result(results, query_result, "vm number")
@@ -1365,7 +1185,6 @@ def formdata(request):
 
 
 def graphdata(request):
-    print(" ================== into graph data ================== ")
     # connect to influxdb
     influxdb_client = InfluxDBClient(url=INFLUX_ADDRESS, token=token, org=org)
     query_api = influxdb_client.query_api()
@@ -1383,17 +1202,10 @@ def graphdata(request):
     start_date_str = request.GET.get('start_time')
     end_date_str = request.GET.get('end_time')
 
-    print(f"type_received: {type_received}, name: {name}, nodename: {nodename}, subject: {subject}, vmid:{vmid}, start_date_str:{start_date_str}, end_date_str: {end_date_str}")
-
     window = get_time_window(start_date_str, end_date_str)
-    print(f"window: {window}")
-
     start_date = parse_form_date(start_date_str)
     end_date = parse_form_date(end_date_str)
 
-    
-    print(f"window: {window}")
-    
     result = defaultdict(dict)
     # determine the type -> system? node? class? indiv?
     if type_received == "system":
@@ -1835,7 +1647,7 @@ def graphdata(request):
             |> filter(fn: (r) => r["host"] =~ /{subject}/)
             |> aggregateWindow(every: {window}, fn: last, createEmpty: false)
         '''    
-        print(f"subject cpu query: {cpu_query}")
+
         query_result = query_api.query(query=cpu_query)
         for table in query_result:
             for record in table.records:
@@ -2209,6 +2021,8 @@ def graphdata(request):
     output["data"] = data
 
     return JsonResponse(output)
+
+
 ############################### Ticketing ###############################
 
 def fetch_ticketing_report_data(form : TicketingReportForm):
