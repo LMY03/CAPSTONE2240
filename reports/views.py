@@ -317,10 +317,10 @@ def process_pernode_query_result(results, query_result, column_name):
 def process_perclass_query_result(results, query_result, column_name):
     for table in query_result:
         for record in table.records:
-            classname = record.values.get('class')
+            subject = record.values.get('subject')
             value = record.values.get('_value', 0)
             for result in results:
-                if result["class"] == classname:
+                if result["subject"] == subject:
                     result[column_name] = value
                     break
 
@@ -403,7 +403,7 @@ def formdata(request):
     result["type"] = "system"
     result["name"] = "system"
     result["nodename"] = "-"
-    result["class"] = "-"
+    result["subject"] = "-"
     result["vmid"] = 0
     
     # vm num
@@ -653,7 +653,7 @@ def formdata(request):
             value = record.values.get('_value', 0)
             if nodename not in nodes:    # node is not included yet in the list
                 nodes.append(nodename)
-                result = {"type": "node", "name": nodename, "nodename": nodename, "class": "-", "vmid": 0,
+                result = {"type": "node", "name": nodename, "nodename": nodename, "subject": "-", "vmid": 0,
                         "vm number": value, "lxc number": 0,
                         "cpu": 0, "cpu usage": 0.0,
                         "mem": 0, "mem usage": 0.0,
@@ -856,7 +856,7 @@ def formdata(request):
         classname = entry.split('_')[0]
         if classname not in class_list:
             class_list.append(classname)
-            result = {"type": "subject", "name": classname, "nodename": "-", "class": classname, "vmid": 0,
+            result = {"type": "subject", "name": classname, "nodename": "-", "subject": classname, "vmid": 0,
                 "vm number": 0, "lxc number": 0,
                 "cpu": 0, "cpu usage": 0.0,
                 "mem": 0, "mem usage": 0.0,
@@ -886,9 +886,9 @@ def formdata(request):
         |> distinct(column: "vmid")
         |> count()
         |> pivot(rowKey: ["host"], columnKey: ["_field"], valueColumn: "_value")
-        |> map(fn: (r) => ({{ r with class: {class_map} }}))
-        |> map(fn: (r) => ({{ _value: r.cpus, class: r.class }}))
-        |> group(columns: ["class"])
+        |> map(fn: (r) => ({{ r with subject: {class_map} }}))
+        |> map(fn: (r) => ({{ _value: r.cpus, subject: r.subject }}))
+        |> group(columns: ["subject"])
         |> sum()
     '''
     query_result = query_api.query(query=vm_query)
@@ -906,9 +906,9 @@ def formdata(request):
         |> distinct(column: "vmid")
         |> count()
         |> pivot(rowKey: ["host"], columnKey: ["_field"], valueColumn: "_value")
-        |> map(fn: (r) => ({{ r with class: {class_map} }}))
-        |> map(fn: (r) => ({{ _value: r.cpus, class: r.class }}))
-        |> group(columns: ["class"])
+        |> map(fn: (r) => ({{ r with subject: {class_map} }}))
+        |> map(fn: (r) => ({{ _value: r.cpus, subject: r.subject }}))
+        |> group(columns: ["subject"])
         |> sum()
     '''
     query_result = query_api.query(query=lxc_query)
@@ -923,8 +923,8 @@ def formdata(request):
         |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
         |> filter(fn: (r) => {class_filters})
         |> last()
-        |> map(fn: (r) => ({{ r with class: {class_map} }}))
-        |> group(columns: ["class"])
+        |> map(fn: (r) => ({{ r with subject: {class_map} }}))
+        |> group(columns: ["subject"])
         |> sum()
     '''    
     query_result = query_api.query(query=cpu_query)
@@ -939,8 +939,8 @@ def formdata(request):
         |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
         |> filter(fn: (r) => {class_filters})
         |> mean()
-        |> map(fn: (r) => ({{ r with class: {class_map} }}))
-        |> group(columns: ["class"])
+        |> map(fn: (r) => ({{ r with subject: {class_map} }}))
+        |> group(columns: ["subject"])
         |> sum()
         |> map(fn: (r) => ({{ r with _value: r._value * 100.0 }}))
     '''    
@@ -956,8 +956,8 @@ def formdata(request):
         |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
         |> filter(fn: (r) => {class_filters})
         |> last()
-        |> map(fn: (r) => ({{ r with class: {class_map} }}))
-        |> group(columns: ["class"])
+        |> map(fn: (r) => ({{ r with subject: {class_map} }}))
+        |> group(columns: ["subject"])
         |> sum()
         |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 / 1024.0 / 1024.0) }}))
     '''    
@@ -976,8 +976,8 @@ def formdata(request):
         |> group(columns: ["host", "_field"])
         |> pivot(rowKey: ["host"], columnKey: ["_field"], valueColumn: "_value")
         |> map(fn: (r) => ({{ r with _value: (r.mem / r.maxmem) * 100.0 }}))
-        |> map(fn: (r) => ({{ r with class: {class_map} }}))
-        |> group(columns: ["class", "_field"])
+        |> map(fn: (r) => ({{ r with subject: {class_map} }}))
+        |> group(columns: ["subject", "_field"])
         |> mean()
     '''
     query_result = query_api.query(query=mem_usage_query)
@@ -992,8 +992,8 @@ def formdata(request):
         |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
         |> filter(fn: (r) => {class_filters})
         |> last()
-        |> map(fn: (r) => ({{ r with class: {class_map} }}))
-        |> group(columns: ["class"])
+        |> map(fn: (r) => ({{ r with subject: {class_map} }}))
+        |> group(columns: ["subject"])
         |> sum()
         |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 / 1024.0 / 1024.0) }}))
     '''
@@ -1010,8 +1010,8 @@ def formdata(request):
         |> filter(fn: (r) => {class_filters})
         |> group(columns: ["nodename", "host", "object", "vmid"])
         |> last()
-        |> map(fn: (r) => ({{ r with class: {class_map} }}))
-        |> keep(columns: ["_value", "class", "nodename", "host", "object", "vmid"])
+        |> map(fn: (r) => ({{ r with subject: {class_map} }}))
+        |> keep(columns: ["_value", "subject", "nodename", "host", "object", "vmid"])
 
         first = from(bucket: "proxmox")
         |> range(start: {start_date}, stop: {end_date})
@@ -1021,8 +1021,8 @@ def formdata(request):
         |> filter(fn: (r) => {class_filters})
         |> group(columns: ["nodename", "host", "object", "vmid"])
         |> first()
-        |> map(fn: (r) => ({{ r with class: {class_map} }}))
-        |> keep(columns: ["_value", "class", "nodename", "host", "object", "vmid"])
+        |> map(fn: (r) => ({{ r with subject: {class_map} }}))
+        |> keep(columns: ["_value", "subject", "nodename", "host", "object", "vmid"])
 
         join(
         tables: {{last: last, first: first}},
@@ -1031,7 +1031,7 @@ def formdata(request):
         |> map(fn: (r) => ({{
         _time: r._time_last,
         nodename: r.nodename,
-        class: r.class_first,
+        subject: r.subject_first,
         host: r.host,
         object: r.object,
         vmid: r.vmid,
@@ -1039,7 +1039,7 @@ def formdata(request):
         last_value: r._value_last,
         _value: r._value_last - r._value_first
         }}))
-        |> group(columns: ["class"])
+        |> group(columns: ["subject"])
         |> sum()
         |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0) }}))
     ''' 
@@ -1056,8 +1056,8 @@ def formdata(request):
         |> filter(fn: (r) => {class_filters})
         |> group(columns: ["nodename", "host", "object", "vmid"])
         |> last()
-        |> map(fn: (r) => ({{ r with class: {class_map} }}))
-        |> keep(columns: ["_value", "class", "nodename", "host", "object", "vmid"])
+        |> map(fn: (r) => ({{ r with subject: {class_map} }}))
+        |> keep(columns: ["_value", "subject", "nodename", "host", "object", "vmid"])
 
         first = from(bucket: "proxmox")
         |> range(start: {start_date}, stop: {end_date})
@@ -1067,8 +1067,8 @@ def formdata(request):
         |> filter(fn: (r) => {class_filters})
         |> group(columns: ["nodename", "host", "object", "vmid"])
         |> first()
-        |> map(fn: (r) => ({{ r with class: {class_map} }}))
-        |> keep(columns: ["_value", "class", "nodename", "host", "object", "vmid"])
+        |> map(fn: (r) => ({{ r with subject: {class_map} }}))
+        |> keep(columns: ["_value", "subject", "nodename", "host", "object", "vmid"])
 
         join(
         tables: {{last: last, first: first}},
@@ -1077,7 +1077,7 @@ def formdata(request):
         |> map(fn: (r) => ({{
         _time: r._time_last,
         nodename: r.nodename,
-        class: r.class_first,
+        subject: r.subject_first,
         host: r.host,
         object: r.object,
         vmid: r.vmid,
@@ -1085,7 +1085,7 @@ def formdata(request):
         last_value: r._value_last,
         _value: r._value_last - r._value_first
         }}))
-        |> group(columns: ["class"])
+        |> group(columns: ["subject"])
         |> sum()
         |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0) }}))
     ''' 
@@ -1121,14 +1121,13 @@ def formdata(request):
         for record in table.records:
             vmname = record.values.get('host')
             nodename = record.values.get('nodename')
-            # if vmname 中有包含 class_list 里面
             classname = check_vmname_class(vmname, class_list)
             vm_type = record.values.get('object')
             vmid = record.values.get('vmid')
             value = record.values.get('_value', 0)
             if (nodename, vm_type, vmid, vmname) not in vms:    
                 vms.append((nodename, vm_type, vmid, vmname))
-                result = {"type": "vm", "name": vmname, "nodename": nodename, "class": classname, "vmid": vmid, 
+                result = {"type": "vm", "name": vmname, "nodename": nodename, "subject": classname, "vmid": vmid, 
                         "vm number": 0, "lxc number": 0,
                         "cpu": value, "cpu usage": 0.0,
                         "mem": 0, "mem usage": 0.0,
@@ -1355,7 +1354,7 @@ def graphdata(request):
     type_received = request.GET.get('type', "system")
     name = request.GET.get('name', "system")
     nodename = request.GET.get('nodename', "-")
-    subject = request.GET.get('class', "-")
+    subject = request.GET.get('subject', "-")
     vmid = request.GET.get('vmid', "0")
     start_date_str = request.GET.get('start_time')
     end_date_str = request.GET.get('end_time')
@@ -1791,7 +1790,7 @@ def graphdata(request):
         data = list(result.values())
         data.sort(key=lambda x: x['time'])
 
-    elif type_received == "class":
+    elif type_received == "subject":
         # subject = "CCINFOM"
 
         # get template

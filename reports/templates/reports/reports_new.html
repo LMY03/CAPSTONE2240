@@ -248,7 +248,7 @@
             "Name": ["name", "Name"],
             "Type": ["type", "Type"],
             "Node": ["nodename", "Node"],
-            "Subject": ["class", "Subject"],
+            "Subject": ["subject", "Subject"],
             "ID": ["vmid", "ID"],
             "VM Number": ["vm number", "VM Number"],
             "LXC Number": ["lxc number", "LXC Number"],
@@ -331,14 +331,14 @@
             })
         }
 
-        function getChartData(start_time, end_time, _type = "system", name = "system", nodename = "none", _class =
+        function getChartData(start_time, end_time, _type = "system", name = "system", nodename = "none", subject =
             "none", vmid = -1) {
             return new Promise((resolve, reject) => {
                 var params = {
                     "type": _type,
                     "name": name,
                     "nodename": nodename,
-                    "class": _class,
+                    "subject": subject,
                     "vmid": vmid,
                     "start_time": start_time, 
                     "end_time": end_time
@@ -810,7 +810,7 @@
                 let row_data = table_data[index];
                 let {startDate, endDate} = getDateRange();
                 getChartData(startDate, endDate, row_data.type,
-                    row_data.name, row_data.nodename, row_data.class, row_data.vmid)
+                    row_data.name, row_data.nodename, row_data.subject, row_data.vmid)
                 .then(({x_labels,result_data}) =>{
                     var labels,dataset;
                     console.log("【show】",x_labels,result_data)
