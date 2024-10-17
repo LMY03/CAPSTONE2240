@@ -103,10 +103,6 @@
             margin-right: auto;
         }
 
-        .system-row { background-color: rgba(0, 0, 128, 1); }  
-        .node-row { background-color: rgba(0, 0, 255, 1); }   
-        .subject-row { background-color: rgba(173, 216, 230, 1); } 
-
         #VMtable_length,
         #VMtable_filter,
         #VMtable_info,
@@ -660,13 +656,13 @@
                     console.log("dataIndex: ", dataIndex)
                     if (data.type === 'system') {
                         console.log("data._type is system")
-                        $(row).addClass('system-row');
+                        $(row).css('background-color', '#e6f7ff');
                     } else if (data.type === 'node') {
                         console.log("data._type is node")
-                        $(row).addClass('node-row');
+                        $(row).css('background-color', '#fff1f0');
                     } else if (data.type === 'subject') {
                         console.log("data._type is subject")
-                        $(row).addClass('subject-row');
+                        $(row).css('background-color', '#f6ffed');
                     }
                 },
                 "drawCallback": function(settings) {
