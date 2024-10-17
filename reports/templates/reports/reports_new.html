@@ -805,22 +805,20 @@
 
         // Function to set cell background color based on value and thresholds
         function setCellColor(cell, value, lowThreshold, midThreshold, highThreshold) {
-            if (value > 0 && value <= lowThreshold) {
-                $(cell).css('background-color', 'rgb(0, 155, 0, 0.35)');
-                $(cell).css('border', '2.5px solid rgb(77,192,77)');
-            } else if (value > lowThreshold && value <= midThreshold) {
-                $(cell).css('background-color', 'rgb(253, 223, 46, 0.51)');
-                $(cell).css('border', '2.5px solid rgb(232,204,39)');
-            } else if (value > midThreshold && value <= highThreshold) {
-                $(cell).css('background-color', 'rgb(259, 155, 0, 0.5)');
-                $(cell).css('border', '2.5px solid rgb(239,155,0)');
-            } else if (value > highThreshold) {
+            if (value > highThreshold) {
                 $(cell).css('background-color', 'rgb(204, 0, 0, 0.5)');
                 $(cell).css('border', '2.5px solid rgb(204,0,0)');
-            } else {
-                $(cell).css('background-color', '#FFFFFF');
-                $(cell).css('border', '');
+            } else if (value > midThreshold) {
+                $(cell).css('background-color', 'rgb(259, 155, 0, 0.5)');
+                $(cell).css('border', '2.5px solid rgb(239,155,0)');
+            } else if (value > lowThreshold) {
+                $(cell).css('background-color', 'rgb(253, 223, 46, 0.51)');
+                $(cell).css('border', '2.5px solid rgb(232,204,39)');
+            } else if (value > 0) {
+                $(cell).css('background-color', 'rgb(0, 155, 0, 0.35)');
+                $(cell).css('border', '2.5px solid rgb(77,192,77)');
             }
+            // If value is 0 or below thresholds, we don't change the styling
         }
 
         // Function to update table highlighting
