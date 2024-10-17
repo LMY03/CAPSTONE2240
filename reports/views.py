@@ -881,7 +881,7 @@ def formdata(request):
                 value = record.values.get('_value', 0)
                 if value > 0:
                     valid_classes.append(class_name)
-                    
+
     for classname in valid_classes:
         result = {"type": "subject", "name": classname, "nodename": "-", "subject": classname, "vmid": 0,
             "vm number": 0, "lxc number": 0,
@@ -913,6 +913,9 @@ def formdata(request):
         |> group(columns: ["subject"])
         |> sum()
     '''
+
+    print(f"vm_query: {vm_query}")
+
     query_result = query_api.query(query=vm_query)
     process_perclass_query_result(results, query_result, "vm number")
 
