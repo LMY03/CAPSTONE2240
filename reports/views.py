@@ -868,12 +868,20 @@ def formdata(request):
             |> filter(fn: (r) => r["_measurement"] == "system")
             |> filter(fn: (r) => r["_field"] == "cpus")
             |> filter(fn: (r) => r["object"] == "qemu" or r["object"] == "lxc")
+            |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+            |> filter(fn: (r) => r["host"] =~ /{class_name}/)
+            |> distinct(column: "vmid")
+            |> count()
+            |> group()
+            |> sum()
         '''
         result = query_api.query(query=vm_lxc_query)
-        
-        if result and len(result) > 0 and result[0].records[0].values["_value"] > 0:
-            valid_classes.append(class_name)
-
+        for table in result:
+            for record in table.records:
+                value = record.values.get('_value', 0)
+                if value > 0:
+                    valid_classes.append(class_name)
+                    
     for classname in valid_classes:
         result = {"type": "subject", "name": classname, "nodename": "-", "subject": classname, "vmid": 0,
             "vm number": 0, "lxc number": 0,
