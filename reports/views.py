@@ -868,10 +868,6 @@ def formdata(request):
             |> filter(fn: (r) => r["_measurement"] == "system")
             |> filter(fn: (r) => r["_field"] == "cpus")
             |> filter(fn: (r) => r["object"] == "qemu" or r["object"] == "lxc")
-            |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
-            |> filter(fn: (r) => r["host"] =~ /{class_name}/)
-            |> distinct(column: "vmid")
-            |> count()
         '''
         result = query_api.query(query=vm_lxc_query)
         
