@@ -26,7 +26,7 @@ from .models import RequestEntry, Comment, RequestUseCase, PortRules, RequestEnt
 from proxmox.models import VirtualMachines, Nodes, VMTemplates
 from guacamole.models import GuacamoleConnection, GuacamoleUser
 from pfsense.models import DestinationPorts
-from notifications.views import comment_notif_faculty, new_request_notif_tsg, testVM_notif_faculty, reject_notif_faculty, accept_notif_tsg, confirm_notif_faculty, reject_test_vm_notif
+from notifications.views import comment_notif_faculty, new_request_notif_tsg, testVM_notif_faculty, reject_notif_faculty, accept_notif_tsg, confirm_notif_faculty, reject_test_vm_notif, new_issue_ticket, new_issue_ticket_comment, issue_ticket_resolved
 from .forms import IssueTicketForm, IssueCommentForm, AddVMTemplates, EditVMTemplates
 from django.core.exceptions import ValidationError
 from django.contrib import messages
@@ -227,7 +227,14 @@ def submit_issue_ticket(request):
                     ticket=issue_ticket,
                     uploaded_by=request.user
                 )
-
+            data= {
+                'category': issue_ticket.category,
+                'subject' : issue_ticket.subject,
+                'description' : issue_ticket.description,
+                'id' : request_entry.id,
+                'faculty_name' : request_entry.requester.get_full_name()
+            }
+            new_issue_ticket (request_entry.assigned_to.email, data)
             return redirect(reverse('ticketing:request_details', args=[request_entry_id]))
         
     return redirect('ticketing:index')
@@ -239,6 +246,12 @@ def resolve_issue_ticket(request):
         
         issue_ticket.resolve_ticket()
 
+        to_email = issue_ticket.created_by.email
+        data = {
+            'issue_ticket_id' : issue_ticket_id
+        }
+
+        issue_ticket_resolved(to_email, data)
         return redirect(reverse('ticketing:ticket_details', args=[issue_ticket_id]))
     
     return redirect('ticketing:ticket_list')
@@ -261,7 +274,6 @@ def add_ticket_comment(request, issue_ticket_id):
             issue_comment.ticket = issue_ticket
             issue_comment.user = request.user
             issue_comment.save()
-            
             files = request.FILES.getlist('files')
             if files:
                 for file in files:
@@ -273,6 +285,16 @@ def add_ticket_comment(request, issue_ticket_id):
             if request.user.is_faculty():
                 issue_ticket.resolve_date = None
                 issue_ticket.save()
+                to_email =  issue_ticket.request.assigned_to.email
+            else:
+                to_email = issue_ticket.created_by.email
+            
+            data = {
+                'commenter' : request.user.get_full_name(),
+                'comment' : issue_comment.comment, 
+                'issue_ticket_id' : issue_ticket_id
+            }
+            new_issue_ticket_comment (to_email, data)
 
             return redirect(reverse('ticketing:ticket_details', args=[issue_ticket_id]))
         

@@ -20,6 +20,7 @@ from django.core.exceptions import ValidationError
 from django.contrib import messages
 import csv, random, string
 from datetime import datetime
+from django.http import JsonResponse
 
 # Create your views here.
 def login_view(request):
@@ -361,3 +362,14 @@ def reset_password (request, user_id):
     #TODO: Send an email to the affected user. 
     reset_password_email(user.email, generated_password)
     return redirect('users:user_management')
+
+def user_initiated_reset_password (request):
+    try:
+        user = get_object_or_404(User, username=request.user.username)
+        new_password = generate_random_string()
+        user.set_password(new_password)
+        user.save()
+
+        return JsonResponse({'status':'ok', 'message': new_password}, status = 200)
+    except:
+        return JsonResponse({'status': 'failed', 'error':"Error processing the reset password"}, status = 500)

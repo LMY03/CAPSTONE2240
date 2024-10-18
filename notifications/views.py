@@ -264,3 +264,75 @@ def reject_test_vm_notif (to_email, data):
     print(message)
     
     return message
+
+def new_issue_ticket (to_email, data):
+    service = Create_Service(CLIENT_SECRET_FILE, API_NAME, API_VERSION, SCOPES)
+    mimeMessage = MIMEMultipart()
+    mimeMessage["to"] = f'{to_email}'
+    mimeMessage['subject'] = f'A new issue ticket has been submitted for {data["id"]}'
+    email_data = {
+        "category": data['category'],
+        "subject" : data['subject'],
+        "description": data['description'],
+        "id" : data['id'],
+        "faculty_name" : data['faculty_name']
+    }
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    template_path = os.path.join(base_dir, 'templates', 'notifications', 'new_issue_ticket.hbs') #new template 
+    with open(template_path, 'r') as f:
+        source = f.read()
+    compiler = pybars.Compiler()
+    template = compiler.compile(source)
+    html_body = template(email_data)
+    mimeMessage.attach(MIMEText(html_body, 'html'))
+    raw_string = base64.urlsafe_b64encode(mimeMessage.as_bytes()).decode()
+    
+    message = service.users().messages().send(userId='me', body={'raw': raw_string}).execute()
+    print(message)
+    return message
+
+def new_issue_ticket_comment (to_email, data):
+    service = Create_Service(CLIENT_SECRET_FILE, API_NAME, API_VERSION, SCOPES)
+    mimeMessage = MIMEMultipart()
+    mimeMessage["to"] = f'{to_email}'
+    mimeMessage['subject'] = f'{data["commenter"]} added a new comment to issue ticket {data ["issue_ticket_id"]}'
+    email_data = {
+        "commenter": data['commenter'],
+        "comment" : data['comment'],
+        "issue_ticket_id" : data['issue_ticket_id']
+    }
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    template_path = os.path.join(base_dir, 'templates', 'notifications', 'new_issue_ticket_comment.hbs') #new template 
+    with open(template_path, 'r') as f:
+        source = f.read()
+    compiler = pybars.Compiler()
+    template = compiler.compile(source)
+    html_body = template(email_data)
+    mimeMessage.attach(MIMEText(html_body, 'html'))
+    raw_string = base64.urlsafe_b64encode(mimeMessage.as_bytes()).decode()
+    
+    message = service.users().messages().send(userId='me', body={'raw': raw_string}).execute()
+    print(message)
+    return message
+
+def issue_ticket_resolved (to_email, data):
+    service = Create_Service(CLIENT_SECRET_FILE, API_NAME, API_VERSION, SCOPES)
+    mimeMessage = MIMEMultipart()
+    mimeMessage["to"] = f'{to_email}'
+    mimeMessage['subject'] = f'Issue Ticket {data["issue_ticket_id"]} has been resolved'
+    email_data = {
+        "id": data['issue_ticket_id']
+    }
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    template_path = os.path.join(base_dir, 'templates', 'notifications', 'issue_ticket_resolved.hbs') #new template 
+    with open(template_path, 'r') as f:
+        source = f.read()
+    compiler = pybars.Compiler()
+    template = compiler.compile(source)
+    html_body = template(email_data)
+    mimeMessage.attach(MIMEText(html_body, 'html'))
+    raw_string = base64.urlsafe_b64encode(mimeMessage.as_bytes()).decode()
+    
+    message = service.users().messages().send(userId='me', body={'raw': raw_string}).execute()
+    print(message)
+    return message
