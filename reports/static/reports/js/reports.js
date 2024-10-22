@@ -343,6 +343,8 @@ document.querySelector('.radio-group input[type="radio"][value="cpu"]').checked 
 // form - start
 
 function showtable(tb_data) {
+
+    console.log("inside the showtable.")
     // Store the original data for later use
     window.table_data = tb_data;
 
