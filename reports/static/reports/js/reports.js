@@ -365,6 +365,21 @@ function showtable(tb_data) {
 
     console.log("columns: ", columns);
 
+    // 检查 jQuery 是否加载
+    if (typeof $ === 'undefined') {
+        throw new Error('jQuery is not loaded');
+    }
+
+    // 检查 DataTable 插件是否加载
+    if (typeof $.fn.DataTable === 'undefined') {
+        throw new Error('DataTable plugin is not loaded');
+    }
+
+    // 检查表格元素是否存在
+    if ($('#VMtable').length === 0) {
+        throw new Error('#VMtable element not found');
+    }
+
     // Check if DataTable already exists
     if ($.fn.DataTable.isDataTable('#VMtable')) {
         // Destroy the existing DataTable
