@@ -1,20 +1,20 @@
-// 在reports.js中
-window.addEventListener('load', function() {  // 使用load而不是DOMContentLoaded
-    console.log("Window fully loaded");
-    // 移除加载遮罩
-    // const loadingOverlay = document.getElementById('loading-overlay');
-    // if (loadingOverlay) {
-    //     loadingOverlay.style.display = 'none';
-    // }
+// // 在reports.js中
+// window.addEventListener('load', function() {  // 使用load而不是DOMContentLoaded
+//     console.log("Window fully loaded");
+//     // 移除加载遮罩
+//     // const loadingOverlay = document.getElementById('loading-overlay');
+//     // if (loadingOverlay) {
+//     //     loadingOverlay.style.display = 'none';
+//     // }
     
-    // 显示主内容
-    // document.querySelector('.content').style.visibility = 'visible';
+//     // 显示主内容
+//     // document.querySelector('.content').style.visibility = 'visible';
     
-    // 然后再执行原有的初始化代码
-    show();
-    console.log("Page loaded");
-    console.log("Current URL:", window.location.href);
-});
+//     // 然后再执行原有的初始化代码
+//     show();
+//     console.log("Page loaded");
+//     console.log("Current URL:", window.location.href);
+// });
 
 
 const base_url = ""
@@ -528,7 +528,7 @@ function show(){
             return row;
         });
 
-        console.log(tb_data);
+        console.log("tb_data", tb_data);
 
         showtable(tb_data);
         table_data = tb_data;
@@ -542,6 +542,8 @@ function show(){
         }
     );
 };
+
+show();
 
 // Function to set cell background color based on value and thresholds
 function setCellColor(cell, value, lowThreshold, midThreshold, highThreshold) {
