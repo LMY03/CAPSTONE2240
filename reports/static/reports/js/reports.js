@@ -1,3 +1,12 @@
+document.addEventListener('DOMContentLoaded', function() {
+    show();
+    
+    console.log("Page loaded");
+    console.log("Current URL:", window.location.href);
+    const urlParams = new URLSearchParams(window.location.search);
+    console.log("Type parameter:", urlParams.get('type'));
+});
+
 const base_url = ""
 
 var table_data = []; //formdata
@@ -513,7 +522,6 @@ function show(){
         }
     );
 };
-show()
 
 // Function to set cell background color based on value and thresholds
 function setCellColor(cell, value, lowThreshold, midThreshold, highThreshold) {
