@@ -38,8 +38,14 @@ def parse_form_date(date_string):
 def index(request):
     return render(request, 'reports/reports.html')
 
-def reports(request):
-    return render(request, 'reports/reports_new.html')
+def system_report(request):
+    return render(request, 'reports/reports_new.html', {'report_type': 'system'})
+
+def subject_report(request):
+    return render(request, 'reports/reports_new.html', {'report_type': 'subject'})
+
+def vm_report(request):
+    return render(request, 'reports/reports_new.html', {'report_type': 'vm'})
 
 # Get VM Info
 def getVmList(request):

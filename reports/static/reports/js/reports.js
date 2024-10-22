@@ -45,11 +45,18 @@ const columnMapping = {
 function getTableData(start_time, end_time) {
     return new Promise((resolve, reject) => {
 
-        // get type from url
-        const urlParams = new URLSearchParams(window.location.search);
-        const type = urlParams.get('type') || 'system';  // if none, default is system
+        const pathSegments = window.location.pathname.split('/');
+        let type = 'system';  
+        
+        if (pathSegments.includes('system')) {
+            type = 'system';
+        } else if (pathSegments.includes('subject')) {
+            type = 'subject';
+        } else if (pathSegments.includes('vm')) {
+            type = 'vm';
+        }
 
-        console.log("type in js: ", type)
+        console.log("Current report type:", type);
 
         var params = {
             "start_time": start_time,
