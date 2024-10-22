@@ -367,17 +367,17 @@ function showtable(tb_data) {
 
     // 检查 jQuery 是否加载
     if (typeof $ === 'undefined') {
-        throw new Error('jQuery is not loaded');
+        console.log('jQuery is not loaded');
     }
 
     // 检查 DataTable 插件是否加载
     if (typeof $.fn.DataTable === 'undefined') {
-        throw new Error('DataTable plugin is not loaded');
+        console.log('DataTable plugin is not loaded');
     }
 
     // 检查表格元素是否存在
     if ($('#VMtable').length === 0) {
-        throw new Error('#VMtable element not found');
+        console.log('#VMtable element not found');
     }
 
     // Check if DataTable already exists
