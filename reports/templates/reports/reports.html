@@ -20,9 +20,9 @@
   <div class="report-section">
 
     <ul>
-      <li><a href="reports/system/">System Report</a></li>
-      <li><a href="reports/subject/">Subject Report</a></li>
-      <li><a href="reports/vm/">Individual Report</a></li>
+      <li><a href="{% url 'reports:system_report' %}">System Report</a></li>
+      <li><a href="{% url 'reports:subject_report' %}">Subject Report</a></li>
+      <li><a href="{% url 'reports:vm_report' %}">Individual Report</a></li>
     </ul>
 
       <div class="card-title mb-3">VM Performance Report</div>

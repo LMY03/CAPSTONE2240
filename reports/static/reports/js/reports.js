@@ -3,8 +3,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     console.log("Page loaded");
     console.log("Current URL:", window.location.href);
-    const urlParams = new URLSearchParams(window.location.search);
-    console.log("Type parameter:", urlParams.get('type'));
 });
 
 const base_url = ""
