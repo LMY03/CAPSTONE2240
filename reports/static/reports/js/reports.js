@@ -78,7 +78,7 @@ function getTableData(start_time, end_time) {
         var queryString = Object.keys(params)
             .map(key => encodeURIComponent(key) + '=' + encodeURIComponent(params[key]))
             .join('&');
-        var fullUrl = 'formdata?' + queryString;
+        var fullUrl = '/reports/formdata?' + queryString;
 
         xhr.open('GET', fullUrl, true);
         xhr.responseType = 'json';
@@ -119,8 +119,7 @@ function getChartData(start_time, end_time, _type = "system", name = "system", n
         var queryString = Object.keys(params)
             .map(key => encodeURIComponent(key) + '=' + encodeURIComponent(params[key]))
             .join('&');
-        // var fullUrl = base_url + '/reports/graphdata?' + queryString;
-        var fullUrl = 'graphdata?' + queryString;
+        var fullUrl = '/reports/graphdata?' + queryString;
 
         xhr.open('GET', fullUrl, true);
         xhr.responseType = 'json';
