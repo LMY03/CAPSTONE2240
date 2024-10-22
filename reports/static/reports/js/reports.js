@@ -40,6 +40,8 @@ function getTableData(start_time, end_time) {
         const urlParams = new URLSearchParams(window.location.search);
         const type = urlParams.get('type') || 'system';  // if none, default is system
 
+        console.log("type in js: ", type)
+
         var params = {
             "start_time": start_time,
             "end_time": end_time,

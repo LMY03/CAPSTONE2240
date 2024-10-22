@@ -203,6 +203,8 @@ def convert_time_format(time_value):
 
 def formdata(request): 
 
+    print("========= in form data ==========")
+
     # connect to influxdb
     influxdb_client = InfluxDBClient(url=INFLUX_ADDRESS, token=token, org=org)
     query_api = influxdb_client.query_api()
@@ -252,10 +254,10 @@ def formdata(request):
                     valid_classes.append(class_name)
 
 
-
+    data = []
     ################################ SYSTEM ###############################
     if report_type == 'system':
-        data = []
+        print("========= in form data - system ==========")
         result = {"type": "system", "name": "system", "nodename": "-", "subject": "-", "vmid": 0,
                             "vm number": 0, "lxc number": 0,
                             "cpu": 0, "cpu usage": 0.0,
@@ -701,8 +703,8 @@ def formdata(request):
     ################################ SUBJECTS ###############################
 
     elif report_type == 'subject':
+        print("========= in form data - subject ==========")
         results = []
-
         for classname in valid_classes:
             result = {"type": "subject", "name": classname, "nodename": "-", "subject": classname, "vmid": 0,
                 "vm number": 0, "lxc number": 0,
@@ -942,6 +944,7 @@ def formdata(request):
 
     ################################ INDIVIDUAL VMS/CONTAINERS ####################################
     elif report_type == 'vm':
+        print("========= in form data - indiv vm ==========")
         results = []
         vms = []
 
