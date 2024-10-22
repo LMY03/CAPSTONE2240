@@ -517,7 +517,7 @@ function show(){
         String(date_str.getSeconds()).padStart(2, '0');
 
     // get table data
-    getTableData(startDate, endDate, selectedType).then(tb_data=>{
+    getTableData(startDate, endDate).then(tb_data=>{
         
         // Format uptime if it's a number
         tb_data = tb_data.map(row => {
