@@ -369,6 +369,8 @@ function showtable(tb_data) {
         $('#VMtable').empty();
     }
 
+    console.log("inside the show table")
+
     vmTable = $('table#VMtable').DataTable({
         data: tb_data,
         columns: columns,
@@ -525,6 +527,8 @@ function show(){
             }
             return row;
         });
+
+        console.log(tb_data);
 
         showtable(tb_data);
         table_data = tb_data;
