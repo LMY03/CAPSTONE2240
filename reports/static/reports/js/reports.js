@@ -2,7 +2,6 @@ const base_url = ""
 
 var table_data = []; //formdata
 var selected_metrics = [];
-var global_page = 1;
 
 var vmTable;
 
@@ -34,19 +33,23 @@ const columnMapping = {
 };
     
 
-function getTableData(start_time, end_time, page = 1) {
+function getTableData(start_time, end_time) {
     return new Promise((resolve, reject) => {
+
+        // get type from url
+        const urlParams = new URLSearchParams(window.location.search);
+        const type = urlParams.get('type') || 'system';  // if none, default is system
+
         var params = {
             "start_time": start_time,
             "end_time": end_time,
-            "page" : page
+            "type": type,
         };
 
         var xhr = new XMLHttpRequest();
         var queryString = Object.keys(params)
             .map(key => encodeURIComponent(key) + '=' + encodeURIComponent(params[key]))
             .join('&');
-        // var fullUrl = base_url + '/reports/formdata?' + queryString;
         var fullUrl = 'formdata?' + queryString;
 
         xhr.open('GET', fullUrl, true);
@@ -55,21 +58,6 @@ function getTableData(start_time, end_time, page = 1) {
         xhr.onload = function () {
             if (xhr.status === 200) {
                 let data = xhr.response;
-                // var current_page_sp = document.querySelector('#current_page');
-                // current_page_sp.textContent = data.current_page;
-                // global_page = data.current_page;
-                // var page_count_sp = document.querySelector('#page_count');
-                // page_count_sp.textContent = data.page_count;
-                // if (data.current_page === data.page_count){
-                //     var next_page = document.querySelector("#nextPage");
-                //     next_page.classList.add("disable");
-                //     next_page.disable = true;
-                // }
-                // if (data.current_page === 1){
-                //     var pre_page = document.querySelector("#prePage");
-                //     pre_page.classList.add("disable");
-                //     pre_page.disable = true;
-                // }
                 resolve(data.data);
 
             } else {
@@ -501,7 +489,7 @@ function show(){
         String(date_str.getSeconds()).padStart(2, '0');
 
     // get table data
-    getTableData(startDate, endDate).then(tb_data=>{
+    getTableData(startDate, endDate, selectedType).then(tb_data=>{
         
         // Format uptime if it's a number
         tb_data = tb_data.map(row => {
