@@ -363,6 +363,8 @@ function showtable(tb_data) {
         }
     })
 
+    console.log("columns: ", columns);
+
     // Check if DataTable already exists
     if ($.fn.DataTable.isDataTable('#VMtable')) {
         // Destroy the existing DataTable
