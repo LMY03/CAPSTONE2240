@@ -214,9 +214,43 @@ def formdata(request):
     start_date = parse_form_date(start_time_str)
     end_date = parse_form_date(end_time_str)
 
-    # get template vm
+    # get template
     template_hosts_ids = get_template_hosts_ids(start_date, end_date)
     excluded_vmids_str = '|'.join(map(str, template_hosts_ids))
+
+    raw_class_list = RequestUseCase.objects.all().exclude(
+        request_use_case__icontains="Research"
+    ).exclude(
+        request_use_case__icontains="Test"
+    ).exclude(
+        request_use_case__icontains="Thesis"
+    ).values_list('request_use_case', flat=True)
+
+    class_list = list(set(entry.split('_')[0] for entry in raw_class_list))
+    
+    valid_classes = []
+    
+    for class_name in class_list:
+        vm_lxc_query = f'''
+            from(bucket: "{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["_field"] == "cpus")
+            |> filter(fn: (r) => r["object"] == "qemu" or r["object"] == "lxc")
+            |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+            |> filter(fn: (r) => r["host"] =~ /{class_name}/)
+            |> distinct(column: "vmid")
+            |> count()
+            |> group()
+            |> sum()
+        '''
+        result = query_api.query(query=vm_lxc_query)
+        for table in result:
+            for record in table.records:
+                value = record.values.get('_value', 0)
+                if value > 0:
+                    valid_classes.append(class_name)
+
 
 
     ################################ SYSTEM ###############################
@@ -665,43 +699,6 @@ def formdata(request):
             data.append(r)
 
     ################################ SUBJECTS ###############################
-    # get template
-    template_hosts_ids = get_template_hosts_ids(start_date, end_date)
-    excluded_vmids_str = '|'.join(map(str, template_hosts_ids))
-
-    raw_class_list = RequestUseCase.objects.all().exclude(
-        request_use_case__icontains="Research"
-    ).exclude(
-        request_use_case__icontains="Test"
-    ).exclude(
-        request_use_case__icontains="Thesis"
-    ).values_list('request_use_case', flat=True)
-
-    class_list = list(set(entry.split('_')[0] for entry in raw_class_list))
-    
-    valid_classes = []
-    
-    for class_name in class_list:
-        vm_lxc_query = f'''
-            from(bucket: "{bucket}")
-            |> range(start: {start_date}, stop: {end_date})
-            |> filter(fn: (r) => r["_measurement"] == "system")
-            |> filter(fn: (r) => r["_field"] == "cpus")
-            |> filter(fn: (r) => r["object"] == "qemu" or r["object"] == "lxc")
-            |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
-            |> filter(fn: (r) => r["host"] =~ /{class_name}/)
-            |> distinct(column: "vmid")
-            |> count()
-            |> group()
-            |> sum()
-        '''
-        result = query_api.query(query=vm_lxc_query)
-        for table in result:
-            for record in table.records:
-                value = record.values.get('_value', 0)
-                if value > 0:
-                    valid_classes.append(class_name)
-
 
     elif report_type == 'subject':
         results = []
