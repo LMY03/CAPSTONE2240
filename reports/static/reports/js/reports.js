@@ -358,7 +358,8 @@ function showtable(tb_data) {
                 }
                 return null;
             },
-            title: columnName
+            title: columnName,
+            visible: ["Type"].includes(columnName)
         }
     })
 
