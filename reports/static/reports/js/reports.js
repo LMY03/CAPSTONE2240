@@ -105,8 +105,19 @@ function getTableData(start_time, end_time) {
 }
 
 
-function getChartData(start_time, end_time, _type = "system", name = "system", nodename = "none", subject =
+function getChartData(start_time, end_time, _type = "none", name = "none", nodename = "none", subject =
     "none", vmid = -1) {
+        if (_type === "none") {
+            const chartContainer = document.getElementById('chartContainer');
+            if (chartContainer) {
+                chartContainer.style.display = 'none';
+            }
+            resolve({
+                x_labels: [],
+                result_data: []
+            });
+            return;
+        }
     return new Promise((resolve, reject) => {
         var params = {
             "type": _type,
@@ -184,9 +195,7 @@ var copy_data = {};
 
 var myChart = undefined;
 function showchart(labels, datasets, title = "system"){
-
     document.getElementById('chartContainer').style.display = 'block';
-    
     if (myChart === undefined){     // no chart yet
         const data = {
             labels: labels,
@@ -562,9 +571,7 @@ function show(){
     getChartData(startDate, endDate).then(
         ({x_labels, result_data}) =>{
             var labels, dataset;
-            if (pathSegments.includes('system')) {
-                showchart(x_labels,result_data);
-            }
+            showchart(x_labels,result_data);
             updateChart();
         }
     );
