@@ -26,7 +26,7 @@ var vmTable;
 
 // Define the order of columns as they appear in the table
 const columnOrder = [
-    "Type", "Node", "Subject", "Name", "ID", "VM#", "LXC#", "CPU", 
+    "Type", "Node", "Subject", "Name", "ID", "VM#", "LXC#", "CPU", "CPU allocated",
     "CPU Usage(%)", "RAM(Gib)", "RAM Usage(%)", "Storage(Gib)", "Storage Usage(%)", 
     "Network In(K)", "Network Out(K)", "Uptime"
 ];
@@ -42,6 +42,7 @@ const columnMapping = {
     "LXC#": ["lxc number", "LXC#"],
     "CPU": ["cpu", "CPU"],
     "CPU Usage(%)": ["cpu usage", "CPU Usage(%)"],
+    "CPU allocated": ["cpu allocated", "CPU allocated"],
     "RAM(Gib)": ["mem", "RAM(Gib)"],
     "RAM Usage(%)": ["mem usage", "RAM Usage(%)"],
     "Storage(Gib)": ["storage", "Storage(Gib)"],
@@ -347,6 +348,17 @@ function showtable(tb_data) {
     // Store the original data for later use
     window.table_data = tb_data;
 
+    const pathSegments = window.location.pathname.split('/');
+    let hiddenColumns = [];  
+    
+    if (pathSegments.includes('system')) {
+        hiddenColumns.push('Subject', 'ID', 'Uptime')
+    } else if (pathSegments.includes('subject')) {
+        hiddenColumns.push('Node', 'Name', 'ID', 'CPU allocated', 'Uptime')
+    } else if (pathSegments.includes('vm')) {
+        hiddenColumns.push('Type', 'Storage Usage', 'CPU allocated')
+    }
+
     // Define columns based on columnOrder and columnMapping
     let columns = columnOrder.map(columnName => {
         return {
@@ -359,7 +371,7 @@ function showtable(tb_data) {
                 return null;
             },
             title: columnName,
-            visible: !["Type"].includes(columnName)
+            visible: !hiddenColumns.includes(columnName)
         }
     })
 
@@ -381,8 +393,8 @@ function showtable(tb_data) {
         "responsive": true,
         "select": true,
         'columnDefs': [
-            { "type": "numeric", "targets": [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] },
-            { className: "tdUptime", type: "natural", "targets": [15] },
+            { "type": "numeric", "targets": [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] },
+            { className: "tdUptime", type: "natural", "targets": [16] },
             { "orderSequence": ["system", "node", "subject"], "targets": 0 }
         ],
         "order": [[0, 'acs']],

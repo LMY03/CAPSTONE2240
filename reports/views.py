@@ -209,8 +209,6 @@ def convert_time_format(time_value):
 
 def formdata(request): 
 
-    print("========= in form data ==========")
-
     # connect to influxdb
     influxdb_client = InfluxDBClient(url=INFLUX_ADDRESS, token=token, org=org)
     query_api = influxdb_client.query_api()
@@ -266,7 +264,7 @@ def formdata(request):
         print("========= in form data - system ==========")
         result = {"type": "system", "name": "system", "nodename": "-", "subject": "-", "vmid": 0,
                             "vm number": 0, "lxc number": 0,
-                            "cpu": 0, "cpu usage": 0.0,
+                            "cpu": 0, "cpu allocated": 0, "cpu usage": 0.0,
                             "mem": 0, "mem usage": 0.0,
                             "storage": 0.0, "storage usage": 0.0,
                             "netin": 0.0, "netout": 0.0,
@@ -322,6 +320,22 @@ def formdata(request):
         for table in query_result:
             for record in table.records:
                 result["cpu"] = record.values.get('_value', 0)
+
+        # cpu allocated
+        cpu_allocated_query = f'''
+            from(bucket: "{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["_field"] == "cpus")
+            |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+            |> last()
+            |> group()
+            |> sum()
+        '''    
+        query_result = query_api.query(query=cpu_allocated_query)
+        for table in query_result:
+            for record in table.records:
+                result["cpu allocated"] = record.values.get('_value', 0)
 
         # cpu data
         cpu_query = f'''
@@ -520,7 +534,7 @@ def formdata(request):
                     nodes.append(nodename)
                     result = {"type": "node", "name": nodename, "nodename": nodename, "subject": "-", "vmid": 0,
                             "vm number": value, "lxc number": 0,
-                            "cpu": 0, "cpu usage": 0.0,
+                            "cpu": 0, "cpu allocated": 0, "cpu usage": 0.0,
                             "mem": 0, "mem usage": 0.0,
                             "storage": 0.0, "storage usage": 0.0,
                             "netin": 0.0, "netout": 0.0,
@@ -554,6 +568,20 @@ def formdata(request):
         '''
         query_result = query_api.query(query=cpus_query)
         process_pernode_query_result(results, query_result, "cpu")
+
+        # cpu allocated
+        cpu_allocated_query = f'''
+            from(bucket: "{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["_field"] == "cpus")
+            |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+            |> last()
+            |> group(columns: ["nodename"])
+            |> sum()
+        '''    
+        query_result = query_api.query(query=cpu_allocated_query)
+        process_pernode_query_result(results, query_result, "cpu allocated")
 
         # cpu usage
         cpu_query = f'''
@@ -714,7 +742,7 @@ def formdata(request):
         for classname in valid_classes:
             result = {"type": "subject", "name": classname, "nodename": "-", "subject": classname, "vmid": 0,
                 "vm number": 0, "lxc number": 0,
-                "cpu": 0, "cpu usage": 0.0,
+                "cpu": 0, "cpu allocated": 0, "cpu usage": 0.0,
                 "mem": 0, "mem usage": 0.0,
                 "storage": 0.0, "storage usage": 0,
                 "netin": 0.0, "netout": 0.0,
@@ -982,7 +1010,7 @@ def formdata(request):
                     vms.append((nodename, vm_type, vmid, vmname))
                     result = {"type": "vm", "name": vmname, "nodename": nodename, "subject": classname, "vmid": vmid, 
                             "vm number": 0, "lxc number": 0,
-                            "cpu": value, "cpu usage": 0.0,
+                            "cpu": value, "cpu allocated": 0, "cpu usage": 0.0,
                             "mem": 0, "mem usage": 0.0,
                             "storage": 0.0, "storage usage": 0,
                             "netin": 0.0, "netout": 0.0,
