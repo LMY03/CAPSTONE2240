@@ -561,8 +561,6 @@ function show(){
         table_data = tb_data;
     })
 
-    const pathSegments = window.location.pathname.split('/');
-        
     // get chart data
     getChartData(startDate, endDate).then(
         ({x_labels, result_data}) =>{
@@ -573,7 +571,57 @@ function show(){
     
 };
 
-show();
+function initialize(){
+    const startDate_input = document.getElementById('startDate');
+    const endDate_input = document.getElementById('endDate');
+
+    // get start date and end date
+    if (!startDate_input.value || !endDate_input.value) {
+        const now = new Date();
+        now.setMinutes(now.getMinutes() + 480);
+        const currentDateTime = now.toISOString().slice(0, 16);
+        endDate_input.value = currentDateTime;
+        now.setMinutes(now.getMinutes() - 1440);
+        const pastOneDay = now.toISOString().slice(0, 16);
+        startDate_input.value = pastOneDay
+    };
+
+    const date = new Date(startDate_input.value);
+    const startDate = date.getFullYear() + '-' +
+        String(date.getMonth() + 1).padStart(2, '0') + '-' +
+        String(date.getDate()).padStart(2, '0') + ' ' +
+        String(date.getHours()).padStart(2, '0') + ':' +
+        String(date.getMinutes()).padStart(2, '0') + ':' +
+        String(date.getSeconds()).padStart(2, '0');
+
+    const date_str = new Date(endDate_input.value);
+    const endDate = date_str.getFullYear() + '-' +
+        String(date_str.getMonth() + 1).padStart(2, '0') + '-' +
+        String(date_str.getDate()).padStart(2, '0') + ' ' +
+        String(date_str.getHours()).padStart(2, '0') + ':' +
+        String(date_str.getMinutes()).padStart(2, '0') + ':' +
+        String(date_str.getSeconds()).padStart(2, '0');
+
+    // get table data
+    getTableData(startDate, endDate).then(tb_data=>{
+        
+        // Format uptime if it's a number
+        tb_data = tb_data.map(row => {
+            if (typeof row.uptime === 'number') {
+                row.uptime = secondsToHHMMSS(row.uptime);
+            }
+            return row;
+        });
+
+        console.log("tb_data", tb_data);
+
+        showtable(tb_data);
+        table_data = tb_data;
+    })
+
+};
+
+initialize();
 
 // Function to set cell background color based on value and thresholds
 function setCellColor(cell, value, lowThreshold, midThreshold, highThreshold) {
