@@ -356,7 +356,7 @@ function showtable(tb_data) {
     } else if (pathSegments.includes('subject')) {
         hiddenColumns.push('Node', 'Name', 'ID', 'CPU allocated', 'Uptime')
     } else if (pathSegments.includes('vm')) {
-        hiddenColumns.push('Type', 'Storage Usage', 'CPU allocated')
+        hiddenColumns.push('Type', 'Storage Usage(%)', 'CPU allocated')
     }
 
     // Define columns based on columnOrder and columnMapping

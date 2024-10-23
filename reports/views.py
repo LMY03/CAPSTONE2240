@@ -265,8 +265,8 @@ def formdata(request):
         result = {"type": "system", "name": "system", "nodename": "-", "subject": "-", "vmid": 0,
                             "vm number": 0, "lxc number": 0,
                             "cpu": 0, "cpu allocated": 0, "cpu usage": 0.0,
-                            "mem": 0, "mem usage": 0.0,
-                            "storage": 0.0, "storage usage": 0.0,
+                            "mem": 0.0, "mem allocated": 0.0, "mem usage": 0.0,
+                            "storage": 0.0, "storage allocated": 0.0, "storage usage": 0.0,
                             "netin": 0.0, "netout": 0.0,
                             "uptime": "-"}
 
@@ -370,6 +370,25 @@ def formdata(request):
             for record in table.records:
                 result["mem"] = record.values.get('_value', 0)
 
+
+        # memory allocated
+        mem_allocated_query = f'''
+            from(bucket: "{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["_field"] == "maxmem")
+            |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+            |> last()
+            |> group()
+            |> sum()
+            |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 / 1024.0 / 1024.0) }}))
+        '''    
+        query_result = query_api.query(query=mem_allocated_query)
+        for table in query_result:
+            for record in table.records:
+                result["mem allocated"] = record.values.get('_value', 0)
+
+
         # mem usage data
         mem_query = f'''
             from(bucket:"{bucket}")
@@ -403,6 +422,25 @@ def formdata(request):
         for table in query_result:
             for record in table.records:
                 result["storage"] = record.values.get('_value', 0)
+
+
+        # storage allocated
+        storage_allocated_query = f'''
+            from(bucket:"{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["_field"] == "maxdisk")
+            |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+            |> last()
+            |> group()
+            |> sum()
+            |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 / 1024.0 / 1024.0) }}))
+        '''
+        query_result = query_api.query(query=storage_allocated_query)
+        for table in query_result:
+            for record in table.records:
+                result["storage allocated"] = record.values.get('_value', 0)
+
 
         # storage usage
         storage_used_query = f'''
@@ -535,8 +573,8 @@ def formdata(request):
                     result = {"type": "node", "name": nodename, "nodename": nodename, "subject": "-", "vmid": 0,
                             "vm number": value, "lxc number": 0,
                             "cpu": 0, "cpu allocated": 0, "cpu usage": 0.0,
-                            "mem": 0, "mem usage": 0.0,
-                            "storage": 0.0, "storage usage": 0.0,
+                            "mem": 0, "mem allocated": 0.0, "mem usage": 0.0,
+                            "storage": 0.0, "storage allocated": 0.0, "storage usage": 0.0,
                             "netin": 0.0, "netout": 0.0,
                             "uptime": "-"}
                     results.append(result)
@@ -609,6 +647,22 @@ def formdata(request):
         '''
         query_result = query_api.query(query=mem_query)
         process_pernode_query_result(results, query_result, "mem")
+
+        # memory allocated
+        mem_allocated_query = f'''
+            from(bucket: "{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["_field"] == "maxmem")
+            |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+            |> last()
+            |> group()
+            |> sum()
+            |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 / 1024.0 / 1024.0) }}))
+        '''    
+        query_result = query_api.query(query=mem_allocated_query)
+        process_pernode_query_result(results, query_result, "mem allocated")
+
         
         # mem usage
         mem_usage_query = f'''
@@ -637,6 +691,21 @@ def formdata(request):
         '''
         query_result = query_api.query(query=storage_query)
         process_pernode_query_result(results, query_result, "storage")
+
+        # storage allocated
+        storage_allocated_query = f'''
+            from(bucket:"{bucket}")
+            |> range(start: {start_date}, stop: {end_date})
+            |> filter(fn: (r) => r["_measurement"] == "system")
+            |> filter(fn: (r) => r["_field"] == "maxdisk")
+            |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
+            |> last()
+            |> group(columns: ["nodename"])
+            |> sum()
+            |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 / 1024.0 / 1024.0) }}))
+        '''
+        query_result = query_api.query(query=storage_allocated_query)
+        process_pernode_query_result(results, query_result, "storage allocated")
 
         # storage usage
         storage_used_query = f'''
