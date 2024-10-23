@@ -1148,9 +1148,9 @@ def formdata(request):
         if 'storage usage' in item:
             item['storage usage'] = round(item['storage usage'],2)
         if 'netin' in item:
-            item['netin'] = round(item['netin'] / 1024, 2)
+            item['netin'] = round(item['netin'], 2)
         if 'netout' in item:
-            item['netout'] = round(item['netout'] / 1024, 2)
+            item['netout'] = round(item['netout'], 2)
 
     # CONSOLIDATE RESULT 
     output = {}
