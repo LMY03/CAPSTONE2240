@@ -551,14 +551,19 @@ function show(){
         showtable(tb_data);
         table_data = tb_data;
     })
-    // get chart data
-    getChartData(startDate, endDate).then(
-        ({x_labels, result_data}) =>{
-            var labels, dataset;
-            showchart(x_labels,result_data);
-            updateChart();
-        }
-    );
+
+    const pathSegments = window.location.pathname.split('/');
+        
+    if (pathSegments.includes('system')) {
+        // get chart data
+        getChartData(startDate, endDate).then(
+            ({x_labels, result_data}) =>{
+                var labels, dataset;
+                showchart(x_labels,result_data);
+                updateChart();
+            }
+        );
+    }
 };
 
 show();
