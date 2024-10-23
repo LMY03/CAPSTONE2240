@@ -27,7 +27,7 @@ var vmTable;
 // Define the order of columns as they appear in the table
 const columnOrder = [
     "Type", "Node", "Subject", "Name", "ID", "VM#", "LXC#", "CPU", "CPU allocated",
-    "CPU Usage(%)", "RAM(Gib)", "RAM Usage(%)", "Storage(Gib)", "Storage Usage(%)", 
+    "CPU Usage(%)", "RAM(Gib)", "RAM allocated", "RAM Usage(%)", "Storage(Gib)", "Storage allocated", "Storage Usage(%)", 
     "Network In(K)", "Network Out(K)", "Uptime"
 ];
 
@@ -44,8 +44,10 @@ const columnMapping = {
     "CPU Usage(%)": ["cpu usage", "CPU Usage(%)"],
     "CPU allocated": ["cpu allocated", "CPU allocated"],
     "RAM(Gib)": ["mem", "RAM(Gib)"],
+    "RAM allocated": ["mem allocated", "RAM allocated"],
     "RAM Usage(%)": ["mem usage", "RAM Usage(%)"],
     "Storage(Gib)": ["storage", "Storage(Gib)"],
+    "Storage allocated": ["storage allocated", "Storage allocated"],
     "Storage Usage(%)": ["storage usage", "Storage Usage(%)"],
     "Network In(K)": ["netin", "Network In(K)"],
     "Network Out(K)": ["netout", "Network Out(K)"],
@@ -393,8 +395,8 @@ function showtable(tb_data) {
         "responsive": true,
         "select": true,
         'columnDefs': [
-            { "type": "numeric", "targets": [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15] },
-            { className: "tdUptime", type: "natural", "targets": [16] },
+            { "type": "numeric", "targets": [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17] },
+            { className: "tdUptime", type: "natural", "targets": [18] },
             { "orderSequence": ["system", "node", "subject"], "targets": 0 }
         ],
         "order": [[0, 'acs']],
@@ -587,11 +589,11 @@ function updateTableHighlighting(table) {
 
         // RAM Usage (index 10)
         var ramUsage = parseFloat(data['mem usage']);
-        setCellColor(table.cell(rowIdx, 10).node(), ramUsage, 25, 50, 75);
+        setCellColor(table.cell(rowIdx, 12).node(), ramUsage, 25, 50, 75);
 
         // Storage Usage (index 12)
         var storageUsage = parseFloat(data['storage usage']);
-        setCellColor(table.cell(rowIdx, 12).node(), storageUsage, 25, 50, 75);
+        setCellColor(table.cell(rowIdx, 15).node(), storageUsage, 25, 50, 75);
     });
 }
 
