@@ -359,7 +359,7 @@ function showtable(tb_data) {
                 return null;
             },
             title: columnName,
-            visible: ["Type"].includes(columnName)
+            visible: !["Type"].includes(columnName)
         }
     })
 
