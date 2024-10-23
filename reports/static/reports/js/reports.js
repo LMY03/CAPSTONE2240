@@ -344,7 +344,6 @@ document.querySelector('.radio-group input[type="radio"][value="cpu"]').checked 
 
 function showtable(tb_data) {
 
-    console.log("inside the showtable.")
     // Store the original data for later use
     window.table_data = tb_data;
 
@@ -362,23 +361,6 @@ function showtable(tb_data) {
             title: columnName
         }
     })
-
-    console.log("columns: ", columns);
-
-    // 检查 jQuery 是否加载
-    if (typeof $ === 'undefined') {
-        console.log('jQuery is not loaded');
-    }
-
-    // 检查 DataTable 插件是否加载
-    if (typeof $.fn.DataTable === 'undefined') {
-        console.log('DataTable plugin is not loaded');
-    }
-
-    // 检查表格元素是否存在
-    if ($('#VMtable').length === 0) {
-        console.log('#VMtable element not found');
-    }
 
     // Check if DataTable already exists
     if ($.fn.DataTable.isDataTable('#VMtable')) {
@@ -399,8 +381,23 @@ function showtable(tb_data) {
         "select": true,
         'columnDefs': [
             { "type": "numeric", "targets": [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] },
-            { className: "tdUptime", type: "natural", "targets": [15] }
+            { className: "tdUptime", type: "natural", "targets": [15] },
+            {
+                "targets": 0,
+                "type": "string",
+                "orderData": 0,
+                "render": function(data, type, row) {
+                    if (type === 'sort') {
+                        if (data === "system") return 1;
+                        if (data === 'node') return 2;
+                        if (data === 'subject') return 3;
+                        return 4;
+                    }
+                    return data;
+                }
+            }
         ],
+        "order": [[0, 'acs']],
         "rowCallback": function(row, data, index) {
             if (data.type === 'system') {
                 $('td', row).css('background-color', '#e6f7ff');
