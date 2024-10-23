@@ -558,15 +558,15 @@ function show(){
 
     const pathSegments = window.location.pathname.split('/');
         
-    if (pathSegments.includes('system')) {
-        // get chart data
-        getChartData(startDate, endDate).then(
-            ({x_labels, result_data}) =>{
-                var labels, dataset;
+    // get chart data
+    getChartData(startDate, endDate).then(
+        ({x_labels, result_data}) =>{
+            var labels, dataset;
+            if (pathSegments.includes('system')) {
                 showchart(x_labels,result_data);
             }
-        );
-    }
+        }
+    );
     updateChart();
 };
 
