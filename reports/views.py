@@ -1265,10 +1265,14 @@ def formdata(request):
             item['cpu usage'] = round(item['cpu usage'],2)
         if 'mem' in item:
             item['mem'] = round(item['mem'],2)
+        if 'mem allocated' in item:
+            item['mem allocated'] = round(item['mem allocated'],2)
         if 'mem usage' in item:
             item['mem usage'] = round(item['mem usage'],2)
         if 'storage' in item:
             item['storage'] = round(item['storage'],2)
+        if 'storage allocated' in item:
+            item['storage allocated'] = round(item['storage allocated'],2)
         if 'storage usage' in item:
             item['storage usage'] = round(item['storage usage'],2)
         if 'netin' in item:
