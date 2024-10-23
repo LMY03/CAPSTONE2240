@@ -313,6 +313,7 @@ function getSelectedMetric() {
 }
 
 function updateChart() {
+    if (myChart === undefined){ return ;}
     const selectedMetric = getSelectedMetric();
     if (selectedMetric && copy_data && copy_data.datasets) {
         const dataset = copy_data.datasets.find(ds => ds.label === selectedMetric);
@@ -563,10 +564,10 @@ function show(){
             ({x_labels, result_data}) =>{
                 var labels, dataset;
                 showchart(x_labels,result_data);
-                updateChart();
             }
         );
     }
+    updateChart();
 };
 
 show();
