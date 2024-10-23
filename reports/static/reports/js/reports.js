@@ -565,9 +565,10 @@ function show(){
             if (pathSegments.includes('system')) {
                 showchart(x_labels,result_data);
             }
+            updateChart();
         }
     );
-    updateChart();
+    
 };
 
 show();
