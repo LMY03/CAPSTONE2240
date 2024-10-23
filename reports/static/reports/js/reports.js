@@ -382,20 +382,7 @@ function showtable(tb_data) {
         'columnDefs': [
             { "type": "numeric", "targets": [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] },
             { className: "tdUptime", type: "natural", "targets": [15] },
-            {
-                "targets": 0,
-                "type": "string",
-                "orderData": 0,
-                "render": function(data, type, row) {
-                    if (type === 'sort') {
-                        if (data === "system") return 1;
-                        if (data === 'node') return 2;
-                        if (data === 'subject') return 3;
-                        return 4;
-                    }
-                    return data;
-                }
-            }
+            { "orderSequence": ["system", "node", "subject"], "targets": 0 }
         ],
         "order": [[0, 'acs']],
         "rowCallback": function(row, data, index) {
