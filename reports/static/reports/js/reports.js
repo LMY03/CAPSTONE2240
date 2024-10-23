@@ -104,15 +104,10 @@ function getTableData(start_time, end_time) {
     });
 }
 
-var myChart = undefined;
 
 function getChartData(start_time, end_time, _type = "none", name = "none", nodename = "none", subject =
     "none", vmid = -1) {
-        if (myChart = undefined && _type === "none") {
-            const chartContainer = document.getElementById('chartContainer');
-            if (chartContainer) {
-                chartContainer.style.display = 'none';
-            }
+        if (_type === "none") {
             resolve({
                 x_labels: [],
                 result_data: []
@@ -194,6 +189,7 @@ function getChartData(start_time, end_time, _type = "none", name = "none", noden
 // deep copy
 var copy_data = {};
 
+var myChart = undefined;
 function showchart(labels, datasets, title = "system"){
     document.getElementById('chartContainer').style.display = 'block';
     if (myChart === undefined){     // no chart yet
@@ -570,7 +566,6 @@ function show(){
     // get chart data
     getChartData(startDate, endDate).then(
         ({x_labels, result_data}) =>{
-            var labels, dataset;
             showchart(x_labels,result_data);
             updateChart();
         }
