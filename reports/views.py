@@ -656,7 +656,7 @@ def formdata(request):
             |> filter(fn: (r) => r["_field"] == "maxmem")
             |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
             |> last()
-            |> group()
+            |> group(columns: ["nodename"])
             |> sum()
             |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 / 1024.0 / 1024.0) }}))
         '''    
