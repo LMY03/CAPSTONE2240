@@ -462,39 +462,24 @@ def formdata(request):
 
         # netin data
         netin_query = f'''
-            last = from(bucket: "proxmox")
+            from(bucket: "proxmox")
             |> range(start: {start_date}, stop: {end_date})
             |> filter(fn: (r) => r["_measurement"] == "system")
             |> filter(fn: (r) => r["_field"] == "netin")
-            |> group(columns: ["nodename", "host", "object", "vmid"])
-            |> last()
-            |> keep(columns: ["_time", "_value", "nodename", "host", "object", "vmid"])
-
-            first = from(bucket: "proxmox")
-            |> range(start: {start_date}, stop: {end_date})
-            |> filter(fn: (r) => r["_measurement"] == "system")
-            |> filter(fn: (r) => r["_field"] == "netin")
-            |> group(columns: ["nodename", "host", "object", "vmid"])
-            |> first()
-            |> keep(columns: ["_time", "_value", "nodename", "host", "object", "vmid"])
-
-            join(
-            tables: {{last: last, first: first}},
-            on: ["nodename", "host", "object", "vmid"]
-            )
+            |> increase()
+            |> difference()
             |> map(fn: (r) => ({{
-            _time: r._time_last,
-            nodename: r.nodename,
-            host: r.host,
-            object: r.object,
-            vmid: r.vmid,
-            first_value: r._value_first,
-            last_value: r._value_last,
-            _value: r._value_last - r._value_first
-            }}))
+                r with
+                _value: float(v: r._value) / 1024.0
+                }}))
+            |> elapsed()
+            |> map(fn: (r) => ({{
+                r with
+                _value: float(v: r._value) / float(v: r.elapsed)
+                }}))
+            |> mean()
             |> group()
-            |> sum(column: "_value")
-            |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0) }}))
+            |> sum()
         '''
         query_result = query_api.query(query=netin_query)
         for table in query_result:
@@ -504,39 +489,24 @@ def formdata(request):
 
         # netout data
         netout_query = f'''
-            last = from(bucket: "proxmox")
+            from(bucket: "proxmox")
             |> range(start: {start_date}, stop: {end_date})
             |> filter(fn: (r) => r["_measurement"] == "system")
             |> filter(fn: (r) => r["_field"] == "netout")
-            |> group(columns: ["nodename", "host", "object", "vmid"])
-            |> last()
-            |> keep(columns: ["_time", "_value", "nodename", "host", "object", "vmid"])
-
-            first = from(bucket: "proxmox")
-            |> range(start: {start_date}, stop: {end_date})
-            |> filter(fn: (r) => r["_measurement"] == "system")
-            |> filter(fn: (r) => r["_field"] == "netout")
-            |> group(columns: ["nodename", "host", "object", "vmid"])
-            |> first()
-            |> keep(columns: ["_time", "_value", "nodename", "host", "object", "vmid"])
-
-            join(
-            tables: {{last: last, first: first}},
-            on: ["nodename", "host", "object", "vmid"]
-            )
+            |> increase()
+            |> difference()
             |> map(fn: (r) => ({{
-            _time: r._time_last,
-            nodename: r.nodename,
-            host: r.host,
-            object: r.object,
-            vmid: r.vmid,
-            first_value: r._value_first,
-            last_value: r._value_last,
-            _value: r._value_last - r._value_first
-            }}))
+                r with
+                _value: float(v: r._value) / 1024.0
+                }}))
+            |> elapsed()
+            |> map(fn: (r) => ({{
+                r with
+                _value: float(v: r._value) / float(v: r.elapsed)
+                }}))
+            |> mean()
             |> group()
-            |> sum(column: "_value")
-            |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0) }}))
+            |> sum()
         '''
         query_result = query_api.query(query=netout_query)
         for table in query_result:
@@ -723,78 +693,48 @@ def formdata(request):
 
         # netin data
         netin_query = f'''
-            last = from(bucket: "proxmox")
+            from(bucket: "proxmox")
             |> range(start: {start_date}, stop: {end_date})
             |> filter(fn: (r) => r["_measurement"] == "system")
             |> filter(fn: (r) => r["_field"] == "netin")
-            |> group(columns: ["nodename", "host", "object", "vmid"])
-            |> last()
-            |> keep(columns: ["_time", "_value", "nodename", "host", "object", "vmid"])
-
-            first = from(bucket: "proxmox")
-            |> range(start: {start_date}, stop: {end_date})
-            |> filter(fn: (r) => r["_measurement"] == "system")
-            |> filter(fn: (r) => r["_field"] == "netin")
-            |> group(columns: ["nodename", "host", "object", "vmid"])
-            |> first()
-            |> keep(columns: ["_time", "_value", "nodename", "host", "object", "vmid"])
-
-            join(
-            tables: {{last: last, first: first}},
-            on: ["nodename", "host", "object", "vmid"]
-            )
+            |> increase()
+            |> difference()
             |> map(fn: (r) => ({{
-            _time: r._time_last,
-            nodename: r.nodename,
-            host: r.host,
-            object: r.object,
-            vmid: r.vmid,
-            first_value: r._value_first,
-            last_value: r._value_last,
-            _value: r._value_last - r._value_first
-            }}))
+                r with
+                _value: float(v: r._value) / 1024.0
+                }}))
+            |> elapsed()
+            |> map(fn: (r) => ({{
+                r with
+                _value: float(v: r._value) / float(v: r.elapsed)
+                }}))
+            |> mean()
             |> group(columns: ["nodename"])
-            |> sum(column: "_value")
-            |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0) }}))
+            |> sum()
         '''
         query_result = query_api.query(query=netin_query)
         process_pernode_query_result(results, query_result, "netin")
 
         # netout data
         netout_query = f'''
-            last = from(bucket: "proxmox")
+            from(bucket: "proxmox")
             |> range(start: {start_date}, stop: {end_date})
             |> filter(fn: (r) => r["_measurement"] == "system")
             |> filter(fn: (r) => r["_field"] == "netout")
-            |> group(columns: ["nodename", "host", "object", "vmid"])
-            |> last()
-            |> keep(columns: ["_time", "_value", "nodename", "host", "object", "vmid"])
-
-            first = from(bucket: "proxmox")
-            |> range(start: {start_date}, stop: {end_date})
-            |> filter(fn: (r) => r["_measurement"] == "system")
-            |> filter(fn: (r) => r["_field"] == "netout")
-            |> group(columns: ["nodename", "host", "object", "vmid"])
-            |> first()
-            |> keep(columns: ["_time", "_value", "nodename", "host", "object", "vmid"])
-
-            join(
-            tables: {{last: last, first: first}},
-            on: ["nodename", "host", "object", "vmid"]
-            )
+            |> increase()
+            |> difference()
             |> map(fn: (r) => ({{
-            _time: r._time_last,
-            nodename: r.nodename,
-            host: r.host,
-            object: r.object,
-            vmid: r.vmid,
-            first_value: r._value_first,
-            last_value: r._value_last,
-            _value: r._value_last - r._value_first
-            }}))
+                r with
+                _value: float(v: r._value) / 1024.0
+                }}))
+            |> elapsed()
+            |> map(fn: (r) => ({{
+                r with
+                _value: float(v: r._value) / float(v: r.elapsed)
+                }}))
+            |> mean()
             |> group(columns: ["nodename"])
-            |> sum(column: "_value")
-            |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0) }}))
+            |> sum()
         '''
         query_result = query_api.query(query=netout_query)
         process_pernode_query_result(results, query_result, "netout")
@@ -951,93 +891,55 @@ def formdata(request):
 
             # netin data
             netin_query = f'''
-                last = from(bucket: "proxmox")
+                from(bucket: "proxmox")
                 |> range(start: {start_date}, stop: {end_date})
                 |> filter(fn: (r) => r["_measurement"] == "system")
                 |> filter(fn: (r) => r["_field"] == "netin")
                 |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
                 |> filter(fn: (r) => {class_filters})
-                |> group(columns: ["nodename", "host", "object", "vmid"])
-                |> last()
-                |> map(fn: (r) => ({{ r with subject: {class_map} }}))
-                |> keep(columns: ["_value", "subject", "nodename", "host", "object", "vmid"])
-
-                first = from(bucket: "proxmox")
-                |> range(start: {start_date}, stop: {end_date})
-                |> filter(fn: (r) => r["_measurement"] == "system")
-                |> filter(fn: (r) => r["_field"] == "netin")
-                |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
-                |> filter(fn: (r) => {class_filters})
-                |> group(columns: ["nodename", "host", "object", "vmid"])
-                |> first()
-                |> map(fn: (r) => ({{ r with subject: {class_map} }}))
-                |> keep(columns: ["_value", "subject", "nodename", "host", "object", "vmid"])
-
-                join(
-                tables: {{last: last, first: first}},
-                on: ["nodename", "host", "object", "vmid"]
-                )
+                |> increase()
+                |> difference()
                 |> map(fn: (r) => ({{
-                _time: r._time_last,
-                nodename: r.nodename,
-                subject: r.subject_first,
-                host: r.host,
-                object: r.object,
-                vmid: r.vmid,
-                first_value: r._value_first,
-                last_value: r._value_last,
-                _value: r._value_last - r._value_first
-                }}))
+                    r with
+                    _value: float(v: r._value) / 1024.0
+                    }}))
+                |> elapsed()
+                |> map(fn: (r) => ({{
+                    r with
+                    _value: float(v: r._value) / float(v: r.elapsed)
+                    }}))
+                |> mean()
+                |> map(fn: (r) => ({{ r with subject: {class_map} }}))
                 |> group(columns: ["subject"])
                 |> sum()
-                |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0) }}))
-            ''' 
+            '''
             query_result = query_api.query(query=netin_query)
             process_perclass_query_result(results, query_result, "netin")  
 
             # netout data
             netout_query = f'''
-                last = from(bucket: "proxmox")
+                from(bucket: "proxmox")
                 |> range(start: {start_date}, stop: {end_date})
                 |> filter(fn: (r) => r["_measurement"] == "system")
                 |> filter(fn: (r) => r["_field"] == "netout")
                 |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
                 |> filter(fn: (r) => {class_filters})
-                |> group(columns: ["nodename", "host", "object", "vmid"])
-                |> last()
-                |> map(fn: (r) => ({{ r with subject: {class_map} }}))
-                |> keep(columns: ["_value", "subject", "nodename", "host", "object", "vmid"])
-
-                first = from(bucket: "proxmox")
-                |> range(start: {start_date}, stop: {end_date})
-                |> filter(fn: (r) => r["_measurement"] == "system")
-                |> filter(fn: (r) => r["_field"] == "netout")
-                |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
-                |> filter(fn: (r) => {class_filters})
-                |> group(columns: ["nodename", "host", "object", "vmid"])
-                |> first()
-                |> map(fn: (r) => ({{ r with subject: {class_map} }}))
-                |> keep(columns: ["_value", "subject", "nodename", "host", "object", "vmid"])
-
-                join(
-                tables: {{last: last, first: first}},
-                on: ["nodename", "host", "object", "vmid"]
-                )
+                |> increase()
+                |> difference()
                 |> map(fn: (r) => ({{
-                _time: r._time_last,
-                nodename: r.nodename,
-                subject: r.subject_first,
-                host: r.host,
-                object: r.object,
-                vmid: r.vmid,
-                first_value: r._value_first,
-                last_value: r._value_last,
-                _value: r._value_last - r._value_first
-                }}))
+                    r with
+                    _value: float(v: r._value) / 1024.0
+                    }}))
+                |> elapsed()
+                |> map(fn: (r) => ({{
+                    r with
+                    _value: float(v: r._value) / float(v: r.elapsed)
+                    }}))
+                |> mean()
+                |> map(fn: (r) => ({{ r with subject: {class_map} }}))
                 |> group(columns: ["subject"])
                 |> sum()
-                |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0) }}))
-            ''' 
+            '''
             query_result = query_api.query(query=netout_query)
             process_perclass_query_result(results, query_result, "netout")  
 
@@ -1146,75 +1048,45 @@ def formdata(request):
 
         # netin data
         netin_query = f'''
-            last = from(bucket: "proxmox")
+            from(bucket: "proxmox")
             |> range(start: {start_date}, stop: {end_date})
             |> filter(fn: (r) => r["_measurement"] == "system")
             |> filter(fn: (r) => r["_field"] == "netin")
-            |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
-            |> last()
-            |> keep(columns: ["_value", "nodename", "host", "object", "vmid"])
-
-            first = from(bucket: "proxmox")
-            |> range(start: {start_date}, stop: {end_date})
-            |> filter(fn: (r) => r["_measurement"] == "system")
-            |> filter(fn: (r) => r["_field"] == "netin")
-            |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
-            |> first()
-            |> keep(columns: ["_value", "nodename", "host", "object", "vmid"])
-
-            join(
-            tables: {{last: last, first: first}},
-            on: ["nodename", "host", "object", "vmid"]
-            )
+            |> increase()
+            |> difference()
             |> map(fn: (r) => ({{
-            _time: r._time_last,
-            nodename: r.nodename,
-            host: r.host,
-            object: r.object,
-            vmid: r.vmid,
-            first_value: r._value_first,
-            last_value: r._value_last,
-            _value: r._value_last - r._value_first
-            }}))
-            |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0) }}))
-        ''' 
+                r with
+                _value: float(v: r._value) / 1024.0
+                }}))
+            |> elapsed()
+            |> map(fn: (r) => ({{
+                r with
+                _value: float(v: r._value) / float(v: r.elapsed)
+                }}))
+            |> mean()
+        '''
         query_result = query_api.query(query=netin_query)
         process_indiv_query_result(results, query_result, "netin")  
 
         # netout data
         netout_query = f'''
-            last = from(bucket: "proxmox")
+            from(bucket: "proxmox")
             |> range(start: {start_date}, stop: {end_date})
             |> filter(fn: (r) => r["_measurement"] == "system")
             |> filter(fn: (r) => r["_field"] == "netout")
-            |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
-            |> last()
-            |> keep(columns: ["_value", "nodename", "host", "object", "vmid"])
-
-            first = from(bucket: "proxmox")
-            |> range(start: {start_date}, stop: {end_date})
-            |> filter(fn: (r) => r["_measurement"] == "system")
-            |> filter(fn: (r) => r["_field"] == "netout")
-            |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
-            |> first()
-            |> keep(columns: ["_value", "nodename", "host", "object", "vmid"])
-
-            join(
-            tables: {{last: last, first: first}},
-            on: ["nodename", "host", "object", "vmid"]
-            )
+            |> increase()
+            |> difference()
             |> map(fn: (r) => ({{
-            _time: r._time_last,
-            nodename: r.nodename,
-            host: r.host,
-            object: r.object,
-            vmid: r.vmid,
-            first_value: r._value_first,
-            last_value: r._value_last,
-            _value: r._value_last - r._value_first
-            }}))
-            |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0) }}))
-        ''' 
+                r with
+                _value: float(v: r._value) / 1024.0
+                }}))
+            |> elapsed()
+            |> map(fn: (r) => ({{
+                r with
+                _value: float(v: r._value) / float(v: r.elapsed)
+                }}))
+            |> mean()
+        '''
         query_result = query_api.query(query=netout_query)
         process_indiv_query_result(results, query_result, "netout")  
 
