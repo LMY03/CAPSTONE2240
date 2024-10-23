@@ -175,7 +175,7 @@ def get_time_window(start_datetime, end_datetime):
     
     time_diff = end - start
 
-    if time_diff < timedelta(minutes=60):
+    if time_diff <= timedelta(minutes=60):
         return "1m"
     elif time_diff <= timedelta(minutes=120):
         return "15m"
