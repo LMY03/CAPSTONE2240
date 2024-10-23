@@ -184,6 +184,9 @@ var copy_data = {};
 
 var myChart = undefined;
 function showchart(labels, datasets, title = "system"){
+
+    document.getElementById('chartContainer').style.display = 'block';
+    
     if (myChart === undefined){     // no chart yet
         const data = {
             labels: labels,
