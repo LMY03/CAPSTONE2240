@@ -1360,15 +1360,15 @@ def graphdata(request):
             |> filter(fn: (r) => r["_field"] == "netin")
             |> increase()
             |> difference()
-            |> map(fn: (r) => ({
+            |> map(fn: (r) => ({{
                 r with
                 _value: float(v: r._value) / 1024.0
-                }))
+                }}))
             |> elapsed()
-            |> map(fn: (r) => ({
+            |> map(fn: (r) => ({{
                 r with
                 _value: float(v: r._value) / float(v: r.elapsed)
-                }))
+                }}))
             |> aggregateWindow(
                 every: {window}, 
                 fn: mean,
@@ -1397,15 +1397,15 @@ def graphdata(request):
             |> filter(fn: (r) => r["_field"] == "netout")
             |> increase()
             |> difference()
-            |> map(fn: (r) => ({
+            |> map(fn: (r) => ({{
                 r with
                 _value: float(v: r._value) / 1024.0
-                }))
+                }}))
             |> elapsed()
-            |> map(fn: (r) => ({
+            |> map(fn: (r) => ({{
                 r with
                 _value: float(v: r._value) / float(v: r.elapsed)
-                }))
+                }}))
             |> aggregateWindow(
                 every: {window}, 
                 fn: mean,
@@ -1604,15 +1604,15 @@ def graphdata(request):
             |> filter(fn: (r) => r["nodename"] == "{nodename}")
             |> increase()
             |> difference()
-            |> map(fn: (r) => ({
+            |> map(fn: (r) => ({{
                 r with
                 _value: float(v: r._value) / 1024.0
-                }))
+                }}))
             |> elapsed()
-            |> map(fn: (r) => ({
+            |> map(fn: (r) => ({{
                 r with
                 _value: float(v: r._value) / float(v: r.elapsed)
-                }))
+                }}))
             |> aggregateWindow(
                 every: {window}, 
                 fn: mean,
@@ -1642,15 +1642,15 @@ def graphdata(request):
             |> filter(fn: (r) => r["nodename"] == "{nodename}")
             |> increase()
             |> difference()
-            |> map(fn: (r) => ({
+            |> map(fn: (r) => ({{
                 r with
                 _value: float(v: r._value) / 1024.0
-                }))
+                }}))
             |> elapsed()
-            |> map(fn: (r) => ({
+            |> map(fn: (r) => ({{
                 r with
                 _value: float(v: r._value) / float(v: r.elapsed)
-                }))
+                }}))
             |> aggregateWindow(
                 every: {window}, 
                 fn: mean,
@@ -1828,15 +1828,15 @@ def graphdata(request):
             |> filter(fn: (r) => r["host"] =~ /{subject}/)
             |> increase()
             |> difference()
-            |> map(fn: (r) => ({
+            |> map(fn: (r) => ({{
                 r with
                 _value: float(v: r._value) / 1024.0
-                }))
+                }}))
             |> elapsed()
-            |> map(fn: (r) => ({
+            |> map(fn: (r) => ({{
                 r with
                 _value: float(v: r._value) / float(v: r.elapsed)
-                }))
+                }}))
             |> aggregateWindow(
                 every: {window}, 
                 fn: mean,
@@ -1867,15 +1867,15 @@ def graphdata(request):
             |> filter(fn: (r) => r["host"] =~ /{subject}/)
             |> increase()
             |> difference()
-            |> map(fn: (r) => ({
+            |> map(fn: (r) => ({{
                 r with
                 _value: float(v: r._value) / 1024.0
-                }))
+                }}))
             |> elapsed()
-            |> map(fn: (r) => ({
+            |> map(fn: (r) => ({{
                 r with
                 _value: float(v: r._value) / float(v: r.elapsed)
-                }))
+                }}))
             |> aggregateWindow(
                 every: {window}, 
                 fn: mean,
@@ -2042,15 +2042,15 @@ def graphdata(request):
             |> filter(fn: (r) => r["host"] == "{name}")
             |> increase()
             |> difference()
-            |> map(fn: (r) => ({
+            |> map(fn: (r) => ({{
                 r with
                 _value: float(v: r._value) / 1024.0
-                }))
+                }}))
             |> elapsed()
-            |> map(fn: (r) => ({
+            |> map(fn: (r) => ({{
                 r with
                 _value: float(v: r._value) / float(v: r.elapsed)
-                }))
+                }}))
             |> aggregateWindow(
                 every: {window}, 
                 fn: mean,
@@ -2078,15 +2078,15 @@ def graphdata(request):
             |> filter(fn: (r) => r["host"] == "{name}")
             |> increase()
             |> difference()
-            |> map(fn: (r) => ({
+            |> map(fn: (r) => ({{
                 r with
                 _value: float(v: r._value) / 1024.0
-                }))
+                }}))
             |> elapsed()
-            |> map(fn: (r) => ({
+            |> map(fn: (r) => ({{
                 r with
                 _value: float(v: r._value) / float(v: r.elapsed)
-                }))
+                }}))
             |> aggregateWindow(
                 every: {window}, 
                 fn: mean,
