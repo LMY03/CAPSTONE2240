@@ -746,7 +746,6 @@ def formdata(request):
     ################################ SUBJECTS ###############################
 
     elif report_type == 'subject':
-        print("========= in form data - subject ==========")
         results = []
         for classname in valid_classes:
             result = {"type": "subject", "name": classname, "nodename": "-", "subject": classname, "vmid": 0,
@@ -1359,8 +1358,24 @@ def graphdata(request):
             |> range(start: {start_date}, stop: {end_date})
             |> filter(fn: (r) => r["_measurement"] == "system")
             |> filter(fn: (r) => r["_field"] == "netin")
-            |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
-            |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 ) }}))
+            |> increase()
+            |> difference()
+            |> map(fn: (r) => ({
+                r with
+                _value: float(v: r._value) / 1024.0
+                }))
+            |> elapsed()
+            |> map(fn: (r) => ({
+                r with
+                _value: float(v: r._value) / float(v: r.elapsed)
+                }))
+            |> aggregateWindow(
+                every: {window}, 
+                fn: mean,
+                createEmpty: false
+            )
+            |> group(columns: ["_time"])
+            |> sum()
         '''
         query_result = query_api.query(query=netin_query)
         
@@ -1380,8 +1395,24 @@ def graphdata(request):
             |> range(start: {start_date}, stop: {end_date})
             |> filter(fn: (r) => r["_measurement"] == "system")
             |> filter(fn: (r) => r["_field"] == "netout")
-            |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
-            |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 ) }}))
+            |> increase()
+            |> difference()
+            |> map(fn: (r) => ({
+                r with
+                _value: float(v: r._value) / 1024.0
+                }))
+            |> elapsed()
+            |> map(fn: (r) => ({
+                r with
+                _value: float(v: r._value) / float(v: r.elapsed)
+                }))
+            |> aggregateWindow(
+                every: {window}, 
+                fn: mean,
+                createEmpty: false
+            )
+            |> group(columns: ["_time"])
+            |> sum()
         '''
         query_result = query_api.query(query=netout_query)
         
@@ -1399,7 +1430,6 @@ def graphdata(request):
         data = list(result.values())
         data.sort(key=lambda x: x['time'])
     elif type_received == "node":
-        # nodename = "pve"
         
         # cpu cores
         cpus_query = f'''
@@ -1572,8 +1602,24 @@ def graphdata(request):
             |> filter(fn: (r) => r["_measurement"] == "system")
             |> filter(fn: (r) => r["_field"] == "netin")
             |> filter(fn: (r) => r["nodename"] == "{nodename}")
-            |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
-            |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 ) }}))
+            |> increase()
+            |> difference()
+            |> map(fn: (r) => ({
+                r with
+                _value: float(v: r._value) / 1024.0
+                }))
+            |> elapsed()
+            |> map(fn: (r) => ({
+                r with
+                _value: float(v: r._value) / float(v: r.elapsed)
+                }))
+            |> aggregateWindow(
+                every: {window}, 
+                fn: mean,
+                createEmpty: false
+            )
+            |> group(columns: ["_time"])
+            |> sum()
         '''
         query_result = query_api.query(query=netin_query)
         
@@ -1594,8 +1640,24 @@ def graphdata(request):
             |> filter(fn: (r) => r["_measurement"] == "system")
             |> filter(fn: (r) => r["_field"] == "netout")
             |> filter(fn: (r) => r["nodename"] == "{nodename}")
-            |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
-            |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 ) }}))
+            |> increase()
+            |> difference()
+            |> map(fn: (r) => ({
+                r with
+                _value: float(v: r._value) / 1024.0
+                }))
+            |> elapsed()
+            |> map(fn: (r) => ({
+                r with
+                _value: float(v: r._value) / float(v: r.elapsed)
+                }))
+            |> aggregateWindow(
+                every: {window}, 
+                fn: mean,
+                createEmpty: false
+            )
+            |> group(columns: ["_time"])
+            |> sum()
         '''
         query_result = query_api.query(query=netout_query)
         
@@ -1764,8 +1826,24 @@ def graphdata(request):
             |> filter(fn: (r) => r["_field"] == "netin")
             |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
             |> filter(fn: (r) => r["host"] =~ /{subject}/)
-            |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
-            |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 ) }}))
+            |> increase()
+            |> difference()
+            |> map(fn: (r) => ({
+                r with
+                _value: float(v: r._value) / 1024.0
+                }))
+            |> elapsed()
+            |> map(fn: (r) => ({
+                r with
+                _value: float(v: r._value) / float(v: r.elapsed)
+                }))
+            |> aggregateWindow(
+                every: {window}, 
+                fn: mean,
+                createEmpty: false
+            )
+            |> group(columns: ["_time"])
+            |> sum()
         '''
         query_result = query_api.query(query=netin_query)
         
@@ -1787,8 +1865,24 @@ def graphdata(request):
             |> filter(fn: (r) => r["_field"] == "netout")
             |> filter(fn: (r) => r["vmid"] !~ /^({excluded_vmids_str})$/)
             |> filter(fn: (r) => r["host"] =~ /{subject}/)
-            |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
-            |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 ) }}))
+            |> increase()
+            |> difference()
+            |> map(fn: (r) => ({
+                r with
+                _value: float(v: r._value) / 1024.0
+                }))
+            |> elapsed()
+            |> map(fn: (r) => ({
+                r with
+                _value: float(v: r._value) / float(v: r.elapsed)
+                }))
+            |> aggregateWindow(
+                every: {window}, 
+                fn: mean,
+                createEmpty: false
+            )
+            |> group(columns: ["_time"])
+            |> sum()
         '''
         query_result = query_api.query(query=netout_query)
         
@@ -1946,8 +2040,22 @@ def graphdata(request):
             |> filter(fn: (r) => r["_measurement"] == "system")
             |> filter(fn: (r) => r["_field"] == "netin")
             |> filter(fn: (r) => r["host"] == "{name}")
-            |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
-            |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 ) }}))
+            |> increase()
+            |> difference()
+            |> map(fn: (r) => ({
+                r with
+                _value: float(v: r._value) / 1024.0
+                }))
+            |> elapsed()
+            |> map(fn: (r) => ({
+                r with
+                _value: float(v: r._value) / float(v: r.elapsed)
+                }))
+            |> aggregateWindow(
+                every: {window}, 
+                fn: mean,
+                createEmpty: false
+            )
         '''
         query_result = query_api.query(query=netin_query)
         
@@ -1968,8 +2076,22 @@ def graphdata(request):
             |> filter(fn: (r) => r["_measurement"] == "system")
             |> filter(fn: (r) => r["_field"] == "netout")
             |> filter(fn: (r) => r["host"] == "{name}")
-            |> aggregateWindow(every: {window}, fn: mean, createEmpty: false)
-            |> map(fn: (r) => ({{ r with _value: (r._value / 1024.0 ) }}))
+            |> increase()
+            |> difference()
+            |> map(fn: (r) => ({
+                r with
+                _value: float(v: r._value) / 1024.0
+                }))
+            |> elapsed()
+            |> map(fn: (r) => ({
+                r with
+                _value: float(v: r._value) / float(v: r.elapsed)
+                }))
+            |> aggregateWindow(
+                every: {window}, 
+                fn: mean,
+                createEmpty: false
+            )
         '''
         query_result = query_api.query(query=netout_query)
         
