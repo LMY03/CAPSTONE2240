@@ -558,7 +558,7 @@ function show(){
             // get chart data
             getChartData(startDate, endDate, firstRecord.type, firstRecord.name, firstRecord.nodename, firstRecord.subject, firstRecord.vmid).then(
                 ({x_labels, result_data}) =>{
-                    showchart(x_labels,result_data);
+                    showchart(x_labels,result_data, firstRecord.name);
                     updateChart();
                 }
             );
