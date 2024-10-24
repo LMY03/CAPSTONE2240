@@ -265,12 +265,14 @@ function showchart(labels, datasets, title){
                                 font: {
                                     family: "'Ubuntu', sans-serif",
                                     size: 14
-                                }
+                                },
+                                color: '#ff6384'
                             },
                             ticks: {
                                 font: {
                                     family: "'Ubuntu', sans-serif"
-                                }
+                                },
+                                color: '#ff6384'
                             }
                         },
                         y1: {
@@ -283,12 +285,14 @@ function showchart(labels, datasets, title){
                                 font: {
                                     family: "'Ubuntu', sans-serif",
                                     size: 14
-                                }
+                                },
+                                color: '#36a2eb'
                             },
                             ticks: {
                                 font: {
                                     family: "'Ubuntu', sans-serif"
-                                }
+                                },
+                                color: '#36a2eb'
                             },
                             grid: {
                                 drawOnChartArea: false,
