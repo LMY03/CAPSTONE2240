@@ -1,22 +1,3 @@
-// // 在reports.js中
-// window.addEventListener('load', function() {  // 使用load而不是DOMContentLoaded
-//     console.log("Window fully loaded");
-//     // 移除加载遮罩
-//     // const loadingOverlay = document.getElementById('loading-overlay');
-//     // if (loadingOverlay) {
-//     //     loadingOverlay.style.display = 'none';
-//     // }
-    
-//     // 显示主内容
-//     // document.querySelector('.content').style.visibility = 'visible';
-    
-//     // 然后再执行原有的初始化代码
-//     show();
-//     console.log("Page loaded");
-//     console.log("Current URL:", window.location.href);
-// });
-
-
 const base_url = ""
 
 var table_data = []; //formdata
@@ -726,6 +707,19 @@ function exporeDataChart(){
 
 // table -end
 function show(){
+
+    // Show loading overlay
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const content = document.querySelector('.content');
+    
+    if (loadingOverlay) {
+        loadingOverlay.style.display = 'flex';
+    }
+    if (content) {
+        content.style.visibility = 'hidden';
+    }
+    
+        
     const startDate_input = document.getElementById('startDate');
     const endDate_input = document.getElementById('endDate');
 
@@ -783,12 +777,20 @@ function show(){
                 }
             );
         } else {
-            // Hide chart container if no data
             document.getElementById('chartContainer').style.display = 'none';
             if (myChart) {
                 myChart.destroy();
                 myChart = undefined;
             }
+        }
+    }).catch(error => {
+        console.error('Error loading data:', error);
+    }).finally(() => {
+        if (loadingOverlay) {
+            loadingOverlay.style.display = 'none';
+        }
+        if (content) {
+            content.style.visibility = 'visible';
         }
     })
 
