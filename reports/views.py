@@ -40,7 +40,6 @@ def get_window_timedelta(window):
 
 # Parse date to InfluxDB compatible
 def parse_form_date(date_string, window = "none"):
-    if window ==
     try:
         dt = datetime.strptime(date_string, "%Y-%m-%d %H:%M:%S")
         adjusted_dt = dt - timedelta(hours=8)
