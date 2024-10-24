@@ -40,16 +40,20 @@ Reports
         <div class="w-40 py-2 px-4 m-2 d-flex justify-content-center align-items-center border">
             <div class="radio-group d-flex flex-column gap-2">
                 <div class="d-flex gap-2">
-                    <label class="form-check-label"><input class="form-check-input me-1" type="radio" name="metric" value="cpu" onchange="updateChart()">cpu</label>
-                    <label class="form-check-label"><input class="form-check-input me-1" type="radio" name="metric" value="cpu usage" onchange="updateChart()">cpu usage</label>
-                    <label class="form-check-label"><input class="form-check-input me-1" type="radio" name="metric" value="mem" onchange="updateChart()">mem</label>
-                    <label class="form-check-label"><input class="form-check-input me-1" type="radio" name="metric" value="mem usage" onchange="updateChart()">mem usage</label>
+                    <label class="form-check-label">
+                        <input class="form-check-input me-1" type="radio" name="metric" value="cpu-group" onchange="updateChart()">CPU Metrics
+                    </label>
+                    <label class="form-check-label">
+                        <input class="form-check-input me-1" type="radio" name="metric" value="mem-group" onchange="updateChart()">Memory Metrics
+                    </label>
                 </div>
                 <div class="d-flex gap-2">
-                    <label class="form-check-label"><input class="form-check-input me-1" type="radio" name="metric" value="storage" onchange="updateChart()">storage</label>
-                    <label class="form-check-label"><input class="form-check-input me-1" type="radio" name="metric" value="storage usage" onchange="updateChart()">storage usage</label>
-                    <label class="form-check-label"><input class="form-check-input me-1" type="radio" name="metric" value="netin" onchange="updateChart()">netin</label>
-                    <label class="form-check-label"><input class="form-check-input me-1" type="radio" name="metric" value="netout" onchange="updateChart()">netout</label>  
+                    <label class="form-check-label">
+                        <input class="form-check-input me-1" type="radio" name="metric" value="storage-group" onchange="updateChart()">Storage Metrics
+                    </label>
+                    <label class="form-check-label">
+                        <input class="form-check-input me-1" type="radio" name="metric" value="network-group" onchange="updateChart()">Network Metrics
+                    </label>  
                 </div>
             </div>
         </div>
