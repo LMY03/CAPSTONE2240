@@ -23,13 +23,30 @@ org = config('INFLUXDB_ORG')
 bucket = config('INFLUXDB_BUCKET')
 proxmox_password = config('PROXMOX_PASSWORD')
 
+
+def get_window_timedelta(window):
+    """Convert window string to timedelta"""
+    window_map = {
+        "1m": timedelta(minutes=1),
+        "15m": timedelta(minutes=15),
+        "30m": timedelta(minutes=30),
+        "1h": timedelta(hours=1),
+        "3h": timedelta(hours=3),
+        "1d": timedelta(days=1),
+        "5d": timedelta(days=5)
+    }
+    return window_map.get(window, timedelta(0))
+
+
 # Parse date to InfluxDB compatible
-def parse_form_date(date_string):
+def parse_form_date(date_string, window = "none"):
+    if window ==
     try:
         dt = datetime.strptime(date_string, "%Y-%m-%d %H:%M:%S")
         adjusted_dt = dt - timedelta(hours=8)
-        # if is_start:
-        #     adjusted_dt = adjusted_dt - timedelta(hours=8)
+        if window != "none":
+            window_delta = get_window_timedelta(window)
+            adjusted_dt = adjusted_dt - window_delta
         return adjusted_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
     except ValueError:
         raise ValueError(f"Invalid date format: {date_string}. Expected YYYY-MM-DD")
@@ -1186,7 +1203,7 @@ def graphdata(request):
     end_date_str = request.GET.get('end_time')
 
     window = get_time_window(start_date_str, end_date_str)
-    start_date = parse_form_date(start_date_str)
+    start_date = parse_form_date(start_date_str, window)
     end_date = parse_form_date(end_date_str)
 
     result = defaultdict(dict)
