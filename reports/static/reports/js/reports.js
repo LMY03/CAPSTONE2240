@@ -400,7 +400,7 @@ function showchart(labels, datasets, title){
                 break;
         }
 
-        myChart.data.datasets = selectedDataset;
+        myChart.data.datasets = selectedDatasets;
         myChart.options.plugins.title.text = title;
         myChart.update();
 
