@@ -15,79 +15,71 @@ Reports
 
 
 {% block content %}
-<!-- Add loading overlay -->
-<div id="loading-overlay" class="loading-overlay">
-    <div class="loading-spinner"></div>
-    <div class="loading-text">Loading data...</div>
-</div>
+<div class="col-md-10 content">
+    <!-- Filter Conditions -->
+    <div class="d-flex filter-container">
+        
+        <!-- Select Datetime -->
+        <div class="w-60 px-2 py-2 m-2 border">
+            <div class="d-flex justify-content-between">
+                <div class="w-50">
+                    <label class="d-flex fw-bolder" for="startDate">Start Date:</label>
+                    <input class="form-control w-70" type="datetime-local" id="startDate">
+                </div>
+                <div class="w-50">
+                    <label class="d-flex fw-bolder" for="endDate">End Date:</label>
+                    <input class="form-control w-70" type="datetime-local" id="endDate">
+                </div>
+                <br>
+                <div class="d-flex justify-content-end ms-2">
+                    <button type="button" class="btn btn-sm" style="background-color: #d96a00;color: #fffafa; font-size: 0.8rem;" onclick="show()">Filter</button>
+                </div>
+            </div>
+        </div>
 
-<div>
-    <div class="col-md-10 content">
-        <!-- Filter Conditions -->
-        <div class="d-flex filter-container">
-            
-            <!-- Select Datetime -->
-            <div class="w-60 px-2 py-2 m-2 border">
-                <div class="d-flex justify-content-between">
-                    <div class="w-50">
-                        <label class="d-flex fw-bolder" for="startDate">Start Date:</label>
-                        <input class="form-control w-70" type="datetime-local" id="startDate">
-                    </div>
-                    <div class="w-50">
-                        <label class="d-flex fw-bolder" for="endDate">End Date:</label>
-                        <input class="form-control w-70" type="datetime-local" id="endDate">
-                    </div>
-                    <br>
-                    <div class="d-flex justify-content-end ms-2">
-                        <button type="button" class="btn btn-sm" style="background-color: #d96a00;color: #fffafa; font-size: 0.8rem;" onclick="show()">Filter</button>
-                    </div>
+        <div class="w-40 py-2 px-4 m-2 d-flex justify-content-center align-items-center border">
+            <div class="radio-group d-flex flex-column gap-2">
+                <div class="d-flex gap-2">
+                    <label class="form-check-label">
+                        <input class="form-check-input me-1" type="radio" name="metric" value="cpu-group" onchange="updateChart()">CPU Metrics
+                    </label>
+                    <label class="form-check-label">
+                        <input class="form-check-input me-1" type="radio" name="metric" value="mem-group" onchange="updateChart()">Memory Metrics
+                    </label>
                 </div>
-            </div>
-    
-            <div class="w-40 py-2 px-4 m-2 d-flex justify-content-center align-items-center border">
-                <div class="radio-group d-flex flex-column gap-2">
-                    <div class="d-flex gap-2">
-                        <label class="form-check-label">
-                            <input class="form-check-input me-1" type="radio" name="metric" value="cpu-group" onchange="updateChart()">CPU Metrics
-                        </label>
-                        <label class="form-check-label">
-                            <input class="form-check-input me-1" type="radio" name="metric" value="mem-group" onchange="updateChart()">Memory Metrics
-                        </label>
-                    </div>
-                    <div class="d-flex gap-2">
-                        <label class="form-check-label">
-                            <input class="form-check-input me-1" type="radio" name="metric" value="storage-group" onchange="updateChart()">Storage Metrics
-                        </label>
-                        <label class="form-check-label">
-                            <input class="form-check-input me-1" type="radio" name="metric" value="network-group" onchange="updateChart()">Network Metrics
-                        </label>  
-                    </div>
+                <div class="d-flex gap-2">
+                    <label class="form-check-label">
+                        <input class="form-check-input me-1" type="radio" name="metric" value="storage-group" onchange="updateChart()">Storage Metrics
+                    </label>
+                    <label class="form-check-label">
+                        <input class="form-check-input me-1" type="radio" name="metric" value="network-group" onchange="updateChart()">Network Metrics
+                    </label>  
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- Graph -->
+    <div class="position-relative" id="chartContainer" style="display: none;">
+        <div class="m-2 d-flex justify-content-center align-items-center">
+            <canvas class="border" id="myChart"></canvas>
+            <button type="button" class="btn btn-sm position-absolute top-0 end-0 mt-4 me-8" style="background-color: #d96a00;color: #fffafa;" onclick="exporeDataChart()">CSV</button>
+        </div>
+    </div>
     
-        <!-- Graph -->
-        <div class="position-relative" id="chartContainer" style="display: none;">
-            <div class="m-2 d-flex justify-content-center align-items-center">
-                <canvas class="border" id="myChart"></canvas>
-                <button type="button" class="btn btn-sm position-absolute top-0 end-0 mt-4 me-8" style="background-color: #d96a00;color: #fffafa;" onclick="exporeDataChart()">CSV</button>
-            </div>
-        </div>
-        
-        <!-- <div class="position-relative mt-4"><button type="button" class="btn btn-sm position-absolute top-0 end-0 me-4" style="background-color: #d96a00;color: #fffafa;" onclick="exporeData()">CSV</button></div> -->
-        <!-- Table 1 -->
-        <div class="table-container" style="overflow-y:scroll;height:auto;width:98%;overflow-x:auto;background-color: white;">
-            <table id="VMtable" class="table display responsive" style="width:100%; margin: 1rem auto;">
-                <thead>
-                    <tr>
-                    </tr>
-                </thead>
-        
-                <tbody id="vmstatus">
-                    
-                </tbody>
-            </table>
-        </div>
+    <!-- <div class="position-relative mt-4"><button type="button" class="btn btn-sm position-absolute top-0 end-0 me-4" style="background-color: #d96a00;color: #fffafa;" onclick="exporeData()">CSV</button></div> -->
+    <!-- Table 1 -->
+    <div class="table-container" style="overflow-y:scroll;height:auto;width:98%;overflow-x:auto;background-color: white;">
+        <table id="VMtable" class="table display responsive" style="width:100%; margin: 1rem auto;">
+            <thead>
+                <tr>
+                </tr>
+            </thead>
+    
+            <tbody id="vmstatus">
+                
+            </tbody>
+        </table>
     </div>
 </div>
 {% endblock content %}
