@@ -13,4 +13,5 @@ urlpatterns = [
 
     path('ticketing_report', views.render_ticketing_report, name="ticketing_report"),
     path('download_general_ticketing_report', views.download_general_ticketing_report, name="download_general_ticketing_report"),
+    path('generate_general_ticketing_report/', views.generate_general_ticketing_report, name = 'generate_general_ticketing_report'),
 ]

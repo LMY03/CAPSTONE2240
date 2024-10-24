@@ -11,10 +11,13 @@ import json, csv
 from decouple import config
 
 from ticketing.models import RequestEntry, RequestUseCase
-from proxmox.models import VirtualMachines
+from proxmox.models import VirtualMachines, VMTemplates
 
 from CAPSTONE2240.utils import download_csv
-
+from django.db.models import Avg, Max, F, ExpressionWrapper, fields, Case, When
+from django.db.models.functions import Abs
+from django.utils import timezone
+from datetime import datetime
 from .forms import TicketingReportForm
 
 INFLUX_ADDRESS = config('INFLUX_ADDRESS')
@@ -2046,22 +2049,140 @@ def fetch_ticketing_report_data(form : TicketingReportForm):
     else:
         print(form.errors)
 
-def generate_general_ticketing_report(raw_data):
-    data = raw_data.aggregate(
-        total_vms=Count('vm_id'),
-        total_ram=Sum('ram'),
-        total_cores=Sum('cores'),
-        total_storage=Sum('storage'),
-    )
-    
-    headers = [
-        'Total VMs', 
-        'Total Memory', 
-        'Total Cores', 
-        'Total Storage',
-    ]
 
-    return headers, data
+def generate_general_ticketing_report (request):
+    data = request.POST
+    start_date = timezone.make_aware(datetime.strptime(data['startdate'], '%Y-%m-%d'))
+    end_date = timezone.make_aware(datetime.strptime(data['enddate'], '%Y-%m-%d'))
+    request_entries = RequestEntry.objects.filter(request_date__range=[start_date, end_date])
+    average_stats = request_entries.aggregate(
+        avg_cores=Avg('cores'),
+        avg_ram=Avg('ram')
+    )
+    template_stats = request_entries.select_related('template') \
+    .values('template__vm_name') \
+    .annotate(total=Count('template_id')) \
+    .order_by('-total')
+
+    requester_stats = request_entries.select_related('requester') \
+    .values('requester__first_name', 'requester__last_name')\
+    .annotate(total=Count('requester_id')) \
+    .order_by('-total')
+
+    
+    total_request_has_internet = request_entries.filter(has_internet=True).count()
+    total_other_config = request_entries.filter(other_config__isnull=False).count()
+
+    request_use_cases = RequestUseCase.objects.filter(request__in = request_entries)
+    distinct_request_entries = RequestUseCase.objects.filter(request__in=request_entries)\
+                                .values('request_id', 'request_use_case')\
+                                .annotate(max_id=Max('id'))\
+                                .order_by('max_id')
+    request_use_case_stat = request_use_cases.values('request_use_case')\
+                            .annotate(total = Count('request_use_case'), vmCount = Sum('vm_count'))\
+                            .order_by('-total')
+    class_course_stat = {}
+    overall_use_case_stat ={}
+    vm_count_stat = {}
+    use_cases = ['THESIS', 'RESEARCH', 'TEST']
+    total_class_course = 0
+    total_vm_count_class_course = 0
+    for use_case_stat in request_use_case_stat:
+        use_case = use_case_stat['request_use_case']
+        total = use_case_stat['total']
+        
+        if use_case in use_cases:
+            overall_use_case_stat[use_case] = total
+            #vm_count_stat[use_case] = use_case_stat['vmCount']
+        else:
+            total_class_course = total_class_course + total
+            total_vm_count_class_course = use_case_stat['vmCount'] + total_vm_count_class_course
+            class_course_stat[use_case] = total
+            vm_count_stat[use_case] = use_case_stat['vmCount']
+            #vm_count_stat['CLASS COURSE'] = total_vm_count_class_course
+            overall_use_case_stat['TOTAL SECTIONS'] = total_class_course
+
+    total_times_requested = {}
+    courses_total_times_request ={}
+    for distinct_entry in distinct_request_entries:
+        use_case = distinct_entry['request_use_case']
+        
+        if 'CLASS COURSE' not in total_times_requested:
+            total_times_requested['CLASS COURSE'] = 0
+
+        if use_case not in ['TEST', 'RESEARCH', 'THESIS']:
+            total_times_requested['CLASS COURSE'] += 1
+            courses_total_times_request[use_case] = courses_total_times_request.get(use_case, 0) + 1
+        else:
+            total_times_requested[use_case] = total_times_requested.get(use_case, 0) + 1
+    
+    total_recurring_tickets = request_entries.filter(expiration_date = '' or None).count()
+
+    request_entries_not_recurring = request_entries.filter(expiration_date__isnull=False)\
+                                    .annotate(
+                                        due_date=Case(
+                                            When(expired_date__isnull=True, then=F('expiration_date')),
+                                            default=F('expired_date'),
+                                        )
+                                    ).values('request_date', 'expired_date', 'expiration_date', 'due_date')
+
+    # Calculate the average turnover in days
+    average_turnover = request_entries_not_recurring.aggregate(
+        avg_turnover=Abs(Avg(ExpressionWrapper(
+            F('due_date') - F('request_date'),
+            output_field=fields.DurationField()
+        )))
+    )
+
+    average_turnover_days = None
+    if average_turnover['avg_turnover']:
+        average_turnover_days = average_turnover['avg_turnover'].days if isinstance(average_turnover['avg_turnover'], timedelta) else None
+
+    request_entries_accepted = request_entries.filter(ongoing_date__isnull = False)\
+                                .annotate(
+                                    accepted_turn_over = ExpressionWrapper(F('ongoing_date') - F('request_date'), output_field=fields.DurationField())
+                                )
+    average_accepted_turnover_days = None
+    average_accepted_turnover = request_entries_accepted.aggregate(
+        avg_turnover = Avg('accepted_turn_over')
+    )
+
+    if average_accepted_turnover['avg_turnover']:
+        average_accepted_turnover_days = average_accepted_turnover['avg_turnover'].days if isinstance(average_accepted_turnover['avg_turnover'], timedelta) else None
+
+    return JsonResponse({'status': 'success', 
+                         'average_stats': average_stats, 
+                         'template_stats': list(template_stats), 
+                         'requester_stats': list(requester_stats), 
+                         'total_has_internet': total_request_has_internet,
+                         'total_other_config':total_other_config,
+                         'sections_course_stat': class_course_stat,
+                         'overall_use_case_stat':overall_use_case_stat,
+                         'total_recurring_tickets': total_recurring_tickets, 
+                         'vm_count_stat':vm_count_stat,
+                         'total_times_requested': total_times_requested,
+                         'courses_total_times_request': courses_total_times_request,
+                         'average_turn_over_days_to_due_date': average_turnover_days,
+                         'average_accepted_turnover': average_accepted_turnover_days}, content_type='application/json')
+
+
+
+# def generate_general_ticketing_report(raw_data):
+#     data = raw_data.aggregate(
+#         total_vms=Count('vm_id'),
+#         total_ram=Sum('ram'),
+#         total_cores=Sum('cores'),
+#         total_storage=Sum('storage'),
+#     )
+    
+#     headers = [
+#         'Total VMs', 
+#         'Total Memory', 
+#         'Total Cores', 
+#         'Total Storage',
+#     ]
+
+#     return headers, data
 
 def generate_detailed_ticketing_report(raw_data):
     data = raw_data

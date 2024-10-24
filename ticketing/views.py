@@ -470,6 +470,8 @@ def new_form_submit(request):
         #     tsgEmails.append(tsg.email)
         
         print (tsg_emails)
+        if use_case == 'CLASS_COURSE':
+            use_case = 'CLASS COURSE'
         data = {
             'vm_template_name' : vmTemplateID.vm_name,
             'use_case' : use_case,
@@ -721,18 +723,19 @@ def accept_test_vm(request, request_id): #Where the faculty Accepts the test vm 
     
     request_use_case = RequestUseCase.objects.filter(request=request_entry)
     to  = request_entry.assigned_to.email
-    use_case = "Class Course" if request_use_case[0].request_use_case not in ['Thesis', 'Research', 'Test'] else request_use_case[0].request_use_case
-    vmCount = 0
+    first_use_case = request_use_case[0].request_use_case
+    use_case = "Class Course" if first_use_case not in ['THESIS', 'RESEARCH', 'TEST'] else first_use_case
+    vm_count = 0
     if use_case == "Class Course":
         for use_case in request_use_case:
-            vmCount += use_case.vm_count
+            vm_count += use_case.vm_count
     else:
-        vmCount = request_use_case.vm_count
+        vm_count = request_use_case[0].vm_count
     data = {
         "id" : request_id,
         "faculty_name" : request_entry.requester.get_full_name(),
         "use_case" : use_case,
-        "vm_count" : vmCount,
+        "vm_count" : vm_count,
     }
 
     accept_notif_tsg(to, data)

@@ -25,19 +25,33 @@ input[type="date"] {
 }
 
 /* Charts */
-#myChart {
-    max-width: 80%;
-    max-height: 400px;
-    position: relative;
-    border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    padding: 20px;
-}
-
 .chart-container {
     border-radius: 15px;
-    padding: 20px;
+    padding: 0;
+    /* Remove padding to avoid extra space */
     margin-bottom: 30px;
+    margin-left: 35%;
+    position: relative;
+    display: inline-block;
+    /* Ensure the container shrinks to fit the chart and button */
+}
+
+#myChart {
+    max-width: 100%;
+    /* Ensure the chart takes full width */
+    height: 400px;
+    /* Set height if necessary */
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+#csvButton {
+    /* position: absolute !important;
+    top: 10px;
+    right: 10px; */
+    z-index: 10;
+    margin: 0;
+    /* Ensure no extra margin around button */
 }
 
 .filter-container {
@@ -69,9 +83,9 @@ input[type="date"] {
 
 .disable {
     color: white;
-    cursor: not-allowed; 
-    pointer-events: none; 
-    opacity: 0.6; 
+    cursor: not-allowed;
+    pointer-events: none;
+    opacity: 0.6;
 }
 
 .table-container {

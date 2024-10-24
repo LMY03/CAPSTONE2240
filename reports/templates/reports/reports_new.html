@@ -64,11 +64,9 @@ Reports
     </div>
 
     <!-- Graph -->
-    <div class="position-relative">
-        <div class="m-2 d-flex justify-content-center align-items-center">
-            <canvas class="border" id="myChart"></canvas>
-            <button type="button" class="btn btn-sm position-absolute top-0 end-0 mt-4 me-8" style="background-color: #d96a00;color: #fffafa;" onclick="exporeDataChart()">CSV</button>
-        </div>
+    <div class="chart-container" style="position: relative;">
+        <svg id="myChart" class="border"></svg>
+        <button type="button" id="csvButton" class="btn btn-sm position-absolute start-0 ms-4 mt-4" style="background-color: #d96a00;color: #fffafa;" onclick="exporeDataChart()">CSV</button>
     </div>
     
     <!-- <div class="position-relative mt-4"><button type="button" class="btn btn-sm position-absolute top-0 end-0 me-4" style="background-color: #d96a00;color: #fffafa;" onclick="exporeData()">CSV</button></div> -->
