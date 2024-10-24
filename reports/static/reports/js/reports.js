@@ -190,16 +190,38 @@ function showchart(labels, datasets, title){
             datasets : datasets
         }
         copy_data = JSON.parse(JSON.stringify(data))
-        const cpuDataset = datasets.find(ds => ds.label === 'cpu') || datasets[0];
+        const cpuDataset = datasets.find(ds => ds.label === 'cpu') ;
+        const cpuUsageDataset = datasets.find(ds => ds.label === 'cpu usage') ;
+        const initialDatasets = [
+            {
+                ...cpuDataset,
+                borderColor: '#ff6384',
+                backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                yAxisID: 'y'
+            },
+            {
+                ...cpuUsageDataset,
+                borderColor: '#36a2eb',
+                backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                yAxisID: 'y1'
+            }
+        ].filter(Boolean);
+
         const initialData = {
             labels: labels,
-            datasets: [cpuDataset]
+            datasets: initialDatasets
         };
+
         const config = {
                 type: 'line',
                 data: initialData,
                 options: {
                     responsive: true,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    stacked: false,
                     plugins: {
                         title: {
                             display: true,
@@ -233,10 +255,13 @@ function showchart(labels, datasets, title){
                         }
                     },
                     scales: {
-                        x: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
                             title: {
                                 display: true,
-                                text: 'Time',
+                                text: 'Value',
                                 font: {
                                     family: "'Ubuntu', sans-serif",
                                     size: 14
@@ -248,10 +273,31 @@ function showchart(labels, datasets, title){
                                 }
                             }
                         },
-                        y: {
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
                             title: {
                                 display: true,
-                                text: 'Value',
+                                text: 'Usage (%)',
+                                font: {
+                                    family: "'Ubuntu', sans-serif",
+                                    size: 14
+                                }
+                            },
+                            ticks: {
+                                font: {
+                                    family: "'Ubuntu', sans-serif"
+                                }
+                            },
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Time',
                                 font: {
                                     family: "'Ubuntu', sans-serif",
                                     size: 14
@@ -284,10 +330,77 @@ function showchart(labels, datasets, title){
         myChart.data.labels = labels;
         // get selected metrics
         const selectedMetric = getSelectedMetric();
+        let selectedDatasets = [];
+
         // filter database
-        const selectedDataset = datasets.find(ds => ds.label === selectedMetric) || datasets[0];
-        // filteredDatasets can be nothing
-        myChart.data.datasets = [selectedDataset];
+        switch(selectedMetric) {
+            case 'cpu-group':
+                selectedDatasets = [
+                    {
+                        ...datasets.find(ds => ds.label === 'cpu'),
+                        borderColor: '#ff6384',
+                        backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                        yAxisID: 'y'
+                    },
+                    {
+                        ...datasets.find(ds => ds.label === 'cpu usage'),
+                        borderColor: '#36a2eb',
+                        backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                        yAxisID: 'y1'
+                    }
+                ].filter(Boolean);
+                break;
+            case 'mem-group':
+                selectedDatasets = [
+                    {
+                        ...datasets.find(ds => ds.label === 'mem'),
+                        borderColor: '#ff6384',
+                        backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                        yAxisID: 'y'
+                    },
+                    {
+                        ...datasets.find(ds => ds.label === 'mem usage'),
+                        borderColor: '#36a2eb',
+                        backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                        yAxisID: 'y1'
+                    }
+                ].filter(Boolean);
+                break;
+            case 'storage-group':
+                selectedDatasets = [
+                    {
+                        ...datasets.find(ds => ds.label === 'storage'),
+                        borderColor: '#ff6384',
+                        backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                        yAxisID: 'y'
+                    },
+                    {
+                        ...datasets.find(ds => ds.label === 'storage usage'),
+                        borderColor: '#36a2eb',
+                        backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                        yAxisID: 'y1'
+                    }
+                ].filter(Boolean);
+                break;
+            case 'network-group':
+                selectedDatasets = [
+                    {
+                        ...datasets.find(ds => ds.label === 'netin'),
+                        borderColor: '#ff6384',
+                        backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                        yAxisID: 'y'
+                    },
+                    {
+                        ...datasets.find(ds => ds.label === 'netout'),
+                        borderColor: '#36a2eb',
+                        backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                        yAxisID: 'y1'
+                    }
+                ].filter(Boolean);
+                break;
+        }
+
+        myChart.data.datasets = selectedDataset;
         myChart.options.plugins.title.text = title;
         myChart.update();
 
@@ -297,11 +410,19 @@ function showchart(labels, datasets, title){
             datasets: datasets
         };
 
-        const initialMetric = datasets[0].label;
-        document.querySelector(`input[type="radio"][value="${initialMetric}"]`).checked = true;
+        const groupToSelect = determineGroupFromDataset(datasets[0].label);
+        document.querySelector(`input[type="radio"][value="${groupToSelect}"]`).checked = true;
     }
 
 };
+
+function determineGroupFromDataset(label) {
+    if (label.includes('cpu')) return 'cpu-group';
+    if (label.includes('mem')) return 'mem-group';
+    if (label.includes('storage')) return 'storage-group';
+    if (label.includes('netin')) return 'network-group';
+    return 'cpu-group'; 
+}
 
 // Helper function to get selected metric
 function getSelectedMetric() {
@@ -310,18 +431,117 @@ function getSelectedMetric() {
 }
 
 function updateChart() {
-    if (myChart === undefined){ return ;}
+    if (myChart === undefined){ return; }
+    
     const selectedMetric = getSelectedMetric();
     if (selectedMetric && copy_data && copy_data.datasets) {
-        const dataset = copy_data.datasets.find(ds => ds.label === selectedMetric);
-        if (dataset) {
-            myChart.data.datasets = [{
-                ...dataset,
-                borderColor: getRandomColor(),
-                backgroundColor: 'rgba(255, 255, 255, 0.1)'
-            }];
-            myChart.update();
+        let datasets = [];
+        
+        switch(selectedMetric) {
+            case 'cpu-group':
+                const cpuDataset = copy_data.datasets.find(ds => ds.label === 'cpu');
+                const cpuUsageDataset = copy_data.datasets.find(ds => ds.label === 'cpu usage');
+                if(cpuDataset && cpuUsageDataset) {
+                    datasets = [
+                        {
+                            ...cpuDataset,
+                            borderColor: '#ff6384',
+                            backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                            yAxisID: 'y'
+                        },
+                        {
+                            ...cpuUsageDataset,
+                            borderColor: '#36a2eb',
+                            backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                            yAxisID: 'y1'
+                        }
+                    ];
+                }
+                break;
+                
+            case 'mem-group':
+                const memDataset = copy_data.datasets.find(ds => ds.label === 'mem');
+                const memUsageDataset = copy_data.datasets.find(ds => ds.label === 'mem usage');
+                if(memDataset && memUsageDataset) {
+                    datasets = [
+                        {
+                            ...memDataset,
+                            borderColor: '#ff6384',
+                            backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                            yAxisID: 'y'
+                        },
+                        {
+                            ...memUsageDataset,
+                            borderColor: '#36a2eb',
+                            backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                            yAxisID: 'y1'
+                        }
+                    ];
+                }
+                break;
+
+            case 'storage-group':
+                const storageDataset = copy_data.datasets.find(ds => ds.label === 'storage');
+                const storageUsageDataset = copy_data.datasets.find(ds => ds.label === 'storage usage');
+                if(storageDataset && storageUsageDataset) {
+                    datasets = [
+                        {
+                            ...storageDataset,
+                            borderColor: '#ff6384',
+                            backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                            yAxisID: 'y'
+                        },
+                        {
+                            ...storageUsageDataset,
+                            borderColor: '#36a2eb',
+                            backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                            yAxisID: 'y1'
+                        }
+                    ];
+                }
+                break;
+
+            case 'network-group':
+                const netInDataset = copy_data.datasets.find(ds => ds.label === 'netin');
+                const netOutDataset = copy_data.datasets.find(ds => ds.label === 'netout');
+                if(netInDataset && netOutDataset) {
+                    datasets = [
+                        {
+                            ...netInDataset,
+                            borderColor: '#ff6384',
+                            backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                            yAxisID: 'y'
+                        },
+                        {
+                            ...netOutDataset,
+                            borderColor: '#36a2eb',
+                            backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                            yAxisID: 'y1'
+                        }
+                    ];
+                }
+                break;
         }
+
+        myChart.data.datasets = datasets;
+        
+        myChart.options.scales = {
+            y: {
+                type: 'linear',
+                display: true,
+                position: 'left',
+            },
+            y1: {
+                type: 'linear',
+                display: true,
+                position: 'right',
+                grid: {
+                    drawOnChartArea: false,
+                },
+            }
+        };
+        
+        myChart.update();
     }
     if (myChart) {
         myChart.update();
@@ -339,7 +559,7 @@ function getRandomColor() {
 }
 
 // default is cpu
-document.querySelector('.radio-group input[type="radio"][value="cpu"]').checked = true;
+document.querySelector('.radio-group input[type="radio"][value="cpu-group"]').checked = true;
 
 
 // chart-end
