@@ -6,7 +6,11 @@ app_name = "reports"
 
 urlpatterns = [
     path('', views.index, name="index"),
-    path('reports', views.reports, name="reports"),
+
+    path('system/', views.system_report, name="system_report"),
+    path('subject/', views.subject_report, name="subject_report"), 
+    path('vm/', views.vm_report, name="vm_report"),
+
     path('getVmList', views.getVmList, name="getVmList"),
     path('formdata', views.formdata, name="formdata"),
     path('graphdata', views.graphdata, name="graphdata"),

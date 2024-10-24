@@ -1,15 +1,33 @@
+// // 在reports.js中
+// window.addEventListener('load', function() {  // 使用load而不是DOMContentLoaded
+//     console.log("Window fully loaded");
+//     // 移除加载遮罩
+//     // const loadingOverlay = document.getElementById('loading-overlay');
+//     // if (loadingOverlay) {
+//     //     loadingOverlay.style.display = 'none';
+//     // }
+    
+//     // 显示主内容
+//     // document.querySelector('.content').style.visibility = 'visible';
+    
+//     // 然后再执行原有的初始化代码
+//     show();
+//     console.log("Page loaded");
+//     console.log("Current URL:", window.location.href);
+// });
+
+
 const base_url = ""
 
 var table_data = []; //formdata
 var selected_metrics = [];
-var global_page = 1;
 
 var vmTable;
 
 // Define the order of columns as they appear in the table
 const columnOrder = [
-    "Type", "Node", "Subject", "Name", "ID", "VM#", "LXC#", "CPU", 
-    "CPU Usage(%)", "RAM(Gib)", "RAM Usage(%)", "Storage(Gib)", "Storage Usage(%)", 
+    "Type", "Node", "Subject", "Name", "ID", "VM#", "LXC#", "CPU", "CPU allocated",
+    "CPU Usage(%)", "RAM(Gib)", "RAM allocated", "RAM Usage(%)", "Storage(Gib)", "Storage allocated", "Storage Usage(%)", 
     "Network In(K)", "Network Out(K)", "Uptime"
 ];
 
@@ -24,9 +42,12 @@ const columnMapping = {
     "LXC#": ["lxc number", "LXC#"],
     "CPU": ["cpu", "CPU"],
     "CPU Usage(%)": ["cpu usage", "CPU Usage(%)"],
+    "CPU allocated": ["cpu allocated", "CPU allocated"],
     "RAM(Gib)": ["mem", "RAM(Gib)"],
+    "RAM allocated": ["mem allocated", "RAM allocated"],
     "RAM Usage(%)": ["mem usage", "RAM Usage(%)"],
     "Storage(Gib)": ["storage", "Storage(Gib)"],
+    "Storage allocated": ["storage allocated", "Storage allocated"],
     "Storage Usage(%)": ["storage usage", "Storage Usage(%)"],
     "Network In(K)": ["netin", "Network In(K)"],
     "Network Out(K)": ["netout", "Network Out(K)"],
@@ -34,20 +55,33 @@ const columnMapping = {
 };
     
 
-function getTableData(start_time, end_time, page = 1) {
+function getTableData(start_time, end_time) {
     return new Promise((resolve, reject) => {
+
+        const pathSegments = window.location.pathname.split('/');
+        let type = 'system';  
+        
+        if (pathSegments.includes('system')) {
+            type = 'system';
+        } else if (pathSegments.includes('subject')) {
+            type = 'subject';
+        } else if (pathSegments.includes('vm')) {
+            type = 'vm';
+        }
+
+        console.log("Current report type:", type);
+
         var params = {
             "start_time": start_time,
             "end_time": end_time,
-            "page" : page
+            "type": type,
         };
 
         var xhr = new XMLHttpRequest();
         var queryString = Object.keys(params)
             .map(key => encodeURIComponent(key) + '=' + encodeURIComponent(params[key]))
             .join('&');
-        // var fullUrl = base_url + '/reports/formdata?' + queryString;
-        var fullUrl = 'formdata?' + queryString;
+        var fullUrl = '/reports/formdata?' + queryString;
 
         xhr.open('GET', fullUrl, true);
         xhr.responseType = 'json';
@@ -55,21 +89,6 @@ function getTableData(start_time, end_time, page = 1) {
         xhr.onload = function () {
             if (xhr.status === 200) {
                 let data = xhr.response;
-                // var current_page_sp = document.querySelector('#current_page');
-                // current_page_sp.textContent = data.current_page;
-                // global_page = data.current_page;
-                // var page_count_sp = document.querySelector('#page_count');
-                // page_count_sp.textContent = data.page_count;
-                // if (data.current_page === data.page_count){
-                //     var next_page = document.querySelector("#nextPage");
-                //     next_page.classList.add("disable");
-                //     next_page.disable = true;
-                // }
-                // if (data.current_page === 1){
-                //     var pre_page = document.querySelector("#prePage");
-                //     pre_page.classList.add("disable");
-                //     pre_page.disable = true;
-                // }
                 resolve(data.data);
 
             } else {
@@ -86,8 +105,7 @@ function getTableData(start_time, end_time, page = 1) {
 }
 
 
-function getChartData(start_time, end_time, _type = "system", name = "system", nodename = "none", subject =
-    "none", vmid = -1) {
+function getChartData(start_time, end_time, _type, name, nodename, subject, vmid) {
     return new Promise((resolve, reject) => {
         var params = {
             "type": _type,
@@ -103,8 +121,7 @@ function getChartData(start_time, end_time, _type = "system", name = "system", n
         var queryString = Object.keys(params)
             .map(key => encodeURIComponent(key) + '=' + encodeURIComponent(params[key]))
             .join('&');
-        // var fullUrl = base_url + '/reports/graphdata?' + queryString;
-        var fullUrl = 'graphdata?' + queryString;
+        var fullUrl = '/reports/graphdata?' + queryString;
 
         xhr.open('GET', fullUrl, true);
         xhr.responseType = 'json';
@@ -165,23 +182,46 @@ function getChartData(start_time, end_time, _type = "system", name = "system", n
 var copy_data = {};
 
 var myChart = undefined;
-function showchart(labels, datasets, title = "system"){
+function showchart(labels, datasets, title){
+    document.getElementById('chartContainer').style.display = 'block';
     if (myChart === undefined){     // no chart yet
         const data = {
             labels: labels,
             datasets : datasets
         }
         copy_data = JSON.parse(JSON.stringify(data))
-        const cpuDataset = datasets.find(ds => ds.label === 'cpu') || datasets[0];
+        const cpuDataset = datasets.find(ds => ds.label === 'cpu') ;
+        const cpuUsageDataset = datasets.find(ds => ds.label === 'cpu usage') ;
+        const initialDatasets = [
+            {
+                ...cpuDataset,
+                borderColor: '#ff6384',
+                backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                yAxisID: 'y'
+            },
+            {
+                ...cpuUsageDataset,
+                borderColor: '#36a2eb',
+                backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                yAxisID: 'y1'
+            }
+        ].filter(Boolean);
+
         const initialData = {
             labels: labels,
-            datasets: [cpuDataset]
+            datasets: initialDatasets
         };
+
         const config = {
                 type: 'line',
                 data: initialData,
                 options: {
                     responsive: true,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    stacked: false,
                     plugins: {
                         title: {
                             display: true,
@@ -215,10 +255,13 @@ function showchart(labels, datasets, title = "system"){
                         }
                     },
                     scales: {
-                        x: {
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
                             title: {
                                 display: true,
-                                text: 'Time',
+                                text: 'Value',
                                 font: {
                                     family: "'Ubuntu', sans-serif",
                                     size: 14
@@ -230,10 +273,31 @@ function showchart(labels, datasets, title = "system"){
                                 }
                             }
                         },
-                        y: {
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
                             title: {
                                 display: true,
-                                text: 'Value',
+                                text: 'Usage (%)',
+                                font: {
+                                    family: "'Ubuntu', sans-serif",
+                                    size: 14
+                                }
+                            },
+                            ticks: {
+                                font: {
+                                    family: "'Ubuntu', sans-serif"
+                                }
+                            },
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Time',
                                 font: {
                                     family: "'Ubuntu', sans-serif",
                                     size: 14
@@ -266,10 +330,77 @@ function showchart(labels, datasets, title = "system"){
         myChart.data.labels = labels;
         // get selected metrics
         const selectedMetric = getSelectedMetric();
+        let selectedDatasets = [];
+
         // filter database
-        const selectedDataset = datasets.find(ds => ds.label === selectedMetric) || datasets[0];
-        // filteredDatasets can be nothing
-        myChart.data.datasets = [selectedDataset];
+        switch(selectedMetric) {
+            case 'cpu-group':
+                selectedDatasets = [
+                    {
+                        ...datasets.find(ds => ds.label === 'cpu'),
+                        borderColor: '#ff6384',
+                        backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                        yAxisID: 'y'
+                    },
+                    {
+                        ...datasets.find(ds => ds.label === 'cpu usage'),
+                        borderColor: '#36a2eb',
+                        backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                        yAxisID: 'y1'
+                    }
+                ].filter(Boolean);
+                break;
+            case 'mem-group':
+                selectedDatasets = [
+                    {
+                        ...datasets.find(ds => ds.label === 'mem'),
+                        borderColor: '#ff6384',
+                        backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                        yAxisID: 'y'
+                    },
+                    {
+                        ...datasets.find(ds => ds.label === 'mem usage'),
+                        borderColor: '#36a2eb',
+                        backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                        yAxisID: 'y1'
+                    }
+                ].filter(Boolean);
+                break;
+            case 'storage-group':
+                selectedDatasets = [
+                    {
+                        ...datasets.find(ds => ds.label === 'storage'),
+                        borderColor: '#ff6384',
+                        backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                        yAxisID: 'y'
+                    },
+                    {
+                        ...datasets.find(ds => ds.label === 'storage usage'),
+                        borderColor: '#36a2eb',
+                        backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                        yAxisID: 'y1'
+                    }
+                ].filter(Boolean);
+                break;
+            case 'network-group':
+                selectedDatasets = [
+                    {
+                        ...datasets.find(ds => ds.label === 'netin'),
+                        borderColor: '#ff6384',
+                        backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                        yAxisID: 'y'
+                    },
+                    {
+                        ...datasets.find(ds => ds.label === 'netout'),
+                        borderColor: '#36a2eb',
+                        backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                        yAxisID: 'y1'
+                    }
+                ].filter(Boolean);
+                break;
+        }
+
+        myChart.data.datasets = selectedDatasets;
         myChart.options.plugins.title.text = title;
         myChart.update();
 
@@ -279,11 +410,19 @@ function showchart(labels, datasets, title = "system"){
             datasets: datasets
         };
 
-        const initialMetric = datasets[0].label;
-        document.querySelector(`input[type="radio"][value="${initialMetric}"]`).checked = true;
+        const groupToSelect = determineGroupFromDataset(datasets[0].label);
+        document.querySelector(`input[type="radio"][value="${groupToSelect}"]`).checked = true;
     }
 
 };
+
+function determineGroupFromDataset(label) {
+    if (label.includes('cpu')) return 'cpu-group';
+    if (label.includes('mem')) return 'mem-group';
+    if (label.includes('storage')) return 'storage-group';
+    if (label.includes('netin')) return 'network-group';
+    return 'cpu-group'; 
+}
 
 // Helper function to get selected metric
 function getSelectedMetric() {
@@ -292,17 +431,117 @@ function getSelectedMetric() {
 }
 
 function updateChart() {
+    if (myChart === undefined){ return; }
+    
     const selectedMetric = getSelectedMetric();
     if (selectedMetric && copy_data && copy_data.datasets) {
-        const dataset = copy_data.datasets.find(ds => ds.label === selectedMetric);
-        if (dataset) {
-            myChart.data.datasets = [{
-                ...dataset,
-                borderColor: getRandomColor(),
-                backgroundColor: 'rgba(255, 255, 255, 0.1)'
-            }];
-            myChart.update();
+        let datasets = [];
+        
+        switch(selectedMetric) {
+            case 'cpu-group':
+                const cpuDataset = copy_data.datasets.find(ds => ds.label === 'cpu');
+                const cpuUsageDataset = copy_data.datasets.find(ds => ds.label === 'cpu usage');
+                if(cpuDataset && cpuUsageDataset) {
+                    datasets = [
+                        {
+                            ...cpuDataset,
+                            borderColor: '#ff6384',
+                            backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                            yAxisID: 'y'
+                        },
+                        {
+                            ...cpuUsageDataset,
+                            borderColor: '#36a2eb',
+                            backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                            yAxisID: 'y1'
+                        }
+                    ];
+                }
+                break;
+                
+            case 'mem-group':
+                const memDataset = copy_data.datasets.find(ds => ds.label === 'mem');
+                const memUsageDataset = copy_data.datasets.find(ds => ds.label === 'mem usage');
+                if(memDataset && memUsageDataset) {
+                    datasets = [
+                        {
+                            ...memDataset,
+                            borderColor: '#ff6384',
+                            backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                            yAxisID: 'y'
+                        },
+                        {
+                            ...memUsageDataset,
+                            borderColor: '#36a2eb',
+                            backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                            yAxisID: 'y1'
+                        }
+                    ];
+                }
+                break;
+
+            case 'storage-group':
+                const storageDataset = copy_data.datasets.find(ds => ds.label === 'storage');
+                const storageUsageDataset = copy_data.datasets.find(ds => ds.label === 'storage usage');
+                if(storageDataset && storageUsageDataset) {
+                    datasets = [
+                        {
+                            ...storageDataset,
+                            borderColor: '#ff6384',
+                            backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                            yAxisID: 'y'
+                        },
+                        {
+                            ...storageUsageDataset,
+                            borderColor: '#36a2eb',
+                            backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                            yAxisID: 'y1'
+                        }
+                    ];
+                }
+                break;
+
+            case 'network-group':
+                const netInDataset = copy_data.datasets.find(ds => ds.label === 'netin');
+                const netOutDataset = copy_data.datasets.find(ds => ds.label === 'netout');
+                if(netInDataset && netOutDataset) {
+                    datasets = [
+                        {
+                            ...netInDataset,
+                            borderColor: '#ff6384',
+                            backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                            yAxisID: 'y'
+                        },
+                        {
+                            ...netOutDataset,
+                            borderColor: '#36a2eb',
+                            backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                            yAxisID: 'y1'
+                        }
+                    ];
+                }
+                break;
         }
+
+        myChart.data.datasets = datasets;
+        
+        myChart.options.scales = {
+            y: {
+                type: 'linear',
+                display: true,
+                position: 'left',
+            },
+            y1: {
+                type: 'linear',
+                display: true,
+                position: 'right',
+                grid: {
+                    drawOnChartArea: false,
+                },
+            }
+        };
+        
+        myChart.update();
     }
     if (myChart) {
         myChart.update();
@@ -320,7 +559,7 @@ function getRandomColor() {
 }
 
 // default is cpu
-document.querySelector('.radio-group input[type="radio"][value="cpu"]').checked = true;
+document.querySelector('.radio-group input[type="radio"][value="cpu-group"]').checked = true;
 
 
 // chart-end
@@ -328,8 +567,20 @@ document.querySelector('.radio-group input[type="radio"][value="cpu"]').checked 
 // form - start
 
 function showtable(tb_data) {
+
     // Store the original data for later use
     window.table_data = tb_data;
+
+    const pathSegments = window.location.pathname.split('/');
+    let hiddenColumns = [];  
+    
+    if (pathSegments.includes('system')) {
+        hiddenColumns.push('Subject', 'ID', 'Uptime')
+    } else if (pathSegments.includes('subject')) {
+        hiddenColumns.push('Node', 'Name', 'ID', 'CPU allocated', 'RAM allocated', 'Storage allocated', 'Uptime')
+    } else if (pathSegments.includes('vm')) {
+        hiddenColumns.push('Type', 'Storage Usage(%)', 'CPU allocated', 'RAM allocated', 'Storage allocated')
+    }
 
     // Define columns based on columnOrder and columnMapping
     let columns = columnOrder.map(columnName => {
@@ -342,7 +593,8 @@ function showtable(tb_data) {
                 }
                 return null;
             },
-            title: columnName
+            title: columnName,
+            visible: !hiddenColumns.includes(columnName)
         }
     })
 
@@ -354,6 +606,8 @@ function showtable(tb_data) {
         $('#VMtable').empty();
     }
 
+    console.log("inside the show table")
+
     vmTable = $('table#VMtable').DataTable({
         data: tb_data,
         columns: columns,
@@ -362,9 +616,11 @@ function showtable(tb_data) {
         "responsive": true,
         "select": true,
         'columnDefs': [
-            { "type": "numeric", "targets": [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14] },
-            { className: "tdUptime", type: "natural", "targets": [15] }
+            { "type": "numeric", "targets": [4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17] },
+            { className: "tdUptime", type: "natural", "targets": [18] },
+            { "orderSequence": ["system", "node", "subject"], "targets": 0 }
         ],
+        "order": [[0, 'acs']],
         "rowCallback": function(row, data, index) {
             if (data.type === 'system') {
                 $('td', row).css('background-color', '#e6f7ff');
@@ -395,10 +651,16 @@ function showtable(tb_data) {
 
         if (data) {  // Check if data exists (row is not empty)
             let {startDate, endDate} = getDateRange();
+
+            document.getElementById('chart-loading').style.display = 'flex';
+
             getChartData(startDate, endDate, data.type, data.name, data.nodename, data.subject, data.vmid)
                 .then(({x_labels, result_data}) => {
                     showchart(x_labels, result_data, data.name);
                     updateChart();
+                })
+                .finally(() => {
+                    document.getElementById('chart-loading').style.display = 'none';
                 });
         }
     });
@@ -511,20 +773,42 @@ function show(){
             return row;
         });
 
+        console.log("tb_data", tb_data);
+
         showtable(tb_data);
         table_data = tb_data;
-    })
-    // get chart data
-    getChartData(startDate, endDate).then(
-        ({x_labels, result_data}) =>{
-            var labels, dataset;
-            showchart(x_labels,result_data);
-            updateChart();
-        }
-    );
-};
-show()
 
+        // only fetch chart data if there are records
+        if (tb_data && tb_data.length > 0) {
+            const firstRecord = tb_data[0];
+
+            document.getElementById('chartContainer').style.display = 'block';
+            document.getElementById('chart-loading').style.display = 'flex';
+
+            // get chart data
+            return getChartData(startDate, endDate, firstRecord.type, firstRecord.name, 
+                firstRecord.nodename, firstRecord.subject, firstRecord.vmid)
+                .then(({x_labels, result_data}) => {
+                    showchart(x_labels, result_data, firstRecord.name);
+                    updateChart();
+                })
+                .finally(() => {
+                    document.getElementById('chart-loading').style.display = 'none';
+                });
+        } else {
+            // Hide chart container if no data
+            document.getElementById('chartContainer').style.display = 'none';
+            if (myChart) {
+                myChart.destroy();
+                myChart = undefined;
+            }
+        }
+    })
+
+
+};
+
+show()
 // Function to set cell background color based on value and thresholds
 function setCellColor(cell, value, lowThreshold, midThreshold, highThreshold) {
     if (value > highThreshold) {
@@ -551,11 +835,11 @@ function updateTableHighlighting(table) {
 
         // RAM Usage (index 10)
         var ramUsage = parseFloat(data['mem usage']);
-        setCellColor(table.cell(rowIdx, 10).node(), ramUsage, 25, 50, 75);
+        setCellColor(table.cell(rowIdx, 12).node(), ramUsage, 25, 50, 75);
 
         // Storage Usage (index 12)
         var storageUsage = parseFloat(data['storage usage']);
-        setCellColor(table.cell(rowIdx, 12).node(), storageUsage, 25, 50, 75);
+        setCellColor(table.cell(rowIdx, 15).node(), storageUsage, 25, 50, 75);
     });
 }
 
