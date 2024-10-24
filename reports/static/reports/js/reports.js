@@ -651,10 +651,16 @@ function showtable(tb_data) {
 
         if (data) {  // Check if data exists (row is not empty)
             let {startDate, endDate} = getDateRange();
+
+            document.getElementById('chart-loading').style.display = 'flex';
+
             getChartData(startDate, endDate, data.type, data.name, data.nodename, data.subject, data.vmid)
                 .then(({x_labels, result_data}) => {
                     showchart(x_labels, result_data, data.name);
                     updateChart();
+                })
+                .finally(() => {
+                    document.getElementById('chart-loading').style.display = 'none';
                 });
         }
     });
@@ -775,13 +781,20 @@ function show(){
         // only fetch chart data if there are records
         if (tb_data && tb_data.length > 0) {
             const firstRecord = tb_data[0];
+
+            document.getElementById('chartContainer').style.display = 'block';
+            document.getElementById('chart-loading').style.display = 'flex';
+
             // get chart data
-            getChartData(startDate, endDate, firstRecord.type, firstRecord.name, firstRecord.nodename, firstRecord.subject, firstRecord.vmid).then(
-                ({x_labels, result_data}) =>{
-                    showchart(x_labels,result_data, firstRecord.name);
+            return getChartData(startDate, endDate, firstRecord.type, firstRecord.name, 
+                firstRecord.nodename, firstRecord.subject, firstRecord.vmid)
+                .then(({x_labels, result_data}) => {
+                    showchart(x_labels, result_data, firstRecord.name);
                     updateChart();
-                }
-            );
+                })
+                .finally(() => {
+                    document.getElementById('chart-loading').style.display = 'none';
+                });
         } else {
             // Hide chart container if no data
             document.getElementById('chartContainer').style.display = 'none';
